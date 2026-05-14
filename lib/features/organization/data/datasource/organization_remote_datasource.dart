@@ -1,0 +1,84 @@
+import 'package:zedu/core/core.dart';
+import 'package:zedu/features/features.dart';
+
+abstract interface class OrganizationRemoteDataSource {
+  Future<OrganizationModel> createOrganization(CreateOrganizationRequest request);
+}
+
+class OrganizationRemoteDataSourceImpl implements OrganizationRemoteDataSource {
+  const OrganizationRemoteDataSourceImpl({
+    required AppConfig config,
+    required ApiBaseService apiBaseService,
+  }) : _config = config,
+       _apiBaseService = apiBaseService;
+
+  final AppConfig _config;
+  final ApiBaseService _apiBaseService;
+
+  static const _tag = 'OrganizationRemoteDataSource';
+
+  @override
+  Future<OrganizationModel> createOrganization(CreateOrganizationRequest request) async {
+    try {
+      if (_config.usesMockData) {
+        AppLogger.d('Using mock data for POST /organisations', tag: _tag);
+        return OrganizationModel(
+          id: 'mock-id',
+          name: request.name ?? 'Mock Org',
+          description: request.description ?? 'Mock Description',
+          email: request.email ?? 'mock@org.com',
+          country: request.country ?? 'Mock Country',
+          industry: request.type ?? 'Mock Industry',
+          location: request.location ?? 'Mock Location',
+          ownerId: 'mock-owner-id',
+          logoUrl: request.logoUrl ?? 'mock-logo-url',
+          channelsCount: 0,
+          totalMessagesCount: 0,
+          userRole: 'owner',
+          organizationPlan: OrganizationPlanModel(
+            id: 'mock-plan-id',
+            organizationId: 'mock-id',
+            planId: 'mock-plan-id',
+            startedAt: DateTime.now(),
+            endedAt: DateTime.now().add(const Duration(days: 30)),
+            status: 'Active',
+            sessionId: 'mock-session-id',
+            invoicePdfUrl: 'mock-pdf-url',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+            planDetails: OrganizationPlanDetailsModel(
+              id: 'mock-plan-details-id',
+              name: 'Mock Plan',
+              description: 'Mock Plan Description',
+              benefits: [],
+              fee: 0,
+              credits: 0,
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+          ),
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+      }
+
+      AppLogger.d('POST /organisations — ${request.name}', tag: _tag);
+      final response = await _apiBaseService.post<Map<String, dynamic>>(
+        path: '/organisations',
+        data: request.toJson(),
+      );
+
+      final payload = response.data['data'] as Map<String, dynamic>;
+      return OrganizationModel.fromJson(payload);
+    } on ApiFailure {
+      rethrow;
+    } catch (error) {
+      AppLogger.e(
+        'Failed to parse /organisation response',
+        tag: _tag,
+        error: error,
+      );
+      throw ApiFailure.fromParsingError(error, path: '/organisation');
+    }
+  }
+}
