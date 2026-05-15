@@ -31,39 +31,72 @@ class HomeView extends ConsumerWidget {
                 ),
                 const SizedBox(width: 12),
                 // Zedu User Dropdown
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF5CCBBA),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            'ZU',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                PopupMenuButton<String>(
+                  offset: const Offset(0, 40),
+                  onSelected: (value) async {
+                    if (value == 'logout') {
+                      await ref.read(authNotifierProvider.notifier).logout();
+                      if (context.mounted) {
+                        context.go(AppRouter.login);
+                      }
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'profile',
+                      child: Row(
+                        children: [
+                          Icon(Icons.person_outline, size: 20, color: Colors.black87),
+                          SizedBox(width: 8),
+                          Text('Profile'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'logout',
+                      child: Row(
+                        children: [
+                          Icon(Icons.logout_rounded, size: 20, color: Colors.redAccent),
+                          SizedBox(width: 8),
+                          Text('Logout', style: TextStyle(color: Colors.redAccent)),
+                        ],
+                      ),
+                    ),
+                  ],
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF5CCBBA),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'ZU',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Zedu User',
-                        style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
-                      ),
-                      const Icon(Icons.keyboard_arrow_down, color: Colors.white70, size: 18),
-                    ],
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Zedu User',
+                          style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                        ),
+                        const Icon(Icons.keyboard_arrow_down, color: Colors.white70, size: 18),
+                      ],
+                    ),
                   ),
                 ),
                 const Spacer(),
