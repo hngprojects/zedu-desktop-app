@@ -6,6 +6,8 @@ enum UserProfileSection {
   security,
   organization,
   userManagement,
+  rolesAndPermissions,
+  billing,
 }
 
 class UserProfileState {
@@ -16,6 +18,8 @@ class UserProfileState {
     this.organization,
     this.securitySessions = const [],
     this.teamMembers = const [],
+    this.rolesAndPermissions = const [],
+    this.billing,
     this.isLoading = false,
     this.isSaving = false,
     this.error,
@@ -28,6 +32,8 @@ class UserProfileState {
   final OrganizationProfile? organization;
   final List<SecuritySession> securitySessions;
   final List<TeamMember> teamMembers;
+  final List<RolePermission> rolesAndPermissions;
+  final BillingInfo? billing;
   final bool isLoading;
   final bool isSaving;
   final String? error;
@@ -40,6 +46,8 @@ class UserProfileState {
     OrganizationProfile? organization,
     List<SecuritySession>? securitySessions,
     List<TeamMember>? teamMembers,
+    List<RolePermission>? rolesAndPermissions,
+    BillingInfo? billing,
     bool? isLoading,
     bool? isSaving,
     String? error,
@@ -54,6 +62,8 @@ class UserProfileState {
       organization: organization ?? this.organization,
       securitySessions: securitySessions ?? this.securitySessions,
       teamMembers: teamMembers ?? this.teamMembers,
+      rolesAndPermissions: rolesAndPermissions ?? this.rolesAndPermissions,
+      billing: billing ?? this.billing,
       isLoading: isLoading ?? this.isLoading,
       isSaving: isSaving ?? this.isSaving,
       error: clearError ? null : (error ?? this.error),

@@ -5,6 +5,12 @@ class OrganizationProfile {
     required this.country,
   });
 
+  factory OrganizationProfile.empty() => const OrganizationProfile(
+    name: 'Anonymous user',
+    natureOfBusiness: 'Design agency',
+    country: 'Nigeria',
+  );
+
   final String name;
   final String natureOfBusiness;
   final String country;

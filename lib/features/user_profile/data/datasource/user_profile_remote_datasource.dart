@@ -26,6 +26,8 @@ abstract interface class UserProfileRemoteDataSource {
   });
   Future<TeamMemberModel> updateMember(TeamMember member);
   Future<void> removeMember(String memberId);
+  Future<List<RolePermissionModel>> getRolesAndPermissions();
+  Future<BillingInfoModel> getBillingInfo();
 }
 
 class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
@@ -260,6 +262,34 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
       path: '/profile/organization/members/$memberId',
     );
   }
+
+  @override
+  Future<List<RolePermissionModel>> getRolesAndPermissions() async {
+    if (_config.usesMockData) {
+      return _roles.map(RolePermissionModel.fromJson).toList();
+    }
+    final response = await _apiBaseService.get<Map<String, dynamic>>(
+      path: '/profile/organization/roles',
+    );
+    final data = response.data['data'] as List<dynamic>;
+    return data
+        .cast<Map<String, dynamic>>()
+        .map(RolePermissionModel.fromJson)
+        .toList();
+  }
+
+  @override
+  Future<BillingInfoModel> getBillingInfo() async {
+    if (_config.usesMockData) {
+      return BillingInfoModel.fromJson(_billing);
+    }
+    final response = await _apiBaseService.get<Map<String, dynamic>>(
+      path: '/profile/organization/billing',
+    );
+    return BillingInfoModel.fromJson(
+      response.data['data'] as Map<String, dynamic>,
+    );
+  }
 }
 
 const _account = {
@@ -315,3 +345,73 @@ const _members = [
     'status': 'active',
   },
 ];
+
+const _roles = [
+  {
+    'role': 'Administrator',
+    'description': 'Full access, control',
+    'permissions': [
+      'Remove members from organization',
+      'Invite members',
+      'Create custom roles',
+      'Create channels',
+      'Comment on threads',
+      'View billing',
+      'Create webhooks',
+      'View channels',
+      'Change user organization role'
+    ]
+  },
+  {
+    'role': 'Guess',
+    'description': 'Read-only access',
+    'permissions': ['View channels']
+  },
+  {
+    'role': 'User',
+    'description': 'Read, write, update',
+    'permissions': [
+      'Remove members from organization',
+      'Comment on threads',
+      'Create channels',
+      'View channels'
+    ]
+  },
+  {
+    'role': 'Manager',
+    'description': 'Read, write, approve',
+    'permissions': [
+      'Remove members from organization',
+      'Invite members',
+      'Create custom roles',
+      'Create channels',
+      'Comment on threads',
+      'View billing',
+      'Create webhooks',
+      'View channels',
+      'Change user organization role'
+    ]
+  },
+  {
+    'role': 'Project Lead',
+    'description': 'Manage, coordinate, oversee',
+    'permissions': [
+      'Remove members from organization',
+      'Invite members',
+      'Create custom roles',
+      'Create channels',
+      'Comment on threads',
+      'View billing',
+      'Create webhooks',
+      'View channels',
+      'Change user organization role'
+    ]
+  }
+];
+
+const _billing = {
+  'plan': 'Zedu Free',
+  'description':
+      'You are enjoying the full Zedu experience with ability to add as many users to your organisation.',
+  'payment_history': <Map<String, dynamic>>[]
+};

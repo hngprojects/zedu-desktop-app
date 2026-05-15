@@ -6,6 +6,12 @@ class ProfileAccount {
     this.avatarUrl,
   });
 
+  factory ProfileAccount.empty() => const ProfileAccount(
+    name: 'Anonymous user',
+    email: 'anonymoususer@email.com',
+    timezone: 'Africa/Lagos',
+  );
+
   final String name;
   final String email;
   final String timezone;

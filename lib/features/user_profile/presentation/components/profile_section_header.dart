@@ -38,7 +38,7 @@ class ProfileSectionHeader extends StatelessWidget {
             ],
           ),
         ),
-        if (trailing != null) trailing!,
+        ?trailing,
       ],
     );
   }

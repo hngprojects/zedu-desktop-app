@@ -90,6 +90,16 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     return _guard(() => _remote.removeMember(memberId));
   }
 
+  @override
+  Future<Result<List<RolePermission>>> getRolesAndPermissions() {
+    return _guard(_remote.getRolesAndPermissions);
+  }
+
+  @override
+  Future<Result<BillingInfo>> getBillingInfo() {
+    return _guard(_remote.getBillingInfo);
+  }
+
   Future<Result<T>> _guard<T>(Future<T> Function() operation) async {
     try {
       return Success(await operation());

@@ -131,3 +131,60 @@ class TeamMemberModel extends TeamMember {
     };
   }
 }
+
+class RolePermissionModel extends RolePermission {
+  const RolePermissionModel({
+    required super.role,
+    required super.description,
+    required super.permissions,
+  });
+
+  factory RolePermissionModel.fromJson(Map<String, dynamic> json) {
+    return RolePermissionModel(
+      role: json['role'] as String? ?? 'User',
+      description: json['description'] as String? ?? '',
+      permissions: (json['permissions'] as List<dynamic>?)
+              ?.cast<String>() ??
+          const [],
+    );
+  }
+}
+
+class BillingInfoModel extends BillingInfo {
+  const BillingInfoModel({
+    required super.plan,
+    required super.description,
+    super.paymentHistory,
+  });
+
+  factory BillingInfoModel.fromJson(Map<String, dynamic> json) {
+    return BillingInfoModel(
+      plan: json['plan'] as String? ?? 'Zedu Free',
+      description: json['description'] as String? ?? '',
+      paymentHistory: (json['payment_history'] as List<dynamic>?)
+              ?.map((e) => PaymentRecordModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+    );
+  }
+}
+
+class PaymentRecordModel extends PaymentRecord {
+  const PaymentRecordModel({
+    required super.id,
+    required super.description,
+    required super.amount,
+    required super.date,
+    required super.status,
+  });
+
+  factory PaymentRecordModel.fromJson(Map<String, dynamic> json) {
+    return PaymentRecordModel(
+      id: json['id'] as String? ?? '',
+      description: json['description'] as String? ?? 'Subscription Payment',
+      amount: json['amount'] as String? ?? '',
+      date: json['date'] as String? ?? '',
+      status: json['status'] as String? ?? '',
+    );
+  }
+}

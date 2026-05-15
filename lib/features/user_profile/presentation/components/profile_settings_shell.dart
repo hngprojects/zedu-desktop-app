@@ -1,7 +1,7 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
-class ProfileSettingsShell extends StatelessWidget {
+class ProfileSettingsShell extends ConsumerWidget {
   const ProfileSettingsShell({
     super.key,
     required this.selectedSection,
@@ -18,18 +18,22 @@ class ProfileSettingsShell extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(userProfileNotifierProvider);
+    final userName = state.account?.name ?? 'Zedu User';
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
-            const _ProfileTopBar(),
+             _ProfileTopBar(userName: userName),
             Expanded(
               child: Row(
                 children: [
                   const _PrimaryRail(),
                   _SettingsNavigation(
+                    userName: userName,
                     selectedSection: selectedSection,
                     onSectionSelected: onSectionSelected,
                   ),
@@ -37,23 +41,6 @@ class ProfileSettingsShell extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          height: 72,
-                          alignment: Alignment.centerLeft,
-                          padding: const EdgeInsets.symmetric(horizontal: 28),
-                          decoration: const BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(color: Color(0xFFE5E7EB)),
-                            ),
-                          ),
-                          child: Text(
-                            'Settings',
-                            style: context.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF111827),
-                            ),
-                          ),
-                        ),
                         Expanded(child: child),
                       ],
                     ),
@@ -69,7 +56,8 @@ class ProfileSettingsShell extends StatelessWidget {
 }
 
 class _ProfileTopBar extends StatelessWidget {
-  const _ProfileTopBar();
+  const _ProfileTopBar({required this.userName});
+  final String userName;
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +67,13 @@ class _ProfileTopBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
         children: [
-          Image.asset('assets/pngs/zedu_logo.png', width: 82, height: 31),
+          Image.asset(
+            'assets/pngs/zedu_logo.png',
+            width: 82,
+            height: 31,
+            color: Colors.white,
+            colorBlendMode: BlendMode.srcIn,
+          ),
           const SizedBox(width: 24),
           Container(
             height: 32,
@@ -98,9 +92,9 @@ class _ProfileTopBar extends StatelessWidget {
                     color: const Color(0xFF13C9BD),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Text(
+                  child: const Text(
                     'zu',
-                    style: context.textTheme.labelSmall?.copyWith(
+                    style: TextStyle(
                       color: Colors.white,
                       fontSize: 8,
                     ),
@@ -108,7 +102,7 @@ class _ProfileTopBar extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Zedu User',
+                  userName,
                   style: context.textTheme.bodySmall?.copyWith(
                     color: Colors.white,
                   ),
@@ -287,10 +281,12 @@ class _RailIcon extends StatelessWidget {
 
 class _SettingsNavigation extends StatelessWidget {
   const _SettingsNavigation({
+    required this.userName,
     required this.selectedSection,
     required this.onSectionSelected,
   });
 
+  final String userName;
   final UserProfileSection selectedSection;
   final ValueChanged<UserProfileSection> onSectionSelected;
 
@@ -303,11 +299,19 @@ class _SettingsNavigation extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            'Settings',
+            style: context.textTheme.titleLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 24),
           Row(
             children: [
               Expanded(
                 child: Text(
-                  'Anonymoususer',
+                  userName,
                   style: context.textTheme.bodyMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -355,15 +359,17 @@ class _SettingsNavigation extends StatelessWidget {
             selected: selectedSection == UserProfileSection.userManagement,
             onTap: () => onSectionSelected(UserProfileSection.userManagement),
           ),
-          const _NavigationTile(
+          _NavigationTile(
             icon: Icons.person_outline,
             label: 'Roles & permissions',
-            selected: false,
+            selected: selectedSection == UserProfileSection.rolesAndPermissions,
+            onTap: () => onSectionSelected(UserProfileSection.rolesAndPermissions),
           ),
-          const _NavigationTile(
+          _NavigationTile(
             icon: Icons.credit_card_outlined,
             label: 'Billing',
-            selected: false,
+            selected: selectedSection == UserProfileSection.billing,
+            onTap: () => onSectionSelected(UserProfileSection.billing),
           ),
         ],
       ),

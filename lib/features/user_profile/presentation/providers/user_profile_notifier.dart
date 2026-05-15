@@ -7,7 +7,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   @override
   UserProfileState build() {
     _repository = ref.read(userProfileRepositoryProvider);
-    _load();
+    load();
     return const UserProfileState(isLoading: true);
   }
 
@@ -192,12 +192,27 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     }
   }
 
-  Future<void> _load() async {
-    final accountResult = await _repository.getAccount();
-    final notificationResult = await _repository.getNotificationPreferences();
-    final securityResult = await _repository.getSecuritySessions();
-    final organizationResult = await _repository.getOrganization();
-    final teamResult = await _repository.getTeamMembers();
+  Future<void> load() async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    final results = await Future.wait([
+      _repository.getAccount(),
+      _repository.getNotificationPreferences(),
+      _repository.getSecuritySessions(),
+      _repository.getOrganization(),
+      _repository.getTeamMembers(),
+      _repository.getRolesAndPermissions(),
+      _repository.getBillingInfo(),
+    ]);
+
+    final accountResult = results[0] as Result<ProfileAccount>;
+    final notificationResult = results[1] as Result<NotificationPreferences>;
+    final securityResult = results[2] as Result<List<SecuritySession>>;
+    final organizationResult = results[3] as Result<OrganizationProfile>;
+    final teamResult = results[4] as Result<List<TeamMember>>;
+    final rolesResult = results[5] as Result<List<RolePermission>>;
+    final billingResult = results[6] as Result<BillingInfo>;
+
+    final error = _getError(results);
 
     state = state.copyWith(
       account: _valueOrNull(accountResult),
@@ -205,8 +220,20 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       securitySessions: _valueOrNull(securityResult) ?? const [],
       organization: _valueOrNull(organizationResult),
       teamMembers: _valueOrNull(teamResult) ?? const [],
+      rolesAndPermissions: _valueOrNull(rolesResult) ?? const [],
+      billing: _valueOrNull(billingResult),
       isLoading: false,
+      error: error,
     );
+  }
+
+  String? _getError(List<dynamic> results) {
+    for (final result in results) {
+      if (result is Failure) {
+        return result.error.friendlyMessage;
+      }
+    }
+    return null;
   }
 
   T? _valueOrNull<T>(Result<T> result) {

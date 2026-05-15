@@ -13,6 +13,10 @@ class AppRouter {
     routes: [
       GoRoute(path: login, builder: (context, state) => const LoginView()),
       GoRoute(
+      path: home, // This is '/'
+      builder: (context, state) => const UserProfileView(),
+    ),
+      GoRoute(
         path: profile,
         builder: (context, state) => const UserProfileView(),
       ),

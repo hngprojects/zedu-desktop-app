@@ -9,6 +9,14 @@ class NotificationPreferences {
     required this.emailNotifications,
   });
 
+  factory NotificationPreferences.empty() => const NotificationPreferences(
+    mode: NotificationMode.allMessages,
+    fromTime: '12:00 AM',
+    toTime: '11:00 PM',
+    useDesktopSettings: true,
+    emailNotifications: false,
+  );
+
   final NotificationMode mode;
   final String fromTime;
   final String toTime;
