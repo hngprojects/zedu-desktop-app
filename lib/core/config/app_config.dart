@@ -3,8 +3,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class AppConfig {
   const AppConfig({required this.apiBaseUrl, required this.usesMockData});
 
-  /// Resolves config after [loadAppEnv] has run in [main] (`.env` then
-  /// `.env.example` as bundled assets; optional `--dart-define` overrides).
+  /// Resolves config after [loadAppEnv] has run in [main] (root `.env` /
+  /// `.env.example`, bundled as assets).
   ///
   /// Precedence: `--dart-define` wins, then dotenv keys from those files, then
   /// defaults. See [String.fromEnvironment](https://api.flutter.dev/flutter/dart-ui/String/String.fromEnvironment.html).
