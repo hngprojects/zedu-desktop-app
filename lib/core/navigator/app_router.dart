@@ -6,12 +6,27 @@ class AppRouter {
 
   static const home = '/home';
   static const login = '/login';
+  static const signup = '/signup';
+  static const forgotPassword = '/forgot-password';
+  static const resetPassword = '/reset-password';
 
   static final router = GoRouter(
-    initialLocation: home,
+    initialLocation: login,
     routes: [
       GoRoute(path: login, builder: (context, state) => const LoginView()),
       GoRoute(path: home, builder: (context, state) => const HomeView()),
+      GoRoute(path: signup, builder: (context, state) => const SignUpView()),
+      GoRoute(
+        path: forgotPassword,
+        builder: (context, state) => const ForgotPasswordView(),
+      ),
+      GoRoute(
+        path: resetPassword,
+        builder: (context, state) {
+          final email = state.extra as String? ?? '';
+          return ResetPasswordView(email: email);
+        },
+      ),
     ],
   );
 }

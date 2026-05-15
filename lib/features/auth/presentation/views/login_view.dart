@@ -69,45 +69,47 @@ class _LoginViewState extends ConsumerState<LoginView> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(80),
-        child: SafeArea(
-          child: Padding(
-            padding: context.symmetric(horizontal: 68, vertical: 28),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Image.asset('assets/pngs/zedu_logo.png', width: 83, height: 31),
-                Text.rich(
-                  TextSpan(
-                    text: 'Already have an account? ',
-                    style: context.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w400,
-                      color: context.colors.textPrimary,
-                      fontFamily: FontFamily.roboto,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: 'Sign up',
-                        style: context.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w400,
-                          color: context.colors.primary,
-                          fontFamily: FontFamily.roboto,
-                        ),
-                      ),
-                    ],
+      appBar: AppBar(
+        toolbarHeight: 80,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Image.asset('assets/pngs/zedu_logo.png', width: 83, height: 31),
+              Text.rich(
+                TextSpan(
+                  text: 'Already have an account? ',
+                  style: context.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: context.colors.textPrimary,
+                    fontFamily: FontFamily.roboto,
                   ),
+                  children: [
+                    TextSpan(
+                      text: 'Sign up',
+                      style: context.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w400,
+                        color: context.colors.primary,
+                        fontFamily: FontFamily.roboto,
+                      ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () => context.push(AppRouter.signup),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
       body: SingleChildScrollView(
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Center(
+          child: SizedBox(
+            width: 520,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -213,12 +215,15 @@ class _LoginViewState extends ConsumerState<LoginView> {
                               const Text('Remember me'),
                             ],
                           ),
-                          Text(
-                            'Forgot Password?',
-                            style: context.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w400,
-                              color: context.colors.primary,
-                              fontFamily: FontFamily.roboto,
+                          GestureDetector(
+                            onTap: () => context.push(AppRouter.forgotPassword),
+                            child: Text(
+                              'Forgot Password?',
+                              style: context.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w400,
+                                color: context.colors.primary,
+                                fontFamily: FontFamily.roboto,
+                              ),
                             ),
                           ),
                         ],
@@ -243,6 +248,23 @@ class _LoginViewState extends ConsumerState<LoginView> {
                       fontFamily: FontFamily.roboto,
                     ),
                   ),
+                ),
+                context.gapV(32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Don't have an account? "),
+                    GestureDetector(
+                      onTap: () => context.push(AppRouter.signup),
+                      child: Text(
+                        'Sign up',
+                        style: TextStyle(
+                          color: context.colors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 context.gapV(32),
               ],
