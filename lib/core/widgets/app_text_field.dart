@@ -103,15 +103,15 @@ class _AppTextFieldState extends State<AppTextField> {
                 vertical: 18,
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(AppTheme.fieldRadius),
                 borderSide: BorderSide(color: context.colors.borderOutline),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(AppTheme.fieldRadius),
                 borderSide: BorderSide(color: context.colors.borderOutline),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(AppTheme.fieldRadius),
                 borderSide: BorderSide(color: context.colors.primary),
               ),
               prefixIcon: widget.prefix != null

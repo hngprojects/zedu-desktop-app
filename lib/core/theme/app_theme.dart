@@ -1,7 +1,8 @@
 import 'package:zedu/core/core.dart';
 
 abstract final class AppTheme {
-  static const _buttonRadius = 6.0;
+  static const fieldRadius = 6.0;
+  static const _buttonRadius = fieldRadius;
 
   static final _buttonShape = RoundedRectangleBorder(
     borderRadius: BorderRadius.circular(_buttonRadius),

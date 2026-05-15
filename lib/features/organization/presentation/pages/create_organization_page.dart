@@ -1,7 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
-
 class CreateOrganizationPage extends ConsumerStatefulWidget {
   const CreateOrganizationPage({super.key});
 
@@ -12,28 +11,19 @@ class CreateOrganizationPage extends ConsumerStatefulWidget {
 
 class _CreateOrganizationPageState
     extends ConsumerState<CreateOrganizationPage> {
+  static const _countryItemHeight = 40.0;
+
   final _formKey = GlobalKey<FormState>();
   final _orgNameController = TextEditingController();
   final _orgTypeController = TextEditingController();
-  String? _selectedCountry;
+  final List<Country> _countries = CountryService().getAll();
+  Country? _selectedCountry;
 
   @override
   void dispose() {
     _orgNameController.dispose();
     _orgTypeController.dispose();
     super.dispose();
-  }
-
-  void _showCountryPicker() {
-    showCountryPicker(
-      context: context,
-      showPhoneCode: false,
-      onSelect: (Country country) {
-        setState(() {
-          _selectedCountry = country.name;
-        });
-      },
-    );
   }
 
   Future<void> _submit() async {
@@ -47,11 +37,13 @@ class _CreateOrganizationPageState
       return;
     }
 
-    ref.read(createOrganizationControllerProvider.notifier).create(
+    ref
+        .read(createOrganizationControllerProvider.notifier)
+        .create(
           CreateOrganizationRequest(
             name: _orgNameController.text.trim(),
             type: _orgTypeController.text.trim(),
-            country: _selectedCountry!,
+            country: _selectedCountry!.name,
           ),
         );
   }
@@ -90,7 +82,10 @@ class _CreateOrganizationPageState
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 520),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 40.0,
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -141,46 +136,71 @@ class _CreateOrganizationPageState
                       ),
                     ),
                     const SizedBox(height: 6),
-                    GestureDetector(
-                      onTap: _showCountryPicker,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
+                    DropdownButtonFormField<Country>(
+                      key: const Key('country_dropdown'),
+                      value: _selectedCountry,
+                      isExpanded: true,
+                      itemHeight: _countryItemHeight,
+                      menuMaxHeight: _countryItemHeight * 7,
+                      style: context.textTheme.bodyLarge?.copyWith(
+                        color: context.colors.textPrimary,
+                        fontFamily: FontFamily.roboto,
+                      ),
+                      hint: Text(
+                        'Select an option...',
+                        style: context.textTheme.bodyLarge?.copyWith(
+                          color: context.colors.textHint,
+                          fontFamily: FontFamily.roboto,
+                        ),
+                      ),
+                      icon: Icon(
+                        Icons.keyboard_arrow_down,
+                        color: context.colors.textHint,
+                      ),
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 18,
                         ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: context.colors.borderOutline),
-                          borderRadius: BorderRadius.circular(6),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.fieldRadius,
+                          ),
+                          borderSide: BorderSide(
+                            color: context.colors.borderOutline,
+                          ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              _selectedCountry ?? 'Select an option...',
-                              style: context.textTheme.bodyLarge?.copyWith(
-                                color: _selectedCountry == null
-                                    ? context.colors.textHint
-                                    : context.colors.textPrimary,
-                                fontFamily: FontFamily.roboto,
-                              ),
-                            ),
-                            Row(
-                              children: [
-                                Container(
-                                  height: 20,
-                                  width: 1,
-                                  color: context.colors.borderOutline,
-                                  margin: const EdgeInsets.only(right: 8),
-                                ),
-                                Icon(
-                                  Icons.keyboard_arrow_down,
-                                  color: context.colors.textHint,
-                                ),
-                              ],
-                            ),
-                          ],
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.fieldRadius,
+                          ),
+                          borderSide: BorderSide(
+                            color: context.colors.borderOutline,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.fieldRadius,
+                          ),
+                          borderSide: BorderSide(color: context.colors.primary),
                         ),
                       ),
+                      items: _countries
+                          .map(
+                            (country) => DropdownMenuItem<Country>(
+                              value: country,
+                              child: Text(
+                                country.name,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (country) {
+                        setState(() {
+                          _selectedCountry = country;
+                        });
+                      },
                     ),
                     const SizedBox(height: 32),
                     AppButton(
