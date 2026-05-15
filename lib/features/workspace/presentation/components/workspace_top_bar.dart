@@ -5,136 +5,118 @@ class WorkspaceTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Container(
-      height: 52,
-      color: const Color(0xFF302F84),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      height: context.s(52),
+      color: colors.primary,
+      padding: context.symmetric(horizontal: 12),
       child: Row(
         children: [
-          SizedBox(
-            width: 380,
-            child: Row(
-              children: [
-                _WorkspaceSwitcherButton(),
-                const SizedBox(width: 12),
-                const _WorkspaceAvatar(initials: 'TC', unreadCount: 15),
-                const SizedBox(width: 8),
-                const _WorkspaceAvatar(initials: 'AD', unreadCount: 23),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.arrow_back_rounded),
-            color: Colors.white54,
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.arrow_forward_rounded),
-            color: Colors.white54,
-          ),
-          const SizedBox(width: 12),
-          const SizedBox(width: 301, child: _SearchBox()),
+          const _WorkspaceSwitcherButton(),
           const Spacer(),
-          const _CreditsPill(),
+          SizedBox(width: context.s(420), child: const _SearchBox()),
+          const Spacer(),
         ],
       ),
     );
   }
 }
 
-class _WorkspaceSwitcherButton extends StatelessWidget {
+class _WorkspaceSwitcherButton extends StatefulWidget {
   const _WorkspaceSwitcherButton();
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 36,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        children: [
-          const CircleAvatar(
-            radius: 12,
-            backgroundColor: Colors.white,
-            child: Icon(
-              Icons.workspaces_outline,
-              size: 15,
-              color: Color(0xFF3F3D97),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'HNG Workspace',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(width: 4),
-          const Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: Colors.white,
-            size: 18,
-          ),
-        ],
-      ),
-    );
-  }
+  State<_WorkspaceSwitcherButton> createState() =>
+      _WorkspaceSwitcherButtonState();
 }
 
-class _WorkspaceAvatar extends StatelessWidget {
-  const _WorkspaceAvatar({required this.initials, required this.unreadCount});
+class _WorkspaceSwitcherButtonState extends State<_WorkspaceSwitcherButton> {
+  String selectedWorkspace = 'HNG Workspace';
 
-  final String initials;
-  final int unreadCount;
+  final List<String> workspaces = [
+    'HNG Workspace',
+    'Design Team',
+    'Dev Cohort',
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          width: 30,
-          height: 30,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: const Color(0xFFFF9B55),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.white, width: 2),
-          ),
-          child: Text(
-            initials,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-        Positioned(
-          right: -5,
-          top: -5,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFF3B30),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: const Color(0xFF302F84), width: 1.5),
-            ),
-            child: Text(
-              unreadCount.toString(),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Colors.white,
-                fontSize: 8,
-                fontWeight: FontWeight.w800,
+    final colors = context.colors;
+
+    return PopupMenuButton<String>(
+      onSelected: (value) {
+        setState(() {
+          selectedWorkspace = value;
+        });
+      },
+      offset: Offset(0, context.s(36)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(context.s(6)),
+      ),
+      color: colors.background,
+      itemBuilder: (context) => workspaces
+          .map(
+            (workspace) => PopupMenuItem<String>(
+              value: workspace,
+              child: Text(
+                workspace,
+                style: context.textTheme.bodySmall?.copyWith(
+                  color: colors.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-          ),
+          )
+          .toList(),
+      child: Container(
+        height: context.s(32),
+        padding: context.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: colors.background.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(context.s(6)),
         ),
-      ],
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: context.s(18),
+              height: context.s(18),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: colors.background,
+                  width: context.s(2),
+                ),
+                borderRadius: BorderRadius.circular(context.s(3)),
+              ),
+              child: Text(
+                '[]',
+                style: context.textTheme.labelSmall?.copyWith(
+                  color: colors.background,
+                  fontWeight: FontWeight.w700,
+                  fontSize: context.s(9),
+                  height: 1,
+                ),
+              ),
+            ),
+            context.gapH(6),
+            Text(
+              selectedWorkspace,
+              style: context.textTheme.labelMedium?.copyWith(
+                color: colors.background,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            context.gapH(4),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: context.s(16),
+              color: colors.background.withValues(alpha: 0.8),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -144,58 +126,37 @@ class _SearchBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 32,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.search_rounded, color: Colors.white, size: 18),
-          const SizedBox(width: 8),
-          Text(
-            'Search Files',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+    final colors = context.colors;
 
-class _CreditsPill extends StatelessWidget {
-  const _CreditsPill();
-
-  @override
-  Widget build(BuildContext context) {
     return Container(
-      height: 28,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      height: context.s(32),
+      alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(5),
+        color: colors.background.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(context.s(6)),
       ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.credit_card_rounded,
-            size: 14,
-            color: Color(0xFF3F3D97),
+      child: TextField(
+        cursorColor: colors.background,
+        style: context.textTheme.labelMedium?.copyWith(
+          color: colors.background,
+          fontWeight: FontWeight.w400,
+        ),
+        decoration: InputDecoration(
+          isDense: true,
+          border: InputBorder.none,
+          hintText: 'Search messages...',
+          hintStyle: context.textTheme.labelMedium?.copyWith(
+            color: colors.background.withValues(alpha: 0.7),
+            fontWeight: FontWeight.w400,
           ),
-          const SizedBox(width: 6),
-          Text(
-            '483 AI Credits',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: const Color(0xFF3F3D97),
-              fontWeight: FontWeight.w600,
-            ),
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            size: context.s(16),
+            color: colors.background.withValues(alpha: 0.85),
           ),
-        ],
+          prefixIconConstraints: BoxConstraints(minWidth: context.s(32)),
+          contentPadding: context.symmetric(horizontal: 8, vertical: 6),
+        ),
       ),
     );
   }

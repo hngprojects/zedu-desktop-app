@@ -8,6 +8,7 @@ class WorkspaceSidebar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
     final workspaceState = ref.watch(workspaceProvider);
     final workspaceNotifier = ref.read(workspaceProvider.notifier);
 
@@ -16,20 +17,12 @@ class WorkspaceSidebar extends ConsumerWidget {
         const _SidebarIconRail(),
         Expanded(
           child: Container(
-            color: const Color(0xFF3F3D97),
+            color: colors.primary,
             child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: context.only(top: 16),
               children: [
                 const _SidebarHeader(),
-                const _SidebarTopItem(
-                  icon: Icons.forum_outlined,
-                  title: 'Threads',
-                ),
-                const _SidebarTopItem(
-                  icon: Icons.dashboard_outlined,
-                  title: 'Overview',
-                ),
-                const SizedBox(height: 12),
+                context.gapV(14),
                 ...workspaceState.categories.map(
                   (category) => WorkspaceSidebarSection(
                     category: category,
@@ -56,37 +49,47 @@ class _SidebarIconRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Container(
-      width: WorkspaceSidebar._iconRailWidth,
+      width: context.s(WorkspaceSidebar._iconRailWidth),
       decoration: BoxDecoration(
-        color: const Color(0xFF34318B),
+        color: colors.primary.withValues(alpha: 0.9),
         border: Border(
           right: BorderSide(
-            color: Colors.white.withValues(alpha: 0.08),
-            width: 1,
+            color: colors.primary.withValues(alpha: 0.65),
+            width: context.s(4),
           ),
         ),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          SizedBox(height: 10),
-          _RailItem(icon: Icons.home_rounded, label: 'Home', isActive: true),
-          _RailItem(icon: Icons.chat_bubble_outline_rounded, label: 'DMs'),
-          _RailItem(icon: Icons.person_outline_rounded, label: 'People'),
-          _RailItem(icon: Icons.android_outlined, label: 'Agents'),
-          _RailItem(icon: Icons.insert_drive_file_outlined, label: 'Files'),
-          SizedBox(height: 16),
-          Spacer(),
-          _RailItem(icon: Icons.hub_outlined, label: ''),
-          _RailItem(
+          context.gapV(12),
+          const _RailItem(
+            icon: Icons.home_rounded,
+            label: 'Home',
+            isActive: true,
+          ),
+          const _RailItem(
+            icon: Icons.chat_bubble_outline_rounded,
+            label: 'DMs',
+          ),
+          const _RailItem(icon: Icons.person_outline_rounded, label: 'People'),
+          const _RailItem(
+            icon: Icons.insert_drive_file_outlined,
+            label: 'Files',
+          ),
+          const _RailItem(icon: Icons.call_outlined, label: 'Buzz'),
+          const Spacer(),
+          const _RailItem(
             icon: Icons.notifications_none_rounded,
             label: '',
             showNotification: true,
           ),
-          _RailItem(icon: Icons.settings_outlined, label: ''),
-          SizedBox(height: 10),
-          _ProfileAvatar(),
-          SizedBox(height: 10),
+          const _RailItem(icon: Icons.settings_outlined, label: ''),
+          context.gapV(10),
+          const _ProfileAvatar(),
+          context.gapV(10),
         ],
       ),
     );
@@ -98,28 +101,40 @@ class _SidebarHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 52,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 12, 0),
+    final colors = context.colors;
+
+    return Padding(
+      padding: context.symmetric(horizontal: 16),
+      child: SizedBox(
+        height: context.s(32),
         child: Row(
           children: [
             Expanded(
-              child: Text(
-                'Home',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      'Anonymoususer',
+                      overflow: TextOverflow.ellipsis,
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: colors.background,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  context.gapH(4),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: context.s(14),
+                    color: colors.background.withValues(alpha: 0.65),
+                  ),
+                ],
               ),
             ),
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.edit_outlined),
-              color: Colors.white70,
-              iconSize: 18,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
+            Icon(
+              Icons.add_rounded,
+              size: context.s(20),
+              color: colors.background,
             ),
           ],
         ),
@@ -143,74 +158,77 @@ class _RailItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final hasLabel = label.isNotEmpty;
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          if (isActive)
-            Positioned(
-              left: 0,
-              child: Container(
-                width: 3,
-                height: 16,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+        Container(
+          width: context.s(50),
+          margin: context.symmetric(vertical: 3, horizontal: 5),
+          padding: context.symmetric(vertical: hasLabel ? 7 : 8),
+          decoration: BoxDecoration(
+            color: isActive
+                ? colors.background.withValues(alpha: 0.12)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(context.s(8)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: context.s(18),
+                color: colors.background.withValues(alpha: 0.95),
               ),
-            ),
-          Container(
-            width: 48,
-            margin: const EdgeInsets.symmetric(vertical: 3, horizontal: 6),
-            padding: EdgeInsets.symmetric(vertical: hasLabel ? 6 : 8),
-            decoration: BoxDecoration(
-              color: isActive
-                  ? Colors.white.withValues(alpha: 0.10)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 18, color: Colors.white),
-                if (hasLabel) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Colors.white,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w400,
-                    ),
+              if (hasLabel) ...[
+                context.gapV(3),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.textTheme.labelSmall?.copyWith(
+                    color: colors.background.withValues(alpha: 0.95),
+                    fontSize: context.s(9),
+                    fontWeight: FontWeight.w500,
                   ),
-                ],
+                ),
               ],
+            ],
+          ),
+        ),
+        if (isActive)
+          Positioned(
+            left: 0,
+            child: Container(
+              width: context.s(3),
+              height: context.s(20),
+              decoration: BoxDecoration(
+                color: colors.background,
+                borderRadius: BorderRadius.circular(context.s(2)),
+              ),
             ),
           ),
-          if (showNotification)
-            Positioned(
-              right: 10,
-              top: 5,
-              child: Container(
-                width: 9,
-                height: 9,
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  border: Border.all(
-                    color: const Color(0xFF34318B),
-                    width: 1.5,
-                  ),
-                  shape: BoxShape.circle,
+        if (showNotification)
+          Positioned(
+            right: context.s(9),
+            top: context.s(4),
+            child: Container(
+              width: context.s(8),
+              height: context.s(8),
+              decoration: BoxDecoration(
+                color: colors.error,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: colors.primary,
+                  width: context.s(1.5),
                 ),
               ),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
@@ -220,63 +238,38 @@ class _ProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 2),
-      child: Stack(
-        alignment: Alignment.bottomRight,
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.white, width: 2),
-            ),
-            child: const Text(
-              'AP',
-              style: TextStyle(
-                color: Color(0xFF34318B),
-                fontWeight: FontWeight.w800,
-                fontSize: 13,
-              ),
+    final colors = context.colors;
+
+    return Stack(
+      alignment: Alignment.bottomRight,
+      children: [
+        Container(
+          width: context.s(38),
+          height: context.s(38),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: colors.background,
+            borderRadius: BorderRadius.circular(context.s(10)),
+          ),
+          child: Text(
+            'AP',
+            style: context.textTheme.bodySmall?.copyWith(
+              color: colors.primary,
+              fontWeight: FontWeight.w800,
+              fontSize: context.s(13),
             ),
           ),
-          Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(
-              color: Colors.green,
-              shape: BoxShape.circle,
-              border: Border.all(color: Color(0xFF34318B), width: 2),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SidebarTopItem extends StatelessWidget {
-  const _SidebarTopItem({required this.icon, required this.title});
-
-  final IconData icon;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      dense: true,
-      minLeadingWidth: 20,
-      leading: Icon(icon, size: 16, color: Colors.white70),
-      title: Text(
-        title,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Colors.white70,
-          fontWeight: FontWeight.w500,
         ),
-      ),
+        Container(
+          width: context.s(11),
+          height: context.s(11),
+          decoration: BoxDecoration(
+            color: colors.success,
+            shape: BoxShape.circle,
+            border: Border.all(color: colors.primary, width: context.s(2)),
+          ),
+        ),
+      ],
     );
   }
 }

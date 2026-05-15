@@ -31,7 +31,7 @@ class AppPalette {
 
   static const light = AppPalette(
     brightness: Brightness.light,
-    primary: Color(0xFF7141F8),
+    primary: Color(0xFF4A4AAF),
     background: Color(0xFFFCFBFF),
     textPrimary: Color(0xFF1E1E1E),
     textSecondary: Color(0xFF0A090B),

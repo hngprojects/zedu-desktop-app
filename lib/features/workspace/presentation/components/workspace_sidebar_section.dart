@@ -17,27 +17,41 @@ class WorkspaceSidebarSection extends StatelessWidget {
   final VoidCallback onToggle;
   final ValueChanged<String> onItemSelected;
 
+  bool get _isChannels => category.title.toLowerCase() == 'channels';
+  bool get _isPeople => category.title.toLowerCase() == 'people';
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _SectionHeader(
-          category: category,
-          isCollapsed: isCollapsed,
-          onToggle: onToggle,
-        ),
-        if (!isCollapsed)
-          if (category.items.isEmpty)
-            const _EmptyCategoryState()
-          else
-            ...category.items.map(
-              (item) => _WorkspaceSidebarItem(
-                item: item,
-                isSelected: item.id == selectedItemId,
-                onTap: () => onItemSelected(item.id),
+    return Padding(
+      padding: context.only(bottom: 8),
+      child: Column(
+        children: [
+          _SectionHeader(
+            category: category,
+            isCollapsed: isCollapsed,
+            onToggle: onToggle,
+          ),
+          if (!isCollapsed) ...[
+            if (category.items.isEmpty)
+              _EmptyCategoryState(
+                message: _isPeople
+                    ? 'No recent chats. Start a new conversation!'
+                    : 'No items available',
+              )
+            else
+              ...category.items.map(
+                (item) => _WorkspaceSidebarItem(
+                  item: item,
+                  isSelected: item.id == selectedItemId,
+                  onTap: () => onItemSelected(item.id),
+                ),
               ),
-            ),
-      ],
+            if (_isChannels)
+              const _SidebarActionButton(title: 'View all channels'),
+            if (_isPeople) const _SidebarActionButton(title: 'View all people'),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -55,41 +69,32 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasUnread = category.totalUnreadCount > 0;
+    final colors = context.colors;
 
     return InkWell(
       onTap: onToggle,
-      mouseCursor: SystemMouseCursors.click,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+        padding: context.only(left: 16, right: 16, top: 6, bottom: 6),
         child: Row(
           children: [
             Icon(
               isCollapsed
                   ? Icons.keyboard_arrow_right_rounded
                   : Icons.keyboard_arrow_down_rounded,
-              color: Colors.white70,
-              size: 18,
+              color: colors.background.withValues(alpha: 0.65),
+              size: context.s(16),
             ),
-            const SizedBox(width: 4),
+            context.gapH(4),
             Expanded(
               child: Text(
                 category.title,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: Colors.white70,
-                  fontWeight: FontWeight.w700,
+                style: context.textTheme.labelSmall?.copyWith(
+                  color: colors.background.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            if (hasUnread)
-              _UnreadBadge(count: category.totalUnreadCount)
-            else
-              const Icon(
-                Icons.more_vert_rounded,
-                color: Colors.white38,
-                size: 16,
-              ),
           ],
         ),
       ),
@@ -110,70 +115,101 @@ class _WorkspaceSidebarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final isChannel = item.type == WorkspaceItemType.channel;
 
     return Container(
-      constraints: const BoxConstraints(minHeight: 32),
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      constraints: BoxConstraints(minHeight: context.s(28)),
+      margin: context.only(left: 16, right: 16, bottom: 4),
       decoration: BoxDecoration(
-        color: isSelected ? Colors.white.withValues(alpha: 0.16) : null,
-        borderRadius: BorderRadius.circular(6),
+        color: isSelected
+            ? colors.background.withValues(alpha: 0.08)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(context.s(6)),
       ),
-      child: ListTile(
-        mouseCursor: SystemMouseCursors.click,
-        dense: true,
-        minLeadingWidth: 20,
-        leading: isChannel
-            ? const Text(
-                '#',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontWeight: FontWeight.w800,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(context.s(6)),
+        child: Padding(
+          padding: context.symmetric(horizontal: 8, vertical: 5),
+          child: Row(
+            children: [
+              if (isChannel)
+                Text(
+                  '#',
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: colors.background.withValues(alpha: 0.7),
+                    fontWeight: FontWeight.w700,
+                  ),
+                )
+              else
+                CircleAvatar(
+                  radius: context.s(10),
+                  backgroundColor: colors.background,
+                  child: Icon(
+                    Icons.person,
+                    size: context.s(13),
+                    color: colors.primary,
+                  ),
                 ),
-              )
-            : const CircleAvatar(
-                radius: 10,
-                backgroundColor: Colors.white,
-                child: Icon(Icons.person, size: 13, color: Color(0xFF7141F8)),
+              context.gapH(10),
+              Expanded(
+                child: Text(
+                  item.name,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: colors.background.withValues(alpha: 0.75),
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                ),
               ),
-        title: Text(
-          item.name,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Colors.white,
-            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+            ],
           ),
         ),
-        trailing: item.unreadCount > 0
-            ? _UnreadBadge(count: item.unreadCount)
-            : null,
-        onTap: onTap,
       ),
     );
   }
 }
 
-class _UnreadBadge extends StatelessWidget {
-  const _UnreadBadge({required this.count});
+class _SidebarActionButton extends StatelessWidget {
+  const _SidebarActionButton({required this.title});
 
-  final int count;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 20),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: Colors.red,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        count > 99 ? '99+' : count.toString(),
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w800,
-          fontSize: 10,
+    final colors = context.colors;
+
+    return Padding(
+      padding: context.only(left: 16, right: 16, top: 4, bottom: 8),
+      child: Container(
+        height: context.s(32),
+        padding: context.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: colors.background.withValues(alpha: 0.02),
+          border: Border.all(
+            color: colors.borderOutline.withValues(alpha: 0.65),
+            width: context.s(1),
+          ),
+          borderRadius: BorderRadius.circular(context.s(6)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: context.textTheme.labelMedium?.copyWith(
+                  color: colors.background.withValues(alpha: 0.72),
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: context.s(16),
+              color: colors.background.withValues(alpha: 0.65),
+            ),
+          ],
         ),
       ),
     );
@@ -181,19 +217,23 @@ class _UnreadBadge extends StatelessWidget {
 }
 
 class _EmptyCategoryState extends StatelessWidget {
-  const _EmptyCategoryState();
+  const _EmptyCategoryState({required this.message});
+
+  final String message;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(40, 4, 18, 8),
+      padding: context.only(left: 40, right: 16, top: 2, bottom: 6),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
-          'No items available',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Colors.white54,
-            fontStyle: FontStyle.italic,
+          message,
+          style: context.textTheme.labelSmall?.copyWith(
+            color: colors.background.withValues(alpha: 0.45),
+            fontSize: context.s(9),
           ),
         ),
       ),
