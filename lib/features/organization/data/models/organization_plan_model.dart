@@ -23,18 +23,18 @@ class OrganizationPlanModel extends OrganizationPlan {
 
   factory OrganizationPlanModel.fromJson(Map<String, dynamic> json) {
     return OrganizationPlanModel(
-      id: json['id'] as String,
-      organizationId: json['organisation_id'] as String,
-      planId: json['plan_id'] as String,
-      startedAt: DateTime.parse(json['started_at'] as String),
-      endedAt: DateTime.parse(json['ended_at'] as String),
-      status: json['status'] as String,
-      sessionId: json['session_id'] as String,
-      invoicePdfUrl: json['invoice_pdf_url'] as String,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      id: json['id'] as String? ?? '',
+      organizationId: json['organisation_id'] as String? ?? '',
+      planId: json['plan_id'] as String? ?? '',
+      startedAt: json['started_at'] != null ? DateTime.parse(json['started_at'] as String) : DateTime.now(),
+      endedAt: json['ended_at'] != null ? DateTime.parse(json['ended_at'] as String) : DateTime.now(),
+      status: json['status'] as String? ?? '',
+      sessionId: json['session_id'] as String? ?? '',
+      invoicePdfUrl: json['invoice_pdf_url'] as String? ?? '',
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : DateTime.now(),
+      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : DateTime.now(),
       planDetails: OrganizationPlanDetailsModel.fromJson(
-        json['plan_details'] as Map<String, dynamic>,
+        json['plan_details'] as Map<String, dynamic>? ?? {},
       ),
     );
   }

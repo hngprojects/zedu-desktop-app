@@ -14,14 +14,14 @@ class OrganizationPlanDetailsModel extends PlanDetails {
 
   factory OrganizationPlanDetailsModel.fromJson(Map<String, dynamic> json) {
     return OrganizationPlanDetailsModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
-      benefits: List<String>.from(json['benefits'] as List),
-      fee: json['fee'] as num,
-      credits: json['credits'] as num,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      benefits: json['benefits'] != null ? List<String>.from(json['benefits'] as List) : [],
+      fee: json['fee'] as num? ?? 0,
+      credits: json['credits'] as num? ?? 0,
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : DateTime.now(),
+      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : DateTime.now(),
     );
   }
 

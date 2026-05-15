@@ -51,7 +51,7 @@ class _CreateOrganizationPageState
           CreateOrganizationRequest(
             name: _orgNameController.text.trim(),
             type: _orgTypeController.text.trim(),
-            country: _selectedCountry,
+            country: _selectedCountry!,
           ),
         );
   }

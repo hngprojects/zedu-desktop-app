@@ -22,23 +22,23 @@ class OrganizationModel extends Organization {
 
   factory OrganizationModel.fromJson(Map<String, dynamic> json) {
     return OrganizationModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
-      email: json['email'] as String,
-      country: json['country'] as String,
-      industry: json['industry'] as String,
-      location: json['location'] as String,
-      ownerId: json['owner_id'] as String,
-      logoUrl: json['logo_url'] as String,
-      channelsCount: json['channels_count'] as int,
-      totalMessagesCount: json['total_messages_count'] as int,
-      userRole: json['user_role'] as String,
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      country: json['country'] as String? ?? '',
+      industry: json['industry'] as String? ?? '',
+      location: json['location'] as String? ?? '',
+      ownerId: json['owner_id'] as String? ?? '',
+      logoUrl: json['logo_url'] as String? ?? '',
+      channelsCount: json['channels_count'] as int? ?? 0,
+      totalMessagesCount: json['total_messages_count'] as int? ?? 0,
+      userRole: json['user_role'] as String? ?? '',
       organizationPlan: OrganizationPlanModel.fromJson(
-        json['organisation_plan'] as Map<String, dynamic>,
+        json['organisation_plan'] as Map<String, dynamic>? ?? {},
       ),
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : DateTime.now(),
+      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : DateTime.now(),
     );
   }
 
