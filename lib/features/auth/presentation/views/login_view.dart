@@ -44,7 +44,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
           type: AppToastType.success,
           message: 'Logged in successfully!',
         );
-        context.go(AppRouter.home);
+        context.go(AppRouter.createOrganization);
       }
       if (next.error != null && previous?.error != next.error) {
         AppToastService.show(
