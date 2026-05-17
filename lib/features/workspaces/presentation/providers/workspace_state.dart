@@ -1,4 +1,4 @@
-import 'package:zedu/features/workspaces/data/models/workspace.dart';
+import 'package:zedu/features/features.dart';
 
 class WorkspaceState {
   final List<Workspace> workspaces;

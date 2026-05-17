@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zedu/features/workspaces/data/models/workspace.dart';
-import 'package:zedu/features/workspaces/presentation/providers/workspace_state.dart';
+import 'package:zedu/features/features.dart';
 
 class WorkspaceNotifier extends Notifier<WorkspaceState> {
   @override
