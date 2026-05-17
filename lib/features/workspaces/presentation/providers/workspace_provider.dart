@@ -52,7 +52,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     state = state.copyWith(isLoading: true);
 
     // Simulate network delay for switching
-    await Future.delayed(const Duration(milliseconds: 800));
+    await Future<void>.delayed(const Duration(milliseconds: 800));
 
     state = state.copyWith(
       selectedWorkspace: workspace,

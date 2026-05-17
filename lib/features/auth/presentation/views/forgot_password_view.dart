@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -49,7 +48,6 @@ class _ForgotPasswordViewState extends ConsumerState<ForgotPasswordView> {
     });
 
     final authState = ref.watch(authNotifierProvider);
-    final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: Colors.white,

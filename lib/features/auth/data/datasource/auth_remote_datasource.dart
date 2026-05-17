@@ -93,12 +93,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       if (_config.usesMockData) {
         AppLogger.d('Using mock data for POST /auth/register', tag: _tag);
-        await Future.delayed(const Duration(milliseconds: 800));
+        await Future<void>.delayed(const Duration(milliseconds: 800));
         return;
       }
 
       AppLogger.d('POST auth/register — $email', tag: _tag);
-      await _apiBaseService.post(
+      await _apiBaseService.post<dynamic>(
         path: 'auth/register',
         data: {'email': email, 'password': password},
       );
@@ -115,12 +115,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       if (_config.usesMockData) {
         AppLogger.d('Using mock data for POST /auth/forgot-password', tag: _tag);
-        await Future.delayed(const Duration(milliseconds: 800));
+        await Future<void>.delayed(const Duration(milliseconds: 800));
         return;
       }
 
       AppLogger.d('POST auth/password-reset — $email', tag: _tag);
-      await _apiBaseService.post(
+      await _apiBaseService.post<dynamic>(
         path: 'auth/password-reset',
         data: {'email': email},
       );
@@ -141,12 +141,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       if (_config.usesMockData) {
         AppLogger.d('Using mock data for POST /auth/reset-password', tag: _tag);
-        await Future.delayed(const Duration(milliseconds: 800));
+        await Future<void>.delayed(const Duration(milliseconds: 800));
         return;
       }
 
       AppLogger.d('POST /auth/reset-password — $email', tag: _tag);
-      await _apiBaseService.post(
+      await _apiBaseService.post<dynamic>(
         path: 'auth/reset-password',
         data: {
           'email': email,
