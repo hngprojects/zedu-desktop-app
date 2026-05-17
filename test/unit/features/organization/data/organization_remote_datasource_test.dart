@@ -23,11 +23,7 @@ void main() {
       when(
         () => mockApi.post<Map<String, dynamic>>(
           path: '/organisations',
-          data: {
-            'name': 'Zedu',
-            'type': 'Education',
-            'country': 'Nigeria',
-          },
+          data: {'name': 'Zedu', 'type': 'Education', 'country': 'Nigeria'},
         ),
       ).thenAnswer(
         (_) async => ApiResponseModel<Map<String, dynamic>>(
@@ -45,7 +41,7 @@ void main() {
               'channels_count': 0,
               'total_messages_count': 0,
               'user_role': 'owner',
-              'organisation_plan': {},
+              'organisation_plan': <String, dynamic>{},
               'created_at': '2026-01-01T00:00:00.000Z',
               'updated_at': '2026-01-02T00:00:00.000Z',
             },
@@ -67,11 +63,7 @@ void main() {
       verify(
         () => mockApi.post<Map<String, dynamic>>(
           path: '/organisations',
-          data: {
-            'name': 'Zedu',
-            'type': 'Education',
-            'country': 'Nigeria',
-          },
+          data: {'name': 'Zedu', 'type': 'Education', 'country': 'Nigeria'},
         ),
       ).called(1);
     });

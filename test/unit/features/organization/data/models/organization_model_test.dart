@@ -17,7 +17,7 @@ void main() {
         'channels_count': 2,
         'total_messages_count': 10,
         'user_role': 'owner',
-        'organisation_plan': {},
+        'organisation_plan': <String, dynamic>{},
         'created_at': '2026-01-01T00:00:00.000Z',
         'updated_at': '2026-01-02T00:00:00.000Z',
       };
@@ -32,10 +32,7 @@ void main() {
 
     test('parses country when country is a map', () {
       final json = baseJson()
-        ..['country'] = {
-          'name': 'Nigeria',
-          'iso2_cc': 'NG',
-        };
+        ..['country'] = {'name': 'Nigeria', 'iso2_cc': 'NG'};
       final model = OrganizationModel.fromJson(json);
 
       expect(model.country, 'Nigeria');
@@ -50,10 +47,7 @@ void main() {
 
     test('parses user role when user_role is a map', () {
       final json = baseJson()
-        ..['user_role'] = {
-          'name': 'admin',
-          'id': 'role-1',
-        };
+        ..['user_role'] = {'name': 'admin', 'id': 'role-1'};
       final model = OrganizationModel.fromJson(json);
 
       expect(model.userRole, 'admin');

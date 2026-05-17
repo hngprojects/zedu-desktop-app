@@ -1,7 +1,6 @@
 import 'package:zedu/features/features.dart';
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/organization/presentation/pages/create_organization_page.dart';
-import 'package:zedu/features/organization/presentation/pages/organization_home_page.dart';
+
 
 class AppRouter {
   const AppRouter._();

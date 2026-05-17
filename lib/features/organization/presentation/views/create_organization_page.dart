@@ -64,11 +64,11 @@ class _CreateOrganizationPageState
             type: AppToastType.success,
             message: 'Organization created successfully',
           );
-          Future.delayed(const Duration(seconds: 4), () {
-            if (mounted) {
-              context.go(AppRouter.organizationHome);
-            }
-          });
+          // Future.delayed(const Duration(seconds: 4), () {
+          //   if (mounted) {
+          context.go(AppRouter.organizationHome);
+          //   }
+          // });
         }
       }
     });
@@ -138,7 +138,7 @@ class _CreateOrganizationPageState
                     const SizedBox(height: 6),
                     DropdownButtonFormField<Country>(
                       key: const Key('country_dropdown'),
-                      value: _selectedCountry,
+                      initialValue: _selectedCountry,
                       isExpanded: true,
                       itemHeight: _countryItemHeight,
                       menuMaxHeight: _countryItemHeight * 7,
