@@ -66,7 +66,7 @@ class HomeView extends ConsumerWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -106,7 +106,7 @@ class HomeView extends ConsumerWidget {
                     constraints: const BoxConstraints(maxWidth: 400),
                     height: 32,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Row(
@@ -159,7 +159,7 @@ class _SidebarRail extends StatelessWidget {
       width: 70,
       decoration: BoxDecoration(
         color: backgroundColor,
-        border: Border(right: BorderSide(color: Colors.white.withOpacity(0.1))),
+        border: Border(right: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
       ),
       child: Column(
         children: [
@@ -307,7 +307,7 @@ class _MainSidebar extends StatelessWidget {
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.white24),
                 borderRadius: BorderRadius.circular(6),
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
               ),
               child: const Row(
                 children: [
@@ -505,7 +505,7 @@ class _HeaderAction extends StatelessWidget {
 }
 
 class _InviteCard extends StatelessWidget {
-  const _InviteCard({super.key});
+  const _InviteCard();
 
   @override
   Widget build(BuildContext context) {

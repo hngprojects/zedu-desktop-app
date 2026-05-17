@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/services.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -142,7 +140,6 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
     });
 
     final authState = ref.watch(authNotifierProvider);
-    final theme = Theme.of(context);
 
     // Format the email to mask it like pl***@gmail.com
     String maskedEmail = widget.email;

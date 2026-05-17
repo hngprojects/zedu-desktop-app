@@ -20,7 +20,7 @@ class WorkspaceSwitcherList extends ConsumerWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -186,7 +186,7 @@ class _WorkspaceListItem extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        color: isActive ? Colors.black.withOpacity(0.05) : Colors.transparent,
+        color: isActive ? Colors.black.withValues(alpha: 0.05) : Colors.transparent,
         child: Row(
           children: [
             Stack(
