@@ -32,7 +32,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (_config.usesMockData) {
         AppLogger.d('Using mock data for POST /auth/login', tag: _tag);
         if (password != mockPassword) {
-          throw const ApiFailure(message: 'Invalid credentials', kind: ApiFailureKind.client);
+          throw const ApiFailure(
+            message: 'Invalid credentials',
+            kind: ApiFailureKind.client,
+          );
         }
         return LoginResponseModel.fromJson(
           LoginResponseModel.mockLoginResponse,

@@ -1,6 +1,5 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
-import 'package:flutter/widgets.dart';
 
 class UserProfileView extends ConsumerWidget {
   const UserProfileView({super.key});
@@ -38,38 +37,6 @@ class UserProfileView extends ConsumerWidget {
       selectedSection: state.section,
       onSectionSelected: notifier.selectSection,
       child: _ProfileContent(state: state, notifier: notifier),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.error, required this.onRetry});
-
-  final String error;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 48, color: context.colors.error),
-          const SizedBox(height: 16),
-          Text(
-            'Failed to load profile data',
-            style: context.textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            error,
-            style: context.textTheme.bodySmall?.copyWith(color: Colors.grey),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          AppButton(label: 'Retry', expand: false, onPressed: onRetry),
-        ],
-      ),
     );
   }
 }

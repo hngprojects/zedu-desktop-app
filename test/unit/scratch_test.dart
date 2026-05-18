@@ -15,6 +15,7 @@ class Failure<T> extends Result<T> {
 }
 
 class ProfileAccount {}
+
 class ProfileAccountModel extends ProfileAccount {}
 
 T? valueOrNull<T>(Result<T> result) {
@@ -30,14 +31,15 @@ void main() {
       Result<dynamic> result = Failure<ProfileAccountModel>('error');
       final castedResult = result as Result<ProfileAccount>;
       final val = valueOrNull(castedResult);
-      print('valueOrNull success: $val');
-      
-      Result<dynamic> successResult = Success<ProfileAccountModel>(ProfileAccountModel());
+      expect(val, null);
+
+      Result<dynamic> successResult = Success<ProfileAccountModel>(
+        ProfileAccountModel(),
+      );
       final castedSuccess = successResult as Result<ProfileAccount>;
       final val2 = valueOrNull(castedSuccess);
-      print('valueOrNull success2: $val2');
+      expect(val2, isNotNull);
     } catch (e) {
-      print('Failed: $e');
       fail('Failed: $e');
     }
   });

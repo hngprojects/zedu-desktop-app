@@ -82,7 +82,9 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
   @override
   Future<void> deleteAccount() async {
     if (_config.usesMockData) return;
-    await _apiBaseService.delete<Map<String, dynamic>>(path: '/profile/account');
+    await _apiBaseService.delete<Map<String, dynamic>>(
+      path: '/profile/account',
+    );
   }
 
   @override
@@ -149,7 +151,10 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     if (_config.usesMockData) {
       // Validate current password against shared mock password
       if (currentPassword != mockPassword) {
-        throw const ApiFailure(message: 'Current password is incorrect', kind: ApiFailureKind.client);
+        throw const ApiFailure(
+          message: 'Current password is incorrect',
+          kind: ApiFailureKind.client,
+        );
       }
       // update the mock password
       mockPassword = newPassword;
@@ -368,13 +373,13 @@ const _roles = [
       'View billing',
       'Create webhooks',
       'View channels',
-      'Change user organization role'
-    ]
+      'Change user organization role',
+    ],
   },
   {
     'role': 'Guess',
     'description': 'Read-only access',
-    'permissions': ['View channels']
+    'permissions': ['View channels'],
   },
   {
     'role': 'User',
@@ -383,8 +388,8 @@ const _roles = [
       'Remove members from organization',
       'Comment on threads',
       'Create channels',
-      'View channels'
-    ]
+      'View channels',
+    ],
   },
   {
     'role': 'Manager',
@@ -398,8 +403,8 @@ const _roles = [
       'View billing',
       'Create webhooks',
       'View channels',
-      'Change user organization role'
-    ]
+      'Change user organization role',
+    ],
   },
   {
     'role': 'Project Lead',
@@ -413,14 +418,14 @@ const _roles = [
       'View billing',
       'Create webhooks',
       'View channels',
-      'Change user organization role'
-    ]
-  }
+      'Change user organization role',
+    ],
+  },
 ];
 
 const _billing = {
   'plan': 'Zedu Free',
   'description':
       'You are enjoying the full Zedu experience with ability to add as many users to your organisation.',
-  'payment_history': <Map<String, dynamic>>[]
+  'payment_history': <Map<String, dynamic>>[],
 };

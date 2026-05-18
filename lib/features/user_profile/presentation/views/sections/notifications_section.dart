@@ -1,6 +1,5 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
-import 'package:flutter/material.dart';
 
 class NotificationsSection extends StatefulWidget {
   const NotificationsSection({
