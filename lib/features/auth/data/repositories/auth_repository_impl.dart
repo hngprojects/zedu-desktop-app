@@ -90,8 +90,23 @@ class AuthRepositoryImpl implements AuthRepository {
     required String newPassword,
   }) async {
     try {
-      await _remote.resetPassword(
-        token: token,
+      await _remote.resetPassword(token: token, newPassword: newPassword);
+      return const Success(null);
+    } on ApiFailure catch (failure) {
+      return Failure(failure);
+    } catch (error) {
+      return Failure(ApiFailure.unknown(error));
+    }
+  }
+
+  @override
+  Future<Result<void>> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    try {
+      await _remote.changePassword(
+        oldPassword: oldPassword,
         newPassword: newPassword,
       );
       return const Success(null);
