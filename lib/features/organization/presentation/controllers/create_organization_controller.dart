@@ -13,6 +13,9 @@ class CreateOrganizationController extends AsyncNotifier<void> {
     state = await AsyncValue.guard(() async {
       final repository = ref.read(organizationRepositoryProvider);
       createOrg = await repository.createOrganization(request);
+      if (createOrg != null) {
+        ref.read(activeOrganizationProvider.notifier).active = createOrg;
+      }
     });
     return createOrg;
   }

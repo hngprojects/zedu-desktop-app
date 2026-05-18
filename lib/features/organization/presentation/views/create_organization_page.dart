@@ -11,7 +11,7 @@ class CreateOrganizationPage extends ConsumerStatefulWidget {
 
 class _CreateOrganizationPageState
     extends ConsumerState<CreateOrganizationPage> {
-  static const _countryItemHeight = 40.0;
+  static const _countryItemHeight = 48.0;
 
   final _formKey = GlobalKey<FormState>();
   final _orgNameController = TextEditingController();

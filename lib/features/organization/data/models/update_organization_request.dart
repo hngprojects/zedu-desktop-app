@@ -1,3 +1,6 @@
+import 'package:zedu/core/core.dart';
+
+
 class UpdateOrganizationRequest {
   const UpdateOrganizationRequest({
     required this.orgId,
@@ -8,6 +11,8 @@ class UpdateOrganizationRequest {
     this.location,
     this.country,
     this.logoUrl,
+    this.logoFile,
+    this.removeLogo = false,
   });
 
   final String orgId;
@@ -18,16 +23,21 @@ class UpdateOrganizationRequest {
   final String? location;
   final String? country;
   final String? logoUrl;
+  final XFile? logoFile;
+  final bool removeLogo;
 
   Map<String, dynamic> toJson() {
     return {
       if (name != null) 'name': name,
       if (description != null) 'description': description,
       if (email != null) 'email': email,
-      if (type != null) 'type': type,
+      if (type != null) 'industry': type,
       if (location != null) 'location': location,
       if (country != null) 'country': country,
-      if (logoUrl != null) 'logo_url': logoUrl,
+      if (removeLogo)
+        'logo_url': ''
+      else if (logoUrl != null)
+        'logo_url': logoUrl,
     };
   }
 }

@@ -109,7 +109,9 @@ class OrganizationRemoteDataSourceImpl implements OrganizationRemoteDataSource {
           industry: request.type ?? 'Mock Industry',
           location: request.location ?? 'Mock Location',
           ownerId: 'mock-owner-id',
-          logoUrl: request.logoUrl ?? 'mock-logo-url',
+          logoUrl: request.removeLogo
+              ? ''
+              : (request.logoFile?.path ?? request.logoUrl ?? 'mock-logo-url'),
           channelsCount: 0,
           totalMessagesCount: 0,
           userRole: 'owner',

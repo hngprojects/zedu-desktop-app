@@ -13,6 +13,9 @@ class UpdateOrganizationController extends AsyncNotifier<void> {
     state = await AsyncValue.guard(() async {
       final repository = ref.read(organizationRepositoryProvider);
       updateOrg = await repository.updateOrganization(request);
+      if (updateOrg != null) {
+        ref.read(activeOrganizationProvider.notifier).active = updateOrg;
+      }
     });
     return updateOrg;
   }
