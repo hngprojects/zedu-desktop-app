@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:zedu/core/core.dart';
@@ -154,7 +155,7 @@ class AuthNotifier extends Notifier<AuthState> {
             </html>
           ''');
         await request.response.close();
-        break; // Stop listening after the first request
+        break; 
       }
 
       await server.close();
@@ -168,8 +169,47 @@ class AuthNotifier extends Notifier<AuthState> {
 
       AppLogger.i('Raw authorization code retrieved successfully', tag: _tag);
 
-      // 4. Send the raw authorization code to the backend
-      final result = await _repository.signInWithGoogle(grantCode: grantCode);
+      // --- NEW CODE: Exchange code for ID token on the frontend ---
+      AppLogger.d('Exchanging authorization code for ID token locally', tag: _tag);
+      final tokenRequestUrl = Uri.parse('https://oauth2.googleapis.com/token');
+      
+      final httpClient = HttpClient();
+      final tokenRequest = await httpClient.postUrl(tokenRequestUrl);
+      tokenRequest.headers.contentType = ContentType('application', 'x-www-form-urlencoded');
+      
+      final body = 'client_id=${Uri.encodeComponent(config.googleClientId)}'
+          '&client_secret=${Uri.encodeComponent(config.googleClientSecret)}'
+          '&code=${Uri.encodeComponent(grantCode)}'
+          '&grant_type=authorization_code'
+          '&redirect_uri=${Uri.encodeComponent(redirectUri)}';
+          
+      tokenRequest.write(body);
+      final tokenResponse = await tokenRequest.close();
+      final responseBody = await tokenResponse.transform(utf8.decoder).join();
+      
+      if (tokenResponse.statusCode != 200) {
+        AppLogger.e('Local token exchange failed: $responseBody', tag: _tag);
+        state = state.copyWith(isLoading: false, error: 'Local token exchange failed');
+        return;
+      }
+      
+      final jsonResponse = jsonDecode(responseBody) as Map<String, dynamic>;
+      final idToken = jsonResponse['id_token'] as String?;
+      
+      if (idToken == null) {
+        AppLogger.e('No ID token in response', tag: _tag);
+        state = state.copyWith(isLoading: false, error: 'No ID token received');
+        return;
+      }
+
+      AppLogger.i('ID token retrieved successfully, sending to backend', tag: _tag);
+
+      // --- OLD CODE (Commented Out) ---
+      // // 4. Send the raw authorization code to the backend
+      // final result = await _repository.signInWithGoogle(grantCode: grantCode);
+      
+      // We now pass the idToken instead of the raw grantCode
+      final result = await _repository.signInWithGoogle(grantCode: idToken);
       switch (result) {
         case Success<AuthSession>():
           AppLogger.i('Google Sign-In succeeded — token persisted', tag: _tag);
