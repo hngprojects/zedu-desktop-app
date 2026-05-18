@@ -20,7 +20,11 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   }
 
   Future<void> updateAccount(ProfileAccount account) async {
-    state = state.copyWith(isSaving: true, clearError: true, clearSuccess: true);
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
     final result = await _repository.updateAccount(account);
     switch (result) {
       case Success<ProfileAccount>():
@@ -38,7 +42,11 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   }
 
   Future<void> deleteAccount() async {
-    state = state.copyWith(isSaving: true, clearError: true, clearSuccess: true);
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
     final result = await _repository.deleteAccount();
     switch (result) {
       case Success<void>():
@@ -57,7 +65,11 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   Future<void> updateNotificationPreferences(
     NotificationPreferences preferences,
   ) async {
-    state = state.copyWith(isSaving: true, clearError: true, clearSuccess: true);
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
     final result = await _repository.updateNotificationPreferences(preferences);
     switch (result) {
       case Success<NotificationPreferences>():
@@ -74,11 +86,39 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     }
   }
 
+  Future<void> revertNotificationPreferences(
+    NotificationPreferences preferences,
+  ) async {
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
+    final result = await _repository.updateNotificationPreferences(preferences);
+    switch (result) {
+      case Success<NotificationPreferences>():
+        state = state.copyWith(
+          notifications: result.value,
+          isSaving: false,
+          successMessage: 'Changes reverted successfully.',
+        );
+      case Failure<NotificationPreferences>():
+        state = state.copyWith(
+          isSaving: false,
+          error: result.error.friendlyMessage,
+        );
+    }
+  }
+
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
   }) async {
-    state = state.copyWith(isSaving: true, clearError: true, clearSuccess: true);
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
     final result = await _repository.changePassword(
       currentPassword: currentPassword,
       newPassword: newPassword,
@@ -98,7 +138,11 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   }
 
   Future<void> updateOrganization(OrganizationProfile organization) async {
-    state = state.copyWith(isSaving: true, clearError: true, clearSuccess: true);
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
     final result = await _repository.updateOrganization(organization);
     switch (result) {
       case Success<OrganizationProfile>():
@@ -116,7 +160,11 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   }
 
   Future<void> deleteOrganization() async {
-    state = state.copyWith(isSaving: true, clearError: true, clearSuccess: true);
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
     final result = await _repository.deleteOrganization();
     switch (result) {
       case Success<void>():
@@ -132,8 +180,15 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     }
   }
 
-  Future<void> inviteMember({required String email, required String role}) async {
-    state = state.copyWith(isSaving: true, clearError: true, clearSuccess: true);
+  Future<void> inviteMember({
+    required String email,
+    required String role,
+  }) async {
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
     final result = await _repository.inviteMember(email: email, role: role);
     switch (result) {
       case Success<TeamMember>():
@@ -151,7 +206,11 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   }
 
   Future<void> updateMember(TeamMember member) async {
-    state = state.copyWith(isSaving: true, clearError: true, clearSuccess: true);
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
     final result = await _repository.updateMember(member);
     switch (result) {
       case Success<TeamMember>():
@@ -172,7 +231,11 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   }
 
   Future<void> removeMember(String memberId) async {
-    state = state.copyWith(isSaving: true, clearError: true, clearSuccess: true);
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
     final result = await _repository.removeMember(memberId);
     switch (result) {
       case Success<void>():
