@@ -10,10 +10,12 @@ abstract interface class AuthRemoteDataSource {
   Future<void> signUp({required String email, required String password});
   Future<void> forgotPassword({required String email});
   Future<void> resetPassword({
+    required String email,
     required String token,
     required String newPassword,
   });
   Future<void> changePassword({
+    required String email,
     required String oldPassword,
     required String newPassword,
   });
@@ -139,6 +141,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<void> resetPassword({
+    required String email,
     required String token,
     required String newPassword,
   }) async {
@@ -152,7 +155,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       AppLogger.d('POST /auth/password-reset', tag: _tag);
       await _apiBaseService.post<dynamic>(
         path: 'auth/password-reset',
-        data: {'token': token, 'new_password': newPassword},
+        data: {'email': email, 'token': token, 'new_password': newPassword},
       );
     } on ApiFailure {
       rethrow;
@@ -164,6 +167,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<void> changePassword({
+    required String email,
     required String oldPassword,
     required String newPassword,
   }) async {
@@ -177,7 +181,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       AppLogger.d('POST /auth/password-reset', tag: _tag);
       await _apiBaseService.post<dynamic>(
         path: 'auth/password-reset',
-        data: {'old_password': oldPassword, 'new_password': newPassword},
+        data: {
+          'email': email,
+          'old_password': oldPassword,
+          'new_password': newPassword,
+        },
       );
     } on ApiFailure {
       rethrow;

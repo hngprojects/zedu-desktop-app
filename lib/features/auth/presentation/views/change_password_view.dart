@@ -1,3 +1,7 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter/gestures.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -30,6 +34,7 @@ class _ChangePasswordViewState extends ConsumerState<ChangePasswordView> {
     final success = await ref
         .read(authNotifierProvider.notifier)
         .changePassword(
+          email: widget.email,
           oldPassword: _oldPasswordController.text,
           newPassword: _newPasswordController.text,
         );

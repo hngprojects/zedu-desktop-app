@@ -1,4 +1,4 @@
-import 'package:zedu/core/core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Loads [dotenv] from project-root env files bundled under `flutter.assets`.
 ///

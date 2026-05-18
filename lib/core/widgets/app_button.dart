@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 // ============================================================
 // AppButton — Reusable button for EventRun
 // ============================================================
@@ -27,7 +28,6 @@
 //   )
 // ============================================================
 
-import 'package:zedu/core/core.dart';
 
 enum _AppButtonVariant { filled, outlined, ghost }
 

@@ -1,3 +1,8 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/gestures.dart';
 import 'dart:async';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
@@ -73,7 +78,11 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
 
     final success = await ref
         .read(authNotifierProvider.notifier)
-        .resetPassword(token: token, newPassword: _newPasswordController.text);
+        .resetPassword(
+          email: widget.email,
+          token: token,
+          newPassword: _newPasswordController.text,
+        );
 
     if (success && mounted) {
       AppToastService.show(

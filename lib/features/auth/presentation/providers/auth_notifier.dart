@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -114,6 +115,7 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<bool> resetPassword({
+    required String email,
     required String token,
     required String newPassword,
   }) async {
@@ -121,6 +123,7 @@ class AuthNotifier extends Notifier<AuthState> {
     state = state.copyWith(isLoading: true, clearError: true);
 
     final result = await _repository.resetPassword(
+      email: email,
       token: token,
       newPassword: newPassword,
     );
@@ -143,6 +146,7 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<bool> changePassword({
+    required String email,
     required String oldPassword,
     required String newPassword,
   }) async {
@@ -150,6 +154,7 @@ class AuthNotifier extends Notifier<AuthState> {
     state = state.copyWith(isLoading: true, clearError: true);
 
     final result = await _repository.changePassword(
+      email: email,
       oldPassword: oldPassword,
       newPassword: newPassword,
     );

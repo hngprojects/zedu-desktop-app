@@ -86,11 +86,16 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Result<void>> resetPassword({
+    required String email,
     required String token,
     required String newPassword,
   }) async {
     try {
-      await _remote.resetPassword(token: token, newPassword: newPassword);
+      await _remote.resetPassword(
+        email: email,
+        token: token,
+        newPassword: newPassword,
+      );
       return const Success(null);
     } on ApiFailure catch (failure) {
       return Failure(failure);
@@ -101,11 +106,13 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Result<void>> changePassword({
+    required String email,
     required String oldPassword,
     required String newPassword,
   }) async {
     try {
       await _remote.changePassword(
+        email: email,
         oldPassword: oldPassword,
         newPassword: newPassword,
       );

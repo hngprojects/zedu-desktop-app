@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:zedu/core/core.dart';
 
 class App extends StatelessWidget {
