@@ -65,6 +65,28 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  Future<void> verifyMagicLink({required String token}) async {
+    AppLogger.d('Magic link verification attempt', tag: _tag);
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    final result = await _repository.verifyMagicLink(token: token);
+    switch (result) {
+      case Success<AuthSession>():
+        AppLogger.i('Magic link verification succeeded — token persisted', tag: _tag);
+        await _storage.saveAccessToken(result.value.accessToken);
+        state = AuthState(
+          status: AuthStatus.authenticated,
+          user: result.value.user,
+        );
+      case Failure<AuthSession>():
+        AppLogger.w('Magic link verification failed — ${result.error.message}', tag: _tag);
+        state = state.copyWith(
+          isLoading: false,
+          error: result.error.friendlyMessage,
+        );
+    }
+  }
+
   Future<void> logout() async {
     AppLogger.i('Logout — clearing session', tag: _tag);
     await _storage.clearAll();
