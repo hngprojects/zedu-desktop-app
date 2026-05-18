@@ -1,5 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+import 'package:http_parser/http_parser.dart';
 
 abstract interface class OrganizationRemoteDataSource {
   Future<OrganizationModel> createOrganization(
@@ -141,13 +142,62 @@ class OrganizationRemoteDataSourceImpl implements OrganizationRemoteDataSource {
           updatedAt: DateTime.now(),
         );
       }
+      var currentRequest = request;
+
+      if (request.logoFile != null) {
+        AppLogger.d('Uploading logo file to /files/upload-files', tag: _tag);
+        final file = request.logoFile!;
+        final formData = FormData.fromMap({
+          'file': await MultipartFile.fromFile(
+            file.path,
+            filename: file.name,
+            contentType: _getMediaType(file.name),
+          ),
+          'files': [
+            await MultipartFile.fromFile(
+              file.path,
+              filename: file.name,
+              contentType: _getMediaType(file.name),
+            ),
+          ],
+          'image': await MultipartFile.fromFile(
+            file.path,
+            filename: file.name,
+            contentType: _getMediaType(file.name),
+          ),
+          'logo': await MultipartFile.fromFile(
+            file.path,
+            filename: file.name,
+            contentType: _getMediaType(file.name),
+          ),
+        });
+
+        final uploadResponse = await _apiBaseService.post<Map<String, dynamic>>(
+          path: '/files/upload-files',
+          data: formData,
+        );
+
+        final uploadedUrl = _findFirstUrl(uploadResponse.data);
+
+        if (uploadedUrl == null) {
+          throw ApiFailure(
+            message: 'Failed to retrieve uploaded logo URL from response: ${uploadResponse.data}',
+            path: '/files/upload-files',
+            kind: ApiFailureKind.client,
+          );
+        }
+
+        AppLogger.d('Logo uploaded successfully: $uploadedUrl', tag: _tag);
+        currentRequest = request.copyWith(logoUrl: uploadedUrl);
+      }
+
       AppLogger.d(
-        'UPDATE /organisations/{orgId} — ${request.orgId}',
+        'UPDATE /organisations/{orgId} — ${currentRequest.orgId}',
         tag: _tag,
       );
       final response = await _apiBaseService.put<Map<String, dynamic>>(
-        path: '/organisations/${request.orgId}',
-        data: request.toJson(),
+        path: '/organisations/${currentRequest.orgId}',
+        data: currentRequest.toJson(),
       );
       final payload = response.data['data'] as Map<String, dynamic>;
       return OrganizationModel.fromJson(payload);
@@ -226,5 +276,33 @@ class OrganizationRemoteDataSourceImpl implements OrganizationRemoteDataSource {
       );
       throw ApiFailure.fromParsingError(error, path: '/organisations/$orgId');
     }
+  }
+  MediaType? _getMediaType(String filename) {
+    final ext = filename.split('.').last.toLowerCase();
+    if (ext == 'png') return MediaType('image', 'png');
+    if (ext == 'jpg' || ext == 'jpeg') return MediaType('image', 'jpeg');
+    if (ext == 'gif') return MediaType('image', 'gif');
+    if (ext == 'webp') return MediaType('image', 'webp');
+    return MediaType('application', 'octet-stream');
+  }
+
+  String? _findFirstUrl(dynamic json) {
+    if (json is String) {
+      final value = json.trim();
+      if (value.startsWith('http://') || value.startsWith('https://')) {
+        return value;
+      }
+    } else if (json is Map) {
+      for (final value in json.values) {
+        final url = _findFirstUrl(value);
+        if (url != null) return url;
+      }
+    } else if (json is List) {
+      for (final item in json) {
+        final url = _findFirstUrl(item);
+        if (url != null) return url;
+      }
+    }
+    return null;
   }
 }

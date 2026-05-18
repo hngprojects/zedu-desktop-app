@@ -26,7 +26,9 @@ class OrganizationModel extends Organization {
       description: json['description'] as String? ?? '',
       email: json['email'] as String? ?? '',
       country: _readCountry(json['country']),
-      industry: json['industry'] as String? ?? '',
+      industry: (json['industry'] as String?)?.isNotEmpty == true
+          ? json['industry'] as String
+          : json['type'] as String? ?? '',
       location: json['location'] as String? ?? '',
       ownerId: json['owner_id'] as String? ?? '',
       logoUrl: json['logo_url'] as String? ?? '',

@@ -22,7 +22,7 @@ class CreateOrganizationRequest {
       if (name != null) 'name': name,
       if (description != null) 'description': description,
       if (email != null) 'email': email,
-      if (type != null) 'industry': type,
+      if (type != null) 'type': type,
       if (location != null) 'location': location,
       if (country != null) 'country': country,
       if (logoUrl != null) 'logo_url': logoUrl,

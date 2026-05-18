@@ -35,6 +35,7 @@ class AuthNotifier extends Notifier<AuthState> {
     switch (result) {
       case Success<User>():
         AppLogger.i('Session restored — ${result.value.email}', tag: _tag);
+        ref.read(activeOrganizationProvider.notifier).active = result.value.organisation;
         state = AuthState(status: AuthStatus.authenticated, user: result.value);
       case Failure<User>():
         AppLogger.w('Session restore failed — clearing token', tag: _tag);
@@ -52,6 +53,7 @@ class AuthNotifier extends Notifier<AuthState> {
       case Success<AuthSession>():
         AppLogger.i('Login succeeded — token persisted', tag: _tag);
         await _storage.saveAccessToken(result.value.accessToken);
+        ref.read(activeOrganizationProvider.notifier).active = result.value.user.organisation;
         state = AuthState(
           status: AuthStatus.authenticated,
           user: result.value.user,

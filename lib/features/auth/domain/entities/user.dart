@@ -1,3 +1,5 @@
+import 'package:zedu/features/features.dart';
+
 class User {
   const User({
     required this.id,
@@ -9,6 +11,7 @@ class User {
     required this.isVerified,
     required this.isOnboarded,
     required this.createdAt,
+    required this.organisation,
   });
 
   final String id;
@@ -20,6 +23,7 @@ class User {
   final bool isVerified;
   final bool isOnboarded;
   final DateTime createdAt;
+  final Organization organisation;
 
   String get fullname => '$firstName $lastName';
 }

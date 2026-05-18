@@ -39,9 +39,13 @@ class _UpdateOrganizationModalState
         TextEditingController(text: widget.organization.name);
     _typeController =
         TextEditingController(text: widget.organization.industry);
-    _selectedCountry = _countries
-        .where((c) => c.name == widget.organization.country)
-        .firstOrNull;
+    final countryStr = widget.organization.country.trim().toLowerCase();
+    _selectedCountry = _countries.where((c) {
+      return c.name.toLowerCase() == countryStr ||
+          c.countryCode.toLowerCase() == countryStr ||
+          c.displayName.toLowerCase() == countryStr ||
+          c.displayNameNoCountryCode.toLowerCase() == countryStr;
+    }).firstOrNull;
   }
 
   @override
@@ -104,6 +108,10 @@ class _UpdateOrganizationModalState
             name: _nameController.text.trim(),
             type: _typeController.text.trim(),
             country: _selectedCountry!.name,
+            description: widget.organization.description,
+            email: widget.organization.email,
+            location: widget.organization.location,
+            logoUrl: widget.organization.logoUrl,
             logoFile: _pickedImage,
             removeLogo: _isImageRemoved,
           ),

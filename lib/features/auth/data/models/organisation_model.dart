@@ -1,5 +1,4 @@
-import 'package:zedu/features/auth/data/models/organisation_plan_model.dart';
-import 'package:zedu/features/auth/data/models/user_role_model.dart';
+import 'package:zedu/features/features.dart';
 
 class OrganisationModel {
   const OrganisationModel({
@@ -84,6 +83,47 @@ class OrganisationModel {
       userRole: UserRoleModel.fromJson(
         json['user_role'] as Map<String, dynamic>,
       ),
+    );
+  }
+
+  OrganizationModel toOrganizationModel() {
+    return OrganizationModel(
+      id: id,
+      name: name,
+      description: description,
+      email: email,
+      country: country,
+      industry: type,
+      location: location,
+      ownerId: ownerId,
+      logoUrl: logoUrl,
+      channelsCount: channelsCount,
+      totalMessagesCount: totalMessagesCount,
+      userRole: userRole.roleName,
+      organizationPlan: OrganizationPlanModel(
+        id: '',
+        organizationId: id,
+        planId: orgPlanId,
+        startedAt: organisationPlan.startedAt,
+        endedAt: organisationPlan.endedAt,
+        status: '',
+        sessionId: '',
+        invoicePdfUrl: '',
+        createdAt: organisationPlan.createdAt,
+        updatedAt: organisationPlan.updatedAt,
+        planDetails: OrganizationPlanDetailsModel(
+          id: organisationPlan.planDetails.id,
+          name: organisationPlan.planDetails.name,
+          description: organisationPlan.planDetails.description,
+          benefits: organisationPlan.planDetails.benefits ?? [],
+          fee: organisationPlan.planDetails.fee,
+          credits: organisationPlan.planDetails.credits,
+          createdAt: organisationPlan.planDetails.createdAt,
+          updatedAt: organisationPlan.planDetails.updatedAt,
+        ),
+      ),
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
 }

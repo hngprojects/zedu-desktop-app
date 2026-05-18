@@ -117,5 +117,6 @@ class UserModel {
     isVerified: isVerified,
     isOnboarded: isOnboarded,
     createdAt: createdAt,
+    organisation: organisation.toOrganizationModel(),
   );
 }

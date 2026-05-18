@@ -82,10 +82,11 @@ class ApiBaseService {
   Map<String, String> headersForPath(
     String path, {
     Map<String, String>? headers,
+    bool isMultipart = false,
   }) {
     return <String, String>{
       'Accept': 'application/json',
-      'Content-Type': 'application/json',
+      if (!isMultipart) 'Content-Type': 'application/json',
       ...?headers,
     };
   }
@@ -98,13 +99,18 @@ class ApiBaseService {
     Map<String, String>? headers,
   }) async {
     try {
+      final isMultipart = data is FormData;
       final response = await _dio.request<T>(
         path,
         data: data,
         queryParameters: queryParameters,
         options: Options(
           method: method,
-          headers: headersForPath(path, headers: headers),
+          headers: headersForPath(
+            path,
+            headers: headers,
+            isMultipart: isMultipart,
+          ),
         ),
       );
 
