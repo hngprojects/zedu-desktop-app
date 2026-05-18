@@ -144,20 +144,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) async {
     try {
       if (_config.usesMockData) {
-        AppLogger.d('Using mock data for POST /auth/password-reset', tag: _tag);
+        AppLogger.d('Using mock data for POST /auth/reset-password', tag: _tag);
         await Future<void>.delayed(const Duration(milliseconds: 800));
         return;
       }
 
-      AppLogger.d('POST /auth/password-reset', tag: _tag);
+      AppLogger.d('POST /auth/reset-password', tag: _tag);
       await _apiBaseService.post<dynamic>(
-        path: 'auth/password-reset',
+        path: 'auth/reset-password',
         data: {'token': token, 'new_password': newPassword},
       );
     } on ApiFailure {
       rethrow;
     } catch (error) {
-      AppLogger.e('Failed /auth/password-reset', tag: _tag, error: error);
+      AppLogger.e('Failed /auth/reset-password', tag: _tag, error: error);
       throw ApiFailure.unknown(error);
     }
   }
@@ -169,23 +169,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) async {
     try {
       if (_config.usesMockData) {
-        AppLogger.d(
-          'Using mock data for POST /auth/change-password',
-          tag: _tag,
-        );
+        AppLogger.d('Using mock data for POST /auth/reset-password', tag: _tag);
         await Future<void>.delayed(const Duration(milliseconds: 800));
         return;
       }
 
-      AppLogger.d('POST /auth/change-password', tag: _tag);
+      AppLogger.d('POST /auth/reset-password', tag: _tag);
       await _apiBaseService.post<dynamic>(
-        path: 'auth/change-password',
+        path: 'auth/reset-password',
         data: {'old_password': oldPassword, 'new_password': newPassword},
       );
     } on ApiFailure {
       rethrow;
     } catch (error) {
-      AppLogger.e('Failed /auth/change-password', tag: _tag, error: error);
+      AppLogger.e('Failed /auth/reset-password', tag: _tag, error: error);
       throw ApiFailure.unknown(error);
     }
   }
