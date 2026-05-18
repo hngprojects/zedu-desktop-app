@@ -1,4 +1,5 @@
 import 'package:zedu/core/core.dart';
+import 'package:zedu/core/mock/mock_credentials.dart';
 import 'package:zedu/features/features.dart';
 
 abstract interface class UserProfileRemoteDataSource {
@@ -145,7 +146,15 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     required String currentPassword,
     required String newPassword,
   }) async {
-    if (_config.usesMockData) return;
+    if (_config.usesMockData) {
+      // Validate current password against shared mock password
+      if (currentPassword != mockPassword) {
+        throw const ApiFailure(message: 'Current password is incorrect', kind: ApiFailureKind.client);
+      }
+      // update the mock password
+      mockPassword = newPassword;
+      return;
+    }
     await _apiBaseService.post<Map<String, dynamic>>(
       path: '/profile/security/password',
       data: {'current_password': currentPassword, 'new_password': newPassword},

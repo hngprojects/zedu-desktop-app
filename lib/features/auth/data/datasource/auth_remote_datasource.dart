@@ -1,4 +1,5 @@
 import 'package:zedu/core/core.dart';
+import 'package:zedu/core/mock/mock_credentials.dart';
 import 'package:zedu/features/auth/data/models/login_response_model.dart';
 import 'package:zedu/features/auth/data/models/user_model.dart';
 
@@ -30,6 +31,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       if (_config.usesMockData) {
         AppLogger.d('Using mock data for POST /auth/login', tag: _tag);
+        if (password != mockPassword) {
+          throw const ApiFailure(message: 'Invalid credentials', kind: ApiFailureKind.client);
+        }
         return LoginResponseModel.fromJson(
           LoginResponseModel.mockLoginResponse,
         );
