@@ -51,3 +51,24 @@ temp_interactive_push.bat
 public/fonts/fa-solid-400.woff2
 *.woff2
 *.woff2
+
+# VS Code
+.vscode/
+
+# OFL / Font License files
+.ofl
+*.ofl
+OFL.txt
+*OFL*
+
+# CMake build outputs and caches
+CMakeCache.txt
+CMakeFiles/
+CMakeSettings.json
+CMakeLists.txt.user
+cmake-build-debug/
+cmake-build-release/
+.cmake/
+**/cmake-build-*/
+**/.cmake/
+
