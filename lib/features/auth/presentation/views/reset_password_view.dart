@@ -13,6 +13,7 @@ class ResetPasswordView extends ConsumerStatefulWidget {
 
 class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
   final _formKey = GlobalKey<FormState>();
+  final _oldPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
@@ -45,6 +46,7 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
 
   @override
   void dispose() {
+    _oldPasswordController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     for (var controller in _tokenControllers) {
@@ -61,7 +63,9 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
     if (!_formKey.currentState!.validate()) return;
 
     final token = _tokenControllers.map((c) => c.text).join();
-    if (token.length != 6) {
+    final isOldPasswordFlow = _oldPasswordController.text.isNotEmpty;
+
+    if (!isOldPasswordFlow && token.length != 6) {
       AppToastService.show(
         context,
         type: AppToastType.error,
@@ -70,15 +74,25 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
       return;
     }
 
-    final success = await ref
-        .read(authNotifierProvider.notifier)
-        .resetPassword(token: token, newPassword: _newPasswordController.text);
+    final success = isOldPasswordFlow
+        ? await ref
+              .read(authNotifierProvider.notifier)
+              .changePassword(
+                oldPassword: _oldPasswordController.text,
+                newPassword: _newPasswordController.text,
+              )
+        : await ref
+              .read(authNotifierProvider.notifier)
+              .resetPassword(
+                token: token,
+                newPassword: _newPasswordController.text,
+              );
 
     if (success && mounted) {
       AppToastService.show(
         context,
         type: AppToastType.success,
-        message: 'Password reset successfully!',
+        message: 'Password updated successfully!',
       );
       context.go(AppRouter.login);
     }
@@ -247,7 +261,7 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Enter verification code',
+                        'Enter verification code (or old password below)',
                         style: context.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w500,
                         ),
@@ -255,6 +269,14 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
                       context.gapV(8),
                       _buildOTPInput(),
                       context.gapV(24),
+                      AppTextField(
+                        isPassword: true,
+                        controller: _oldPasswordController,
+                        label: 'Enter old password (optional if using OTP)',
+                        hint: 'Old Password',
+                        textInputAction: TextInputAction.next,
+                      ),
+                      context.gapV(16),
                       AppTextField(
                         isPassword: true,
                         controller: _newPasswordController,
