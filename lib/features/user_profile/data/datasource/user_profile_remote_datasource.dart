@@ -148,15 +148,7 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     required String newPassword,
   }) async {
     if (_config.usesMockData) {
-      // Validate current password against shared mock password
-      if (currentPassword != mockPassword) {
-        throw const ApiFailure(
-          message: 'Current password is incorrect',
-          kind: ApiFailureKind.client,
-        );
-      }
-      // update the mock password
-      mockPassword = newPassword;
+      AppLogger.d('Using mock data for POST /profile/security/password', tag: _tag);
       return;
     }
     await _apiBaseService.post<Map<String, dynamic>>(
