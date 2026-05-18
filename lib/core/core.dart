@@ -6,3 +6,6 @@ export 'secure_storage/secure_storage.dart';
 export 'utils/utils.dart';
 export 'theme/theme.dart';
 export 'widgets/widgets.dart';
+export 'package:dio/dio.dart';
+export 'package:flutter_dotenv/flutter_dotenv.dart';
+export 'package:go_router/go_router.dart';

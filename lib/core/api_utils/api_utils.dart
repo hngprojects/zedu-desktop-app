@@ -1,4 +1,3 @@
-export 'package:dio/dio.dart';
 export 'package:flutter/foundation.dart';
 
 export 'api_client.dart';
