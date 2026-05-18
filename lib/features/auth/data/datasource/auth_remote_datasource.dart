@@ -10,7 +10,7 @@ abstract interface class AuthRemoteDataSource {
   Future<void> signUp({required String email, required String password});
   Future<void> forgotPassword({required String email});
   Future<void> resetPassword({
-    required String oldPassword,
+    required String token,
     required String newPassword,
   });
 }
@@ -135,7 +135,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<void> resetPassword({
-    required String oldPassword,
+    required String token,
     required String newPassword,
   }) async {
     try {
@@ -149,7 +149,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       await _apiBaseService.post<dynamic>(
         path: 'auth/reset-password',
         data: {
-          'old_password': oldPassword,
+          'token': token,
           'new_password': newPassword,
         },
       );
