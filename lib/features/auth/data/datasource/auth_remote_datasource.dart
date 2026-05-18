@@ -10,6 +10,7 @@ abstract interface class AuthRemoteDataSource {
   Future<UserModel> me();
   Future<void> sendMagicLink({required String email});
   Future<LoginResponseModel> verifyMagicLink({required String token});
+  Future<LoginResponseModel> signInWithGoogle({required String grantCode});
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -133,6 +134,32 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         error,
         path: '/auth/magick-link/verify',
       );
+    }
+  }
+
+  @override
+  Future<LoginResponseModel> signInWithGoogle({required String grantCode}) async {
+    try {
+      if (_config.usesMockData) {
+        AppLogger.d('Using mock data for POST /auth/google', tag: _tag);
+        return LoginResponseModel.fromJson(
+          LoginResponseModel.mockLoginResponse,
+        );
+      }
+
+      AppLogger.d('POST /auth/google', tag: _tag);
+      final response = await _apiBaseService.post<Map<String, dynamic>>(
+        path: '/auth/google',
+        data: {'grant_code': grantCode},
+      );
+
+      final payload = response.data['data'] as Map<String, dynamic>;
+      return LoginResponseModel.fromJson(payload);
+    } on ApiFailure {
+      rethrow;
+    } catch (error) {
+      AppLogger.e('Failed to parse /auth/google response', tag: _tag, error: error);
+      throw ApiFailure.fromParsingError(error, path: '/auth/google');
     }
   }
 }

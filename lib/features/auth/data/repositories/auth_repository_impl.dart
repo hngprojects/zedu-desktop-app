@@ -92,4 +92,25 @@ class AuthRepositoryImpl implements AuthRepository {
       return Failure(ApiFailure.unknown(error));
     }
   }
+
+  @override
+  Future<Result<AuthSession>> signInWithGoogle({required String grantCode}) async {
+    try {
+      final response = await _remote.signInWithGoogle(grantCode: grantCode);
+      AppLogger.i('Google sign-in successful — ${response.user.email}', tag: _tag);
+      return Success(
+        AuthSession(
+          user: response.user.toEntity(),
+          accessToken: response.accessToken,
+          accessTokenExpiresIn: response.accessTokenExpiresIn,
+        ),
+      );
+    } on ApiFailure catch (failure) {
+      AppLogger.w('Google sign-in failed — ${failure.message}', tag: _tag);
+      return Failure(failure);
+    } catch (error) {
+      AppLogger.e('Unexpected Google sign-in error', tag: _tag, error: error);
+      return Failure(ApiFailure.unknown(error));
+    }
+  }
 }

@@ -97,11 +97,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                 SocialAuthButton(
                   icon: 'assets/svgs/google_logo.svg',
                   label: 'Sign up with Google',
-                  onPressed: () => AppToastService.show(
-                    context,
-                    type: AppToastType.info,
-                    message: 'Google sign in is not available yet.',
-                  ),
+                  onPressed: () => ref.read(authNotifierProvider.notifier).loginWithGoogle(),
                 ),
                 context.gapV(12),
                 SocialAuthButton(
