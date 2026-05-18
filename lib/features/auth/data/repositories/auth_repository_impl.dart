@@ -86,12 +86,12 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Result<void>> resetPassword({
-    required String oldPassword,
+    required String token,
     required String newPassword,
   }) async {
     try {
       await _remote.resetPassword(
-        oldPassword: oldPassword,
+        token: token,
         newPassword: newPassword,
       );
       return const Success(null);
