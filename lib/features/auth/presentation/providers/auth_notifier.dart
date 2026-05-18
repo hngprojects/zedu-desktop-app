@@ -142,5 +142,34 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  Future<bool> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    AppLogger.d('Change password attempt', tag: _tag);
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    final result = await _repository.changePassword(
+      oldPassword: oldPassword,
+      newPassword: newPassword,
+    );
+    switch (result) {
+      case Success<void>():
+        AppLogger.i('Change password succeeded', tag: _tag);
+        state = state.copyWith(isLoading: false);
+        return true;
+      case Failure<void>():
+        AppLogger.w(
+          'Change password failed — ${result.error.message}',
+          tag: _tag,
+        );
+        state = state.copyWith(
+          isLoading: false,
+          error: result.error.friendlyMessage,
+        );
+        return false;
+    }
+  }
+
   Future<String?> get accessToken => _storage.getAccessToken();
 }

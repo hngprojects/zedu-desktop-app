@@ -17,4 +17,8 @@ abstract interface class AuthRepository {
     required String token,
     required String newPassword,
   });
+  Future<Result<void>> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  });
 }
