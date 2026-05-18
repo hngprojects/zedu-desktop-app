@@ -1,5 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+import 'package:flutter/material.dart';
 
 class NotificationsSection extends StatefulWidget {
   const NotificationsSection({
@@ -7,11 +8,13 @@ class NotificationsSection extends StatefulWidget {
     required this.preferences,
     required this.isSaving,
     required this.onSave,
+    required this.onRevert,
   });
 
   final NotificationPreferences preferences;
   final bool isSaving;
-  final ValueChanged<NotificationPreferences> onSave;
+  final Future<void> Function(NotificationPreferences) onSave;
+  final Future<void> Function(NotificationPreferences) onRevert;
 
   @override
   State<NotificationsSection> createState() => _NotificationsSectionState();
@@ -19,11 +22,13 @@ class NotificationsSection extends StatefulWidget {
 
 class _NotificationsSectionState extends State<NotificationsSection> {
   late NotificationPreferences _draft;
+  late NotificationPreferences _original;
 
   @override
   void initState() {
     super.initState();
     _draft = widget.preferences;
+    _original = widget.preferences;
   }
 
   @override
@@ -31,6 +36,7 @@ class _NotificationsSectionState extends State<NotificationsSection> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.preferences != widget.preferences) {
       _draft = widget.preferences;
+      _original = widget.preferences;
     }
   }
 
@@ -130,7 +136,12 @@ class _NotificationsSectionState extends State<NotificationsSection> {
               label: 'Revert changes',
               expand: false,
               height: 44,
-              onPressed: () => _setDraft(widget.preferences),
+              disabled: !_hasChanges,
+              onPressed: () async {
+                // revert to last saved and persist automatically
+                setState(() => _draft = _original);
+                await widget.onRevert(_original);
+              },
             ),
             const SizedBox(width: 16),
             AppButton(
@@ -138,7 +149,10 @@ class _NotificationsSectionState extends State<NotificationsSection> {
               expand: false,
               height: 44,
               loading: widget.isSaving,
-              onPressed: () => widget.onSave(_draft),
+              disabled: !_hasChanges,
+              onPressed: () async {
+                await widget.onSave(_draft);
+              },
             ),
           ],
         ),
@@ -149,6 +163,93 @@ class _NotificationsSectionState extends State<NotificationsSection> {
   void _setDraft(NotificationPreferences preferences) {
     setState(() => _draft = preferences);
   }
+}
+
+bool _arePrefsEqual(NotificationPreferences a, NotificationPreferences b) {
+  return a.mode == b.mode &&
+      a.fromTime == b.fromTime &&
+      a.toTime == b.toTime &&
+      a.useDesktopSettings == b.useDesktopSettings &&
+      a.emailNotifications == b.emailNotifications;
+}
+
+class _TimeSelect extends StatelessWidget {
+  const _TimeSelect({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ProfileFieldLabel(label),
+        const SizedBox(height: 6),
+        InkWell(
+          onTap: () async {
+            final initial = _parseTimeOfDay(value) ?? TimeOfDay.now();
+            final picked = await showTimePicker(
+              context: context,
+              initialTime: initial,
+            );
+            if (picked != null) onChanged(_formatTimeOfDay(picked));
+          },
+          child: Container(
+            width: 120,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              children: [
+                Text(value, style: context.textTheme.bodySmall),
+                const Spacer(),
+                const Icon(
+                  Icons.access_time,
+                  size: 16,
+                  color: Color(0xFF6B7280),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+TimeOfDay? _parseTimeOfDay(String s) {
+  try {
+    final parts = s.split(' ');
+    if (parts.isEmpty) return null;
+    final hm = parts[0].split(':');
+    var hour = int.parse(hm[0]);
+    final minute = int.parse(hm[1]);
+    final period = parts.length > 1 ? parts[1].toUpperCase() : 'AM';
+    if (period == 'PM' && hour < 12) hour += 12;
+    if (period == 'AM' && hour == 12) hour = 0;
+    return TimeOfDay(hour: hour, minute: minute);
+  } catch (_) {
+    return null;
+  }
+}
+
+String _formatTimeOfDay(TimeOfDay t) {
+  final hour = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
+  final minute = t.minute.toString().padLeft(2, '0');
+  final period = t.period == DayPeriod.am ? 'AM' : 'PM';
+  return '$hour:$minute $period';
+}
+
+extension on _NotificationsSectionState {
+  bool get _hasChanges => !_arePrefsEqual(_draft, _original);
 }
 
 class _Section extends StatelessWidget {
@@ -204,7 +305,9 @@ class _RadioLine extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: selected ? const Color(0xFF6458F5) : const Color(0xFFD1D5DB),
+                  color: selected
+                      ? const Color(0xFF6458F5)
+                      : const Color(0xFFD1D5DB),
                   width: 2,
                 ),
               ),
@@ -263,47 +366,6 @@ class _CheckboxLine extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _TimeSelect extends StatelessWidget {
-  const _TimeSelect({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String label;
-  final String value;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ProfileFieldLabel(label),
-        const SizedBox(height: 6),
-        InkWell(
-          onTap: () {}, // Show time picker
-          child: Container(
-            width: 120,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Row(
-              children: [
-                Text(value, style: context.textTheme.bodySmall),
-                const Spacer(),
-                const Icon(Icons.access_time, size: 16, color: Color(0xFF6B7280)),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
