@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zedu/features/features.dart';
 
 class WorkspaceNotifier extends Notifier<WorkspaceState> {

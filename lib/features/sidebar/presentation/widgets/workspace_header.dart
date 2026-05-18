@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
 class WorkspaceSwitcherHeader extends ConsumerWidget {
@@ -7,6 +6,7 @@ class WorkspaceSwitcherHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
     final workspaceState = ref.watch(workspaceProvider);
     final selectedWorkspace = workspaceState.selectedWorkspace;
 
@@ -24,19 +24,19 @@ class WorkspaceSwitcherHeader extends ConsumerWidget {
                   Flexible(
                     child: Text(
                       selectedWorkspace.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: colors.onPrimary,
                         letterSpacing: 0.2,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Icon(
+                  Icon(
                     Icons.keyboard_arrow_down,
-                    color: Colors.white70,
+                    color: colors.onPrimary.withValues(alpha: 0.7),
                     size: 20,
                   ),
                 ],
@@ -47,7 +47,11 @@ class WorkspaceSwitcherHeader extends ConsumerWidget {
             onPressed: () {
               // Add action
             },
-            icon: const Icon(Icons.add, color: Colors.white70, size: 20),
+            icon: Icon(
+              Icons.add,
+              color: colors.onPrimary.withValues(alpha: 0.7),
+              size: 20,
+            ),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),
@@ -57,11 +61,12 @@ class WorkspaceSwitcherHeader extends ConsumerWidget {
   }
 
   void _showWorkspaceSwitcher(BuildContext context) {
+    final colors = context.colors;
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
       barrierLabel: 'WorkspaceSwitcher',
-      barrierColor: Colors.black26,
+      barrierColor: colors.textPrimary.withValues(alpha: 0.26),
       transitionDuration: const Duration(milliseconds: 200),
       pageBuilder: (context, anim1, anim2) {
         return const Align(

@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:zedu/core/core.dart';
 
 enum AppToastType { success, error, info }
@@ -114,7 +113,7 @@ class _AppToastWidgetState extends State<_AppToastWidget>
       ),
       AppToastType.info => (
         colors.primary,
-        const Color(0xFFF3EFFF),
+        colors.primaryBg,
         Icons.info_outline_rounded,
         'Info',
       ),
@@ -138,7 +137,7 @@ class _AppToastWidgetState extends State<_AppToastWidget>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
+                  color: colors.textPrimary.withValues(alpha: 0.08),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),

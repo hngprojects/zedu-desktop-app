@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:zedu/core/core.dart';
 
 abstract final class AppTheme {
@@ -35,8 +34,8 @@ abstract final class AppTheme {
           backgroundColor: palette.primary,
           shape: _buttonShape,
           padding: _buttonPadding,
-          foregroundColor: Colors.white,
-          textStyle: _buttonTextStyle.copyWith(color: Colors.white),
+          foregroundColor: palette.onPrimary,
+          textStyle: _buttonTextStyle.copyWith(color: palette.onPrimary),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(

@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:zedu/core/core.dart';
+import 'package:zedu/features/features.dart';
 
 class SocialAuthButton extends StatelessWidget {
   const SocialAuthButton({

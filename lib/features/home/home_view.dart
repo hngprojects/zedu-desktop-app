@@ -1,6 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -9,31 +6,28 @@ class HomeView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    const primaryColor = Color(0xFF303073);
-    const topBarColor = Color(0xFF7141F8);
+    final colors = context.colors;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: Column(
         children: [
-          // 1. Top Bar
           Container(
             height: 50,
-            color: topBarColor,
+            color: colors.primary,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                const Text(
+                Text(
                   'Zedu',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: colors.onPrimary,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Poetsen One',
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Zedu User Dropdown
                 PopupMenuButton<String>(
                   offset: const Offset(0, 40),
                   onSelected: (value) async {
@@ -45,33 +39,33 @@ class HomeView extends ConsumerWidget {
                     }
                   },
                   itemBuilder: (context) => [
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'profile',
                       child: Row(
                         children: [
                           Icon(
                             Icons.person_outline,
                             size: 20,
-                            color: Colors.black87,
+                            color: colors.textPrimary,
                           ),
-                          SizedBox(width: 8),
-                          Text('Profile'),
+                          const SizedBox(width: 8),
+                          const Text('Profile'),
                         ],
                       ),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'logout',
                       child: Row(
                         children: [
                           Icon(
                             Icons.logout_rounded,
                             size: 20,
-                            color: Colors.redAccent,
+                            color: colors.error,
                           ),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text(
                             'Logout',
-                            style: TextStyle(color: Colors.redAccent),
+                            style: TextStyle(color: colors.error),
                           ),
                         ],
                       ),
@@ -83,7 +77,7 @@ class HomeView extends ConsumerWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: colors.onPrimary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -92,14 +86,14 @@ class HomeView extends ConsumerWidget {
                           width: 24,
                           height: 24,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF5CCBBA),
+                            color: colors.accent,
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Center(
+                          child: Center(
                             child: Text(
                               'ZU',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: colors.onPrimary,
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -107,17 +101,17 @@ class HomeView extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Text(
+                        Text(
                           'Zedu User',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: colors.onPrimary,
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        const Icon(
+                        Icon(
                           Icons.keyboard_arrow_down,
-                          color: Colors.white70,
+                          color: colors.onPrimary.withValues(alpha: 0.7),
                           size: 18,
                         ),
                       ],
@@ -125,23 +119,29 @@ class HomeView extends ConsumerWidget {
                   ),
                 ),
                 const Spacer(),
-                // Search Bar
                 Flexible(
                   child: Container(
                     constraints: const BoxConstraints(maxWidth: 400),
                     height: 32,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: colors.onPrimary.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        SizedBox(width: 8),
-                        Icon(Icons.search, color: Colors.white70, size: 18),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.search,
+                          color: colors.onPrimary.withValues(alpha: 0.7),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
                         Text(
                           'Search messages...',
-                          style: TextStyle(color: Colors.white70, fontSize: 13),
+                          style: TextStyle(
+                            color: colors.onPrimary.withValues(alpha: 0.7),
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
@@ -151,18 +151,12 @@ class HomeView extends ConsumerWidget {
               ],
             ),
           ),
-
-          Expanded(
+          const Expanded(
             child: Row(
               children: [
-                // 2. Sidebar Rail
-                const _SidebarRail(backgroundColor: primaryColor),
-
-                // 3. Main Sidebar
-                const _MainSidebar(backgroundColor: primaryColor),
-
-                // 4. Chat Area
-                const Expanded(child: _ChatArea()),
+                _SidebarRail(),
+                _MainSidebar(),
+                Expanded(child: _ChatArea()),
               ],
             ),
           ),
@@ -173,17 +167,20 @@ class HomeView extends ConsumerWidget {
 }
 
 class _SidebarRail extends StatelessWidget {
-  final Color backgroundColor;
-  const _SidebarRail({required this.backgroundColor});
+  const _SidebarRail();
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Container(
       width: 70,
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: colors.sidebar,
         border: Border(
-          right: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          right: BorderSide(
+            color: colors.onPrimary.withValues(alpha: 0.1),
+          ),
         ),
       ),
       child: Column(
@@ -199,7 +196,6 @@ class _SidebarRail extends StatelessWidget {
           const _RailNavItem(icon: Icons.folder_open_outlined, label: 'Files'),
           const _RailNavItem(icon: Icons.phone_outlined, label: 'Buzz'),
           const Spacer(),
-          // Bottom Section
           const _RailBottomIcon(
             icon: Icons.notifications_none_outlined,
             hasNotification: true,
@@ -214,8 +210,8 @@ class _SidebarRail extends StatelessWidget {
                   child: Container(
                     width: 36,
                     height: 36,
-                    color: Colors.grey.shade300,
-                    child: const Icon(Icons.person, color: Colors.white),
+                    color: colors.divider,
+                    child: Icon(Icons.person, color: colors.onPrimary),
                   ),
                 ),
                 Positioned(
@@ -225,9 +221,9 @@ class _SidebarRail extends StatelessWidget {
                     width: 12,
                     height: 12,
                     decoration: BoxDecoration(
-                      color: Colors.green,
+                      color: colors.success,
                       shape: BoxShape.circle,
-                      border: Border.all(color: backgroundColor, width: 2),
+                      border: Border.all(color: colors.sidebar, width: 2),
                     ),
                   ),
                 ),
@@ -253,16 +249,18 @@ class _RailNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         children: [
-          Icon(icon, color: Colors.white, size: 24),
+          Icon(icon, color: colors.onPrimary, size: 24),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-              color: Colors.white,
+              color: colors.onPrimary,
               fontSize: 11,
               fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
             ),
@@ -281,11 +279,13 @@ class _RailBottomIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Stack(
         children: [
-          Icon(icon, color: Colors.white, size: 24),
+          Icon(icon, color: colors.onPrimary, size: 24),
           if (hasNotification)
             Positioned(
               right: 0,
@@ -293,8 +293,8 @@ class _RailBottomIcon extends StatelessWidget {
               child: Container(
                 width: 8,
                 height: 8,
-                decoration: const BoxDecoration(
-                  color: Colors.red,
+                decoration: BoxDecoration(
+                  color: colors.error,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -306,28 +306,29 @@ class _RailBottomIcon extends StatelessWidget {
 }
 
 class _MainSidebar extends StatelessWidget {
-  final Color backgroundColor;
-  const _MainSidebar({required this.backgroundColor});
+  const _MainSidebar();
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Container(
       width: 260,
-      color: backgroundColor,
+      color: colors.sidebar,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const WorkspaceSwitcherHeader(),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 20, 16, 8),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
             child: Row(
               children: [
-                Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
-                SizedBox(width: 8),
+                Icon(Icons.arrow_drop_down, color: colors.onPrimary, size: 20),
+                const SizedBox(width: 8),
                 Text(
                   'Channels',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: colors.onPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
@@ -341,35 +342,44 @@ class _MainSidebar extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.white24),
+                border: Border.all(
+                  color: colors.onPrimary.withValues(alpha: 0.24),
+                ),
                 borderRadius: BorderRadius.circular(6),
-                color: Colors.white.withValues(alpha: 0.05),
+                color: colors.onPrimary.withValues(alpha: 0.05),
               ),
-              child: const Row(
+              child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       'View all channels',
-                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                      style: TextStyle(
+                        color: colors.onPrimary.withValues(alpha: 0.7),
+                        fontSize: 13,
+                      ),
                     ),
                   ),
-                  Icon(Icons.chevron_right, color: Colors.white70, size: 16),
+                  Icon(
+                    Icons.chevron_right,
+                    color: colors.onPrimary.withValues(alpha: 0.7),
+                    size: 16,
+                  ),
                 ],
               ),
             ),
           ),
           const _AddChannelButton(),
           const SizedBox(height: 20),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Icon(Icons.arrow_right, color: Colors.white, size: 20),
-                SizedBox(width: 8),
+                Icon(Icons.arrow_right, color: colors.onPrimary, size: 20),
+                const SizedBox(width: 8),
                 Text(
                   'People',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: colors.onPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
@@ -389,18 +399,23 @@ class _ChannelItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
         children: [
-          const Text(
+          Text(
             '#',
-            style: TextStyle(color: Colors.white54, fontSize: 18),
+            style: TextStyle(
+              color: colors.onPrimary.withValues(alpha: 0.54),
+              fontSize: 18,
+            ),
           ),
           const SizedBox(width: 12),
           Text(
             label,
-            style: const TextStyle(color: Colors.white, fontSize: 15),
+            style: TextStyle(color: colors.onPrimary, fontSize: 15),
           ),
         ],
       ),
@@ -413,6 +428,8 @@ class _AddChannelButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -421,17 +438,16 @@ class _AddChannelButton extends StatelessWidget {
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               border: Border.all(
-                color: Colors.white38,
-                style: BorderStyle.solid,
+                color: colors.onPrimary.withValues(alpha: 0.38),
               ),
               borderRadius: BorderRadius.circular(4),
             ),
-            child: const Icon(Icons.add, color: Colors.white, size: 14),
+            child: Icon(Icons.add, color: colors.onPrimary, size: 14),
           ),
           const SizedBox(width: 12),
-          const Text(
+          Text(
             'Add channel',
-            style: TextStyle(color: Colors.white, fontSize: 14),
+            style: TextStyle(color: colors.onPrimary, fontSize: 14),
           ),
         ],
       ),
@@ -446,90 +462,104 @@ class _ChatArea extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _buildChatHeader(),
-        Expanded(child: _buildWelcomeScreen()),
-        _buildMessageInput(),
+        _buildChatHeader(context),
+        Expanded(child: _buildWelcomeScreen(context)),
+        _buildMessageInput(context),
       ],
     );
   }
 
-  Widget _buildChatHeader() {
+  Widget _buildChatHeader(BuildContext context) {
+    final colors = context.colors;
+
     return Container(
       height: 60,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.black12)),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: colors.divider)),
       ),
       child: Row(
         children: [
-          const Text(
+          Text(
             '# general',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: colors.textPrimary,
+            ),
           ),
           const Spacer(),
           _HeaderAction(icon: Icons.headphones_outlined, label: 'Start Buzz'),
           const SizedBox(width: 12),
-          const CircleAvatar(
+          CircleAvatar(
             radius: 14,
-            backgroundColor: Colors.tealAccent,
-            child: Icon(Icons.person, size: 18, color: Colors.white),
+            backgroundColor: colors.accent,
+            child: Icon(Icons.person, size: 18, color: colors.onPrimary),
           ),
           const SizedBox(width: 8),
-          const Icon(Icons.more_vert, color: Colors.black54),
+          Icon(Icons.more_vert, color: colors.textHint),
         ],
       ),
     );
   }
 
-  Widget _buildWelcomeScreen() {
+  Widget _buildWelcomeScreen(BuildContext context) {
+    final colors = context.colors;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 80),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.celebration, size: 60, color: Colors.amber),
+          Icon(Icons.celebration, size: 60, color: colors.primary),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'Welcome to #general',
-            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: colors.textPrimary,
+            ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Share all information relating to general here. All team members await you! 😉',
-            style: TextStyle(fontSize: 16, color: Colors.black87),
+            style: TextStyle(fontSize: 16, color: colors.textPrimary),
           ),
           const SizedBox(height: 32),
-          _InviteCard(),
+          const _InviteCard(),
         ],
       ),
     );
   }
 
-  Widget _buildMessageInput() {
+  Widget _buildMessageInput(BuildContext context) {
+    final colors = context.colors;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.black12),
+          border: Border.all(color: colors.divider),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(Icons.format_bold, size: 20, color: Colors.black54),
-                SizedBox(width: 16),
-                Icon(Icons.format_italic, size: 20, color: Colors.black54),
-                SizedBox(width: 16),
-                Icon(Icons.link, size: 20, color: Colors.black54),
-                SizedBox(width: 16),
-                Icon(Icons.list, size: 20, color: Colors.black54),
-                SizedBox(width: 16),
-                Icon(Icons.code, size: 20, color: Colors.black54),
+                Icon(Icons.format_bold, size: 20, color: colors.textHint),
+                const SizedBox(width: 16),
+                Icon(Icons.format_italic, size: 20, color: colors.textHint),
+                const SizedBox(width: 16),
+                Icon(Icons.link, size: 20, color: colors.textHint),
+                const SizedBox(width: 16),
+                Icon(Icons.list, size: 20, color: colors.textHint),
+                const SizedBox(width: 16),
+                Icon(Icons.code, size: 20, color: colors.textHint),
               ],
             ),
-            const Divider(height: 24),
+            Divider(height: 24, color: colors.divider),
             const TextField(
               decoration: InputDecoration(
                 hintText: 'Message Ruby - Social Media Handler',
@@ -540,20 +570,35 @@ class _ChatArea extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.add, color: Colors.black38),
-                const SizedBox(width: 12),
-                const Icon(
-                  Icons.emoji_emotions_outlined,
-                  color: Colors.black38,
+                Icon(
+                  Icons.add,
+                  color: colors.textHint.withValues(alpha: 0.75),
                 ),
                 const SizedBox(width: 12),
-                const Icon(Icons.alternate_email, color: Colors.black38),
+                Icon(
+                  Icons.emoji_emotions_outlined,
+                  color: colors.textHint.withValues(alpha: 0.75),
+                ),
                 const SizedBox(width: 12),
-                const Icon(Icons.videocam_outlined, color: Colors.black38),
+                Icon(
+                  Icons.alternate_email,
+                  color: colors.textHint.withValues(alpha: 0.75),
+                ),
                 const SizedBox(width: 12),
-                const Icon(Icons.mic_none_outlined, color: Colors.black38),
+                Icon(
+                  Icons.videocam_outlined,
+                  color: colors.textHint.withValues(alpha: 0.75),
+                ),
+                const SizedBox(width: 12),
+                Icon(
+                  Icons.mic_none_outlined,
+                  color: colors.textHint.withValues(alpha: 0.75),
+                ),
                 const Spacer(),
-                const Icon(Icons.send_rounded, color: Colors.black26),
+                Icon(
+                  Icons.send_rounded,
+                  color: colors.textHint.withValues(alpha: 0.5),
+                ),
               ],
             ),
           ],
@@ -567,21 +612,28 @@ class _HeaderAction extends StatelessWidget {
   final IconData icon;
   final String label;
   const _HeaderAction({required this.icon, required this.label});
+
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.black12),
+        border: Border.all(color: colors.divider),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: Colors.black87),
+          Icon(icon, size: 18, color: colors.textPrimary),
           const SizedBox(width: 8),
           Text(
             label,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              color: colors.textPrimary,
+            ),
           ),
         ],
       ),
@@ -594,10 +646,12 @@ class _InviteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.black12),
+        border: Border.all(color: colors.divider),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -605,22 +659,26 @@ class _InviteCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: colors.primaryBg,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.person_add_alt, color: Colors.blue),
+            child: Icon(Icons.person_add_alt, color: colors.primary),
           ),
           const SizedBox(width: 16),
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Invite teammates',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: colors.textPrimary,
+                ),
               ),
               Text(
                 'Add your entire team in seconds',
-                style: TextStyle(color: Colors.black54),
+                style: TextStyle(color: colors.textHint),
               ),
             ],
           ),
