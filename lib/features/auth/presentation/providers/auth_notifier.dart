@@ -101,7 +101,10 @@ class AuthNotifier extends Notifier<AuthState> {
         state = state.copyWith(isLoading: false);
         return true;
       case Failure<void>():
-        AppLogger.w('Forgot password failed — ${result.error.message}', tag: _tag);
+        AppLogger.w(
+          'Forgot password failed — ${result.error.message}',
+          tag: _tag,
+        );
         state = state.copyWith(
           isLoading: false,
           error: result.error.friendlyMessage,
@@ -129,7 +132,10 @@ class AuthNotifier extends Notifier<AuthState> {
         state = state.copyWith(isLoading: false);
         return true;
       case Failure<void>():
-        AppLogger.w('Reset password failed — ${result.error.message}', tag: _tag);
+        AppLogger.w(
+          'Reset password failed — ${result.error.message}',
+          tag: _tag,
+        );
         state = state.copyWith(
           isLoading: false,
           error: result.error.friendlyMessage,

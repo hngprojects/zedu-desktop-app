@@ -15,8 +15,11 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
   final _formKey = GlobalKey<FormState>();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
-  final List<TextEditingController> _tokenControllers = List.generate(6, (_) => TextEditingController());
+
+  final List<TextEditingController> _tokenControllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
 
   Timer? _timer;
@@ -59,29 +62,45 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
 
     final token = _tokenControllers.map((c) => c.text).join();
     if (token.length != 6) {
-      AppToastService.show(context, type: AppToastType.error, message: 'Please enter the 6-digit verification code.');
+      AppToastService.show(
+        context,
+        type: AppToastType.error,
+        message: 'Please enter the 6-digit verification code.',
+      );
       return;
     }
 
-    final success = await ref.read(authNotifierProvider.notifier).resetPassword(
-      email: widget.email,
-      token: token,
-      newPassword: _newPasswordController.text,
-    );
+    final success = await ref
+        .read(authNotifierProvider.notifier)
+        .resetPassword(
+          email: widget.email,
+          token: token,
+          newPassword: _newPasswordController.text,
+        );
 
     if (success && mounted) {
-      AppToastService.show(context, type: AppToastType.success, message: 'Password reset successfully!');
+      AppToastService.show(
+        context,
+        type: AppToastType.success,
+        message: 'Password reset successfully!',
+      );
       context.go(AppRouter.login);
     }
   }
-  
+
   Future<void> _onResendCodePressed() async {
     if (_secondsLeft > 0) return;
-    
+
     // Trigger forgot password again to resend code
-    final success = await ref.read(authNotifierProvider.notifier).forgotPassword(email: widget.email);
+    final success = await ref
+        .read(authNotifierProvider.notifier)
+        .forgotPassword(email: widget.email);
     if (success && mounted) {
-      AppToastService.show(context, type: AppToastType.success, message: 'New code sent to your email.');
+      AppToastService.show(
+        context,
+        type: AppToastType.success,
+        message: 'New code sent to your email.',
+      );
       _startTimer();
     }
   }
@@ -103,7 +122,9 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(1),
             ],
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
             decoration: InputDecoration(
               filled: true,
               fillColor: Colors.white,
@@ -135,7 +156,11 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authNotifierProvider, (previous, next) {
       if (next.error != null && previous?.error != next.error) {
-        AppToastService.show(context, type: AppToastType.error, message: next.error!);
+        AppToastService.show(
+          context,
+          type: AppToastType.error,
+          message: next.error!,
+        );
       }
     });
 
@@ -179,7 +204,8 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
                         color: context.colors.primary,
                         fontFamily: FontFamily.roboto,
                       ),
-                      recognizer: TapGestureRecognizer()..onTap = () => context.go(AppRouter.login),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () => context.go(AppRouter.login),
                     ),
                   ],
                 ),
@@ -199,7 +225,9 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
                 context.gapV(80),
                 Text(
                   'Reset Password',
-                  style: context.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
+                  style: context.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 context.gapV(12),
                 Text(
@@ -212,7 +240,9 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
                 context.gapV(8),
                 Text(
                   'We have sent a code to your email $maskedEmail',
-                  style: context.textTheme.bodyMedium?.copyWith(color: context.colors.textSecondary),
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    color: context.colors.textSecondary,
+                  ),
                 ),
                 context.gapV(48),
                 Form(
@@ -222,7 +252,9 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
                     children: [
                       Text(
                         'Enter verification code',
-                        style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                        style: context.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       context.gapV(8),
                       _buildOTPInput(),
@@ -233,7 +265,8 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
                         label: 'Enter new password',
                         hint: 'Password',
                         textInputAction: TextInputAction.next,
-                        validator: (value) => Validators.validatePassword(context, value),
+                        validator: (value) =>
+                            Validators.validatePassword(context, value),
                       ),
                       context.gapV(16),
                       AppTextField(
@@ -262,7 +295,9 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
                         child: OutlinedButton(
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(color: context.colors.divider),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                           onPressed: () => context.go(AppRouter.login),
                           child: Text(
@@ -280,14 +315,18 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
                           TextSpan(
                             text: 'Resend code ',
                             style: context.textTheme.bodyMedium?.copyWith(
-                              color: _secondsLeft > 0 ? context.colors.textPrimary : context.colors.primary,
+                              color: _secondsLeft > 0
+                                  ? context.colors.textPrimary
+                                  : context.colors.primary,
                               fontWeight: FontWeight.w500,
                             ),
-                            recognizer: TapGestureRecognizer()..onTap = _onResendCodePressed,
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = _onResendCodePressed,
                             children: [
                               if (_secondsLeft > 0)
                                 TextSpan(
-                                  text: 'after ${_secondsLeft ~/ 60}:${(_secondsLeft % 60).toString().padLeft(2, '0')} mins',
+                                  text:
+                                      'after ${_secondsLeft ~/ 60}:${(_secondsLeft % 60).toString().padLeft(2, '0')} mins',
                                   style: context.textTheme.bodyMedium?.copyWith(
                                     color: context.colors.primary,
                                     fontWeight: FontWeight.w500,
