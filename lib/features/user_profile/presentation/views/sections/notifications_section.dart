@@ -183,40 +183,76 @@ class _TimeSelect extends StatelessWidget {
   final String value;
   final ValueChanged<String> onChanged;
 
+  List<String> _generateTimeOptions() {
+    final list = <String>[];
+    for (var h = 0; h < 24; h++) {
+      for (var m = 0; m < 60; m += 30) {
+        final tod = TimeOfDay(hour: h, minute: m);
+        list.add(_formatTimeOfDay(tod));
+      }
+    }
+    return list;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final timeOptions = _generateTimeOptions();
+    if (!timeOptions.contains(value)) {
+      timeOptions.add(value);
+      timeOptions.sort((a, b) {
+        final ta = _parseTimeOfDay(a) ?? const TimeOfDay(hour: 0, minute: 0);
+        final tb = _parseTimeOfDay(b) ?? const TimeOfDay(hour: 0, minute: 0);
+        final am = ta.hour * 60 + ta.minute;
+        final bm = tb.hour * 60 + tb.minute;
+        return am.compareTo(bm);
+      });
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ProfileFieldLabel(label),
         const SizedBox(height: 6),
-        InkWell(
-          onTap: () async {
-            final initial = _parseTimeOfDay(value) ?? TimeOfDay.now();
-            final picked = await showTimePicker(
-              context: context,
-              initialTime: initial,
-            );
-            if (picked != null) onChanged(_formatTimeOfDay(picked));
-          },
-          child: Container(
-            width: 120,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-              borderRadius: BorderRadius.circular(6),
+        SizedBox(
+          width: 140,
+          child: DropdownButtonFormField<String>(
+            initialValue: value,
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: const BorderSide(color: Color(0xFF6458F5)),
+              ),
             ),
-            child: Row(
-              children: [
-                Text(value, style: context.textTheme.bodySmall),
-                const Spacer(),
-                const Icon(
-                  Icons.access_time,
-                  size: 16,
-                  color: Color(0xFF6B7280),
-                ),
-              ],
+            dropdownColor: Colors.white,
+            icon: const Icon(
+              Icons.access_time,
+              size: 16,
+              color: Color(0xFF6B7280),
             ),
+            style: context.textTheme.bodySmall?.copyWith(
+              color: const Color(0xFF111827),
+            ),
+            items: timeOptions.map((time) {
+              return DropdownMenuItem<String>(value: time, child: Text(time));
+            }).toList(),
+            onChanged: (newValue) {
+              if (newValue != null) {
+                onChanged(newValue);
+              }
+            },
           ),
         ),
       ],
