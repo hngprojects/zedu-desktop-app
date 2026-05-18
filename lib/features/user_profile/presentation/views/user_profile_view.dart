@@ -1,5 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+import 'package:flutter/widgets.dart';
 
 class UserProfileView extends ConsumerWidget {
   const UserProfileView({super.key});
@@ -8,19 +9,25 @@ class UserProfileView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.listen<UserProfileState>(userProfileNotifierProvider, (previous, next) {
       if (next.error != null && previous?.error != next.error) {
-        AppToastService.show(
-          context,
-          type: AppToastType.error,
-          message: next.error!,
-        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!context.mounted) return;
+          AppToastService.show(
+            context,
+            type: AppToastType.error,
+            message: next.error!,
+          );
+        });
       }
       if (next.successMessage != null &&
           previous?.successMessage != next.successMessage) {
-        AppToastService.show(
-          context,
-          type: AppToastType.success,
-          message: next.successMessage!,
-        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!context.mounted) return;
+          AppToastService.show(
+            context,
+            type: AppToastType.success,
+            message: next.successMessage!,
+          );
+        });
       }
     });
 
@@ -93,6 +100,7 @@ class _ProfileContent extends StatelessWidget {
                   state.notifications ?? NotificationPreferences.empty(),
               isSaving: state.isSaving,
               onSave: notifier.updateNotificationPreferences,
+              onRevert: notifier.revertNotificationPreferences,
             ),
             UserProfileSection.security => SecuritySection(
               sessions: state.securitySessions,
