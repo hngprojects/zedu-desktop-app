@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
 class WorkspaceSwitcherList extends ConsumerWidget {
@@ -7,6 +6,7 @@ class WorkspaceSwitcherList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
     final workspaceState = ref.watch(workspaceProvider);
     final selectedWorkspace = workspaceState.selectedWorkspace;
 
@@ -17,11 +17,11 @@ class WorkspaceSwitcherList extends ConsumerWidget {
       child: Container(
         width: 320,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.background,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
+              color: colors.textPrimary.withValues(alpha: 0.15),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -31,7 +31,7 @@ class WorkspaceSwitcherList extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildCurrentWorkspaceHeader(selectedWorkspace),
+            _buildCurrentWorkspaceHeader(context, selectedWorkspace),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: Row(
@@ -52,12 +52,12 @@ class WorkspaceSwitcherList extends ConsumerWidget {
                 ],
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 20, 16, 8),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
               child: Text(
                 'Switch Workspaces',
                 style: TextStyle(
-                  color: Colors.black54,
+                  color: colors.textHint,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -85,7 +85,7 @@ class WorkspaceSwitcherList extends ConsumerWidget {
                 },
               ),
             ),
-            const Divider(height: 1, color: Colors.black12),
+            Divider(height: 1, color: colors.divider),
             _buildFooter(context),
           ],
         ),
@@ -93,7 +93,12 @@ class WorkspaceSwitcherList extends ConsumerWidget {
     );
   }
 
-  Widget _buildCurrentWorkspaceHeader(Workspace workspace) {
+  Widget _buildCurrentWorkspaceHeader(
+    BuildContext context,
+    Workspace workspace,
+  ) {
+    final colors = context.colors;
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Row(
@@ -102,15 +107,13 @@ class WorkspaceSwitcherList extends ConsumerWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: Colors.blue.shade700,
+              color: colors.primary,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Center(
-              child: Icon(
-                Icons.grid_view_rounded,
-                color: Colors.white,
-                size: 28,
-              ),
+            child: Icon(
+              Icons.grid_view_rounded,
+              color: colors.onPrimary,
+              size: 28,
             ),
           ),
           const SizedBox(width: 12),
@@ -120,22 +123,25 @@ class WorkspaceSwitcherList extends ConsumerWidget {
               children: [
                 Text(
                   workspace.name,
-                  style: const TextStyle(
-                    color: Colors.black,
+                  style: TextStyle(
+                    color: colors.textPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
                 Text(
                   '${workspace.membersCount} members',
-                  style: const TextStyle(color: Colors.black54, fontSize: 13),
+                  style: TextStyle(color: colors.textHint, fontSize: 13),
                 ),
               ],
             ),
           ),
-          const Text(
+          Text(
             'Current',
-            style: TextStyle(color: Colors.black38, fontSize: 12),
+            style: TextStyle(
+              color: colors.textHint.withValues(alpha: 0.75),
+              fontSize: 12,
+            ),
           ),
         ],
       ),
@@ -143,17 +149,19 @@ class WorkspaceSwitcherList extends ConsumerWidget {
   }
 
   Widget _buildFooter(BuildContext context) {
+    final colors = context.colors;
+
     return InkWell(
       onTap: () => Navigator.pop(context),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            const Icon(Icons.add, color: Colors.black54, size: 20),
+            Icon(Icons.add, color: colors.textHint, size: 20),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               'Add a new organization',
-              style: TextStyle(color: Colors.black87, fontSize: 14),
+              style: TextStyle(color: colors.textPrimary, fontSize: 14),
             ),
           ],
         ),
@@ -170,16 +178,18 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return OutlinedButton.icon(
       onPressed: () {},
-      icon: Icon(icon, size: 18, color: Colors.black87),
+      icon: Icon(icon, size: 18, color: colors.textPrimary),
       label: Text(
         label,
-        style: const TextStyle(color: Colors.black87, fontSize: 13),
+        style: TextStyle(color: colors.textPrimary, fontSize: 13),
       ),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        side: const BorderSide(color: Colors.black12),
+        side: BorderSide(color: colors.divider),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
       ),
     );
@@ -199,12 +209,14 @@ class _WorkspaceListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return InkWell(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         color: isActive
-            ? Colors.black.withValues(alpha: 0.05)
+            ? colors.textPrimary.withValues(alpha: 0.05)
             : Colors.transparent,
         child: Row(
           children: [
@@ -215,14 +227,14 @@ class _WorkspaceListItem extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: _getAvatarColor(workspace.name),
+                    color: _avatarColor(colors, workspace.name),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Center(
                     child: Text(
                       workspace.name.substring(0, 1).toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: colors.onPrimary,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -239,14 +251,14 @@ class _WorkspaceListItem extends StatelessWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.red,
+                        color: colors.error,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.white, width: 2),
+                        border: Border.all(color: colors.background, width: 2),
                       ),
                       child: Text(
                         '${workspace.unreadCount}',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: colors.onPrimary,
                           fontSize: 8,
                           fontWeight: FontWeight.bold,
                         ),
@@ -260,7 +272,7 @@ class _WorkspaceListItem extends StatelessWidget {
               child: Text(
                 workspace.name,
                 style: TextStyle(
-                  color: Colors.black87,
+                  color: colors.textPrimary,
                   fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                   fontSize: 14,
                 ),
@@ -269,7 +281,9 @@ class _WorkspaceListItem extends StatelessWidget {
             Icon(
               Icons.push_pin,
               size: 16,
-              color: isActive ? Colors.black38 : Colors.transparent,
+              color: isActive
+                  ? colors.textHint.withValues(alpha: 0.75)
+                  : Colors.transparent,
             ),
           ],
         ),
@@ -277,15 +291,15 @@ class _WorkspaceListItem extends StatelessWidget {
     );
   }
 
-  Color _getAvatarColor(String name) {
-    final colors = [
-      Colors.orange,
-      Colors.green,
-      Colors.blue,
-      Colors.purple,
-      Colors.red,
-      Colors.teal,
+  Color _avatarColor(AppPalette colors, String name) {
+    final palette = [
+      colors.accent,
+      colors.success,
+      colors.primary,
+      colors.error,
+      colors.borderOutline,
+      colors.textSecondary,
     ];
-    return colors[name.length % colors.length];
+    return palette[name.length % palette.length];
   }
 }

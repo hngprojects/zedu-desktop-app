@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:zedu/core/core.dart';
 // ============================================================
 // AppButton — Reusable button for EventRun
 // ============================================================
@@ -117,7 +117,7 @@ class AppButton extends StatelessWidget {
   Widget _buildChild(BuildContext context) {
     if (loading) {
       final color = switch (_variant) {
-        _AppButtonVariant.filled => Colors.white,
+        _AppButtonVariant.filled => context.colors.onPrimary,
         _ => Theme.of(context).colorScheme.primary,
       };
 

@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 class AppPalette {
   final Brightness brightness;
   final Color primary;
+  final Color sidebar;
+  final Color accent;
+  final Color onPrimary;
   final Color background;
   final Color textPrimary;
   final Color textSecondary;
@@ -13,10 +16,14 @@ class AppPalette {
   final Color successBg;
   final Color error;
   final Color errorBg;
+  final Color primaryBg;
 
   const AppPalette({
     required this.brightness,
     required this.primary,
+    required this.sidebar,
+    required this.accent,
+    required this.onPrimary,
     required this.background,
     required this.textPrimary,
     required this.textSecondary,
@@ -27,11 +34,15 @@ class AppPalette {
     required this.successBg,
     required this.error,
     required this.errorBg,
+    required this.primaryBg,
   });
 
   static const light = AppPalette(
     brightness: Brightness.light,
     primary: Color(0xFF7141F8),
+    sidebar: Color(0xFF303073),
+    accent: Color(0xFF5CCBBA),
+    onPrimary: Color(0xFFFFFFFF),
     background: Color(0xFFFCFBFF),
     textPrimary: Color(0xFF1E1E1E),
     textSecondary: Color(0xFF0A090B),
@@ -42,5 +53,6 @@ class AppPalette {
     successBg: Color(0xFFEFFFF5),
     error: Color(0xFFEF4444),
     errorBg: Color(0xFFFFF1F1),
+    primaryBg: Color(0xFFF3EFFF),
   );
 }
