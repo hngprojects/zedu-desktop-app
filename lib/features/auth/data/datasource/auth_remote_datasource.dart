@@ -87,20 +87,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<void> sendMagicLink({required String email}) async {
     try {
       if (_config.usesMockData) {
-        AppLogger.d('Using mock data for POST /auth/magic-link', tag: _tag);
+        AppLogger.d('Using mock data for POST /auth/magick-link', tag: _tag);
         return;
       }
 
-      AppLogger.d('POST /auth/magic-link — $email', tag: _tag);
+      AppLogger.d('POST /auth/magick-link — $email', tag: _tag);
       await _apiBaseService.post<Map<String, dynamic>>(
-        path: '/auth/magic-link',
+        path: '/auth/magick-link',
         data: {'email': email},
       );
     } on ApiFailure {
       rethrow;
     } catch (error) {
       AppLogger.e('Failed to request magic link', tag: _tag, error: error);
-      throw ApiFailure.fromParsingError(error, path: '/auth/magic-link');
+      throw ApiFailure.fromParsingError(error, path: '/auth/magick-link');
     }
   }
 
@@ -108,15 +108,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<LoginResponseModel> verifyMagicLink({required String token}) async {
     try {
       if (_config.usesMockData) {
-        AppLogger.d('Using mock data for POST /auth/magic-link/verify', tag: _tag);
+        AppLogger.d(
+          'Using mock data for POST /auth/magick-link/verify',
+          tag: _tag,
+        );
         return LoginResponseModel.fromJson(
           LoginResponseModel.mockLoginResponse,
         );
       }
 
-      AppLogger.d('POST /auth/magic-link/verify', tag: _tag);
+      AppLogger.d('POST /auth/magick-link/verify', tag: _tag);
       final response = await _apiBaseService.post<Map<String, dynamic>>(
-        path: '/auth/magic-link/verify',
+        path: '/auth/magick-link/verify',
         data: {'token': token},
       );
 
@@ -126,7 +129,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       rethrow;
     } catch (error) {
       AppLogger.e('Failed to verify magic link', tag: _tag, error: error);
-      throw ApiFailure.fromParsingError(error, path: '/auth/magic-link/verify');
+      throw ApiFailure.fromParsingError(
+        error,
+        path: '/auth/magick-link/verify',
+      );
     }
   }
 }

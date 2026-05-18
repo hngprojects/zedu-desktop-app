@@ -71,36 +71,9 @@ class _LoginViewState extends ConsumerState<LoginView> {
       backgroundColor: Colors.white,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(80),
-        child: SafeArea(
-          child: Padding(
-            padding: context.symmetric(horizontal: 68, vertical: 28),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Image.asset('assets/pngs/zedu_logo.png', width: 83, height: 31),
-                Text.rich(
-                  TextSpan(
-                    text: 'Already have an account? ',
-                    style: context.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w400,
-                      color: context.colors.textPrimary,
-                      fontFamily: FontFamily.roboto,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: 'Sign up',
-                        style: context.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w400,
-                          color: context.colors.primary,
-                          fontFamily: FontFamily.roboto,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+        child: AuthHeaderStrip(
+          promptText: 'Already have an account? ',
+          actionText: 'Sign up',
         ),
       ),
       body: SingleChildScrollView(
@@ -235,12 +208,15 @@ class _LoginViewState extends ConsumerState<LoginView> {
                 context.gapV(12),
                 Align(
                   alignment: Alignment.topLeft,
-                  child: Text(
-                    'Login with magic link',
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w400,
-                      color: context.colors.primary,
-                      fontFamily: FontFamily.roboto,
+                  child: InkWell(
+                    onTap: () => context.go(AppRouter.magicLinkRequest),
+                    child: Text(
+                      'Login with magic link',
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w400,
+                        color: context.colors.primary,
+                        fontFamily: FontFamily.roboto,
+                      ),
                     ),
                   ),
                 ),

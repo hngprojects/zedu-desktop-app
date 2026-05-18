@@ -146,5 +146,72 @@ void main() {
         ).called(1);
       });
     });
+
+    group('sendMagicLink', () {
+      test('calls POST /auth/magick-link with email payload', () async {
+        when(
+          () => mockApi.post<Map<String, dynamic>>(
+            path: '/auth/magick-link',
+            data: {'email': 'magic@example.com'},
+          ),
+        ).thenAnswer(
+          (_) async => ApiResponseModel<Map<String, dynamic>>(
+            data: {'status': 'success'},
+            statusCode: 200,
+          ),
+        );
+
+        final datasource = AuthRemoteDataSourceImpl(
+          config: const AppConfig(
+            apiBaseUrl: 'https://api.example.com',
+            usesMockData: false,
+          ),
+          apiBaseService: mockApi,
+        );
+
+        await datasource.sendMagicLink(email: 'magic@example.com');
+
+        verify(
+          () => mockApi.post<Map<String, dynamic>>(
+            path: '/auth/magick-link',
+            data: {'email': 'magic@example.com'},
+          ),
+        ).called(1);
+      });
+    });
+
+    group('verifyMagicLink', () {
+      test('calls POST /auth/magick-link/verify with token', () async {
+        when(
+          () => mockApi.post<Map<String, dynamic>>(
+            path: '/auth/magick-link/verify',
+            data: {'token': 'token-123'},
+          ),
+        ).thenAnswer(
+          (_) async => ApiResponseModel<Map<String, dynamic>>(
+            data: {'data': LoginResponseModel.mockLoginResponse},
+            statusCode: 200,
+          ),
+        );
+
+        final datasource = AuthRemoteDataSourceImpl(
+          config: const AppConfig(
+            apiBaseUrl: 'https://api.example.com',
+            usesMockData: false,
+          ),
+          apiBaseService: mockApi,
+        );
+
+        final result = await datasource.verifyMagicLink(token: 'token-123');
+
+        expect(result, isA<LoginResponseModel>());
+        verify(
+          () => mockApi.post<Map<String, dynamic>>(
+            path: '/auth/magick-link/verify',
+            data: {'token': 'token-123'},
+          ),
+        ).called(1);
+      });
+    });
   });
 }
