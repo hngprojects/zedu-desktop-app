@@ -148,7 +148,10 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     required String newPassword,
   }) async {
     if (_config.usesMockData) {
-      AppLogger.d('Using mock data for POST /profile/security/password', tag: _tag);
+      AppLogger.d(
+        'Using mock data for POST /profile/security/password',
+        tag: _tag,
+      );
       return;
     }
     await _apiBaseService.post<Map<String, dynamic>>(
