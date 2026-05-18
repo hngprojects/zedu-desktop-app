@@ -1,5 +1,5 @@
+import 'package:dio/dio.dart';
 // core/network/api_failure.dart
-import 'package:zedu/core/core.dart';
 
 class ApiFailure implements Exception {
   const ApiFailure({
@@ -56,7 +56,32 @@ class ApiFailure implements Exception {
 
   static String _resolveMessage(DioException error) {
     final data = error.response?.data;
-    if (data case {'message': final String message}) return message;
+    if (data is Map) {
+      if (data['errors'] is List) {
+        final errorsList = data['errors'] as List;
+        final details = <String>[];
+        for (final err in errorsList) {
+          if (err is Map) {
+            final field = err['field'] ?? err['key'];
+            final msg = err['message'] ?? err['value'] ?? err['error'];
+            if (field != null && msg != null) {
+              details.add('$field: $msg');
+            } else if (msg != null) {
+              details.add(msg.toString());
+            } else if (field != null) {
+              details.add('$field is invalid');
+            }
+          } else {
+            details.add(err.toString());
+          }
+        }
+        if (details.isNotEmpty) {
+          return details.join('\n');
+        }
+      }
+      if (data['message'] is String) return data['message'] as String;
+      if (data['error'] is String) return data['error'] as String;
+    }
     if (error.message case final message?) return message;
     return 'Request failed.';
   }

@@ -1,5 +1,5 @@
+import 'package:go_router/go_router.dart';
 import 'package:zedu/features/features.dart';
-import 'package:zedu/core/core.dart';
 
 class AppRouter {
   const AppRouter._();

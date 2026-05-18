@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:zedu/core/core.dart';
 
 class ApiBaseService {

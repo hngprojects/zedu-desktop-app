@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class FontFamily {
   static const String lato = 'Lato';
   static const String roboto = 'Roboto';
-  static String poetsenOne = GoogleFonts.poetsenOne().fontFamily!;
+  static const String poetsenOne = 'PoetsenOne';
 }
 
 class AppTypography {

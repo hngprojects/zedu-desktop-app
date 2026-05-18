@@ -1,4 +1,4 @@
-import 'package:zedu/core/core.dart';
+import 'package:flutter/material.dart';
 
 class Validators {
   static String? validatePassword(BuildContext context, String? value) {
