@@ -114,16 +114,14 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<bool> resetPassword({
-    required String email,
-    required String token,
+    required String oldPassword,
     required String newPassword,
   }) async {
-    AppLogger.d('Reset password attempt — $email', tag: _tag);
+    AppLogger.d('Reset password attempt', tag: _tag);
     state = state.copyWith(isLoading: true, clearError: true);
 
     final result = await _repository.resetPassword(
-      email: email,
-      token: token,
+      oldPassword: oldPassword,
       newPassword: newPassword,
     );
     switch (result) {
