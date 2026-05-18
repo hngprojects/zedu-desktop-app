@@ -63,10 +63,7 @@ class HomeView extends ConsumerWidget {
                             color: colors.error,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            'Logout',
-                            style: TextStyle(color: colors.error),
-                          ),
+                          Text('Logout', style: TextStyle(color: colors.error)),
                         ],
                       ),
                     ),
@@ -178,9 +175,7 @@ class _SidebarRail extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.sidebar,
         border: Border(
-          right: BorderSide(
-            color: colors.onPrimary.withValues(alpha: 0.1),
-          ),
+          right: BorderSide(color: colors.onPrimary.withValues(alpha: 0.1)),
         ),
       ),
       child: Column(
@@ -413,10 +408,7 @@ class _ChannelItem extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Text(
-            label,
-            style: TextStyle(color: colors.onPrimary, fontSize: 15),
-          ),
+          Text(label, style: TextStyle(color: colors.onPrimary, fontSize: 15)),
         ],
       ),
     );
@@ -570,10 +562,7 @@ class _ChatArea extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(
-                  Icons.add,
-                  color: colors.textHint.withValues(alpha: 0.75),
-                ),
+                Icon(Icons.add, color: colors.textHint.withValues(alpha: 0.75)),
                 const SizedBox(width: 12),
                 Icon(
                   Icons.emoji_emotions_outlined,
