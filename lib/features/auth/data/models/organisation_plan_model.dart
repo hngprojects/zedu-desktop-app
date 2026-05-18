@@ -1,4 +1,4 @@
-import 'package:zedu/features/auth/data/models/plan_details_model.dart';
+import 'package:zedu/features/features.dart';
 
 class OrganisationPlanModel {
   const OrganisationPlanModel({

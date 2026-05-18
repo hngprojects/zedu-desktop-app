@@ -1,7 +1,5 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/core/mock/mock_credentials.dart';
-import 'package:zedu/features/auth/data/models/login_response_model.dart';
-import 'package:zedu/features/auth/data/models/user_model.dart';
+import 'package:zedu/features/features.dart';
 
 abstract interface class AuthRemoteDataSource {
   Future<LoginResponseModel> login({

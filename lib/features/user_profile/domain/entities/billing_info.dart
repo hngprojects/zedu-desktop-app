@@ -11,7 +11,8 @@ class BillingInfo {
 
   factory BillingInfo.empty() => const BillingInfo(
     plan: 'Zedu Free',
-    description: 'You are enjoying the full Zedu experience with ability to add as many users to your organisation.',
+    description:
+        'You are enjoying the full Zedu experience with ability to add as many users to your organisation.',
   );
 }
 

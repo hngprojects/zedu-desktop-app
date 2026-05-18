@@ -14,7 +14,12 @@ Future<void> showProfileConfirmDialog(
     context: context,
     builder: (context) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: Text(title, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+      title: Text(
+        title,
+        style: context.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+        ),
+      ),
       content: Text(message, style: context.textTheme.bodyMedium),
       actions: [
         TextButton(
@@ -51,7 +56,10 @@ Future<void> showEditAccountDialog(
     context: context,
     builder: (ctx) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: Text('Edit Account', style: ctx.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+      title: Text(
+        'Edit Account',
+        style: ctx.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      ),
       content: SizedBox(
         width: 480,
         child: Form(
@@ -63,7 +71,8 @@ Future<void> showEditAccountDialog(
                 label: 'Name',
                 controller: nameCtrl,
                 hint: 'Enter your full name',
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Name is required' : null,
               ),
               const SizedBox(height: 16),
               AppTextField(
@@ -121,7 +130,11 @@ Future<void> showEditAccountDialog(
 /// Dialog for changing password.
 Future<void> showChangePasswordDialog(
   BuildContext context,
-  Future<void> Function({required String currentPassword, required String newPassword}) onSave,
+  Future<void> Function({
+    required String currentPassword,
+    required String newPassword,
+  })
+  onSave,
 ) async {
   final currentCtrl = TextEditingController();
   final newCtrl = TextEditingController();
@@ -132,7 +145,10 @@ Future<void> showChangePasswordDialog(
     context: context,
     builder: (ctx) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: Text('Change Password', style: ctx.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+      title: Text(
+        'Change Password',
+        style: ctx.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      ),
       content: SizedBox(
         width: 480,
         child: Form(
@@ -155,7 +171,9 @@ Future<void> showChangePasswordDialog(
                 isPassword: true,
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Required';
-                  if (v.length < 8) return 'Password must be at least 8 characters';
+                  if (v.length < 8) {
+                    return 'Password must be at least 8 characters';
+                  }
                   return null;
                 },
               ),
@@ -165,7 +183,8 @@ Future<void> showChangePasswordDialog(
                 controller: confirmCtrl,
                 hint: 'Re-enter new password',
                 isPassword: true,
-                validator: (v) => v != newCtrl.text ? 'Passwords do not match' : null,
+                validator: (v) =>
+                    v != newCtrl.text ? 'Passwords do not match' : null,
               ),
             ],
           ),
@@ -206,7 +225,9 @@ Future<void> showEditOrganizationDialog(
   ValueChanged<OrganizationProfile> onSave,
 ) async {
   final nameCtrl = TextEditingController(text: organization.name);
-  final businessCtrl = TextEditingController(text: organization.natureOfBusiness);
+  final businessCtrl = TextEditingController(
+    text: organization.natureOfBusiness,
+  );
   final countryCtrl = TextEditingController(text: organization.country);
   final formKey = GlobalKey<FormState>();
 
@@ -214,7 +235,10 @@ Future<void> showEditOrganizationDialog(
     context: context,
     builder: (ctx) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: Text('Edit Organisation', style: ctx.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+      title: Text(
+        'Edit Organisation',
+        style: ctx.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+      ),
       content: SizedBox(
         width: 480,
         child: Form(
@@ -226,7 +250,8 @@ Future<void> showEditOrganizationDialog(
                 label: 'Organisation Name',
                 controller: nameCtrl,
                 hint: 'Enter organisation name',
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Name is required' : null,
               ),
               const SizedBox(height: 16),
               AppTextField(
@@ -289,7 +314,12 @@ Future<void> showInviteMemberDialog(
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setDialogState) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Text('Invite Team Member', style: ctx.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+        title: Text(
+          'Invite Team Member',
+          style: ctx.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         content: SizedBox(
           width: 480,
           child: Form(
@@ -304,7 +334,9 @@ Future<void> showInviteMemberDialog(
                   hint: 'Enter email address',
                   keyboardType: TextInputType.emailAddress,
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Email is required';
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Email is required';
+                    }
                     if (!v.contains('@')) return 'Enter a valid email';
                     return null;
                   },
@@ -315,11 +347,19 @@ Future<void> showInviteMemberDialog(
                 DropdownButtonFormField<String>(
                   initialValue: role,
                   decoration: InputDecoration(
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 14,
+                    ),
                   ),
                   items: const [
-                    DropdownMenuItem(value: 'Administrator', child: Text('Administrator')),
+                    DropdownMenuItem(
+                      value: 'Administrator',
+                      child: Text('Administrator'),
+                    ),
                     DropdownMenuItem(value: 'Manager', child: Text('Manager')),
                     DropdownMenuItem(value: 'User', child: Text('User')),
                   ],
@@ -366,25 +406,43 @@ Future<void> showEditMemberDialog(
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setDialogState) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Text('Edit Team Member', style: ctx.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+        title: Text(
+          'Edit Team Member',
+          style: ctx.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         content: SizedBox(
           width: 480,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(member.email, style: ctx.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+              Text(
+                member.email,
+                style: ctx.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 16),
               ProfileFieldLabel('Role'),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
                 initialValue: role,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
                 ),
                 items: const [
-                  DropdownMenuItem(value: 'Administrator', child: Text('Administrator')),
+                  DropdownMenuItem(
+                    value: 'Administrator',
+                    child: Text('Administrator'),
+                  ),
                   DropdownMenuItem(value: 'Manager', child: Text('Manager')),
                   DropdownMenuItem(value: 'User', child: Text('User')),
                 ],

@@ -69,7 +69,11 @@ class OrganizationSection extends StatelessWidget {
                   right: 0,
                   child: SquareIconButton(
                     icon: Icons.edit_outlined,
-                    onTap: () => showEditOrganizationDialog(context, organization, onSave),
+                    onTap: () => showEditOrganizationDialog(
+                      context,
+                      organization,
+                      onSave,
+                    ),
                   ),
                 ),
               ],
@@ -96,17 +100,16 @@ class OrganizationSection extends StatelessWidget {
   Future<void> _confirmDelete(
     BuildContext context,
     Future<void> Function() onConfirm,
-  ) =>
-      showProfileConfirmDialog(
-        context,
-        title: 'Delete organization?',
-        message: 'This will remove the organization and its related workspace data.',
-        confirmLabel: 'Delete organization',
-        onConfirm: onConfirm,
-        destructive: true,
-      );
+  ) => showProfileConfirmDialog(
+    context,
+    title: 'Delete organization?',
+    message:
+        'This will remove the organization and its related workspace data.',
+    confirmLabel: 'Delete organization',
+    onConfirm: onConfirm,
+    destructive: true,
+  );
 }
-
 
 class _OrganizationAvatar extends StatelessWidget {
   const _OrganizationAvatar({required this.initials});

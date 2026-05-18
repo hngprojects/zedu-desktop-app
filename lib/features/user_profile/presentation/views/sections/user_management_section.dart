@@ -13,7 +13,8 @@ class UserManagementSection extends StatefulWidget {
 
   final List<TeamMember> members;
   final bool isSaving;
-  final Future<void> Function({required String email, required String role}) onInvite;
+  final Future<void> Function({required String email, required String role})
+  onInvite;
   final ValueChanged<TeamMember> onUpdate;
   final ValueChanged<String> onRemove;
 
@@ -35,8 +36,10 @@ class _UserManagementSectionState extends State<UserManagementSection> {
   Widget build(BuildContext context) {
     final query = _searchController.text.trim().toLowerCase();
     final filtered = widget.members.where((member) {
-      final matchesQuery = query.isEmpty || member.email.toLowerCase().contains(query);
-      final matchesRole = _roleFilter == 'All Roles' || member.role == _roleFilter;
+      final matchesQuery =
+          query.isEmpty || member.email.toLowerCase().contains(query);
+      final matchesRole =
+          _roleFilter == 'All Roles' || member.role == _roleFilter;
       return matchesQuery && matchesRole;
     }).toList();
 
@@ -86,7 +89,10 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
                         ),
                       ),
                     ),
@@ -95,9 +101,18 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                       value: _roleFilter,
                       underline: const SizedBox(),
                       items: const [
-                        DropdownMenuItem(value: 'All Roles', child: Text('All Roles')),
-                        DropdownMenuItem(value: 'Administrator', child: Text('Administrator')),
-                        DropdownMenuItem(value: 'Manager', child: Text('Manager')),
+                        DropdownMenuItem(
+                          value: 'All Roles',
+                          child: Text('All Roles'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Administrator',
+                          child: Text('Administrator'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Manager',
+                          child: Text('Manager'),
+                        ),
                         DropdownMenuItem(value: 'User', child: Text('User')),
                       ],
                       onChanged: (value) => setState(() {
@@ -112,7 +127,9 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                 child: SizedBox(
                   width: 880,
                   child: DataTable(
-                    headingRowColor: WidgetStateProperty.all(const Color(0xFFFAFAFA)),
+                    headingRowColor: WidgetStateProperty.all(
+                      const Color(0xFFFAFAFA),
+                    ),
                     columns: const [
                       DataColumn(label: Text('Email Address')),
                       DataColumn(label: Text('Role')),
@@ -126,14 +143,20 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                           DataCell(_MemberIdentity(email: member.email)),
                           DataCell(Text(member.role)),
                           DataCell(Text(member.dateJoined)),
-                          DataCell(ProfileStatusPill(status: member.status.name)),
+                          DataCell(
+                            ProfileStatusPill(status: member.status.name),
+                          ),
                           DataCell(
                             Row(
                               children: [
                                 SquareIconButton(
                                   icon: Icons.edit_outlined,
                                   size: 28,
-                                  onTap: () => _showMemberDialog(context, member, widget.onUpdate),
+                                  onTap: () => _showMemberDialog(
+                                    context,
+                                    member,
+                                    widget.onUpdate,
+                                  ),
                                 ),
                                 const SizedBox(width: 8),
                                 SquareIconButton(
@@ -159,11 +182,21 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    AppButton.outlined(label: 'Previous', expand: false, height: 36, disabled: true),
+                    AppButton.outlined(
+                      label: 'Previous',
+                      expand: false,
+                      height: 36,
+                      disabled: true,
+                    ),
                     const Spacer(),
                     Text('1', style: context.textTheme.bodySmall),
                     const Spacer(),
-                    AppButton.outlined(label: 'Next', expand: false, height: 36, disabled: true),
+                    AppButton.outlined(
+                      label: 'Next',
+                      expand: false,
+                      height: 36,
+                      disabled: true,
+                    ),
                   ],
                 ),
               ),
@@ -176,35 +209,36 @@ class _UserManagementSectionState extends State<UserManagementSection> {
 
   void _showInviteDialog(
     BuildContext context,
-    Future<void> Function({required String email, required String role}) onInvite,
-  ) =>
-      showInviteMemberDialog(context, onInvite);
+    Future<void> Function({required String email, required String role})
+    onInvite,
+  ) => showInviteMemberDialog(context, onInvite);
 
   void _showMemberDialog(
     BuildContext context,
     TeamMember member,
     ValueChanged<TeamMember> onUpdate,
-  ) =>
-      showEditMemberDialog(context, member, onUpdate);
+  ) => showEditMemberDialog(context, member, onUpdate);
 
   Future<void> _confirmRemove(
     BuildContext context,
     String email,
     Future<void> Function() onConfirm,
-  ) =>
-      showProfileConfirmDialog(
-        context,
-        title: 'Remove team member?',
-        message: '$email will lose access to this organization.',
-        confirmLabel: 'Remove member',
-        onConfirm: onConfirm,
-        destructive: true,
-      );
+  ) => showProfileConfirmDialog(
+    context,
+    title: 'Remove team member?',
+    message: '$email will lose access to this organization.',
+    confirmLabel: 'Remove member',
+    onConfirm: onConfirm,
+    destructive: true,
+  );
 }
 
-
 class _TabLabel extends StatelessWidget {
-  const _TabLabel({required this.label, required this.count, required this.active});
+  const _TabLabel({
+    required this.label,
+    required this.count,
+    required this.active,
+  });
   final String label;
   final int count;
   final bool active;
@@ -219,20 +253,26 @@ class _TabLabel extends StatelessWidget {
               label,
               style: context.textTheme.bodyMedium?.copyWith(
                 fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-                color: active ? const Color(0xFF39368A) : const Color(0xFF6B7280),
+                color: active
+                    ? const Color(0xFF39368A)
+                    : const Color(0xFF6B7280),
               ),
             ),
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: active ? const Color(0xFFE9E9FF) : const Color(0xFFF3F4F6),
+                color: active
+                    ? const Color(0xFFE9E9FF)
+                    : const Color(0xFFF3F4F6),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 count.toString(),
                 style: context.textTheme.labelSmall?.copyWith(
-                  color: active ? const Color(0xFF39368A) : const Color(0xFF6B7280),
+                  color: active
+                      ? const Color(0xFF39368A)
+                      : const Color(0xFF6B7280),
                   fontSize: 10,
                 ),
               ),
@@ -259,8 +299,13 @@ class _MemberIdentity extends StatelessWidget {
         Container(
           width: 32,
           height: 32,
-          decoration: const BoxDecoration(color: Color(0xFFE9FBFA), shape: BoxShape.circle),
-          child: const Center(child: Icon(Icons.person, size: 18, color: Color(0xFF17C9BD))),
+          decoration: const BoxDecoration(
+            color: Color(0xFFE9FBFA),
+            shape: BoxShape.circle,
+          ),
+          child: const Center(
+            child: Icon(Icons.person, size: 18, color: Color(0xFF17C9BD)),
+          ),
         ),
         const SizedBox(width: 12),
         Text(email, style: context.textTheme.bodyMedium),

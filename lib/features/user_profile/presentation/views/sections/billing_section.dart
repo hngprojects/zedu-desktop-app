@@ -23,7 +23,9 @@ class BillingSection extends StatelessWidget {
             children: [
               Text(
                 billing.plan,
-                style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                style: context.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 8),
               Text(billing.description, style: context.textTheme.bodyMedium),

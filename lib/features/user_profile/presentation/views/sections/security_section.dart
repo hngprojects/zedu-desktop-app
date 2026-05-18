@@ -14,7 +14,8 @@ class SecuritySection extends StatelessWidget {
   final Future<void> Function({
     required String currentPassword,
     required String newPassword,
-  }) onChangePassword;
+  })
+  onChangePassword;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +30,8 @@ class SecuritySection extends StatelessWidget {
             expand: false,
             height: 44,
             loading: isSaving,
-            onPressed: () => showChangePasswordDialog(context, onChangePassword),
+            onPressed: () =>
+                showChangePasswordDialog(context, onChangePassword),
           ),
         ),
         const SizedBox(height: 28),
@@ -38,7 +40,6 @@ class SecuritySection extends StatelessWidget {
     );
   }
 }
-
 
 class _SessionsTable extends StatelessWidget {
   const _SessionsTable({required this.sessions});

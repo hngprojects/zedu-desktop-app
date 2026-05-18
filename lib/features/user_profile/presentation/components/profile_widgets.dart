@@ -67,7 +67,9 @@ class ProfileStatusPill extends StatelessWidget {
             width: 6,
             height: 6,
             decoration: BoxDecoration(
-              color: isActive ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+              color: isActive
+                  ? const Color(0xFF10B981)
+                  : const Color(0xFFEF4444),
               shape: BoxShape.circle,
             ),
           ),
@@ -75,7 +77,9 @@ class ProfileStatusPill extends StatelessWidget {
           Text(
             status[0].toUpperCase() + status.substring(1),
             style: context.textTheme.labelSmall?.copyWith(
-              color: isActive ? const Color(0xFF065F46) : const Color(0xFF991B1B),
+              color: isActive
+                  ? const Color(0xFF065F46)
+                  : const Color(0xFF991B1B),
               fontWeight: FontWeight.w500,
             ),
           ),

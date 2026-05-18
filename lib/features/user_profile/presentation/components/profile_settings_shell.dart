@@ -27,7 +27,7 @@ class ProfileSettingsShell extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-             _ProfileTopBar(userName: userName),
+            _ProfileTopBar(userName: userName),
             Expanded(
               child: Row(
                 children: [
@@ -40,9 +40,7 @@ class ProfileSettingsShell extends ConsumerWidget {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: child),
-                      ],
+                      children: [Expanded(child: child)],
                     ),
                   ),
                 ],
@@ -94,10 +92,7 @@ class _ProfileTopBar extends StatelessWidget {
                   ),
                   child: const Text(
                     'zu',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 8,
-                    ),
+                    style: TextStyle(color: Colors.white, fontSize: 8),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -169,7 +164,11 @@ class _PrimaryRail extends StatelessWidget {
       child: Column(
         children: [
           for (final item in items)
-            _RailItem(icon: item.$1, label: item.$2, selected: item.$2 == 'DMs'),
+            _RailItem(
+              icon: item.$1,
+              label: item.$2,
+              selected: item.$2 == 'DMs',
+            ),
           const Spacer(),
           const _RailIcon(icon: Icons.notifications_none, badge: true),
           const SizedBox(height: 12),
@@ -241,7 +240,11 @@ class _RailItem extends StatelessWidget {
 }
 
 class _RailIcon extends StatelessWidget {
-  const _RailIcon({required this.icon, this.selected = false, this.badge = false});
+  const _RailIcon({
+    required this.icon,
+    this.selected = false,
+    this.badge = false,
+  });
 
   final IconData icon;
   final bool selected;
@@ -363,7 +366,8 @@ class _SettingsNavigation extends StatelessWidget {
             icon: Icons.person_outline,
             label: 'Roles & permissions',
             selected: selectedSection == UserProfileSection.rolesAndPermissions,
-            onTap: () => onSectionSelected(UserProfileSection.rolesAndPermissions),
+            onTap: () =>
+                onSectionSelected(UserProfileSection.rolesAndPermissions),
           ),
           _NavigationTile(
             icon: Icons.credit_card_outlined,

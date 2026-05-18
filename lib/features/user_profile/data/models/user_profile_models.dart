@@ -143,9 +143,8 @@ class RolePermissionModel extends RolePermission {
     return RolePermissionModel(
       role: json['role'] as String? ?? 'User',
       description: json['description'] as String? ?? '',
-      permissions: (json['permissions'] as List<dynamic>?)
-              ?.cast<String>() ??
-          const [],
+      permissions:
+          (json['permissions'] as List<dynamic>?)?.cast<String>() ?? const [],
     );
   }
 }
@@ -161,8 +160,11 @@ class BillingInfoModel extends BillingInfo {
     return BillingInfoModel(
       plan: json['plan'] as String? ?? 'Zedu Free',
       description: json['description'] as String? ?? '',
-      paymentHistory: (json['payment_history'] as List<dynamic>?)
-              ?.map((e) => PaymentRecordModel.fromJson(e as Map<String, dynamic>))
+      paymentHistory:
+          (json['payment_history'] as List<dynamic>?)
+              ?.map(
+                (e) => PaymentRecordModel.fromJson(e as Map<String, dynamic>),
+              )
               .toList() ??
           const [],
     );

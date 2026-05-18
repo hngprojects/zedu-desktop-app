@@ -40,14 +40,25 @@ class _RoleCard extends StatelessWidget {
             children: [
               Text(
                 role.role,
-                style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                style: context.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const Spacer(),
-              const Icon(Icons.keyboard_arrow_right, size: 20, color: Color(0xFF6B7280)),
+              const Icon(
+                Icons.keyboard_arrow_right,
+                size: 20,
+                color: Color(0xFF6B7280),
+              ),
             ],
           ),
           const SizedBox(height: 4),
-          Text(role.description, style: context.textTheme.bodySmall?.copyWith(color: const Color(0xFF6B7280))),
+          Text(
+            role.description,
+            style: context.textTheme.bodySmall?.copyWith(
+              color: const Color(0xFF6B7280),
+            ),
+          ),
         ],
       ),
     );

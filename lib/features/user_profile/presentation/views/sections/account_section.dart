@@ -39,7 +39,8 @@ class AccountSection extends StatelessWidget {
                       right: 8,
                       child: SquareIconButton(
                         icon: Icons.edit_outlined,
-                        onTap: () => _showAccountDialog(context, account, onSave),
+                        onTap: () =>
+                            _showAccountDialog(context, account, onSave),
                       ),
                     ),
                   ],
@@ -97,22 +98,21 @@ class AccountSection extends StatelessWidget {
   Future<void> _confirmDelete(
     BuildContext context,
     Future<void> Function() onConfirm,
-  ) =>
-      showProfileConfirmDialog(
-        context,
-        title: 'Delete account?',
-        message: 'This action cannot be undone. Your account information will be removed.',
-        confirmLabel: 'Delete account',
-        onConfirm: onConfirm,
-        destructive: true,
-      );
+  ) => showProfileConfirmDialog(
+    context,
+    title: 'Delete account?',
+    message:
+        'This action cannot be undone. Your account information will be removed.',
+    confirmLabel: 'Delete account',
+    onConfirm: onConfirm,
+    destructive: true,
+  );
 
   void _showAccountDialog(
     BuildContext context,
     ProfileAccount account,
     ValueChanged<ProfileAccount> onSave,
-  ) =>
-      showEditAccountDialog(context, account, onSave);
+  ) => showEditAccountDialog(context, account, onSave);
 }
 
 class _AvatarBlock extends StatelessWidget {
