@@ -35,9 +35,19 @@ class WorkspaceSwitcherList extends ConsumerWidget {
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  Expanded(child: _ActionButton(icon: Icons.settings_outlined, label: 'Settings')),
+                  Expanded(
+                    child: _ActionButton(
+                      icon: Icons.settings_outlined,
+                      label: 'Settings',
+                    ),
+                  ),
                   SizedBox(width: 8),
-                  Expanded(child: _ActionButton(icon: Icons.person_add_alt, label: 'Invite')),
+                  Expanded(
+                    child: _ActionButton(
+                      icon: Icons.person_add_alt,
+                      label: 'Invite',
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -65,7 +75,9 @@ class WorkspaceSwitcherList extends ConsumerWidget {
                     workspace: workspace,
                     isActive: isActive,
                     onTap: () {
-                      ref.read(workspaceProvider.notifier).switchWorkspace(workspace);
+                      ref
+                          .read(workspaceProvider.notifier)
+                          .switchWorkspace(workspace);
                       Navigator.pop(context);
                     },
                   );
@@ -93,7 +105,11 @@ class WorkspaceSwitcherList extends ConsumerWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Center(
-              child: Icon(Icons.grid_view_rounded, color: Colors.white, size: 28),
+              child: Icon(
+                Icons.grid_view_rounded,
+                color: Colors.white,
+                size: 28,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -136,10 +152,7 @@ class WorkspaceSwitcherList extends ConsumerWidget {
             const SizedBox(width: 8),
             const Text(
               'Add a new organization',
-              style: TextStyle(
-                color: Colors.black87,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.black87, fontSize: 14),
             ),
           ],
         ),
@@ -159,7 +172,10 @@ class _ActionButton extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: () {},
       icon: Icon(icon, size: 18, color: Colors.black87),
-      label: Text(label, style: const TextStyle(color: Colors.black87, fontSize: 13)),
+      label: Text(
+        label,
+        style: const TextStyle(color: Colors.black87, fontSize: 13),
+      ),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 8),
         side: const BorderSide(color: Colors.black12),
@@ -186,7 +202,9 @@ class _WorkspaceListItem extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        color: isActive ? Colors.black.withValues(alpha: 0.05) : Colors.transparent,
+        color: isActive
+            ? Colors.black.withValues(alpha: 0.05)
+            : Colors.transparent,
         child: Row(
           children: [
             Stack(
@@ -215,7 +233,10 @@ class _WorkspaceListItem extends StatelessWidget {
                     top: -6,
                     right: -6,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(10),

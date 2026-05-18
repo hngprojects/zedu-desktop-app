@@ -46,11 +46,7 @@ class WorkspaceSwitcherHeader extends ConsumerWidget {
             onPressed: () {
               // Add action
             },
-            icon: const Icon(
-              Icons.add,
-              color: Colors.white70,
-              size: 20,
-            ),
+            icon: const Icon(Icons.add, color: Colors.white70, size: 20),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),

@@ -46,7 +46,11 @@ class HomeView extends ConsumerWidget {
                       value: 'profile',
                       child: Row(
                         children: [
-                          Icon(Icons.person_outline, size: 20, color: Colors.black87),
+                          Icon(
+                            Icons.person_outline,
+                            size: 20,
+                            color: Colors.black87,
+                          ),
                           SizedBox(width: 8),
                           Text('Profile'),
                         ],
@@ -56,15 +60,25 @@ class HomeView extends ConsumerWidget {
                       value: 'logout',
                       child: Row(
                         children: [
-                          Icon(Icons.logout_rounded, size: 20, color: Colors.redAccent),
+                          Icon(
+                            Icons.logout_rounded,
+                            size: 20,
+                            color: Colors.redAccent,
+                          ),
                           SizedBox(width: 8),
-                          Text('Logout', style: TextStyle(color: Colors.redAccent)),
+                          Text(
+                            'Logout',
+                            style: TextStyle(color: Colors.redAccent),
+                          ),
                         ],
                       ),
                     ),
                   ],
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
@@ -92,9 +106,17 @@ class HomeView extends ConsumerWidget {
                         const SizedBox(width: 8),
                         const Text(
                           'Zedu User',
-                          style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                        const Icon(Icons.keyboard_arrow_down, color: Colors.white70, size: 18),
+                        const Icon(
+                          Icons.keyboard_arrow_down,
+                          color: Colors.white70,
+                          size: 18,
+                        ),
                       ],
                     ),
                   ),
@@ -126,20 +148,18 @@ class HomeView extends ConsumerWidget {
               ],
             ),
           ),
-          
+
           Expanded(
             child: Row(
               children: [
                 // 2. Sidebar Rail
                 const _SidebarRail(backgroundColor: primaryColor),
-                
+
                 // 3. Main Sidebar
                 const _MainSidebar(backgroundColor: primaryColor),
-                
+
                 // 4. Chat Area
-                const Expanded(
-                  child: _ChatArea(),
-                ),
+                const Expanded(child: _ChatArea()),
               ],
             ),
           ),
@@ -159,19 +179,28 @@ class _SidebarRail extends StatelessWidget {
       width: 70,
       decoration: BoxDecoration(
         color: backgroundColor,
-        border: Border(right: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+        border: Border(
+          right: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        ),
       ),
       child: Column(
         children: [
           const SizedBox(height: 12),
-          const _RailNavItem(icon: Icons.home_filled, label: 'Home', isActive: true),
+          const _RailNavItem(
+            icon: Icons.home_filled,
+            label: 'Home',
+            isActive: true,
+          ),
           const _RailNavItem(icon: Icons.chat_bubble_outline, label: 'DMs'),
           const _RailNavItem(icon: Icons.people_outline, label: 'People'),
           const _RailNavItem(icon: Icons.folder_open_outlined, label: 'Files'),
           const _RailNavItem(icon: Icons.phone_outlined, label: 'Buzz'),
           const Spacer(),
           // Bottom Section
-          const _RailBottomIcon(icon: Icons.notifications_none_outlined, hasNotification: true),
+          const _RailBottomIcon(
+            icon: Icons.notifications_none_outlined,
+            hasNotification: true,
+          ),
           const _RailBottomIcon(icon: Icons.settings_outlined),
           Padding(
             padding: const EdgeInsets.only(bottom: 16, top: 8),
@@ -294,7 +323,11 @@ class _MainSidebar extends StatelessWidget {
                 SizedBox(width: 8),
                 Text(
                   'Channels',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
                 ),
               ],
             ),
@@ -332,7 +365,11 @@ class _MainSidebar extends StatelessWidget {
                 SizedBox(width: 8),
                 Text(
                   'People',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
                 ),
               ],
             ),
@@ -353,7 +390,10 @@ class _ChannelItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
         children: [
-          const Text('#', style: TextStyle(color: Colors.white54, fontSize: 18)),
+          const Text(
+            '#',
+            style: TextStyle(color: Colors.white54, fontSize: 18),
+          ),
           const SizedBox(width: 12),
           Text(
             label,
@@ -377,7 +417,10 @@ class _AddChannelButton extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.white38, style: BorderStyle.solid),
+              border: Border.all(
+                color: Colors.white38,
+                style: BorderStyle.solid,
+              ),
               borderRadius: BorderRadius.circular(4),
             ),
             child: const Icon(Icons.add, color: Colors.white, size: 14),
@@ -411,14 +454,23 @@ class _ChatArea extends StatelessWidget {
     return Container(
       height: 60,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Colors.black12))),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.black12)),
+      ),
       child: Row(
         children: [
-          const Text('# general', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text(
+            '# general',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
           const Spacer(),
           _HeaderAction(icon: Icons.headphones_outlined, label: 'Start Buzz'),
           const SizedBox(width: 12),
-          const CircleAvatar(radius: 14, backgroundColor: Colors.tealAccent, child: Icon(Icons.person, size: 18, color: Colors.white)),
+          const CircleAvatar(
+            radius: 14,
+            backgroundColor: Colors.tealAccent,
+            child: Icon(Icons.person, size: 18, color: Colors.white),
+          ),
           const SizedBox(width: 8),
           const Icon(Icons.more_vert, color: Colors.black54),
         ],
@@ -434,9 +486,15 @@ class _ChatArea extends StatelessWidget {
         children: [
           const Icon(Icons.celebration, size: 60, color: Colors.amber),
           const SizedBox(height: 24),
-          const Text('Welcome to #general', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold)),
+          const Text(
+            'Welcome to #general',
+            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 8),
-          const Text('Share all information relating to general here. All team members await you! 😉', style: TextStyle(fontSize: 16, color: Colors.black87)),
+          const Text(
+            'Share all information relating to general here. All team members await you! 😉',
+            style: TextStyle(fontSize: 16, color: Colors.black87),
+          ),
           const SizedBox(height: 32),
           _InviteCard(),
         ],
@@ -449,7 +507,10 @@ class _ChatArea extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(border: Border.all(color: Colors.black12), borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.black12),
+          borderRadius: BorderRadius.circular(12),
+        ),
         child: Column(
           children: [
             const Row(
@@ -466,13 +527,22 @@ class _ChatArea extends StatelessWidget {
               ],
             ),
             const Divider(height: 24),
-            const TextField(decoration: InputDecoration(hintText: 'Message Ruby - Social Media Handler', border: InputBorder.none, isDense: true)),
+            const TextField(
+              decoration: InputDecoration(
+                hintText: 'Message Ruby - Social Media Handler',
+                border: InputBorder.none,
+                isDense: true,
+              ),
+            ),
             const SizedBox(height: 12),
             Row(
               children: [
                 const Icon(Icons.add, color: Colors.black38),
                 const SizedBox(width: 12),
-                const Icon(Icons.emoji_emotions_outlined, color: Colors.black38),
+                const Icon(
+                  Icons.emoji_emotions_outlined,
+                  color: Colors.black38,
+                ),
                 const SizedBox(width: 12),
                 const Icon(Icons.alternate_email, color: Colors.black38),
                 const SizedBox(width: 12),
@@ -498,8 +568,20 @@ class _HeaderAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(border: Border.all(color: Colors.black12), borderRadius: BorderRadius.circular(8)),
-      child: Row(children: [Icon(icon, size: 18, color: Colors.black87), const SizedBox(width: 8), Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))]),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.black12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: Colors.black87),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -511,12 +593,34 @@ class _InviteCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(border: Border.all(color: Colors.black12), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.black12),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         children: [
-          Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.blue.shade50, shape: BoxShape.circle), child: const Icon(Icons.person_add_alt, color: Colors.blue)),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.person_add_alt, color: Colors.blue),
+          ),
           const SizedBox(width: 16),
-          const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Invite teammates', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), Text('Add your entire team in seconds', style: TextStyle(color: Colors.black54))]),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Invite teammates',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              Text(
+                'Add your entire team in seconds',
+                style: TextStyle(color: Colors.black54),
+              ),
+            ],
+          ),
         ],
       ),
     );

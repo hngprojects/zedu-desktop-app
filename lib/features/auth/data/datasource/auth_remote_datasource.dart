@@ -113,7 +113,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<void> forgotPassword({required String email}) async {
     try {
       if (_config.usesMockData) {
-        AppLogger.d('Using mock data for POST /auth/forgot-password', tag: _tag);
+        AppLogger.d(
+          'Using mock data for POST /auth/forgot-password',
+          tag: _tag,
+        );
         await Future<void>.delayed(const Duration(milliseconds: 800));
         return;
       }
