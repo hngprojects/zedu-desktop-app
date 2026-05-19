@@ -1,7 +1,5 @@
 import 'package:zedu/features/features.dart';
 
-
-
 class OrganisationPlanModel {
   const OrganisationPlanModel({
     required this.startedAt,
