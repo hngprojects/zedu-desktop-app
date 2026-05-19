@@ -25,7 +25,7 @@ class AppConfig {
         ? _parseBool(defineUsesMock, defaultValue: false)
         : envUsesMock != null && envUsesMock.isNotEmpty
         ? _parseBool(envUsesMock, defaultValue: false)
-        : false;
+        : true; // Default to true so it doesn't hang forever without a backend
 
     return AppConfig(apiBaseUrl: apiBaseUrl, usesMockData: usesMockData);
   }
