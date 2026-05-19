@@ -1,6 +1,4 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/core/theme/app_typography.dart';
-import 'package:zedu/core/utils/validators.dart';
 import 'package:zedu/features/features.dart';
 
 class LoginView extends ConsumerStatefulWidget {
@@ -156,8 +154,11 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         child: Text(
                           'OR',
                           style: textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.72,
+                            color: Color(
+                              (((theme.colorScheme.onSurface as dynamic).value
+                                          as int) &
+                                      0x00FFFFFF) |
+                                  (((0.72 * 255).round() & 0xFF) << 24),
                             ),
                           ),
                         ),
