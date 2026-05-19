@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:zedu/core/core.dart';
 
 class FontFamily {
   static const String lato = 'Lato';
