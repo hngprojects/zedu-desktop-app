@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'dart:io';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -111,8 +109,7 @@ class AuthNotifier extends Notifier<AuthState> {
       server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
       AppLogger.d('Local loopback server listening on port $port', tag: _tag);
 
-      // 2. Launch Google Auth URL in external browser
-      final redirectUri = 'http://localhost:$port';
+      final redirectUri = 'http://localhost:$port'; // Desktop Loopback URI
       final authUrl = Uri.https('accounts.google.com', '/o/oauth2/v2/auth', {
         'client_id': config.googleClientId,
         'response_type': 'code',
@@ -127,7 +124,7 @@ class AuthNotifier extends Notifier<AuthState> {
 
       // 3. Wait for Google's redirect containing the authorization code
       String? grantCode;
-      await for (final request in server) {
+      await for (final  request in server) {
         grantCode = request.uri.queryParameters['code'];
 
         // Return a clean success page to the user in their browser
@@ -167,49 +164,12 @@ class AuthNotifier extends Notifier<AuthState> {
         return;
       }
 
-      AppLogger.i('Raw authorization code retrieved successfully', tag: _tag);
+      AppLogger.i('Raw authorization code retrieved successfully, sending to backend', tag: _tag);
 
-      // --- NEW CODE: Exchange code for ID token on the frontend ---
-      AppLogger.d('Exchanging authorization code for ID token locally', tag: _tag);
-      final tokenRequestUrl = Uri.parse('https://oauth2.googleapis.com/token');
-      
-      final httpClient = HttpClient();
-      final tokenRequest = await httpClient.postUrl(tokenRequestUrl);
-      tokenRequest.headers.contentType = ContentType('application', 'x-www-form-urlencoded');
-      
-      final body = 'client_id=${Uri.encodeComponent(config.googleClientId)}'
-          '&client_secret=${Uri.encodeComponent(config.googleClientSecret)}'
-          '&code=${Uri.encodeComponent(grantCode)}'
-          '&grant_type=authorization_code'
-          '&redirect_uri=${Uri.encodeComponent(redirectUri)}';
-          
-      tokenRequest.write(body);
-      final tokenResponse = await tokenRequest.close();
-      final responseBody = await tokenResponse.transform(utf8.decoder).join();
-      
-      if (tokenResponse.statusCode != 200) {
-        AppLogger.e('Local token exchange failed: $responseBody', tag: _tag);
-        state = state.copyWith(isLoading: false, error: 'Local token exchange failed');
-        return;
-      }
-      
-      final jsonResponse = jsonDecode(responseBody) as Map<String, dynamic>;
-      final idToken = jsonResponse['id_token'] as String?;
-      
-      if (idToken == null) {
-        AppLogger.e('No ID token in response', tag: _tag);
-        state = state.copyWith(isLoading: false, error: 'No ID token received');
-        return;
-      }
-
-      AppLogger.i('ID token retrieved successfully, sending to backend', tag: _tag);
-
-      // --- OLD CODE (Commented Out) ---
-      // // 4. Send the raw authorization code to the backend
-      // final result = await _repository.signInWithGoogle(grantCode: grantCode);
-      
-      // We now pass the idToken instead of the raw grantCode
-      final result = await _repository.signInWithGoogle(grantCode: idToken);
+      final result = await _repository.signInWithGoogle(
+        grantCode: grantCode,
+        redirectUri: redirectUri,
+      );
       switch (result) {
         case Success<AuthSession>():
           AppLogger.i('Google Sign-In succeeded — token persisted', tag: _tag);

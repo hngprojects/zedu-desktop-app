@@ -10,7 +10,10 @@ abstract interface class AuthRemoteDataSource {
   Future<UserModel> me();
   Future<void> sendMagicLink({required String email});
   Future<LoginResponseModel> verifyMagicLink({required String token});
-  Future<LoginResponseModel> signInWithGoogle({required String grantCode});
+  Future<LoginResponseModel> signInWithGoogle({
+    required String grantCode,
+    String? redirectUri,
+  });
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -138,7 +141,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<LoginResponseModel> signInWithGoogle({required String grantCode}) async {
+  Future<LoginResponseModel> signInWithGoogle({
+    required String grantCode,
+    String? redirectUri,
+  }) async {
     try {
       if (_config.usesMockData) {
         AppLogger.d('Using mock data for POST /auth/google', tag: _tag);
@@ -148,9 +154,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
 
       AppLogger.d('POST /auth/google', tag: _tag);
+      final data = <String, dynamic>{
+        'grant_code': grantCode,
+      };
+      if (redirectUri != null) {
+        data['redirect_uri'] = redirectUri;
+      }
+
       final response = await _apiBaseService.post<Map<String, dynamic>>(
         path: '/auth/google',
-        data: {'grant_code': grantCode},
+        data: data,
       );
 
       final payload = response.data['data'] as Map<String, dynamic>;
