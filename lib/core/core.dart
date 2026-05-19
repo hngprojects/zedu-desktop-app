@@ -6,6 +6,14 @@ export 'secure_storage/secure_storage.dart';
 export 'utils/utils.dart';
 export 'theme/theme.dart';
 export 'widgets/widgets.dart';
+
+// Third-party packages
+export 'package:flutter/material.dart';
+export 'package:flutter/foundation.dart';
+export 'package:flutter_riverpod/flutter_riverpod.dart';
+export 'package:flutter_secure_storage/flutter_secure_storage.dart';
+export 'package:flutter_svg/flutter_svg.dart';
+export 'package:google_fonts/google_fonts.dart';
 export 'package:dio/dio.dart';
 export 'package:flutter_dotenv/flutter_dotenv.dart';
 export 'package:go_router/go_router.dart';

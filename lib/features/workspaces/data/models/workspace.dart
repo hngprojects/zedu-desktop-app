@@ -1,3 +1,4 @@
+// import 'package:zedu/core/core.dart';
 class Workspace {
   final String id;
   final String name;

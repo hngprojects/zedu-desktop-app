@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import 'package:zedu/core/core.dart';
 // core/network/api_failure.dart
 
 class ApiFailure implements Exception {
