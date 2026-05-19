@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:app_links/app_links.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -43,7 +42,7 @@ class _AuthDeepLinkListenerState extends ConsumerState<AuthDeepLinkListener> {
       (uri) {
         unawaited(_handleUri(uri));
       },
-      onError: (error, stackTrace) {
+      onError: (Object error, StackTrace stackTrace) {
         AppLogger.w('Deep link stream error: $error', tag: _tag);
       },
     );

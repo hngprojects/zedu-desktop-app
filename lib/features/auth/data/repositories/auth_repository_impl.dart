@@ -94,9 +94,15 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Result<AuthSession>> signInWithGoogle({required String grantCode}) async {
+  Future<Result<AuthSession>> signInWithGoogle({
+    required String grantCode,
+    String? redirectUri,
+  }) async {
     try {
-      final response = await _remote.signInWithGoogle(grantCode: grantCode);
+      final response = await _remote.signInWithGoogle(
+        grantCode: grantCode,
+        redirectUri: redirectUri,
+      );
       AppLogger.i('Google sign-in successful — ${response.user.email}', tag: _tag);
       return Success(
         AuthSession(
