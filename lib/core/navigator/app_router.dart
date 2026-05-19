@@ -36,9 +36,6 @@ class AppRouter {
           final email = state.extra as String? ?? '';
           return ChangePasswordView(email: email);
         },
-      GoRoute(
-        path: home, // This is '/'
-        builder: (context, state) => const UserProfileView(),
       ),
       GoRoute(
         path: profile,
