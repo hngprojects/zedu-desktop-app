@@ -147,20 +147,27 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) async {
     try {
       if (_config.usesMockData) {
-        AppLogger.d('Using mock data for POST /auth/password-reset', tag: _tag);
+        AppLogger.d(
+          'Using mock data for POST /auth/password-reset/verify',
+          tag: _tag,
+        );
         await Future<void>.delayed(const Duration(milliseconds: 800));
         return;
       }
 
-      AppLogger.d('POST /auth/password-reset', tag: _tag);
+      AppLogger.d('POST /auth/password-reset/verify', tag: _tag);
       await _apiBaseService.post<dynamic>(
-        path: 'auth/password-reset',
-        data: {'email': email, 'token': token, 'new_password': newPassword},
+        path: 'auth/password-reset/verify',
+        data: {'token': token, 'new_password': newPassword},
       );
     } on ApiFailure {
       rethrow;
     } catch (error) {
-      AppLogger.e('Failed /auth/password-reset', tag: _tag, error: error);
+      AppLogger.e(
+        'Failed /auth/password-reset/verify',
+        tag: _tag,
+        error: error,
+      );
       throw ApiFailure.unknown(error);
     }
   }
@@ -173,24 +180,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) async {
     try {
       if (_config.usesMockData) {
-        AppLogger.d('Using mock data for POST /auth/password-reset', tag: _tag);
+        AppLogger.d('Using mock data for PUT /auth/change-password', tag: _tag);
         await Future<void>.delayed(const Duration(milliseconds: 800));
         return;
       }
 
-      AppLogger.d('POST /auth/password-reset', tag: _tag);
-      await _apiBaseService.post<dynamic>(
-        path: 'auth/password-reset',
-        data: {
-          'email': email,
-          'old_password': oldPassword,
-          'new_password': newPassword,
-        },
+      AppLogger.d('PUT /auth/change-password', tag: _tag);
+      await _apiBaseService.put<dynamic>(
+        path: 'auth/change-password',
+        data: {'old_password': oldPassword, 'new_password': newPassword},
       );
     } on ApiFailure {
       rethrow;
     } catch (error) {
-      AppLogger.e('Failed /auth/password-reset', tag: _tag, error: error);
+      AppLogger.e('Failed /auth/change-password', tag: _tag, error: error);
       throw ApiFailure.unknown(error);
     }
   }

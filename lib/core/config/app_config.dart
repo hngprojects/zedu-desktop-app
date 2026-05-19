@@ -1,4 +1,4 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:zedu/core/core.dart';
 
 class AppConfig {
   const AppConfig({required this.apiBaseUrl, required this.usesMockData});
