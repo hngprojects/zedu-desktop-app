@@ -1,5 +1,5 @@
-import 'package:zedu/features/features.dart';
 import 'package:zedu/core/core.dart';
+import 'package:zedu/features/features.dart';
 
 class AppRouter {
   const AppRouter._();
@@ -10,11 +10,13 @@ class AppRouter {
   static const forgotPassword = '/forgot-password';
   static const resetPassword = '/reset-password';
   static const changePassword = '/change-password';
+  static const profile = '/profile';
 
   static final router = GoRouter(
     initialLocation: login,
     routes: [
       GoRoute(path: login, builder: (context, state) => const LoginView()),
+
       GoRoute(path: home, builder: (context, state) => const HomeView()),
       GoRoute(path: signup, builder: (context, state) => const SignUpView()),
       GoRoute(
@@ -34,6 +36,13 @@ class AppRouter {
           final email = state.extra as String? ?? '';
           return ChangePasswordView(email: email);
         },
+      GoRoute(
+        path: home, // This is '/'
+        builder: (context, state) => const UserProfileView(),
+      ),
+      GoRoute(
+        path: profile,
+        builder: (context, state) => const UserProfileView(),
       ),
     ],
   );

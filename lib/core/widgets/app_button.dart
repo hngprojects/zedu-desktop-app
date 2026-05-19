@@ -1,5 +1,5 @@
 // ============================================================
-// AppButton — Reusable button for EventRun
+// AppButton — Reusable button for Zedu
 // ============================================================
 //
 // Usage:
