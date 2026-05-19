@@ -1,4 +1,4 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:zedu/core/core.dart';
 
 enum AppFlavor { development, staging, production }
 
