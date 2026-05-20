@@ -113,7 +113,7 @@ class _AppToastWidgetState extends State<_AppToastWidget>
       ),
       AppToastType.info => (
         colors.primary,
-        const Color(0xFFF3EFFF),
+        colors.primaryBg,
         Icons.info_outline_rounded,
         'Info',
       ),
@@ -132,18 +132,12 @@ class _AppToastWidgetState extends State<_AppToastWidget>
               color: bgColor,
               borderRadius: BorderRadius.circular(8 * s),
               border: Border.all(
-                color: Color(
-                  (((accentColor as dynamic).value as int) & 0x00FFFFFF) |
-                      (((0.25 * 255).round() & 0xFF) << 24),
-                ),
+                color: accentColor.withValues(alpha: 0.25),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Color(
-                    (((Colors.black as dynamic).value as int) & 0x00FFFFFF) |
-                        (((0.08 * 255).round() & 0xFF) << 24),
-                  ),
+                  color: colors.textPrimary.withValues(alpha: 0.08),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
