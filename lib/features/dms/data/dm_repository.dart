@@ -21,7 +21,7 @@ class DmRepository {
       path: '/organizations/$_defaultOrgId/recent-dm',
       queryParameters: {'page': page, 'limit': pageSize},
     );
-    
+
     final data = response.data as Map<String, dynamic>;
     final list = (data['data'] as List)
         .map((e) => DmConversation.fromJson(e as Map<String, dynamic>))
@@ -31,17 +31,21 @@ class DmRepository {
 
   /// Fetches paginated messages for a specific DM channel.
   Future<List<dynamic>> getMessages(String channelId, {int page = 1}) async {
-  Future<List<dynamic>> getMessages(String channelId, {int page = 1}) async {
     final response = await _apiClient.get(
       path: '/channels/$channelId/messages',
       queryParameters: {'page': page, 'limit': pageSize},
     );
-    
+
     final data = response.data as Map<String, dynamic>;
     return data['messages'] as List;
   }
 
-  Future<void> sendMessage(String channelId, String content, {List<dynamic>? media, List<dynamic>? mentions}) async {
+  Future<void> sendMessage(
+    String channelId,
+    String content, {
+    List<dynamic>? media,
+    List<dynamic>? mentions,
+  }) async {
     await _apiClient.post(
       path: '/channels/$channelId/messages',
       data: {

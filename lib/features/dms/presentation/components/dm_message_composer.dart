@@ -85,31 +85,23 @@ class _DmMessageComposerState extends State<DmMessageComposer> {
                     _handleSend();
                   }
                 },
-                child: PasteRegion(
-                  onPaste: (PasteEvent event) {
-                    final reader = event.data;
-                    if (reader.canProvide(Formats.png) || reader.canProvide(Formats.jpeg)) {
-                      // Handled file pasting here
-                    }
-                  },
-                  child: TextField(
-                    controller: _controller,
-                    focusNode: _focusNode,
-                    maxLines: null,
-                    minLines: 1,
-                    decoration: InputDecoration(
-                      hintText: 'Message ${widget.recipientName}',
-                      hintStyle: TextStyle(
-                        color: colors.textHint.withValues(alpha: 0.6),
-                        fontSize: 14,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                    ),
-                    style: TextStyle(
-                      color: colors.textPrimary,
+                child: TextField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  maxLines: null,
+                  minLines: 1,
+                  decoration: InputDecoration(
+                    hintText: 'Message ${widget.recipientName}',
+                    hintStyle: TextStyle(
+                      color: colors.textHint.withValues(alpha: 0.6),
                       fontSize: 14,
                     ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 14,
                   ),
                 ),
               ),
@@ -169,7 +161,7 @@ class _DmMessageComposerState extends State<DmMessageComposer> {
 
 class _ToolbarIcon extends StatelessWidget {
   final IconData icon;
-  final AppColorScheme colors;
+  final dynamic colors;
   final String? label;
 
   const _ToolbarIcon({

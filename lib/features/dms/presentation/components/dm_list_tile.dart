@@ -22,7 +22,7 @@ class DmListTile extends ConsumerWidget {
 
     return InkWell(
       onTap: () {
-        ref.read(selectedDmProvider.notifier).state = conversation;
+        ref.read(selectedDmProvider.notifier).select(conversation);
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
