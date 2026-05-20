@@ -62,8 +62,7 @@ class DmListTile extends ConsumerWidget {
                     style: TextStyle(
                       color: colors.onPrimary,
                       fontSize: 14,
-                      fontWeight:
-                          hasUnread ? FontWeight.bold : FontWeight.w500,
+                      fontWeight: hasUnread ? FontWeight.bold : FontWeight.w500,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
