@@ -3,7 +3,14 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  agora_rtc_engine
+  desktop_drop
   flutter_secure_storage_windows
+  iris_method_channel
+  irondash_engine_context
+  local_notifier
+  super_native_extensions
+  url_launcher_windows
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

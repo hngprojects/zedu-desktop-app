@@ -13,12 +13,12 @@ class HomeView extends ConsumerWidget {
       body: Column(
         children: [
           _HomeAppBar(ref: ref),
-          const Expanded(
+          Expanded(
             child: Row(
               children: [
-                _SidebarRail(),
-                _MainSidebar(),
-                Expanded(child: _ChatArea()),
+                const _SidebarRail(),
+                const _MainSidebarSwitcher(),
+                const Expanded(child: _ChatAreaSwitcher()),
               ],
             ),
           ),
@@ -90,11 +90,11 @@ class _HomeAppBar extends StatelessWidget {
   }
 }
 
-class _SidebarRail extends StatelessWidget {
+class _SidebarRail extends ConsumerWidget {
   const _SidebarRail();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
 
     return Container(
@@ -108,15 +108,36 @@ class _SidebarRail extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 12),
-          const _RailNavItem(
+          _RailNavItem(
             icon: Icons.home_filled,
             label: 'Home',
-            isActive: true,
+            isActive: ref.watch(homeSidebarProvider) == HomeSidebarType.home,
+            onTap: () => ref.read(homeSidebarProvider.notifier).state = HomeSidebarType.home,
           ),
-          const _RailNavItem(icon: Icons.chat_bubble_outline, label: 'DMs'),
-          const _RailNavItem(icon: Icons.people_outline, label: 'People'),
-          const _RailNavItem(icon: Icons.folder_open_outlined, label: 'Files'),
-          const _RailNavItem(icon: Icons.phone_outlined, label: 'Buzz'),
+          _RailNavItem(
+            icon: Icons.chat_bubble_outline, 
+            label: 'DMs',
+            isActive: ref.watch(homeSidebarProvider) == HomeSidebarType.dms,
+            onTap: () => ref.read(homeSidebarProvider.notifier).state = HomeSidebarType.dms,
+          ),
+          _RailNavItem(
+            icon: Icons.people_outline, 
+            label: 'People',
+            isActive: ref.watch(homeSidebarProvider) == HomeSidebarType.people,
+            onTap: () => ref.read(homeSidebarProvider.notifier).state = HomeSidebarType.people,
+          ),
+          _RailNavItem(
+            icon: Icons.folder_open_outlined, 
+            label: 'Files',
+            isActive: ref.watch(homeSidebarProvider) == HomeSidebarType.files,
+            onTap: () => ref.read(homeSidebarProvider.notifier).state = HomeSidebarType.files,
+          ),
+          _RailNavItem(
+            icon: Icons.phone_outlined, 
+            label: 'Buzz',
+            isActive: ref.watch(homeSidebarProvider) == HomeSidebarType.buzz,
+            onTap: () => ref.read(homeSidebarProvider.notifier).state = HomeSidebarType.buzz,
+          ),
           const Spacer(),
           const _RailBottomIcon(
             icon: Icons.notifications_none_outlined,
@@ -137,32 +158,37 @@ class _RailNavItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool isActive;
+  final VoidCallback? onTap;
 
   const _RailNavItem({
     required this.icon,
     required this.label,
     this.isActive = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        children: [
-          Icon(icon, color: colors.onPrimary, size: 24),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: colors.onPrimary,
-              fontSize: 11,
-              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          children: [
+            Icon(icon, color: colors.onPrimary, size: 24),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: colors.onPrimary,
+                fontSize: 11,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -199,6 +225,34 @@ class _RailBottomIcon extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _MainSidebarSwitcher extends ConsumerWidget {
+  const _MainSidebarSwitcher();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(homeSidebarProvider);
+    if (state == HomeSidebarType.dms) {
+      return const DmSidebarList();
+    }
+    return const _MainSidebar();
+  }
+}
+
+class _ChatAreaSwitcher extends ConsumerWidget {
+  const _ChatAreaSwitcher();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(homeSidebarProvider);
+    final selectedDm = ref.watch(selectedDmProvider);
+    
+    if (state == HomeSidebarType.dms && selectedDm != null) {
+      return DmChatArea(conversation: selectedDm);
+    }
+    return const _ChatArea();
   }
 }
 
