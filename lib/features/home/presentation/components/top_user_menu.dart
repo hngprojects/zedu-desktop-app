@@ -1,0 +1,106 @@
+import 'package:zedu/core/core.dart';
+import 'package:zedu/features/features.dart';
+
+class TopUserMenu extends ConsumerWidget {
+  final String userName;
+  final Color? backgroundColor;
+
+  const TopUserMenu({
+    super.key,
+    required this.userName,
+    this.backgroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+
+    return PopupMenuButton<String>(
+      offset: const Offset(0, 40),
+      onSelected: (value) async {
+        if (value == 'profile') {
+          if (context.mounted) {
+            context.go(AppRouter.profile);
+          }
+        } else if (value == 'logout') {
+          await ref.read(authNotifierProvider.notifier).logout();
+          if (context.mounted) {
+            context.go(AppRouter.login);
+          }
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'profile',
+          child: Row(
+            children: [
+              Icon(
+                Icons.person_outline,
+                size: 20,
+                color: colors.textPrimary,
+              ),
+              const SizedBox(width: 8),
+              const Text('Profile'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'logout',
+          child: Row(
+            children: [
+              Icon(Icons.logout_rounded, size: 20, color: colors.error),
+              const SizedBox(width: 8),
+              Text('Logout', style: TextStyle(color: colors.error)),
+            ],
+          ),
+        ),
+      ],
+      child: Container(
+        height: 32,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: backgroundColor ?? colors.onPrimary.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 18,
+              height: 18,
+              decoration: BoxDecoration(
+                color: colors.accent,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Center(
+                child: Text(
+                  'ZU',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 8,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              userName,
+              style: TextStyle(
+                color: colors.onPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.keyboard_arrow_down,
+              color: colors.onPrimary.withValues(alpha: 0.7),
+              size: 18,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
