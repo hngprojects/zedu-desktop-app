@@ -1,5 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
+import '../../../../helpers/helpers.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -25,7 +24,7 @@ void main() {
 
         final result = await datasource.login(
           email: 'test@example.com',
-          password: 'password',
+          password: mockPassword,
         );
 
         expect(result, isA<LoginResponseModel>());
@@ -42,7 +41,7 @@ void main() {
       test('calls POST /auth/login with correct credentials', () async {
         when(
           () => mockApi.post<Map<String, dynamic>>(
-            path: '/auth/login',
+            path: 'auth/login',
             data: {'email': 'user@example.com', 'password': 'Secret123'},
           ),
         ).thenAnswer(
@@ -67,7 +66,7 @@ void main() {
 
         verify(
           () => mockApi.post<Map<String, dynamic>>(
-            path: '/auth/login',
+            path: 'auth/login',
             data: {'email': 'user@example.com', 'password': 'Secret123'},
           ),
         ).called(1);
@@ -78,7 +77,7 @@ void main() {
 
         when(
           () => mockApi.post<Map<String, dynamic>>(
-            path: '/auth/login',
+            path: 'auth/login',
             data: any(named: 'data'),
           ),
         ).thenThrow(failure);
@@ -122,7 +121,7 @@ void main() {
                 as Map<String, dynamic>;
 
         when(
-          () => mockApi.get<Map<String, dynamic>>(path: '/auth/me'),
+          () => mockApi.get<Map<String, dynamic>>(path: 'auth/me'),
         ).thenAnswer(
           (_) async => ApiResponseModel<Map<String, dynamic>>(
             data: {'data': rawUserData},
@@ -142,7 +141,7 @@ void main() {
 
         expect(user.email, rawUserData['email'] as String);
         verify(
-          () => mockApi.get<Map<String, dynamic>>(path: '/auth/me'),
+          () => mockApi.get<Map<String, dynamic>>(path: 'auth/me'),
         ).called(1);
       });
     });
