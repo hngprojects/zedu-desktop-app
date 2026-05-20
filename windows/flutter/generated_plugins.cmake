@@ -9,8 +9,10 @@ list(APPEND FLUTTER_PLUGIN_LIST
   iris_method_channel
   irondash_engine_context
   local_notifier
+  screen_retriever_windows
   super_native_extensions
   url_launcher_windows
+  window_manager
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

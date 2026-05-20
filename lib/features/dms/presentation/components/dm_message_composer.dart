@@ -1,7 +1,6 @@
 import 'package:zedu/core/core.dart';
+import 'package:zedu/features/features.dart';
 
-/// Rich text message composer matching the Figma design.
-/// Two-row formatting toolbar, text input, and bottom action row.
 class DmMessageComposer extends StatefulWidget {
   final String recipientName;
   final ValueChanged<String>? onSend;
@@ -49,7 +48,6 @@ class _DmMessageComposerState extends State<DmMessageComposer> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Formatting toolbar row
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
               child: Row(
@@ -75,7 +73,6 @@ class _DmMessageComposerState extends State<DmMessageComposer> {
               ),
             ),
             Divider(height: 16, color: colors.divider),
-            // Text input
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: KeyboardListener(
@@ -88,20 +85,31 @@ class _DmMessageComposerState extends State<DmMessageComposer> {
                     _handleSend();
                   }
                 },
-                child: TextField(
-                  controller: _controller,
-                  focusNode: _focusNode,
-                  maxLines: null,
-                  minLines: 1,
-                  decoration: InputDecoration(
-                    hintText: 'Message ${widget.recipientName}',
-                    hintStyle: TextStyle(
-                      color: colors.textHint.withValues(alpha: 0.6),
+                child: PasteRegion(
+                  onPaste: (PasteEvent event) {
+                    final reader = event.data;
+                    if (reader.canProvide(Formats.png) || reader.canProvide(Formats.jpeg)) {
+                      // Handled file pasting here
+                    }
+                  },
+                  child: TextField(
+                    controller: _controller,
+                    focusNode: _focusNode,
+                    maxLines: null,
+                    minLines: 1,
+                    decoration: InputDecoration(
+                      hintText: 'Message ${widget.recipientName}',
+                      hintStyle: TextStyle(
+                        color: colors.textHint.withValues(alpha: 0.6),
+                        fontSize: 14,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                    style: TextStyle(
+                      color: colors.textPrimary,
                       fontSize: 14,
                     ),
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
                   ),
                 ),
               ),
