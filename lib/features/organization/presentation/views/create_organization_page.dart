@@ -66,7 +66,7 @@ class _CreateOrganizationPageState
           );
           // Future.delayed(const Duration(seconds: 4), () {
           //   if (mounted) {
-          context.go(AppRouter.organizationHome);
+          context.go(AppRouter.home);
           //   }
           // });
         }

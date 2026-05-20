@@ -7,7 +7,6 @@ class AppRouter {
   static const home = '/home';
   static const login = '/login';
   static const createOrganization = '/create-organization';
-  static const organizationHome = '/organization-home';
   static const _orgSettingsBase = '/organization-settings';
   static const signup = '/signup';
   static const forgotPassword = '/forgot-password';
@@ -26,11 +25,6 @@ class AppRouter {
         path: createOrganization,
         builder: (context, state) => const CreateOrganizationPage(),
       ),
-      GoRoute(
-        path: organizationHome,
-        builder: (context, state) => const OrganizationHomePage(),
-      ),
-
       GoRoute(
         path: '$_orgSettingsBase/:orgId',
         builder: (context, state) => OrganizationGeneralSettingsPage(

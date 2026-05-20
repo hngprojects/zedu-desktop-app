@@ -7,10 +7,9 @@ class WorkspaceSwitcherHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    final workspaceState = ref.watch(workspaceProvider);
-    final selectedWorkspace = workspaceState.selectedWorkspace;
+    final activeOrg = ref.watch(activeOrganizationProvider);
 
-    if (selectedWorkspace == null) return const SizedBox.shrink();
+    if (activeOrg == null) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -23,7 +22,7 @@ class WorkspaceSwitcherHeader extends ConsumerWidget {
                 children: [
                   Flexible(
                     child: Text(
-                      selectedWorkspace.name,
+                      activeOrg.name,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

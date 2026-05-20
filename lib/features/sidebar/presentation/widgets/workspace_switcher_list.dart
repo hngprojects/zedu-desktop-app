@@ -7,10 +7,9 @@ class WorkspaceSwitcherList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    final workspaceState = ref.watch(workspaceProvider);
-    final selectedWorkspace = workspaceState.selectedWorkspace;
+    final activeOrg = ref.watch(activeOrganizationProvider);
 
-    if (selectedWorkspace == null) return const SizedBox.shrink();
+    if (activeOrg == null) return const SizedBox.shrink();
 
     return Material(
       color: Colors.transparent,
@@ -31,18 +30,41 @@ class WorkspaceSwitcherList extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildCurrentWorkspaceHeader(context, selectedWorkspace),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+            _buildCurrentWorkspaceHeader(context, activeOrg),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
                   Expanded(
-                    child: _ActionButton(
-                      icon: Icons.settings_outlined,
-                      label: 'Settings',
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        context.go(
+                          AppRouter.organizationSettings(activeOrg.id),
+                        );
+                      },
+                      icon: Icon(
+                        Icons.settings_outlined,
+                        size: 18,
+                        color: colors.textPrimary,
+                      ),
+                      label: Text(
+                        'Settings',
+                        style: TextStyle(
+                          color: colors.textPrimary,
+                          fontSize: 13,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        side: BorderSide(color: colors.divider),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
                     ),
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: _ActionButton(
                       icon: Icons.person_add_alt,
@@ -67,20 +89,12 @@ class WorkspaceSwitcherList extends ConsumerWidget {
               child: ListView.builder(
                 shrinkWrap: true,
                 padding: EdgeInsets.zero,
-                itemCount: workspaceState.workspaces.length,
+                itemCount: 1,
                 itemBuilder: (context, index) {
-                  final workspace = workspaceState.workspaces[index];
-                  final isActive = selectedWorkspace.id == workspace.id;
-
                   return _WorkspaceListItem(
-                    workspace: workspace,
-                    isActive: isActive,
-                    onTap: () {
-                      ref
-                          .read(workspaceProvider.notifier)
-                          .switchWorkspace(workspace);
-                      Navigator.pop(context);
-                    },
+                    org: activeOrg,
+                    isActive: true,
+                    onTap: () => Navigator.pop(context),
                   );
                 },
               ),
@@ -95,7 +109,7 @@ class WorkspaceSwitcherList extends ConsumerWidget {
 
   Widget _buildCurrentWorkspaceHeader(
     BuildContext context,
-    Workspace workspace,
+    Organization org,
   ) {
     final colors = context.colors;
 
@@ -103,35 +117,19 @@ class WorkspaceSwitcherList extends ConsumerWidget {
       padding: const EdgeInsets.all(16.0),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: colors.primary,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              Icons.grid_view_rounded,
-              color: colors.onPrimary,
-              size: 28,
-            ),
-          ),
+          OrganizationLogo(logoUrl: org.logoUrl, name: org.name, size: 44),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  workspace.name,
+                  org.name,
                   style: TextStyle(
                     color: colors.textPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
-                ),
-                Text(
-                  '${workspace.membersCount} members',
-                  style: TextStyle(color: colors.textHint, fontSize: 13),
                 ),
               ],
             ),
@@ -152,16 +150,22 @@ class WorkspaceSwitcherList extends ConsumerWidget {
     final colors = context.colors;
 
     return InkWell(
-      onTap: () => Navigator.pop(context),
+      onTap: () {
+        Navigator.pop(context);
+        context.go(AppRouter.createOrganization);
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             Icon(Icons.add, color: colors.textHint, size: 20),
             const SizedBox(width: 8),
-            Text(
-              'Add a new organization',
-              style: TextStyle(color: colors.textPrimary, fontSize: 14),
+            Expanded(
+              child: Text(
+                'Add a new organization',
+                style: TextStyle(color: colors.textPrimary, fontSize: 14),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
@@ -197,12 +201,12 @@ class _ActionButton extends StatelessWidget {
 }
 
 class _WorkspaceListItem extends StatelessWidget {
-  final Workspace workspace;
+  final Organization org;
   final bool isActive;
   final VoidCallback onTap;
 
   const _WorkspaceListItem({
-    required this.workspace,
+    required this.org,
     required this.isActive,
     required this.onTap,
   });
@@ -220,57 +224,30 @@ class _WorkspaceListItem extends StatelessWidget {
             : Colors.transparent,
         child: Row(
           children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: _avatarColor(colors, workspace.name),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Center(
-                    child: Text(
-                      workspace.name.substring(0, 1).toUpperCase(),
-                      style: TextStyle(
-                        color: colors.onPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: _avatarColor(colors, org.name),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Center(
+                child: Text(
+                  org.name.isNotEmpty
+                      ? org.name.substring(0, 1).toUpperCase()
+                      : 'O',
+                  style: TextStyle(
+                    color: colors.onPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
                   ),
                 ),
-                if (workspace.unreadCount > 0)
-                  Positioned(
-                    top: -6,
-                    right: -6,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colors.error,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: colors.background, width: 2),
-                      ),
-                      child: Text(
-                        '${workspace.unreadCount}',
-                        style: TextStyle(
-                          color: colors.onPrimary,
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                workspace.name,
+                org.name,
                 style: TextStyle(
                   color: colors.textPrimary,
                   fontWeight: isActive ? FontWeight.bold : FontWeight.normal,

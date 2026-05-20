@@ -35,8 +35,7 @@ class AuthNotifier extends Notifier<AuthState> {
     switch (result) {
       case Success<User>():
         AppLogger.i('Session restored — ${result.value.email}', tag: _tag);
-        ref.read(activeOrganizationProvider.notifier).active = result.value.organisation;
-        state = AuthState(status: AuthStatus.authenticated, user: result.value);
+        await _handlePostAuth(result.value);
       case Failure<User>():
         AppLogger.w('Session restore failed — clearing token', tag: _tag);
         await _storage.clearAll();
@@ -53,11 +52,7 @@ class AuthNotifier extends Notifier<AuthState> {
       case Success<AuthSession>():
         AppLogger.i('Login succeeded — token persisted', tag: _tag);
         await _storage.saveAccessToken(result.value.accessToken);
-        ref.read(activeOrganizationProvider.notifier).active = result.value.user.organisation;
-        state = AuthState(
-          status: AuthStatus.authenticated,
-          user: result.value.user,
-        );
+        await _handlePostAuth(result.value.user);
       case Failure<AuthSession>():
         AppLogger.w('Login rejected — ${result.error.message}', tag: _tag);
         state = state.copyWith(
@@ -175,6 +170,39 @@ class AuthNotifier extends Notifier<AuthState> {
         );
         return false;
     }
+  }
+
+  /// Called after a successful login or session restore.
+  /// If the user has no organisation, creates one automatically.
+  Future<void> _handlePostAuth(User user) async {
+    if (user.organisation.id.trim().isEmpty) {
+      await _createOnboardingOrg(user);
+    } else {
+      ref.read(activeOrganizationProvider.notifier).active = user.organisation;
+    }
+    state = AuthState(status: AuthStatus.authenticated, user: user);
+  }
+
+  /// Derives an org name and calls CreateOrganizationController.create().
+  /// On failure, logs the error but does NOT block navigation.
+  Future<void> _createOnboardingOrg(User user) async {
+    final orgName = _deriveOrgName(user);
+    try {
+      await ref.read(createOrganizationControllerProvider.notifier).create(
+        CreateOrganizationRequest(name: orgName),
+      );
+      // activeOrganizationProvider is set inside CreateOrganizationController.create() on success
+    } catch (e, st) {
+      AppLogger.e('Auto org creation failed', error: e, stackTrace: st, tag: _tag);
+      // Non-blocking: user proceeds to home regardless
+    }
+  }
+
+  static String _deriveOrgName(User user) {
+    final first = user.firstName.trim();
+    final last = user.lastName.trim();
+    if (first.isNotEmpty && last.isNotEmpty) return '$first $last';
+    return user.email.split('@').first;
   }
 
   Future<String?> get accessToken => _storage.getAccessToken();
