@@ -239,16 +239,21 @@ class _LoginViewState extends ConsumerState<LoginView> {
                   onPressed: _onLoginPressed,
                 ),
                 context.gapV(12),
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: Text(
-                    'Login with magic link',
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w400,
-                      color: context.colors.primary,
-                      fontFamily: FontFamily.roboto,
+                Row(
+                  children: [
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: Text(
+                        'Login with magic link',
+                        style: context.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w400,
+                          color: context.colors.primary,
+                          fontFamily: FontFamily.roboto,
+                        ),
+                      ),
                     ),
-                  ),
+            
+                  ],
                 ),
                 context.gapV(32),
                 Row(
