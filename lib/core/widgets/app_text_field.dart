@@ -142,7 +142,7 @@ class _AppTextFieldState extends State<AppTextField> {
                         obscureText
                             ? Icons.visibility_off_outlined
                             : Icons.visibility_outlined,
-                        color: Colors.grey.shade400,
+                        color: context.colors.textHint,
                       ),
                       onPressed: () {
                         setState(() {
