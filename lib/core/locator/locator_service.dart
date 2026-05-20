@@ -13,7 +13,10 @@ void setupLocator() {
   final authInterceptor = AuthInterceptor(storage: storage);
   locator.registerLazySingleton<AuthInterceptor>(() => authInterceptor);
 
-  final dio = Dio(BaseOptions(baseUrl: config.apiBaseUrl));
+  final baseUrl = config.apiBaseUrl.endsWith('/')
+      ? config.apiBaseUrl
+      : '${config.apiBaseUrl}/';
+  final dio = Dio(BaseOptions(baseUrl: baseUrl));
   dio.interceptors.add(authInterceptor);
 
   locator.registerLazySingleton<ApiBaseService>(

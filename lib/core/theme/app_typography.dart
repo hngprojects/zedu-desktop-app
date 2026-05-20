@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:zedu/core/core.dart';
 
 class FontFamily {
   static const String lato = 'Lato';
   static const String roboto = 'Roboto';
+  static const String poetsenOne = 'PoetsenOne';
 }
 
 class AppTypography {

@@ -35,8 +35,8 @@ abstract final class AppTheme {
           backgroundColor: palette.primary,
           shape: _buttonShape,
           padding: _buttonPadding,
-          foregroundColor: Colors.white,
-          textStyle: _buttonTextStyle.copyWith(color: Colors.white),
+          foregroundColor: palette.onPrimary,
+          textStyle: _buttonTextStyle.copyWith(color: palette.onPrimary),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(

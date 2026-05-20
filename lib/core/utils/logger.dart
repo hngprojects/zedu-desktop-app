@@ -1,5 +1,5 @@
 import 'dart:developer' as dev;
-import 'package:flutter/foundation.dart';
+import 'package:zedu/core/core.dart';
 
 /// Log level severity, aligned with java.util.logging integers used by dart:developer.
 enum LogLevel {
