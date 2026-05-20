@@ -1,13 +1,23 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zedu/features/dms/domain/domain.dart';
-import 'package:zedu/features/dms/data/data.dart';
+import 'package:zedu/core/core.dart';
+import 'package:zedu/features/features.dart';
 
 final dmListProvider =
     AsyncNotifierProvider<DmListNotifier, List<DmConversation>>(() {
   return DmListNotifier();
 });
 
-final selectedDmProvider = StateProvider<DmConversation?>((ref) => null);
+class SelectedDmNotifier extends Notifier<DmConversation?> {
+  @override
+  DmConversation? build() => null;
+
+  void select(DmConversation? conversation) {
+    state = conversation;
+  }
+}
+
+final selectedDmProvider = NotifierProvider<SelectedDmNotifier, DmConversation?>(
+  SelectedDmNotifier.new,
+);
 
 class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
   int _currentPage = 1;
@@ -33,7 +43,7 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
 
   Future<void> loadMore() async {
     if (!_hasMore) return;
-    final current = state.valueOrNull ?? [];
+    final current = state.value ?? [];
     _currentPage++;
     final next = await _fetchPage(_currentPage);
     state = AsyncValue.data([...current, ...next]);

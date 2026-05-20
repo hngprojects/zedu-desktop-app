@@ -1,5 +1,7 @@
+import 'package:zedu/core/core.dart';
+import 'package:zedu/features/features.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zedu/features/dms/data/data.dart';
+import 'package:state_notifier/state_notifier.dart';
 
 class ChatHistoryState {
   final List<dynamic> messages;
@@ -29,18 +31,20 @@ class ChatHistoryState {
   }
 }
 
-class ChatHistoryNotifier extends FamilyNotifier<ChatHistoryState, String> {
-  @override
-  ChatHistoryState build(String arg) {
+class ChatHistoryNotifier extends StateNotifier<ChatHistoryState> {
+  final String arg;
+  final Ref ref;
+
+  ChatHistoryNotifier(this.arg, this.ref)
+    : super(ChatHistoryState(messages: [], isLoading: true)) {
     _loadInitial();
-    return ChatHistoryState(messages: [], isLoading: true);
   }
 
   Future<void> _loadInitial() async {
     try {
       final repository = ref.read(dmRepositoryProvider);
       final messages = await repository.getMessages(arg, page: 1);
-      
+
       state = state.copyWith(
         messages: messages,
         isLoading: false,
@@ -72,7 +76,11 @@ class ChatHistoryNotifier extends FamilyNotifier<ChatHistoryState, String> {
     }
   }
 
-  Future<void> sendMessage(String content, {List<dynamic>? media, List<dynamic>? mentions}) async {
+  Future<void> sendMessage(
+    String content, {
+    List<dynamic>? media,
+    List<dynamic>? mentions,
+  }) async {
     final tempId = DateTime.now().millisecondsSinceEpoch.toString();
     final optimisticMessage = {
       "id": tempId,
@@ -88,8 +96,13 @@ class ChatHistoryNotifier extends FamilyNotifier<ChatHistoryState, String> {
 
     try {
       final repository = ref.read(dmRepositoryProvider);
-      await repository.sendMessage(arg, content, media: media, mentions: mentions);
-      
+      await repository.sendMessage(
+        arg,
+        content,
+        media: media,
+        mentions: mentions,
+      );
+
       final updatedMessages = state.messages.map((m) {
         if (m['id'] == tempId) {
           final newMsg = Map<String, dynamic>.from(m as Map);
@@ -99,7 +112,6 @@ class ChatHistoryNotifier extends FamilyNotifier<ChatHistoryState, String> {
         return m;
       }).toList();
       state = state.copyWith(messages: updatedMessages);
-
     } catch (e) {
       final failedMessages = state.messages.map((m) {
         if (m['id'] == tempId) {
@@ -114,6 +126,7 @@ class ChatHistoryNotifier extends FamilyNotifier<ChatHistoryState, String> {
   }
 }
 
-final chatHistoryProvider = NotifierProviderFamily<ChatHistoryNotifier, ChatHistoryState, String>(
-  ChatHistoryNotifier.new,
-);
+final chatHistoryProvider =
+    StateNotifierProvider.family<ChatHistoryNotifier, ChatHistoryState, String>(
+      (ref, arg) => ChatHistoryNotifier(arg, ref),
+    );
