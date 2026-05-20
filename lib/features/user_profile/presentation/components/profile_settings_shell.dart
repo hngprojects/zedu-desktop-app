@@ -73,43 +73,9 @@ class _ProfileTopBar extends StatelessWidget {
             colorBlendMode: BlendMode.srcIn,
           ),
           const SizedBox(width: 24),
-          Container(
-            height: 32,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF4D49AC),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 18,
-                  height: 18,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF13C9BD),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Text(
-                    'zu',
-                    style: TextStyle(color: Colors.white, fontSize: 8),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  userName,
-                  style: context.textTheme.bodySmall?.copyWith(
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                const Icon(
-                  Icons.keyboard_arrow_down,
-                  color: Colors.white70,
-                  size: 18,
-                ),
-              ],
-            ),
+          TopUserMenu(
+            userName: userName,
+            backgroundColor: const Color(0xFF4D49AC),
           ),
           const Spacer(),
           ConstrainedBox(
@@ -174,33 +140,7 @@ class _PrimaryRail extends StatelessWidget {
           const SizedBox(height: 12),
           const _RailIcon(icon: Icons.settings_outlined, selected: true),
           const SizedBox(height: 12),
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Icon(Icons.person, color: Color(0xFF303073)),
-              ),
-              Positioned(
-                right: -2,
-                bottom: -2,
-                child: Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF22C55E),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: ProfileSettingsShell._rail),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          const UserMenuButton(),
         ],
       ),
     );
@@ -222,18 +162,25 @@ class _RailItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Column(
-        children: [
-          _RailIcon(icon: icon, selected: selected),
-          const SizedBox(height: 3),
-          Text(
-            label,
-            style: context.textTheme.labelSmall?.copyWith(
-              color: Colors.white,
-              fontSize: 10,
+      child: InkWell(
+        onTap: () {
+          if (label == 'Home') {
+            context.go(AppRouter.home);
+          }
+        },
+        child: Column(
+          children: [
+            _RailIcon(icon: icon, selected: selected),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: context.textTheme.labelSmall?.copyWith(
+                color: Colors.white,
+                fontSize: 10,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
