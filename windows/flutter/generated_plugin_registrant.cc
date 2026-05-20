@@ -6,9 +6,30 @@
 
 #include "generated_plugin_registrant.h"
 
+#include <agora_rtc_engine/agora_rtc_engine_plugin.h>
+#include <desktop_drop/desktop_drop_plugin.h>
 #include <flutter_secure_storage_windows/flutter_secure_storage_windows_plugin.h>
+#include <iris_method_channel/iris_method_channel_plugin_c_api.h>
+#include <irondash_engine_context/irondash_engine_context_plugin_c_api.h>
+#include <local_notifier/local_notifier_plugin.h>
+#include <super_native_extensions/super_native_extensions_plugin_c_api.h>
+#include <url_launcher_windows/url_launcher_windows.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
+  AgoraRtcEnginePluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("AgoraRtcEnginePlugin"));
+  DesktopDropPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("DesktopDropPlugin"));
   FlutterSecureStorageWindowsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FlutterSecureStorageWindowsPlugin"));
+  IrisMethodChannelPluginCApiRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("IrisMethodChannelPluginCApi"));
+  IrondashEngineContextPluginCApiRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("IrondashEngineContextPluginCApi"));
+  LocalNotifierPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("LocalNotifierPlugin"));
+  SuperNativeExtensionsPluginCApiRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("SuperNativeExtensionsPluginCApi"));
+  UrlLauncherWindowsRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("UrlLauncherWindows"));
 }
