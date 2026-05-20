@@ -5,6 +5,7 @@ class AppRouter {
   const AppRouter._();
 
   static const home = '/home';
+  static const homeChannel = '/home/channels/:channelId';
   static const login = '/login';
   static const signup = '/signup';
   static const forgotPassword = '/forgot-password';
@@ -18,6 +19,13 @@ class AppRouter {
       GoRoute(path: login, builder: (context, state) => const LoginView()),
 
       GoRoute(path: home, builder: (context, state) => const HomeView()),
+      GoRoute(
+        path: homeChannel,
+        builder: (context, state) {
+          final channelId = state.pathParameters['channelId'];
+          return HomeView(initialChannelId: channelId);
+        },
+      ),
       GoRoute(path: signup, builder: (context, state) => const SignUpView()),
       GoRoute(
         path: forgotPassword,
