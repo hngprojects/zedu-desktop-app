@@ -7,7 +7,6 @@ final dmListProvider =
   return DmListNotifier();
 });
 
-/// Tracks which DM conversation is currently selected in the sidebar.
 final selectedDmProvider = StateProvider<DmConversation?>((ref) => null);
 
 class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
@@ -32,7 +31,6 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
     return results;
   }
 
-  /// Loads the next page and appends to the current list.
   Future<void> loadMore() async {
     if (!_hasMore) return;
     final current = state.valueOrNull ?? [];

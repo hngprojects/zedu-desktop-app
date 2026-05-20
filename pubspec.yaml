@@ -26,6 +26,7 @@ dependencies:
   riverpod: ^3.2.1
   super_clipboard: ^0.9.1
   url_launcher: ^6.3.2
+  window_manager: ^0.5.1
 
 dev_dependencies:
   flutter_test:

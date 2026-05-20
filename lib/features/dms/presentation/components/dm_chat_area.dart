@@ -1,43 +1,145 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
-class DmChatArea extends ConsumerWidget {
+class DmChatArea extends ConsumerStatefulWidget {
   final DmConversation conversation;
 
   const DmChatArea({super.key, required this.conversation});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DmChatArea> createState() => _DmChatAreaState();
+}
+
+class _DmChatAreaState extends ConsumerState<DmChatArea> {
+  bool _isDragging = false;
+  final List<XFile> _pendingFiles = [];
+
+  void _addFiles(List<XFile> files) {
+    setState(() {
+      _pendingFiles.addAll(files);
+    });
+  }
+
+  void _removeFile(int index) {
+    setState(() {
+      _pendingFiles.removeAt(index);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.colors;
 
-    return Container(
-      color: colors.background,
-      child: Column(
-        children: [
-          _DmChatHeader(conversation: conversation),
-          Expanded(
-            child: CustomScrollView(
-              reverse: true, // Messages build bottom-up
-              slivers: [
-                // Paginating message list would go here.
-                // Currently just the profile card at the top.
-                SliverToBoxAdapter(
-                  child: DmProfileCard(conversation: conversation),
+    return DropTarget(
+      onDragDone: (detail) {
+        _addFiles(detail.files);
+      },
+      onDragEntered: (detail) {
+        setState(() => _isDragging = true);
+      },
+      onDragExited: (detail) {
+        setState(() => _isDragging = false);
+      },
+      child: Container(
+        color: colors.background,
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                _DmChatHeader(conversation: widget.conversation),
+                Expanded(
+                  child: Consumer(
+                    builder: (context, ref, child) {
+                      final historyState = ref.watch(chatHistoryProvider(widget.conversation.id));
+                      final messages = historyState.messages;
+
+                      return NotificationListener<ScrollNotification>(
+                        onNotification: (ScrollNotification scrollInfo) {
+                          if (!historyState.isLoading &&
+                              historyState.hasMore &&
+                              scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent * 0.8) {
+                            ref.read(chatHistoryProvider(widget.conversation.id).notifier).loadMore();
+                          }
+                          return false;
+                        },
+                        child: CustomScrollView(
+                          reverse: true,
+                          slivers: [
+                            SliverPadding(
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                              sliver: SliverList(
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, index) {
+                                    final msg = messages[index];
+                                    return _MessageBubble(message: msg);
+                                  },
+                                  childCount: messages.length,
+                                ),
+                              ),
+                            ),
+                            if (historyState.isLoading)
+                              const SliverToBoxAdapter(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 16),
+                                  child: Center(child: CircularProgressIndicator()),
+                                ),
+                              ),
+                            if (!historyState.hasMore)
+                              SliverToBoxAdapter(
+                                child: DmProfileCard(conversation: widget.conversation),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                if (_pendingFiles.isNotEmpty)
+                  _AttachmentPreviewList(
+                    files: _pendingFiles,
+                    onRemove: _removeFile,
+                  ),
+                DmMessageComposer(
+                  recipientName: '@${widget.conversation.participantName.split(' ').first}_${widget.conversation.participantName.split(' ').last}',
+                  onSend: (text) {
+                    ref.read(chatHistoryProvider(widget.conversation.id).notifier).sendMessage(text, media: _pendingFiles);
+                    setState(() {
+                      _pendingFiles.clear();
+                    });
+                  },
                 ),
               ],
             ),
-          ),
-          DmMessageComposer(
-            recipientName: '@${conversation.participantName.split(' ').first}_${conversation.participantName.split(' ').last}',
-            onSend: (text) {
-              // TODO: Wire to repository sendMessage
-            },
-          ),
-        ],
+            if (_isDragging)
+              Positioned.fill(
+                child: Container(
+                  color: colors.primary.withValues(alpha: 0.2),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: colors.primary,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'Drop files to attach',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 }
+
 
 class _DmChatHeader extends StatelessWidget {
   final DmConversation conversation;
@@ -84,10 +186,24 @@ class _DmChatHeader extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          // Buzz Start Call Button (Phase 6 placeholder)
           InkWell(
             onTap: () {
-              // TODO: Integrate Buzz/Agora
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => BuzzPreparationView(
+                  remoteUserName: conversation.participantName,
+                  onCancel: () => Navigator.of(context).pop(),
+                  onJoin: () {
+                    Navigator.of(context).pushReplacement(MaterialPageRoute(
+                      builder: (_) => BuzzMeetingView(
+                        channelName: conversation.id,
+                        token: '',
+                        localUid: 0,
+                        remoteUserName: conversation.participantName,
+                      ),
+                    ));
+                  },
+                ),
+              ));
             },
             borderRadius: BorderRadius.circular(4),
             child: Padding(
@@ -109,6 +225,173 @@ class _DmChatHeader extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _MessageBubble extends StatelessWidget {
+  final dynamic message;
+
+  const _MessageBubble({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final isMe = message['userId'] == 'me';
+    final content = message['content'] as String? ?? '';
+    final createdAt = message['created_at'] != null 
+        ? DateTime.parse(message['created_at'] as String).toLocal()
+        : DateTime.now();
+
+    final timeString = '${createdAt.hour}:${createdAt.minute.toString().padLeft(2, '0')}';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (!isMe) ...[
+            const CircleAvatar(
+              radius: 16,
+              backgroundColor: Color(0xFF6458F5),
+              child: Icon(Icons.person, size: 16, color: Colors.white),
+            ),
+            const SizedBox(width: 12),
+          ],
+          Flexible(
+            child: Column(
+              crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                if (!isMe)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'User',
+                          style: TextStyle(
+                            color: colors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          timeString,
+                          style: TextStyle(
+                            color: colors.textHint,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isMe ? const Color(0xFF6458F5) : colors.onPrimary.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    content,
+                    style: TextStyle(
+                      color: isMe ? Colors.white : colors.textPrimary,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                if (isMe)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      message['status'] == 'sending' ? 'Sending...' : (message['status'] == 'failed' ? 'Failed - Tap to retry' : timeString),
+                      style: TextStyle(
+                        color: message['status'] == 'failed' ? colors.error : colors.textHint,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AttachmentPreviewList extends StatelessWidget {
+  final List<XFile> files;
+  final Function(int) onRemove;
+
+  const _AttachmentPreviewList({
+    required this.files,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      height: 100,
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: colors.background,
+        border: Border(top: BorderSide(color: colors.divider)),
+      ),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: files.length,
+        itemBuilder: (context, index) {
+          final file = files[index];
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 80,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  color: colors.onPrimary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: colors.divider),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.insert_drive_file, color: colors.textHint),
+                      const SizedBox(height: 4),
+                      Text(
+                        file.name,
+                        style: TextStyle(color: colors.textPrimary, fontSize: 10),
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                top: -4,
+                right: 4,
+                child: InkWell(
+                  onTap: () => onRemove(index),
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.close, size: 12, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
