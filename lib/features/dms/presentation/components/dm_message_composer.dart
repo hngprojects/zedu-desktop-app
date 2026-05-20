@@ -1,5 +1,4 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/features.dart';
 
 class DmMessageComposer extends StatefulWidget {
   final String recipientName;
@@ -161,7 +160,7 @@ class _DmMessageComposerState extends State<DmMessageComposer> {
 
 class _ToolbarIcon extends StatelessWidget {
   final IconData icon;
-  final dynamic colors;
+  final AppPalette colors;
   final String? label;
 
   const _ToolbarIcon({

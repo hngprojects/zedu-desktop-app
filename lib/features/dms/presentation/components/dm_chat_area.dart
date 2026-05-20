@@ -21,9 +21,22 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
   }
 
   void _removeFile(int index) {
+    if (index < 0 || index >= _pendingFiles.length) return;
     setState(() {
       _pendingFiles.removeAt(index);
     });
+  }
+
+  String get _recipientHandle {
+    final parts = widget.conversation.participantName
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) return '@user';
+    if (parts.length == 1) return '@${parts.first}';
+    return '@${parts.first}_${parts.last}';
   }
 
   @override
@@ -33,6 +46,7 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
     return DropTarget(
       onDragDone: (detail) {
         _addFiles(detail.files);
+        setState(() => _isDragging = false);
       },
       onDragEntered: (detail) {
         setState(() => _isDragging = true);
@@ -58,7 +72,7 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                           if (!historyState.isLoading &&
                               historyState.hasMore &&
                               scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent * 0.8) {
-                            ref.read(chatHistoryProvider(widget.conversation.id).notifier).loadMore();
+                            ref.read(chatHistoryProvider(widget.conversation.id)).loadMore();
                           }
                           return false;
                         },
@@ -100,9 +114,9 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                     onRemove: _removeFile,
                   ),
                 DmMessageComposer(
-                  recipientName: '@${widget.conversation.participantName.split(' ').first}_${widget.conversation.participantName.split(' ').last}',
+                  recipientName: _recipientHandle,
                   onSend: (text) {
-                    ref.read(chatHistoryProvider(widget.conversation.id).notifier).sendMessage(text, media: _pendingFiles);
+                    ref.read(chatHistoryProvider(widget.conversation.id)).sendMessage(text, media: List<XFile>.of(_pendingFiles));
                     setState(() {
                       _pendingFiles.clear();
                     });
@@ -149,6 +163,9 @@ class _DmChatHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final participantInitial = conversation.participantName.trim().isEmpty
+        ? '?'
+        : conversation.participantName.trim()[0].toUpperCase();
     
     return Container(
       height: 64,
@@ -167,7 +184,7 @@ class _DmChatHeader extends StatelessWidget {
                 : null,
             child: conversation.participantAvatarUrl == null
                 ? Text(
-                    conversation.participantName[0].toUpperCase(),
+                    participantInitial,
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -231,7 +248,7 @@ class _DmChatHeader extends StatelessWidget {
 }
 
 class _MessageBubble extends StatelessWidget {
-  final dynamic message;
+  final Map<String, dynamic> message;
 
   const _MessageBubble({required this.message});
 
@@ -240,9 +257,9 @@ class _MessageBubble extends StatelessWidget {
     final colors = context.colors;
     final isMe = message['userId'] == 'me';
     final content = message['content'] as String? ?? '';
-    final createdAt = message['created_at'] != null 
-        ? DateTime.parse(message['created_at'] as String).toLocal()
-        : DateTime.now();
+    final createdAt =
+        DateTime.tryParse(message['created_at']?.toString() ?? '')?.toLocal() ??
+        DateTime.now();
 
     final timeString = '${createdAt.hour}:${createdAt.minute.toString().padLeft(2, '0')}';
 
