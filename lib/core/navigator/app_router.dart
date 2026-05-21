@@ -26,8 +26,8 @@ class AppRouter {
         path: magicLinkSent,
         redirect: (context, state) =>
             state.extra is String && (state.extra! as String).trim().isNotEmpty
-                ? null
-                : magicLinkRequest,
+            ? null
+            : magicLinkRequest,
         builder: (context, state) {
           final email = state.extra is String ? state.extra! as String : '';
           return MagicLinkSentView(email: email);
