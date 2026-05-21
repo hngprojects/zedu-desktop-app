@@ -1,7 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
-import 'package:zedu/features/dms/presentation/providers/notification_settings_provider.dart';
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService(ref);
@@ -21,11 +19,15 @@ class NotificationService {
     );
   }
 
-  Future<void> handleIncomingMessage(Map<String, dynamic> message, String channelId, String senderName) async {
+  Future<void> handleIncomingMessage(
+    Map<String, dynamic> message,
+    String channelId,
+    String senderName,
+  ) async {
     final settings = _ref.read(notificationSettingsProvider);
     final authState = _ref.read(authNotifierProvider);
     final currentUserId = authState.user?.id ?? '';
-    
+
     final senderId = (message['user_id'] ?? message['userId']).toString();
 
     // Do not notify for our own messages
@@ -40,7 +42,7 @@ class NotificationService {
     // Suppress if the thread is already active and the window is focused
     final isFocused = await windowManager.isFocused();
     final selectedChannel = _ref.read(selectedDmProvider)?.channelId;
-    
+
     if (isFocused && selectedChannel == channelId) {
       return;
     }
@@ -76,7 +78,7 @@ class NotificationService {
     notification.onClick = () async {
       await windowManager.show();
       await windowManager.focus();
-      
+
       // Navigate to the DM using GoRouter
       final router = locator<GoRouter>();
       router.go('/dms/$channelId');

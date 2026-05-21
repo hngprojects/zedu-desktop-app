@@ -108,6 +108,98 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                 ),
               ],
             ),
+            
+            // FULL PAGE MODE INJECTION
+            Consumer(
+              builder: (context, ref, child) {
+                final activeCall = ref.watch(activeCallProvider);
+                if (activeCall.state.status == CallStatus.active && activeCall.state.isFullPage) {
+                  return const Positioned.fill(
+                    child: BuzzMeetingView(),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+
+            // FLOATING / PIP INJECTION
+            Consumer(
+              builder: (context, ref, child) {
+                final activeCall = ref.watch(activeCallProvider);
+                if (activeCall.state.status == CallStatus.active && !activeCall.state.isFullPage) {
+                  return const BuzzMeetingView();
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+
+            // INCOMING CALL MODAL
+            const IncomingCallModal(),
+
+            // RINGING STATE OVERLAY (Caller)
+            Consumer(
+              builder: (context, ref, child) {
+                final activeCall = ref.watch(activeCallProvider);
+                if (activeCall.state.status == CallStatus.calling) {
+                  return Positioned(
+                    top: 24,
+                    right: 24,
+                    child: Material(
+                      color: Colors.transparent,
+                      elevation: 8,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        width: 320,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: colors.background,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: colors.divider),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            const CircularProgressIndicator(),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Calling...',
+                                    style: TextStyle(color: colors.textHint, fontSize: 12),
+                                  ),
+                                  Text(
+                                    activeCall.state.remoteUserName ?? 'Unknown',
+                                    style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.call_end),
+                              color: Colors.red,
+                              onPressed: () {
+                                ref.read(activeCallProvider.notifier).cancelCall();
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+
             if (_isDragging)
               Positioned.fill(
                 child: Container(
@@ -210,26 +302,18 @@ class _DmChatHeader extends StatelessWidget {
             },
           ),
           const SizedBox(width: 8),
-          InkWell(
-            onTap: () {
-              Navigator.of(context).push(MaterialPageRoute<void>(
-                builder: (_) => BuzzPreparationView(
-                  remoteUserName: conversation.displayName,
-                  onCancel: () => Navigator.of(context).pop(),
-                  onJoin: () {
-                    Navigator.of(context).pushReplacement(MaterialPageRoute<void>(
-                      builder: (_) => BuzzMeetingView(
-                        channelName: conversation.channelId,
-                        token: '',
-                        localUid: 0,
-                        remoteUserName: conversation.displayName,
-                      ),
-                    ));
-                  },
-                ),
-              ));
-            },
-            borderRadius: BorderRadius.circular(8),
+          Consumer(
+            builder: (context, ref, child) {
+              return InkWell(
+                onTap: () {
+                  ref.read(activeCallProvider.notifier).initiateCall(
+                    remoteUserId: conversation.participantId,
+                    remoteUserName: conversation.displayName,
+                    channelId: conversation.channelId,
+                    remoteAvatarUrl: conversation.effectiveAvatarUrl,
+                  );
+                },
+                borderRadius: BorderRadius.circular(8),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
@@ -251,7 +335,9 @@ class _DmChatHeader extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
+              ),
+            );
+            },
           ),
           const SizedBox(width: 12),
           Icon(Icons.more_vert, color: colors.textHint),
@@ -272,6 +358,58 @@ class _MessageBubble extends ConsumerWidget {
     required this.conversation,
     required this.channelId,
   });
+
+  TextSpan _parseRichText(String text, TextStyle defaultStyle) {
+    if (text.isEmpty) return TextSpan(style: defaultStyle, text: '');
+
+    final boldRegex = RegExp(r'\*\*(.*?)\*\*', dotAll: true);
+    final italicRegex = RegExp(r'(?<!\*)\*(.*?)\*(?!\*)', dotAll: true);
+    final strikeRegex = RegExp(r'~~(.*?)~~', dotAll: true);
+    final codeRegex = RegExp(r'`(.*?)`', dotAll: true);
+
+    final allPatterns = [boldRegex, italicRegex, strikeRegex, codeRegex];
+    final combined = RegExp(allPatterns.map((r) => r.pattern).join('|'), dotAll: true);
+
+    final spans = <TextSpan>[];
+    int lastEnd = 0;
+
+    for (final match in combined.allMatches(text)) {
+      if (match.start > lastEnd) {
+        spans.add(TextSpan(text: text.substring(lastEnd, match.start), style: defaultStyle));
+      }
+
+      final raw = match.group(0)!;
+      if (boldRegex.hasMatch(raw)) {
+        final inner = match.group(1) ?? boldRegex.firstMatch(raw)?.group(1) ?? raw;
+        spans.add(TextSpan(text: inner, style: defaultStyle.copyWith(fontWeight: FontWeight.bold)));
+      } else if (strikeRegex.hasMatch(raw)) {
+        final inner = strikeRegex.firstMatch(raw)?.group(1) ?? raw;
+        spans.add(TextSpan(text: inner, style: defaultStyle.copyWith(decoration: TextDecoration.lineThrough)));
+      } else if (codeRegex.hasMatch(raw)) {
+        final inner = codeRegex.firstMatch(raw)?.group(1) ?? raw;
+        spans.add(TextSpan(
+          text: inner,
+          style: defaultStyle.copyWith(
+            fontFamily: 'monospace',
+            backgroundColor: const Color(0x1A6458F5),
+            color: const Color(0xFF6458F5),
+          ),
+        ));
+      } else if (italicRegex.hasMatch(raw)) {
+        final inner = italicRegex.firstMatch(raw)?.group(1) ?? raw;
+        spans.add(TextSpan(text: inner, style: defaultStyle.copyWith(fontStyle: FontStyle.italic)));
+      } else {
+        spans.add(TextSpan(text: raw, style: defaultStyle));
+      }
+      lastEnd = match.end;
+    }
+
+    if (lastEnd < text.length) {
+      spans.add(TextSpan(text: text.substring(lastEnd), style: defaultStyle));
+    }
+
+    return TextSpan(style: defaultStyle, children: spans);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -365,11 +503,13 @@ class _MessageBubble extends ConsumerWidget {
                       color: isMe ? const Color(0xFF6458F5) : colors.onPrimary.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text(
-                      content,
-                      style: TextStyle(
-                        color: isMe ? Colors.white : colors.textPrimary,
-                        fontSize: 14,
+                    child: RichText(
+                      text: _parseRichText(
+                        content,
+                        TextStyle(
+                          color: isMe ? Colors.white : colors.textPrimary,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                   ),
@@ -432,10 +572,47 @@ class _AttachmentBubbleList extends StatelessWidget {
     }
   }
 
+  Widget _buildGenericFile(String fileName, String fileLink, bool isImage, BuildContext context) {
+    final colors = context.colors;
+    return GestureDetector(
+      onTap: fileLink.isNotEmpty ? () => _launchUrl(fileLink) : null,
+      child: Container(
+        width: 120,
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isMe ? colors.primary.withValues(alpha: 0.15) : colors.onPrimary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: isMe ? colors.primary.withValues(alpha: 0.3) : colors.divider),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isImage ? Icons.image_rounded : Icons.insert_drive_file_rounded,
+              color: isMe ? colors.primary : colors.textPrimary,
+              size: 28,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              fileName,
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -445,41 +622,30 @@ class _AttachmentBubbleList extends StatelessWidget {
         final String fileLink = (item['file_link'] ?? '').toString();
         final isImage = ['png', 'jpg', 'jpeg', 'gif', 'webp'].contains((item['file_type'] ?? '').toString().toLowerCase());
 
-        return GestureDetector(
-          onTap: fileLink.isNotEmpty ? () => _launchUrl(fileLink) : null,
-          child: Container(
-            width: 120,
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: isMe ? colors.primary.withValues(alpha: 0.15) : colors.onPrimary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: isMe ? colors.primary.withValues(alpha: 0.3) : colors.divider),
+        if (isImage && fileLink.isNotEmpty) {
+          final isNetwork = fileLink.startsWith('http');
+          Widget imageWidget = isNetwork
+              ? Image.network(fileLink, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildGenericFile(fileName, fileLink, isImage, context))
+              : Image.asset(fileLink, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildGenericFile(fileName, fileLink, isImage, context)); // Use asset/file depending on your local storage setup, assuming network mostly
+
+          return GestureDetector(
+            onTap: () => _launchUrl(fileLink),
+            child: Container(
+              width: 250,
+              height: 200,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: context.colors.divider),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: isNetwork ? Image.network(fileLink, fit: BoxFit.cover) : _buildGenericFile(fileName, fileLink, isImage, context),
+              ),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  isImage ? Icons.image_rounded : Icons.insert_drive_file_rounded,
-                  color: isMe ? colors.primary : colors.textPrimary,
-                  size: 28,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  fileName,
-                  style: TextStyle(
-                    color: colors.textPrimary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        );
+          );
+        }
+
+        return _buildGenericFile(fileName, fileLink, isImage, context);
       }).toList(),
     );
   }

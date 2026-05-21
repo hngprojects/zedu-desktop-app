@@ -12,7 +12,8 @@ class DesktopManager extends ConsumerStatefulWidget {
   ConsumerState<DesktopManager> createState() => _DesktopManagerState();
 }
 
-class _DesktopManagerState extends ConsumerState<DesktopManager> with WindowListener, TrayListener {
+class _DesktopManagerState extends ConsumerState<DesktopManager>
+    with WindowListener, TrayListener {
   @override
   void initState() {
     super.initState();
@@ -38,20 +39,14 @@ class _DesktopManagerState extends ConsumerState<DesktopManager> with WindowList
 
     try {
       if (Platform.isWindows) {
-        await trayManager.setIcon('app_icon.ico'); 
+        await trayManager.setIcon('app_icon.ico');
       }
-      
+
       Menu menu = Menu(
         items: [
-          MenuItem(
-            key: 'show_window',
-            label: 'Show Zedu',
-          ),
+          MenuItem(key: 'show_window', label: 'Show Zedu'),
           MenuItem.separator(),
-          MenuItem(
-            key: 'exit_app',
-            label: 'Exit',
-          ),
+          MenuItem(key: 'exit_app', label: 'Exit'),
         ],
       );
       await trayManager.setContextMenu(menu);
@@ -83,7 +78,8 @@ class _DesktopManagerState extends ConsumerState<DesktopManager> with WindowList
       await windowManager.show();
       await windowManager.focus();
     } else if (menuItem.key == 'exit_app') {
-      await windowManager.destroy(); 
+      await windowManager.destroy();
+    }
   }
 
   @override
