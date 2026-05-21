@@ -9,7 +9,7 @@ class DmSidebarList extends ConsumerWidget {
     final colors = context.colors;
 
     return Container(
-      width: 330,
+      width: 320,
       color: colors.sidebar,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -44,7 +44,7 @@ class UserMenuDialog extends ConsumerWidget {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF303073),
+                        color: context.colors.sidebar,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Center(

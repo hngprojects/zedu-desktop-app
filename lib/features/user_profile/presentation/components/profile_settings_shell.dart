@@ -9,10 +9,6 @@ class ProfileSettingsShell extends ConsumerWidget {
     required this.child,
   });
 
-  static const _brand = Color(0xFF303073);
-  static const _rail = Color(0xFF39368A);
-  static const _active = Color(0xFF6458F5);
-
   final UserProfileSection selectedSection;
   final ValueChanged<UserProfileSection> onSectionSelected;
   final Widget child;
@@ -31,7 +27,14 @@ class ProfileSettingsShell extends ConsumerWidget {
             Expanded(
               child: Row(
                 children: [
-                  const _PrimaryRail(),
+                  AppSidebarRail(
+                    activeType: null,
+                    settingsSelected: true,
+                    onTypeSelected: (type) {
+                      ref.read(homeSidebarProvider.notifier).setType(type);
+                      context.go(AppRouter.home);
+                    },
+                  ),
                   _SettingsNavigation(
                     userName: userName,
                     selectedSection: selectedSection,
@@ -60,8 +63,8 @@ class _ProfileTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 56,
-      color: ProfileSettingsShell._brand,
+      height: 44,
+      color: context.colors.sidebar,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
         children: [
@@ -75,7 +78,7 @@ class _ProfileTopBar extends StatelessWidget {
           const SizedBox(width: 24),
           TopUserMenu(
             userName: userName,
-            backgroundColor: const Color(0xFF4D49AC),
+            backgroundColor: context.colors.primary.withValues(alpha: 0.58),
           ),
           const Spacer(),
           ConstrainedBox(
@@ -93,7 +96,7 @@ class _ProfileTopBar extends StatelessWidget {
                   size: 18,
                 ),
                 filled: true,
-                fillColor: const Color(0xFF5751BC),
+                fillColor: context.colors.onPrimary.withValues(alpha: 0.16),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide.none,
@@ -106,125 +109,6 @@ class _ProfileTopBar extends StatelessWidget {
           const Spacer(flex: 2),
         ],
       ),
-    );
-  }
-}
-
-class _PrimaryRail extends StatelessWidget {
-  const _PrimaryRail();
-
-  @override
-  Widget build(BuildContext context) {
-    final items = [
-      (Icons.home_outlined, 'Home'),
-      (Icons.chat_bubble_outline, 'DMs'),
-      (Icons.person_outline, 'People'),
-      (Icons.insert_drive_file_outlined, 'Files'),
-      (Icons.call_outlined, 'Buzz'),
-    ];
-
-    return Container(
-      width: 64,
-      color: ProfileSettingsShell._rail,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Column(
-        children: [
-          for (final item in items)
-            _RailItem(
-              icon: item.$1,
-              label: item.$2,
-              selected: item.$2 == 'DMs',
-            ),
-          const Spacer(),
-          const _RailIcon(icon: Icons.notifications_none, badge: true),
-          const SizedBox(height: 12),
-          const _RailIcon(icon: Icons.settings_outlined, selected: true),
-          const SizedBox(height: 12),
-          const UserMenuButton(),
-        ],
-      ),
-    );
-  }
-}
-
-class _RailItem extends StatelessWidget {
-  const _RailItem({
-    required this.icon,
-    required this.label,
-    required this.selected,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: InkWell(
-        onTap: () {
-          if (label == 'Home') {
-            context.go(AppRouter.home);
-          }
-        },
-        child: Column(
-          children: [
-            _RailIcon(icon: icon, selected: selected),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: context.textTheme.labelSmall?.copyWith(
-                color: Colors.white,
-                fontSize: 10,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RailIcon extends StatelessWidget {
-  const _RailIcon({
-    required this.icon,
-    this.selected = false,
-    this.badge = false,
-  });
-
-  final IconData icon;
-  final bool selected;
-  final bool badge;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: selected ? ProfileSettingsShell._active : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Icon(icon, color: Colors.white, size: 18),
-        ),
-        if (badge)
-          Positioned(
-            right: 5,
-            top: 5,
-            child: Container(
-              width: 7,
-              height: 7,
-              decoration: const BoxDecoration(
-                color: Color(0xFFEF4444),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-      ],
     );
   }
 }
@@ -243,8 +127,8 @@ class _SettingsNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 260,
-      color: ProfileSettingsShell._rail,
+      width: 320,
+      color: context.colors.sidebar,
       padding: const EdgeInsets.fromLTRB(20, 20, 12, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -377,7 +261,7 @@ class _NavigationTile extends StatelessWidget {
           height: 38,
           padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            color: selected ? ProfileSettingsShell._active : Colors.transparent,
+            color: selected ? context.colors.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
           ),
           child: Row(
