@@ -20,8 +20,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     String? previousId;
     try {
       previousId = state.selectedWorkspace?.id;
-    } catch (_) {
-    }
+    } catch (_) {}
 
     final selected = previousId != null
         ? workspaces.firstWhere(
@@ -30,31 +29,32 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
           )
         : workspaces.first;
 
-    return WorkspaceState(
-      workspaces: workspaces,
-      selectedWorkspace: selected,
-    );
+    return WorkspaceState(workspaces: workspaces, selectedWorkspace: selected);
   }
 
   List<Workspace> _buildWorkspacesFromUser(User user) {
     final workspaces = <Workspace>[];
 
     if (user.currentOrg.isNotEmpty) {
-      workspaces.add(Workspace(
-        id: user.currentOrg,
-        name: user.currentOrganisationSlug.isNotEmpty
-            ? user.currentOrganisationSlug
-            : '${user.firstName}\'s Workspace',
-        avatar: '',
-      ));
+      workspaces.add(
+        Workspace(
+          id: user.currentOrg,
+          name: user.currentOrganisationSlug.isNotEmpty
+              ? user.currentOrganisationSlug
+              : '${user.firstName}\'s Workspace',
+          avatar: '',
+        ),
+      );
     }
 
     if (workspaces.isEmpty) {
-      workspaces.add(const Workspace(
-        id: '01910544-d1e1-7ada-bdac-c761e527ec91',
-        name: 'Default Workspace',
-        avatar: '',
-      ));
+      workspaces.add(
+        const Workspace(
+          id: '01910544-d1e1-7ada-bdac-c761e527ec91',
+          name: 'Default Workspace',
+          avatar: '',
+        ),
+      );
     }
 
     return workspaces;

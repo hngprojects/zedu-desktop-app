@@ -35,8 +35,9 @@ class DmConversation {
 
   String get displayName => username.isNotEmpty ? username : 'Unknown';
 
-  String? get effectiveAvatarUrl =>
-      (avatarUrl != null && avatarUrl!.isNotEmpty) ? avatarUrl : defaultAvatarUrl;
+  String? get effectiveAvatarUrl => (avatarUrl != null && avatarUrl!.isNotEmpty)
+      ? avatarUrl
+      : defaultAvatarUrl;
 
   DateTime get lastActivityAt {
     if (previewThreads.isNotEmpty) {
@@ -76,7 +77,8 @@ class DmConversation {
       previewMessage: json['preview_message'] as String? ?? '',
       previewThreads: threads,
       participants: participantsList,
-      unreadCount: json['unread_count'] as int? ?? json['thread_count'] as int? ?? 0,
+      unreadCount:
+          json['unread_count'] as int? ?? json['thread_count'] as int? ?? 0,
     );
   }
 

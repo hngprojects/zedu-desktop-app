@@ -8,8 +8,8 @@ final currentOrgIdProvider = Provider<String>((ref) {
 
 final dmListProvider =
     AsyncNotifierProvider<DmListNotifier, List<DmConversation>>(() {
-  return DmListNotifier();
-});
+      return DmListNotifier();
+    });
 
 class SelectedDmNotifier extends Notifier<DmConversation?> {
   @override
@@ -20,9 +20,10 @@ class SelectedDmNotifier extends Notifier<DmConversation?> {
   }
 }
 
-final selectedDmProvider = NotifierProvider<SelectedDmNotifier, DmConversation?>(
-  SelectedDmNotifier.new,
-);
+final selectedDmProvider =
+    NotifierProvider<SelectedDmNotifier, DmConversation?>(
+      SelectedDmNotifier.new,
+    );
 
 class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
   int _currentPage = 1;
@@ -42,10 +43,7 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
 
   Future<List<DmConversation>> _fetchPage(String orgId, int page) async {
     final repository = ref.read(dmRepositoryProvider);
-    final results = await repository.getConversations(
-      orgId: orgId,
-      page: page,
-    );
+    final results = await repository.getConversations(orgId: orgId, page: page);
     if (results.length < DmRepository.pageSize) {
       _hasMore = false;
     }
@@ -58,7 +56,8 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
           channelId: 'mock-channel-id-123',
           username: 'Test User',
           participantId: 'mock-user-id',
-          previewMessage: 'This is a test conversation. Tap to test the composer.',
+          previewMessage:
+              'This is a test conversation. Tap to test the composer.',
           unreadCount: 0,
         ),
       ];

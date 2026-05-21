@@ -81,7 +81,10 @@ class ChatHistoryNotifier extends ChangeNotifier {
     try {
       final repository = ref.read(dmRepositoryProvider);
       final nextPage = page + 1;
-      final newMessages = await repository.getMessages(channelId, page: nextPage);
+      final newMessages = await repository.getMessages(
+        channelId,
+        page: nextPage,
+      );
 
       messages = [...messages, ...newMessages];
       hasMore = newMessages.length >= DmRepository.pageSize;
@@ -239,5 +242,5 @@ class ChatHistoryNotifier extends ChangeNotifier {
 
 final chatHistoryProvider =
     ChangeNotifierProvider.family<ChatHistoryNotifier, String>(
-  (ref, channelId) => ChatHistoryNotifier(channelId, ref),
-);
+      (ref, channelId) => ChatHistoryNotifier(channelId, ref),
+    );

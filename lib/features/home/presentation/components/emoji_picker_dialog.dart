@@ -7,9 +7,30 @@ class EmojiPickerDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final emojis = [
-      '😀', '😅', '😊', '😍', '😎', '🤔', '😴', '🥳', 
-      '😭', '😡', '👍', '🙏', '🔥', '✨', '🎉', '🚀',
-      '👀', '💯', '❤️', '🙌', '👏', '🤝', '💼', '💻',
+      '😀',
+      '😅',
+      '😊',
+      '😍',
+      '😎',
+      '🤔',
+      '😴',
+      '🥳',
+      '😭',
+      '😡',
+      '👍',
+      '🙏',
+      '🔥',
+      '✨',
+      '🎉',
+      '🚀',
+      '👀',
+      '💯',
+      '❤️',
+      '🙌',
+      '👏',
+      '🤝',
+      '💼',
+      '💻',
     ];
 
     return Dialog(

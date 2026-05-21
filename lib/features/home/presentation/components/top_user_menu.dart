@@ -5,11 +5,7 @@ class TopUserMenu extends ConsumerWidget {
   final String userName;
   final Color? backgroundColor;
 
-  const TopUserMenu({
-    super.key,
-    required this.userName,
-    this.backgroundColor,
-  });
+  const TopUserMenu({super.key, required this.userName, this.backgroundColor});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,11 +30,7 @@ class TopUserMenu extends ConsumerWidget {
           value: 'profile',
           child: Row(
             children: [
-              Icon(
-                Icons.person_outline,
-                size: 20,
-                color: colors.textPrimary,
-              ),
+              Icon(Icons.person_outline, size: 20, color: colors.textPrimary),
               const SizedBox(width: 8),
               const Text('Profile'),
             ],
