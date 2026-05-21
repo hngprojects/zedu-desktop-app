@@ -12,8 +12,13 @@ class _CreateChannelModalState extends State<CreateChannelModal> {
 
   String selectedCategory = 'General';
   String selectedType = 'Public';
-
   String? error;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
 
   void _createChannel() {
     final name = _nameController.text.trim();
@@ -33,88 +38,165 @@ class _CreateChannelModalState extends State<CreateChannelModal> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final textTheme = context.textTheme;
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(context.s(12)),
+      ),
       child: Container(
-        width: 420,
-        padding: const EdgeInsets.all(20),
+        width: context.s(520),
+        padding: context.all(24),
         color: colors.background,
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// Title
             Row(
               children: [
                 Text(
-                  'Create Channel',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                  'Create a Channel',
+                  style: textTheme.titleLarge?.copyWith(
                     color: colors.textPrimary,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 const Spacer(),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
+                  icon: Icon(Icons.close, color: colors.textPrimary),
                 ),
               ],
             ),
-
-            const SizedBox(height: 16),
-
-            /// Channel Name
-            TextField(
+            context.gapV(12),
+            Divider(color: colors.divider),
+            context.gapV(20),
+            AppTextField(
+              label: 'Channel name',
               controller: _nameController,
-              decoration: InputDecoration(
-                hintText: 'Channel name',
-                errorText: error,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
+              hint: 'e.g. project-x',
+              maxLength: 40,
               onChanged: (_) {
                 if (error != null) setState(() => error = null);
               },
+              validator: (_) => error,
             ),
-
-            const SizedBox(height: 16),
-
-            /// Category Dropdown
-            DropdownButtonFormField<String>(
-              initialValue: selectedCategory,
-              items: [
-                'General',
-                'Class',
-                'Team',
-              ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-              onChanged: (val) => setState(() => selectedCategory = val!),
-              decoration: const InputDecoration(labelText: 'Category'),
-            ),
-
-            const SizedBox(height: 16),
-
-            /// Type Dropdown
-            DropdownButtonFormField<String>(
-              initialValue: selectedType,
-              items: [
-                'Public',
-                'Private',
-              ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-              onChanged: (val) => setState(() => selectedType = val!),
-              decoration: const InputDecoration(labelText: 'Channel Type'),
-            ),
-
-            const SizedBox(height: 24),
-
-            /// Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _createChannel,
-                child: const Text('Create Channel'),
+            if (error != null) ...[
+              context.gapV(6),
+              Text(
+                error!,
+                style: textTheme.bodySmall?.copyWith(color: colors.error),
               ),
+            ],
+            context.gapV(22),
+            Text(
+              'Channel Visibility',
+              style: textTheme.titleMedium?.copyWith(
+                color: colors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            context.gapV(10),
+            _VisibilityOption(
+              value: 'Public',
+              groupValue: selectedType,
+              label: 'Public - Anyone in aimz',
+              onChanged: (value) => setState(() => selectedType = value),
+            ),
+            _VisibilityOption(
+              value: 'Private',
+              groupValue: selectedType,
+              label: 'Private - Only specific people',
+              onChanged: (value) => setState(() => selectedType = value),
+            ),
+            context.gapV(16),
+            Divider(color: colors.divider),
+            context.gapV(18),
+            Text(
+              'Note: Channels can house as many members as necessary.',
+              style: textTheme.bodyMedium?.copyWith(
+                color: colors.textSecondary,
+              ),
+            ),
+            context.gapV(28),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                AppButton.outlined(
+                  label: 'Cancel',
+                  expand: false,
+                  height: context.s(48),
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: context.symmetric(horizontal: 24),
+                  ),
+                ),
+                context.gapH(16),
+                AppButton(
+                  label: 'Create Channel',
+                  expand: false,
+                  height: context.s(48),
+                  onPressed: _createChannel,
+                  style: ElevatedButton.styleFrom(
+                    padding: context.symmetric(horizontal: 26),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _VisibilityOption extends StatelessWidget {
+  const _VisibilityOption({
+    required this.value,
+    required this.groupValue,
+    required this.label,
+    required this.onChanged,
+  });
+
+  final String value;
+  final String groupValue;
+  final String label;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textTheme = context.textTheme;
+    final isSelected = value == groupValue;
+
+    return InkWell(
+      onTap: () => onChanged(value),
+      child: Padding(
+        padding: context.symmetric(vertical: 7),
+        child: Row(
+          children: [
+            Container(
+              width: context.s(18),
+              height: context.s(18),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: colors.primary, width: 1.4),
+              ),
+              child: Center(
+                child: Container(
+                  width: context.s(10),
+                  height: context.s(10),
+                  decoration: BoxDecoration(
+                    color: isSelected ? colors.primary : Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ),
+            context.gapH(12),
+            Text(
+              label,
+              style: textTheme.bodyLarge?.copyWith(color: colors.textPrimary),
             ),
           ],
         ),

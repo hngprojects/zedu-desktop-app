@@ -29,32 +29,16 @@ class HomeSidebar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.colors;
     final channels = ref.watch(channelProvider);
 
-    return Container(
-      width: 260,
-      color: colors.sidebar,
+    return _SidebarShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const WorkspaceSwitcherHeader(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-            child: Row(
-              children: [
-                Icon(Icons.arrow_drop_down, color: colors.onPrimary, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'Channels',
-                  style: TextStyle(
-                    color: colors.onPrimary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-              ],
-            ),
+          const _SidebarSectionHeader(
+            icon: Icons.arrow_drop_down,
+            label: 'Channels',
           ),
           for (final channel in channels) ChannelItem(channel: channel),
           SidebarActionButton(
@@ -65,24 +49,8 @@ class HomeSidebar extends ConsumerWidget {
                   .select(MenuSection.channelsDirectory);
             },
           ),
-          const SizedBox(height: 14),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Icon(Icons.arrow_right, color: colors.onPrimary, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'People',
-                  style: TextStyle(
-                    color: colors.onPrimary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          context.gapV(14),
+          const _SidebarSectionHeader(icon: Icons.arrow_right, label: 'People'),
           const SidebarActionButton(label: 'View all people'),
         ],
       ),
@@ -97,9 +65,7 @@ class DmsSidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
 
-    return Container(
-      width: 260,
-      color: colors.sidebar,
+    return _SidebarShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -109,9 +75,8 @@ class DmsSidebar extends StatelessWidget {
             child: Center(
               child: Text(
                 'No recent messages',
-                style: TextStyle(
+                style: context.textTheme.bodyLarge?.copyWith(
                   color: colors.onPrimary.withValues(alpha: 0.62),
-                  fontSize: 16,
                 ),
               ),
             ),
@@ -129,29 +94,30 @@ class PeopleSidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
 
-    return Container(
-      width: 260,
-      color: colors.sidebar,
+    return _SidebarShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const WorkspaceSwitcherHeader(),
           const SearchBox(label: 'Find a conversation'),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+            padding: context.only(left: 16, right: 16, top: 24, bottom: 8),
             child: Row(
               children: [
                 CircleAvatar(
-                  radius: 14,
+                  radius: context.s(14),
                   backgroundColor: colors.onPrimary,
-                  child: Icon(Icons.person, size: 16, color: colors.sidebar),
+                  child: Icon(
+                    Icons.person,
+                    size: context.s(16),
+                    color: colors.sidebar,
+                  ),
                 ),
-                const SizedBox(width: 12),
+                context.gapH(12),
                 Text(
                   'aimz',
-                  style: TextStyle(
+                  style: context.textTheme.bodyLarge?.copyWith(
                     color: colors.onPrimary,
-                    fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -169,16 +135,12 @@ class FilesSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return Container(
-      width: 260,
-      color: colors.sidebar,
+    return _SidebarShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const WorkspaceSwitcherHeader(),
-          const SizedBox(height: 16),
+          context.gapV(16),
           const FileSidebarItem(
             icon: Icons.file_copy_outlined,
             label: 'All files',
@@ -212,22 +174,21 @@ class ChannelItem extends StatelessWidget {
     final colors = context.colors;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: context.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
           Icon(
             channel.isPrivate ? Icons.lock_outline : Icons.tag,
             color: colors.onPrimary.withValues(alpha: 0.62),
-            size: 17,
+            size: context.s(17),
           ),
-          const SizedBox(width: 12),
+          context.gapH(12),
           Expanded(
             child: Text(
               channel.name,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
+              style: context.textTheme.bodyMedium?.copyWith(
                 color: colors.onPrimary.withValues(alpha: 0.78),
-                fontSize: 15,
               ),
             ),
           ),
@@ -248,32 +209,31 @@ class SidebarActionButton extends StatelessWidget {
     final colors = context.colors;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: context.symmetric(horizontal: 16, vertical: 8),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(context.s(6)),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+          padding: context.symmetric(horizontal: 12, vertical: 9),
           decoration: BoxDecoration(
-            border: Border.all(color: colors.onPrimary.withValues(alpha: 0.24)),
-            borderRadius: BorderRadius.circular(6),
             color: colors.onPrimary.withValues(alpha: 0.04),
+            border: Border.all(color: colors.onPrimary.withValues(alpha: 0.24)),
+            borderRadius: BorderRadius.circular(context.s(6)),
           ),
           child: Row(
             children: [
               Expanded(
                 child: Text(
                   label,
-                  style: TextStyle(
+                  style: context.textTheme.bodySmall?.copyWith(
                     color: colors.onPrimary.withValues(alpha: 0.72),
-                    fontSize: 13,
                   ),
                 ),
               ),
               Icon(
                 Icons.chevron_right,
                 color: colors.onPrimary.withValues(alpha: 0.72),
-                size: 16,
+                size: context.s(16),
               ),
             ],
           ),
@@ -293,24 +253,23 @@ class SearchBox extends StatelessWidget {
     final colors = context.colors;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: context.only(left: 16, right: 16, top: 16, bottom: 8),
       child: Container(
-        height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        height: context.s(40),
+        padding: context.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          border: Border.all(color: colors.onPrimary.withValues(alpha: 0.28)),
-          borderRadius: BorderRadius.circular(6),
           color: colors.onPrimary.withValues(alpha: 0.05),
+          border: Border.all(color: colors.onPrimary.withValues(alpha: 0.28)),
+          borderRadius: BorderRadius.circular(context.s(6)),
         ),
         child: Row(
           children: [
-            Icon(Icons.search, color: colors.onPrimary, size: 18),
-            const SizedBox(width: 8),
+            Icon(Icons.search, color: colors.onPrimary, size: context.s(18)),
+            context.gapH(8),
             Text(
               label,
-              style: TextStyle(
+              style: context.textTheme.bodyMedium?.copyWith(
                 color: colors.onPrimary.withValues(alpha: 0.78),
-                fontSize: 15,
               ),
             ),
           ],
@@ -337,23 +296,66 @@ class FileSidebarItem extends StatelessWidget {
     final colors = context.colors;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-      height: 64,
+      height: context.s(64),
+      margin: context.symmetric(horizontal: 18, vertical: 4),
+      padding: context.symmetric(horizontal: 18),
       decoration: BoxDecoration(
         color: isActive ? colors.primary.withValues(alpha: 0.10) : null,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(context.s(8)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 18),
       child: Row(
         children: [
-          Icon(icon, color: colors.onPrimary, size: 26),
-          const SizedBox(width: 18),
+          Icon(icon, color: colors.onPrimary, size: context.s(26)),
+          context.gapH(18),
           Text(
             label,
-            style: TextStyle(
+            style: context.textTheme.titleMedium?.copyWith(
               color: colors.onPrimary,
-              fontSize: 18,
               fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SidebarShell extends StatelessWidget {
+  const _SidebarShell({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: context.s(260),
+      color: context.colors.sidebar,
+      child: child,
+    );
+  }
+}
+
+class _SidebarSectionHeader extends StatelessWidget {
+  const _SidebarSectionHeader({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Padding(
+      padding: context.only(left: 16, right: 16, top: 20, bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, color: colors.onPrimary, size: context.s(20)),
+          context.gapH(8),
+          Text(
+            label,
+            style: context.textTheme.bodyMedium?.copyWith(
+              color: colors.onPrimary,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
