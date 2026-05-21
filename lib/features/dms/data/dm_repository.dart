@@ -76,7 +76,7 @@ class DmRepository {
         "content": content,
         if (media != null && media.isNotEmpty)
           "media": media.map(_mediaPayloadFromFile).toList(),
-        if (mentions != null) "mentions": mentions,
+        ...?(mentions != null ? {'mentions': mentions} : null),
       },
     );
   }
@@ -100,9 +100,9 @@ class DmRepository {
       path: '/dms/messages/$channelId',
       data: {
         'content': content,
-        if (threadId != null) 'thread_id': threadId,
-        if (media != null) 'media': media,
-        if (mentions != null) 'mentions': mentions,
+        ...?(threadId != null ? {'thread_id': threadId} : null),
+        ...?(media != null ? {'media': media} : null),
+        ...?(mentions != null ? {'mentions': mentions} : null),
       },
     );
   }

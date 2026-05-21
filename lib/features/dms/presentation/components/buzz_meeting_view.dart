@@ -207,7 +207,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                   onChanged: (val) {
                     ref.read(activeCallProvider.notifier).setFullPage(false);
                   },
-                  activeColor: colors.primary,
+                  activeThumbColor: colors.primary,
                 ),
               ],
             ),

@@ -85,7 +85,7 @@ class ActiveCallNotifier extends ChangeNotifier {
       _state = _state.copyWith(buzzId: buzzId, token: token);
       notifyListeners();
 
-      Future.delayed(const Duration(seconds: 3), () {
+      Future<void>.delayed(const Duration(seconds: 3), () {
         if (_state.status == CallStatus.calling && _state.buzzId == buzzId) {
           _state = _state.copyWith(status: CallStatus.active);
           notifyListeners();
