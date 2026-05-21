@@ -63,14 +63,16 @@ class MentionSuggestionList extends StatelessWidget {
                   hoverColor: colors.primary.withValues(alpha: 0.07),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: [
                         CircleAvatar(
                           radius: 14,
                           backgroundColor: const Color(0xFF6458F5),
-                          backgroundImage: p.avatarUrl != null &&
-                                  p.avatarUrl!.isNotEmpty
+                          backgroundImage:
+                              p.avatarUrl != null && p.avatarUrl!.isNotEmpty
                               ? NetworkImage(p.avatarUrl!)
                               : null,
                           child: p.avatarUrl == null || p.avatarUrl!.isEmpty

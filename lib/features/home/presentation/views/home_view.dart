@@ -112,31 +112,41 @@ class _SidebarRail extends ConsumerWidget {
             icon: Icons.home_filled,
             label: 'Home',
             isActive: ref.watch(homeSidebarProvider) == HomeSidebarType.home,
-            onTap: () => ref.read(homeSidebarProvider.notifier).setType(HomeSidebarType.home),
+            onTap: () => ref
+                .read(homeSidebarProvider.notifier)
+                .setType(HomeSidebarType.home),
           ),
           _RailNavItem(
-            icon: Icons.chat_bubble_outline, 
+            icon: Icons.chat_bubble_outline,
             label: 'DMs',
             isActive: ref.watch(homeSidebarProvider) == HomeSidebarType.dms,
-            onTap: () => ref.read(homeSidebarProvider.notifier).setType(HomeSidebarType.dms),
+            onTap: () => ref
+                .read(homeSidebarProvider.notifier)
+                .setType(HomeSidebarType.dms),
           ),
           _RailNavItem(
-            icon: Icons.people_outline, 
+            icon: Icons.people_outline,
             label: 'People',
             isActive: ref.watch(homeSidebarProvider) == HomeSidebarType.people,
-            onTap: () => ref.read(homeSidebarProvider.notifier).setType(HomeSidebarType.people),
+            onTap: () => ref
+                .read(homeSidebarProvider.notifier)
+                .setType(HomeSidebarType.people),
           ),
           _RailNavItem(
-            icon: Icons.folder_open_outlined, 
+            icon: Icons.folder_open_outlined,
             label: 'Files',
             isActive: ref.watch(homeSidebarProvider) == HomeSidebarType.files,
-            onTap: () => ref.read(homeSidebarProvider.notifier).setType(HomeSidebarType.files),
+            onTap: () => ref
+                .read(homeSidebarProvider.notifier)
+                .setType(HomeSidebarType.files),
           ),
           _RailNavItem(
-            icon: Icons.phone_outlined, 
+            icon: Icons.phone_outlined,
             label: 'Buzz',
             isActive: ref.watch(homeSidebarProvider) == HomeSidebarType.buzz,
-            onTap: () => ref.read(homeSidebarProvider.notifier).setType(HomeSidebarType.buzz),
+            onTap: () => ref
+                .read(homeSidebarProvider.notifier)
+                .setType(HomeSidebarType.buzz),
           ),
           const Spacer(),
           const _RailBottomIcon(
@@ -248,7 +258,7 @@ class _ChatAreaSwitcher extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(homeSidebarProvider);
     final selectedDm = ref.watch(selectedDmProvider);
-    
+
     if (state == HomeSidebarType.dms) {
       if (selectedDm != null) {
         return DmChatArea(conversation: selectedDm);
@@ -258,10 +268,7 @@ class _ChatAreaSwitcher extends ConsumerWidget {
           child: Center(
             child: Text(
               'Select a conversation to start messaging',
-              style: TextStyle(
-                color: context.colors.textHint,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: context.colors.textHint, fontSize: 16),
             ),
           ),
         );

@@ -50,49 +50,51 @@ class DmSidebarList extends ConsumerWidget {
             ),
           ),
           Expanded(
-            child: ref.watch(dmListProvider).when(
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: Colors.white),
-              ),
-              error: (err, stack) => Center(
-                child: Text(
-                  'Failed to load DMs',
-                  style: TextStyle(color: colors.error),
-                ),
-              ),
-              data: (conversations) {
-                if (conversations.isEmpty) {
-                  return Center(
-                    child: Text(
-                      'No recent chats',
-                      style: TextStyle(
-                        color: colors.onPrimary.withValues(alpha: 0.5),
-                      ),
-                    ),
-                  );
-                }
-                return NotificationListener<ScrollNotification>(
-                  onNotification: (scrollInfo) {
-                    if (scrollInfo is ScrollEndNotification &&
-                        scrollInfo.metrics.pixels >=
-                            scrollInfo.metrics.maxScrollExtent * 0.85) {
-                      final notifier = ref.read(dmListProvider.notifier);
-                      if (notifier.hasMore) {
-                        notifier.loadMore();
-                      }
-                    }
-                    return false;
-                  },
-                  child: ListView.builder(
-                    padding: EdgeInsets.zero,
-                    itemCount: conversations.length,
-                    itemBuilder: (context, index) {
-                      return DmListTile(conversation: conversations[index]);
-                    },
+            child: ref
+                .watch(dmListProvider)
+                .when(
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
                   ),
-                );
-              },
-            ),
+                  error: (err, stack) => Center(
+                    child: Text(
+                      'Failed to load DMs',
+                      style: TextStyle(color: colors.error),
+                    ),
+                  ),
+                  data: (conversations) {
+                    if (conversations.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'No recent chats',
+                          style: TextStyle(
+                            color: colors.onPrimary.withValues(alpha: 0.5),
+                          ),
+                        ),
+                      );
+                    }
+                    return NotificationListener<ScrollNotification>(
+                      onNotification: (scrollInfo) {
+                        if (scrollInfo is ScrollEndNotification &&
+                            scrollInfo.metrics.pixels >=
+                                scrollInfo.metrics.maxScrollExtent * 0.85) {
+                          final notifier = ref.read(dmListProvider.notifier);
+                          if (notifier.hasMore) {
+                            notifier.loadMore();
+                          }
+                        }
+                        return false;
+                      },
+                      child: ListView.builder(
+                        padding: EdgeInsets.zero,
+                        itemCount: conversations.length,
+                        itemBuilder: (context, index) {
+                          return DmListTile(conversation: conversations[index]);
+                        },
+                      ),
+                    );
+                  },
+                ),
           ),
         ],
       ),

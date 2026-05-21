@@ -10,7 +10,8 @@ class NotificationSettings {
   });
 
   bool get isDndActive => dndUntil != null && dndUntil!.isAfter(DateTime.now());
-  bool isMuted(String participantId) => mutedParticipantIds.contains(participantId);
+  bool isMuted(String participantId) =>
+      mutedParticipantIds.contains(participantId);
 
   NotificationSettings copyWith({
     DateTime? dndUntil,
@@ -41,12 +42,14 @@ class NotificationSettingsNotifier extends Notifier<NotificationSettings> {
   }
 
   void muteParticipant(String participantId) {
-    final newMuted = Set<String>.from(state.mutedParticipantIds)..add(participantId);
+    final newMuted = Set<String>.from(state.mutedParticipantIds)
+      ..add(participantId);
     state = state.copyWith(mutedParticipantIds: newMuted);
   }
 
   void unmuteParticipant(String participantId) {
-    final newMuted = Set<String>.from(state.mutedParticipantIds)..remove(participantId);
+    final newMuted = Set<String>.from(state.mutedParticipantIds)
+      ..remove(participantId);
     state = state.copyWith(mutedParticipantIds: newMuted);
   }
 
@@ -57,5 +60,5 @@ class NotificationSettingsNotifier extends Notifier<NotificationSettings> {
 
 final notificationSettingsProvider =
     NotifierProvider<NotificationSettingsNotifier, NotificationSettings>(
-  NotificationSettingsNotifier.new,
-);
+      NotificationSettingsNotifier.new,
+    );
