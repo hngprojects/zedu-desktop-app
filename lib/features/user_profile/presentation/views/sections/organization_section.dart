@@ -128,10 +128,10 @@ class _OrganizationAvatar extends StatelessWidget {
       child: Center(
         child: Text(
           initials,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 40,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF39368A),
+            color: context.colors.sidebar,
           ),
         ),
       ),

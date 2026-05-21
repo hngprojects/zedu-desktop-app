@@ -24,7 +24,7 @@ class UserMenuButton extends ConsumerWidget {
             child: Container(
               width: 48,
               height: 48,
-              color: const Color(0xFF303073),
+              color: colors.sidebar,
               child: Icon(Icons.person, color: colors.onPrimary, size: 32),
             ),
           ),

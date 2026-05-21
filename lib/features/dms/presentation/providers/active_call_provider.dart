@@ -13,6 +13,7 @@ class ActiveCallState {
   final String? remoteAvatarUrl;
   final String? token;
   final bool isFullPage;
+  final DateTime? lastCallAt;
 
   const ActiveCallState({
     this.status = CallStatus.none,
@@ -23,6 +24,7 @@ class ActiveCallState {
     this.remoteAvatarUrl,
     this.token,
     this.isFullPage = false,
+    this.lastCallAt,
   });
 
   ActiveCallState copyWith({
@@ -34,6 +36,7 @@ class ActiveCallState {
     String? remoteAvatarUrl,
     String? token,
     bool? isFullPage,
+    DateTime? lastCallAt,
   }) {
     return ActiveCallState(
       status: status ?? this.status,
@@ -44,6 +47,7 @@ class ActiveCallState {
       remoteAvatarUrl: remoteAvatarUrl ?? this.remoteAvatarUrl,
       token: token ?? this.token,
       isFullPage: isFullPage ?? this.isFullPage,
+      lastCallAt: lastCallAt ?? this.lastCallAt,
     );
   }
 }
@@ -73,6 +77,7 @@ class ActiveCallNotifier extends ChangeNotifier {
       remoteUserId: remoteUserId,
       remoteUserName: remoteUserName,
       remoteAvatarUrl: remoteAvatarUrl,
+      lastCallAt: DateTime.now(),
     );
     notifyListeners();
 
@@ -116,6 +121,7 @@ class ActiveCallNotifier extends ChangeNotifier {
       remoteUserName: remoteUserName,
       remoteAvatarUrl: remoteAvatarUrl,
       isFullPage: false,
+      lastCallAt: DateTime.now(),
     );
     notifyListeners();
   }
@@ -158,7 +164,7 @@ class ActiveCallNotifier extends ChangeNotifier {
   }
 
   void endCall() {
-    _state = const ActiveCallState();
+    _state = ActiveCallState(lastCallAt: _state.lastCallAt);
     notifyListeners();
   }
 }
