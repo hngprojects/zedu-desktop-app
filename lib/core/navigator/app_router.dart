@@ -6,6 +6,8 @@ class AppRouter {
 
   static const home = '/home';
   static const login = '/login';
+  static const magicLinkRequest = '/magic-link';
+  static const magicLinkSent = '/magic-link/sent';
   static const signup = '/signup';
   static const forgotPassword = '/forgot-password';
   static const resetPassword = '/reset-password';
@@ -16,6 +18,21 @@ class AppRouter {
     initialLocation: login,
     routes: [
       GoRoute(path: login, builder: (context, state) => const LoginView()),
+      GoRoute(
+        path: magicLinkRequest,
+        builder: (context, state) => const MagicLinkRequestView(),
+      ),
+      GoRoute(
+        path: magicLinkSent,
+        redirect: (context, state) =>
+            state.extra is String && (state.extra! as String).trim().isNotEmpty
+            ? null
+            : magicLinkRequest,
+        builder: (context, state) {
+          final email = state.extra is String ? state.extra! as String : '';
+          return MagicLinkSentView(email: email);
+        },
+      ),
 
       GoRoute(path: home, builder: (context, state) => const HomeView()),
       GoRoute(path: signup, builder: (context, state) => const SignUpView()),
