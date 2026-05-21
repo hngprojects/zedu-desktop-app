@@ -68,6 +68,16 @@ class AuthRepositoryImpl implements AuthRepository {
       return Failure(failure);
     } catch (error) {
       AppLogger.e('Unexpected magic link request error', tag: _tag, error: error);
+  Future<Result<void>> signUp({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      await _remote.signUp(email: email, password: password);
+      return const Success(null);
+    } on ApiFailure catch (failure) {
+      return Failure(failure);
+    } catch (error) {
       return Failure(ApiFailure.unknown(error));
     }
   }
@@ -89,6 +99,13 @@ class AuthRepositoryImpl implements AuthRepository {
       return Failure(failure);
     } catch (error) {
       AppLogger.e('Unexpected magic link verification error', tag: _tag, error: error);
+  Future<Result<void>> forgotPassword({required String email}) async {
+    try {
+      await _remote.forgotPassword(email: email);
+      return const Success(null);
+    } on ApiFailure catch (failure) {
+      return Failure(failure);
+    } catch (error) {
       return Failure(ApiFailure.unknown(error));
     }
   }
@@ -116,6 +133,41 @@ class AuthRepositoryImpl implements AuthRepository {
       return Failure(failure);
     } catch (error) {
       AppLogger.e('Unexpected Google sign-in error', tag: _tag, error: error);
+  Future<Result<void>> resetPassword({
+    required String email,
+    required String token,
+    required String newPassword,
+  }) async {
+    try {
+      await _remote.resetPassword(
+        email: email,
+        token: token,
+        newPassword: newPassword,
+      );
+      return const Success(null);
+    } on ApiFailure catch (failure) {
+      return Failure(failure);
+    } catch (error) {
+      return Failure(ApiFailure.unknown(error));
+    }
+  }
+
+  @override
+  Future<Result<void>> changePassword({
+    required String email,
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    try {
+      await _remote.changePassword(
+        email: email,
+        oldPassword: oldPassword,
+        newPassword: newPassword,
+      );
+      return const Success(null);
+    } on ApiFailure catch (failure) {
+      return Failure(failure);
+    } catch (error) {
       return Failure(ApiFailure.unknown(error));
     }
   }

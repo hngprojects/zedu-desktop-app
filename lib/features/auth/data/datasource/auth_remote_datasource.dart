@@ -1,6 +1,5 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/auth/data/models/login_response_model.dart';
-import 'package:zedu/features/auth/data/models/user_model.dart';
+import 'package:zedu/features/features.dart';
 
 abstract interface class AuthRemoteDataSource {
   Future<LoginResponseModel> login({
@@ -13,6 +12,17 @@ abstract interface class AuthRemoteDataSource {
   Future<LoginResponseModel> signInWithGoogle({
     required String grantCode,
     String? redirectUri,
+  Future<void> signUp({required String email, required String password});
+  Future<void> forgotPassword({required String email});
+  Future<void> resetPassword({
+    required String email,
+    required String token,
+    required String newPassword,
+  });
+  Future<void> changePassword({
+    required String email,
+    required String oldPassword,
+    required String newPassword,
   });
 }
 
@@ -36,6 +46,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       if (_config.usesMockData) {
         AppLogger.d('Using mock data for POST /auth/login', tag: _tag);
+        if (password != mockPassword) {
+          throw const ApiFailure(
+            message: 'Invalid credentials',
+            kind: ApiFailureKind.client,
+          );
+        }
         return LoginResponseModel.fromJson(
           LoginResponseModel.mockLoginResponse,
         );
@@ -43,7 +59,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       AppLogger.d('POST /auth/login — $email', tag: _tag);
       final response = await _apiBaseService.post<Map<String, dynamic>>(
-        path: '/auth/login',
+        path: 'auth/login',
         data: {'email': email, 'password': password},
       );
 
@@ -57,7 +73,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         tag: _tag,
         error: error,
       );
-      throw ApiFailure.fromParsingError(error, path: '/auth/login');
+      throw ApiFailure.fromParsingError(error, path: 'auth/login');
     }
   }
 
@@ -74,7 +90,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       AppLogger.d('GET /auth/me', tag: _tag);
       final response = await _apiBaseService.get<Map<String, dynamic>>(
-        path: '/auth/me',
+        path: 'auth/me',
       );
 
       final data = response.data['data'] as Map<String, dynamic>;
@@ -83,7 +99,113 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       rethrow;
     } catch (error) {
       AppLogger.e('Failed to parse /auth/me response', tag: _tag, error: error);
-      throw ApiFailure.fromParsingError(error, path: '/auth/me');
+      throw ApiFailure.fromParsingError(error, path: 'auth/me');
+    }
+  }
+
+  @override
+  Future<void> signUp({required String email, required String password}) async {
+    try {
+      if (_config.usesMockData) {
+        AppLogger.d('Using mock data for POST /auth/register', tag: _tag);
+        await Future<void>.delayed(const Duration(milliseconds: 800));
+        return;
+      }
+
+      AppLogger.d('POST auth/register — $email', tag: _tag);
+      await _apiBaseService.post<dynamic>(
+        path: 'auth/register',
+        data: {'email': email, 'password': password},
+      );
+    } on ApiFailure {
+      rethrow;
+    } catch (error) {
+      AppLogger.e('Failed auth/register', tag: _tag, error: error);
+      throw ApiFailure.unknown(error);
+    }
+  }
+
+  @override
+  Future<void> forgotPassword({required String email}) async {
+    try {
+      if (_config.usesMockData) {
+        AppLogger.d(
+          'Using mock data for POST /auth/forgot-password',
+          tag: _tag,
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 800));
+        return;
+      }
+
+      AppLogger.d('POST auth/password-reset — $email', tag: _tag);
+      await _apiBaseService.post<dynamic>(
+        path: 'auth/password-reset',
+        data: {'email': email},
+      );
+    } on ApiFailure {
+      rethrow;
+    } catch (error) {
+      AppLogger.e('Failed auth/password-reset', tag: _tag, error: error);
+      throw ApiFailure.unknown(error);
+    }
+  }
+
+  @override
+  Future<void> resetPassword({
+    required String email,
+    required String token,
+    required String newPassword,
+  }) async {
+    try {
+      if (_config.usesMockData) {
+        AppLogger.d(
+          'Using mock data for POST /auth/password-reset/verify',
+          tag: _tag,
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 800));
+        return;
+      }
+
+      AppLogger.d('POST /auth/password-reset/verify', tag: _tag);
+      await _apiBaseService.post<dynamic>(
+        path: 'auth/password-reset/verify',
+        data: {'token': token, 'new_password': newPassword},
+      );
+    } on ApiFailure {
+      rethrow;
+    } catch (error) {
+      AppLogger.e(
+        'Failed /auth/password-reset/verify',
+        tag: _tag,
+        error: error,
+      );
+      throw ApiFailure.unknown(error);
+    }
+  }
+
+  @override
+  Future<void> changePassword({
+    required String email,
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    try {
+      if (_config.usesMockData) {
+        AppLogger.d('Using mock data for PUT /auth/change-password', tag: _tag);
+        await Future<void>.delayed(const Duration(milliseconds: 800));
+        return;
+      }
+
+      AppLogger.d('PUT /auth/change-password', tag: _tag);
+      await _apiBaseService.put<dynamic>(
+        path: 'auth/change-password',
+        data: {'old_password': oldPassword, 'new_password': newPassword},
+      );
+    } on ApiFailure {
+      rethrow;
+    } catch (error) {
+      AppLogger.e('Failed /auth/change-password', tag: _tag, error: error);
+      throw ApiFailure.unknown(error);
     }
   }
 

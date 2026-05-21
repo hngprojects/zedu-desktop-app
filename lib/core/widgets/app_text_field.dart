@@ -1,5 +1,4 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/core/theme/app_typography.dart';
 
 class AppTextField extends StatefulWidget {
   final String? label;
@@ -143,7 +142,7 @@ class _AppTextFieldState extends State<AppTextField> {
                         obscureText
                             ? Icons.visibility_off_outlined
                             : Icons.visibility_outlined,
-                        color: Colors.grey.shade400,
+                        color: context.colors.textHint,
                       ),
                       onPressed: () {
                         setState(() {
