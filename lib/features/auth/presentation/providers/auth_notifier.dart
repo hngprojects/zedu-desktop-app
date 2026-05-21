@@ -73,14 +73,20 @@ class AuthNotifier extends Notifier<AuthState> {
     final result = await _repository.verifyMagicLink(token: token);
     switch (result) {
       case Success<AuthSession>():
-        AppLogger.i('Magic link verification succeeded — token persisted', tag: _tag);
+        AppLogger.i(
+          'Magic link verification succeeded — token persisted',
+          tag: _tag,
+        );
         await _storage.saveAccessToken(result.value.accessToken);
         state = AuthState(
           status: AuthStatus.authenticated,
           user: result.value.user,
         );
       case Failure<AuthSession>():
-        AppLogger.w('Magic link verification failed — ${result.error.message}', tag: _tag);
+        AppLogger.w(
+          'Magic link verification failed — ${result.error.message}',
+          tag: _tag,
+        );
         state = state.copyWith(
           isLoading: false,
           error: result.error.friendlyMessage,
@@ -229,7 +235,7 @@ class AuthNotifier extends Notifier<AuthState> {
 
       // 3. Wait for Google's redirect containing the authorization code
       String? grantCode;
-      await for (final  request in server) {
+      await for (final request in server) {
         grantCode = request.uri.queryParameters['code'];
 
         // Return a clean success page to the user in their browser
@@ -257,7 +263,7 @@ class AuthNotifier extends Notifier<AuthState> {
             </html>
           ''');
         await request.response.close();
-        break; 
+        break;
       }
 
       await server.close();
@@ -269,7 +275,10 @@ class AuthNotifier extends Notifier<AuthState> {
         return;
       }
 
-      AppLogger.i('Raw authorization code retrieved successfully, sending to backend', tag: _tag);
+      AppLogger.i(
+        'Raw authorization code retrieved successfully, sending to backend',
+        tag: _tag,
+      );
 
       final result = await _repository.signInWithGoogle(
         grantCode: grantCode,
@@ -284,7 +293,10 @@ class AuthNotifier extends Notifier<AuthState> {
             user: result.value.user,
           );
         case Failure<AuthSession>():
-          AppLogger.w('Google Sign-In rejected — ${result.error.message}', tag: _tag);
+          AppLogger.w(
+            'Google Sign-In rejected — ${result.error.message}',
+            tag: _tag,
+          );
           state = state.copyWith(
             isLoading: false,
             error: result.error.friendlyMessage,
@@ -292,10 +304,7 @@ class AuthNotifier extends Notifier<AuthState> {
       }
     } catch (e) {
       AppLogger.e('Google Sign-In failed', tag: _tag, error: e);
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Google Sign-In failed',
-      );
+      state = state.copyWith(isLoading: false, error: 'Google Sign-In failed');
     } finally {
       await server?.close();
     }

@@ -27,6 +27,4 @@ class MagicLinkNotifier extends AsyncNotifier<void> {
 }
 
 final magicLinkNotifierProvider =
-    AsyncNotifierProvider<MagicLinkNotifier, void>(
-  MagicLinkNotifier.new,
-);
+    AsyncNotifierProvider<MagicLinkNotifier, void>(MagicLinkNotifier.new);

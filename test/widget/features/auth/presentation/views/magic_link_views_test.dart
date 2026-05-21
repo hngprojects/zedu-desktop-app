@@ -96,7 +96,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextFormField), 'anonymoususer@gmail.com');
+      await tester.enterText(
+        find.byType(TextFormField),
+        'anonymoususer@gmail.com',
+      );
       await tester.tap(find.text('Generate magic link'));
       await tester.pumpAndSettle();
 

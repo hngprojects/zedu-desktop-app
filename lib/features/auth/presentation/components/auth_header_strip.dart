@@ -1,6 +1,5 @@
 import 'package:zedu/core/core.dart';
 
-
 class AuthHeaderStrip extends StatelessWidget {
   const AuthHeaderStrip({
     super.key,
