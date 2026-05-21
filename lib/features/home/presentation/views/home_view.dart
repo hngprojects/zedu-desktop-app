@@ -38,16 +38,16 @@ class _HomeAppBar extends StatelessWidget {
     final colors = context.colors;
 
     return Container(
-      height: 50,
-      color: colors.primary,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: 44,
+      color: colors.sidebar,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
         children: [
           Text(
             'Zedu',
             style: TextStyle(
               color: colors.onPrimary,
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               fontFamily: 'Poetsen One',
             ),
@@ -58,9 +58,9 @@ class _HomeAppBar extends StatelessWidget {
           Flexible(
             child: Container(
               constraints: const BoxConstraints(maxWidth: 400),
-              height: 32,
+              height: 28,
               decoration: BoxDecoration(
-                color: colors.onPrimary.withValues(alpha: 0.2),
+                color: colors.onPrimary.withValues(alpha: 0.16),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Row(
@@ -98,7 +98,7 @@ class _SidebarRail extends ConsumerWidget {
     final colors = context.colors;
 
     return Container(
-      width: 70,
+      width: 50,
       decoration: BoxDecoration(
         color: colors.sidebar,
         border: Border(
@@ -107,7 +107,7 @@ class _SidebarRail extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _RailNavItem(
             icon: Icons.home_filled,
             label: 'Home',
@@ -184,17 +184,27 @@ class _RailNavItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
         child: Column(
           children: [
-            Icon(icon, color: colors.onPrimary, size: 24),
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: isActive
+                    ? colors.primary.withValues(alpha: 0.95)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(7),
+              ),
+              child: Icon(icon, color: colors.onPrimary, size: 18),
+            ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: colors.onPrimary,
-                fontSize: 11,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                color: colors.onPrimary.withValues(alpha: 0.92),
+                fontSize: 9,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -215,10 +225,10 @@ class _RailBottomIcon extends StatelessWidget {
     final colors = context.colors;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 7),
       child: Stack(
         children: [
-          Icon(icon, color: colors.onPrimary, size: 24),
+          Icon(icon, color: colors.onPrimary, size: 18),
           if (hasNotification)
             Positioned(
               right: 0,

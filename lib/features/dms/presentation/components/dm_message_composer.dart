@@ -412,20 +412,20 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
           ),
 
         Container(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           child: Container(
             decoration: BoxDecoration(
               border: Border.all(
-                color: _isEditMode ? colors.primary : colors.divider,
+                color: _isEditMode ? colors.primary : colors.primary,
                 width: 1.5,
               ),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                   child: Row(
                     children: [
                       ToolbarButton(
@@ -486,23 +486,23 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
                             ? 'Editing message…'
                             : 'Message ${widget.recipientName}',
                         hintStyle: TextStyle(
-                          color: colors.textHint.withValues(alpha: 0.55),
-                          fontSize: 14,
+                          color: colors.textHint.withValues(alpha: 0.75),
+                          fontSize: 12,
                         ),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(vertical: 8),
                       ),
                       style: TextStyle(
                         color: colors.textPrimary,
-                        fontSize: 14,
+                        fontSize: 13,
                         height: 1.5,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                   child: Row(
                     children: [
                       ToolbarButton(
@@ -539,20 +539,45 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
                         },
                         colors: colors,
                       ),
+                      ToolbarButton(
+                        icon: Icons.tag,
+                        tooltip: 'Channel tag',
+                        onTap: () {
+                          final text = _controller.text;
+                          final sel = _controller.selection;
+                          final pos = sel.isValid
+                              ? sel.baseOffset
+                              : text.length;
+                          final newText =
+                              '${text.substring(0, pos)}#${text.substring(pos)}';
+                          _controller.value = TextEditingValue(
+                            text: newText,
+                            selection: TextSelection.collapsed(offset: pos + 1),
+                          );
+                          _focusNode.requestFocus();
+                        },
+                        colors: colors,
+                      ),
+                      ToolbarButton(
+                        icon: Icons.horizontal_rule_rounded,
+                        tooltip: 'Divider',
+                        onTap: () => _wrapSelection('/'),
+                        colors: colors,
+                      ),
+                      const SizedBox(width: 4),
+                      ToolbarButton(
+                        icon: Icons.mic_none_rounded,
+                        tooltip: 'Voice message',
+                        onTap: () {},
+                        colors: colors,
+                      ),
                       const Spacer(),
                       GestureDetector(
                         onTap: _handleSend,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: colors.primary,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Icon(
-                            Icons.send_rounded,
-                            color: Colors.white,
-                            size: 16,
-                          ),
+                        child: Icon(
+                          Icons.send_rounded,
+                          color: colors.textHint.withValues(alpha: 0.55),
+                          size: 22,
                         ),
                       ),
                     ],

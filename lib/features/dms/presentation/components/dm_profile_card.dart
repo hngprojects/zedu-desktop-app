@@ -16,13 +16,13 @@ class DmProfileCard extends StatelessWidget {
         : '@${nameParts.first}';
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(40, 40, 40, 0),
+      padding: const EdgeInsets.fromLTRB(18, 76, 40, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
-            radius: 36,
-            backgroundColor: const Color(0xFF6458F5),
+            radius: 39,
+            backgroundColor: colors.primary,
             backgroundImage: conversation.effectiveAvatarUrl != null
                 ? NetworkImage(conversation.effectiveAvatarUrl!)
                 : null,
@@ -41,12 +41,12 @@ class DmProfileCard extends StatelessWidget {
           Text(
             name,
             style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
               color: colors.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 14),
           RichText(
             text: TextSpan(
               style: TextStyle(fontSize: 14, color: colors.textPrimary),
@@ -56,8 +56,8 @@ class DmProfileCard extends StatelessWidget {
                 ),
                 TextSpan(
                   text: handle,
-                  style: const TextStyle(
-                    color: Color(0xFF6458F5),
+                  style: TextStyle(
+                    color: colors.primary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -73,9 +73,9 @@ class DmProfileCard extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: colors.divider),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(5),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
             ),
             child: Text(
               'View Profile',

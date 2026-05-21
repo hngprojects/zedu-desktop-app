@@ -9,36 +9,39 @@ class DmSidebarList extends ConsumerWidget {
     final colors = context.colors;
 
     return Container(
-      width: 320,
+      width: 330,
       color: colors.sidebar,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const WorkspaceSwitcherHeader(),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+            padding: const EdgeInsets.fromLTRB(10, 0, 10, 16),
             child: Row(
               children: [
                 Expanded(
                   child: Container(
-                    height: 32,
+                    height: 34,
                     decoration: BoxDecoration(
-                      color: colors.onPrimary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(
+                        color: colors.onPrimary.withValues(alpha: 0.68),
+                      ),
                     ),
                     child: Row(
                       children: [
                         const SizedBox(width: 8),
                         Icon(
                           Icons.search,
-                          color: colors.onPrimary.withValues(alpha: 0.7),
+                          color: colors.onPrimary.withValues(alpha: 0.9),
                           size: 16,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           'Find a Conversation',
                           style: TextStyle(
-                            color: colors.onPrimary.withValues(alpha: 0.7),
+                            color: colors.onPrimary.withValues(alpha: 0.9),
                             fontSize: 12,
                           ),
                         ),
