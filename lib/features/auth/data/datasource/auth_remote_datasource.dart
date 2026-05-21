@@ -277,9 +277,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
 
       AppLogger.d('POST /auth/google', tag: _tag);
-      final data = <String, dynamic>{
-        'grant_code': grantCode,
-      };
+      final data = <String, dynamic>{'grant_code': grantCode};
       if (redirectUri != null) {
         data['redirect_uri'] = redirectUri;
       }
@@ -294,7 +292,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } on ApiFailure {
       rethrow;
     } catch (error) {
-      AppLogger.e('Failed to parse /auth/google response', tag: _tag, error: error);
+      AppLogger.e(
+        'Failed to parse /auth/google response',
+        tag: _tag,
+        error: error,
+      );
       throw ApiFailure.fromParsingError(error, path: '/auth/google');
     }
   }

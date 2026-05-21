@@ -81,7 +81,8 @@ class PlanDetailsModel {
           json['create_your_own_ai_co_workers'] as bool? ?? false,
       aiCreditsPurchasable: json['ai_credits_purchasable'] as bool? ?? false,
       maxCallDuration: (json['max_call_duration'] as num?)?.toInt() ?? 0,
-      maxBuzzParticipants: (json['max_buzz_participants'] as num?)?.toInt() ?? 0,
+      maxBuzzParticipants:
+          (json['max_buzz_participants'] as num?)?.toInt() ?? 0,
       maxActiveCalls: (json['max_active_calls'] as num?)?.toInt() ?? 0,
       callRecordsAvailable: json['call_records_available'] as bool? ?? false,
       transcriptAvailable: json['transcript_available'] as bool? ?? false,

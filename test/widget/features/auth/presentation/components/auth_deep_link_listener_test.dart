@@ -33,14 +33,18 @@ void main() {
       mockAppLinks = MockAppLinks();
       linkController = StreamController<Uri>.broadcast();
 
-      when(() => mockAppLinks.uriLinkStream).thenAnswer((_) => linkController.stream);
+      when(
+        () => mockAppLinks.uriLinkStream,
+      ).thenAnswer((_) => linkController.stream);
     });
 
     tearDown(() async {
       await linkController.close();
     });
 
-    testWidgets('ignores link when token query param is missing', (tester) async {
+    testWidgets('ignores link when token query param is missing', (
+      tester,
+    ) async {
       String? capturedToken;
 
       when(
@@ -74,9 +78,9 @@ void main() {
     ) async {
       String? capturedToken;
 
-      when(
-        () => mockAppLinks.getInitialLink(),
-      ).thenAnswer((_) async => Uri.parse('zedu://auth/magick-link/verify?token=t-123'));
+      when(() => mockAppLinks.getInitialLink()).thenAnswer(
+        (_) async => Uri.parse('zedu://auth/magick-link/verify?token=t-123'),
+      );
 
       await tester.pumpWidget(
         ProviderScope(
