@@ -43,7 +43,7 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
         setState(() => _isDragging = false);
       },
       child: Container(
-        color: colors.background,
+        color: colors.onPrimary,
         child: Stack(
           children: [
             Column(
@@ -272,16 +272,16 @@ class _DmChatHeader extends StatelessWidget {
         : conversation.displayName.trim()[0].toUpperCase();
 
     return Container(
-      height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      height: 58,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: colors.divider)),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            radius: 14,
-            backgroundColor: const Color(0xFF6458F5),
+            radius: 20,
+            backgroundColor: colors.primary,
             backgroundImage: conversation.effectiveAvatarUrl != null
                 ? NetworkImage(conversation.effectiveAvatarUrl!)
                 : null,
@@ -291,7 +291,7 @@ class _DmChatHeader extends StatelessWidget {
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 11,
+                      fontSize: 13,
                     ),
                   )
                 : null,
@@ -300,8 +300,8 @@ class _DmChatHeader extends StatelessWidget {
           Text(
             conversation.displayName,
             style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
               color: colors.textPrimary,
             ),
           ),
@@ -351,32 +351,16 @@ class _DmChatHeader extends StatelessWidget {
                 },
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
+                  width: 34,
+                  height: 34,
                   decoration: BoxDecoration(
                     border: Border.all(color: colors.divider),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.videocam_outlined,
-                        size: 18,
-                        color: colors.textPrimary,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Start Buzz',
-                        style: TextStyle(
-                          color: colors.textPrimary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                  child: Icon(
+                    Icons.headphones_outlined,
+                    size: 18,
+                    color: colors.textPrimary,
                   ),
                 ),
               );
@@ -524,8 +508,8 @@ class _MessageBubble extends ConsumerWidget {
         children: [
           if (!isMe) ...[
             CircleAvatar(
-              radius: 16,
-              backgroundColor: const Color(0xFF6458F5),
+              radius: 15,
+              backgroundColor: colors.primary,
               backgroundImage:
                   senderAvatarUrl != null && senderAvatarUrl.isNotEmpty
                   ? NetworkImage(senderAvatarUrl)
@@ -578,7 +562,7 @@ class _MessageBubble extends ConsumerWidget {
                     ),
                     decoration: BoxDecoration(
                       color: isMe
-                          ? const Color(0xFF6458F5)
+                          ? colors.primary
                           : colors.onPrimary.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
                     ),

@@ -38,17 +38,21 @@ class DmListTile extends ConsumerWidget {
         ref.read(selectedDmProvider.notifier).select(conversation);
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? colors.onPrimary.withValues(alpha: 0.12)
+              ? colors.onPrimary.withValues(alpha: 0.08)
               : Colors.transparent,
+          border: Border(
+            top: BorderSide(color: colors.onPrimary.withValues(alpha: 0.18)),
+            bottom: BorderSide(color: colors.onPrimary.withValues(alpha: 0.18)),
+          ),
         ),
         child: Row(
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: const Color(0xFF6458F5),
+              backgroundColor: colors.primary,
               backgroundImage: conversation.effectiveAvatarUrl != null
                   ? NetworkImage(conversation.effectiveAvatarUrl!)
                   : null,
@@ -72,8 +76,8 @@ class DmListTile extends ConsumerWidget {
                     conversation.displayName,
                     style: TextStyle(
                       color: colors.onPrimary,
-                      fontSize: 14,
-                      fontWeight: hasUnread ? FontWeight.bold : FontWeight.w500,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -82,8 +86,8 @@ class DmListTile extends ConsumerWidget {
                   Text(
                     conversation.previewMessage,
                     style: TextStyle(
-                      color: colors.onPrimary.withValues(alpha: 0.55),
-                      fontSize: 12,
+                      color: colors.onPrimary.withValues(alpha: 0.86),
+                      fontSize: 11,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -98,7 +102,7 @@ class DmListTile extends ConsumerWidget {
                 Text(
                   _formatTime(conversation.lastActivityAt),
                   style: TextStyle(
-                    color: colors.onPrimary.withValues(alpha: 0.5),
+                    color: colors.onPrimary.withValues(alpha: 0.92),
                     fontSize: 11,
                   ),
                 ),
@@ -110,7 +114,7 @@ class DmListTile extends ConsumerWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF6458F5),
+                      color: colors.primary,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
