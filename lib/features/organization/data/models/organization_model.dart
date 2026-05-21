@@ -67,6 +67,26 @@ class OrganizationModel extends Organization {
     };
   }
 
+  Organization toEntity() {
+    return Organization(
+      id: id,
+      name: name,
+      description: description,
+      email: email,
+      country: country,
+      industry: industry,
+      location: location,
+      ownerId: ownerId,
+      logoUrl: logoUrl,
+      channelsCount: channelsCount,
+      totalMessagesCount: totalMessagesCount,
+      userRole: userRole,
+      organizationPlan: organizationPlan,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+
   static String _readCountry(Object? rawCountry) {
     if (rawCountry is String) return rawCountry;
     if (rawCountry is Map) {
@@ -89,10 +109,12 @@ class OrganizationModel extends Organization {
   static String _readUserRole(Object? rawUserRole) {
     if (rawUserRole is String) return rawUserRole;
     if (rawUserRole is Map) {
-      return _firstString(
-            Map<String, dynamic>.from(rawUserRole),
-            const ['name', 'role', 'slug', 'id'],
-          ) ??
+      return _firstString(Map<String, dynamic>.from(rawUserRole), const [
+            'name',
+            'role',
+            'slug',
+            'id',
+          ]) ??
           '';
     }
     return '';
