@@ -252,7 +252,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         ),
                       ),
                     ),
-            
                   ],
                 ),
                 context.gapV(32),
