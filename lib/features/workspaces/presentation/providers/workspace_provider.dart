@@ -4,7 +4,6 @@ import 'package:zedu/core/core.dart';
 class WorkspaceNotifier extends Notifier<WorkspaceState> {
   @override
   WorkspaceState build() {
-    // Watch auth state so we re-build when user logs in / out.
     final authState = ref.watch(authNotifierProvider);
     return _resolveState(authState);
   }
@@ -22,7 +21,6 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     try {
       previousId = state.selectedWorkspace?.id;
     } catch (_) {
-      // First build — no previous state.
     }
 
     final selected = previousId != null

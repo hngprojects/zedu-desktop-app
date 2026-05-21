@@ -13,11 +13,6 @@ class DmRepository {
 
   DmRepository(this._apiClient);
 
-  /// Fetches paginated DM conversations for the given [orgId].
-  ///
-  /// Uses `GET /organisations/{org_id}/dms` with pagination and optional
-  /// [recentDm] / [search] filters. Results are sorted client-side by
-  /// most-recent activity to guarantee AC-1 ordering regardless of backend.
   Future<List<DmConversation>> getConversations({
     required String orgId,
     int page = 1,
@@ -41,13 +36,11 @@ class DmRepository {
         .map(DmConversation.fromJson)
         .toList();
 
-    // Client-side sort: most recent activity first (AC-1 guarantee).
     list.sort((a, b) => b.lastActivityAt.compareTo(a.lastActivityAt));
 
     return list;
   }
 
-  /// Fetches paginated messages for a specific DM channel.
   Future<List<Map<String, dynamic>>> getMessages(
     String channelId, {
     int page = 1,
@@ -94,5 +87,23 @@ class DmRepository {
       'path': file.path,
       if (file.mimeType != null) 'mime_type': file.mimeType,
     };
+  }
+
+  Future<void> editMessage(
+    String channelId, {
+    required String content,
+    String? threadId,
+    List<Map<String, dynamic>>? media,
+    List<Map<String, dynamic>>? mentions,
+  }) async {
+    await _apiClient.put<Map<String, dynamic>>(
+      path: '/dms/messages/$channelId',
+      data: {
+        'content': content,
+        if (threadId != null) 'thread_id': threadId,
+        if (media != null) 'media': media,
+        if (mentions != null) 'mentions': mentions,
+      },
+    );
   }
 }

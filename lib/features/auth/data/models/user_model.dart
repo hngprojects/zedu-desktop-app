@@ -118,5 +118,7 @@ class UserModel {
     createdAt: createdAt,
     currentOrg: currentOrg,
     currentOrganisationSlug: currentOrganisationSlug,
+    avatarUrl: avatarUrl,
+    defaultAvatarUrl: defaultAvatarUrl,
   );
 }

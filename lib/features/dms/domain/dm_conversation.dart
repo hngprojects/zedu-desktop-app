@@ -1,5 +1,3 @@
-/// Domain model for a DM conversation, mapped from
-/// `GET /organisations/{org_id}/dms` response.
 class DmConversation {
   final String channelId;
   final String username;
@@ -35,14 +33,11 @@ class DmConversation {
     required this.unreadCount,
   });
 
-  /// The display name shown in the sidebar tile.
   String get displayName => username.isNotEmpty ? username : 'Unknown';
 
-  /// Best avatar URL — prefers custom, falls back to default.
   String? get effectiveAvatarUrl =>
       (avatarUrl != null && avatarUrl!.isNotEmpty) ? avatarUrl : defaultAvatarUrl;
 
-  /// The timestamp used for sorting: last preview-thread date, or [lastReadAt].
   DateTime get lastActivityAt {
     if (previewThreads.isNotEmpty) {
       return previewThreads.first.createdAt;
@@ -92,7 +87,6 @@ class DmConversation {
   }
 }
 
-/// A single preview-thread entry inside a DM conversation.
 class DmPreviewThread {
   final String threadId;
   final String message;
@@ -124,7 +118,6 @@ class DmPreviewThread {
   }
 }
 
-/// A participant inside a DM conversation.
 class DmParticipant {
   final String userId;
   final String username;

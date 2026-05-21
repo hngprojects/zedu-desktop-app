@@ -85,7 +85,11 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                                 delegate: SliverChildBuilderDelegate(
                                   (context, index) {
                                     final msg = messages[index];
-                                    return _MessageBubble(message: msg);
+                                    return _MessageBubble(
+                                      message: msg,
+                                      conversation: widget.conversation,
+                                      channelId: widget.conversation.channelId,
+                                    );
                                   },
                                   childCount: messages.length,
                                 ),
@@ -115,6 +119,7 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                   ),
                 DmMessageComposer(
                   recipientName: _recipientHandle,
+                  channelId: widget.conversation.channelId,
                   onSend: (text) {
                     ref.read(chatHistoryProvider(widget.conversation.channelId)).sendMessage(text, media: List<XFile>.of(_pendingFiles));
                     setState(() {
@@ -171,7 +176,6 @@ class _DmChatHeader extends StatelessWidget {
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: colors.background,
         border: Border(bottom: BorderSide(color: colors.divider)),
       ),
       child: Row(
@@ -187,8 +191,8 @@ class _DmChatHeader extends StatelessWidget {
                     participantInitial,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
                     ),
                   )
                 : null,
@@ -222,46 +226,78 @@ class _DmChatHeader extends StatelessWidget {
                 ),
               ));
             },
-            borderRadius: BorderRadius.circular(4),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border.all(color: colors.divider),
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.phone_outlined, size: 20, color: colors.textHint),
-                  const SizedBox(width: 8),
+                  Icon(Icons.videocam_outlined, size: 18, color: colors.textPrimary),
+                  const SizedBox(width: 6),
                   Text(
-                    'Buzz',
+                    'Start Buzz',
                     style: TextStyle(
-                      color: colors.textHint,
-                      fontSize: 14,
+                      color: colors.textPrimary,
+                      fontSize: 13,
                       fontWeight: FontWeight.w500,
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
           ),
+          const SizedBox(width: 12),
+          Icon(Icons.more_vert, color: colors.textHint),
         ],
       ),
     );
   }
 }
 
-class _MessageBubble extends StatelessWidget {
-  final Map<String, dynamic> message;
 
-  const _MessageBubble({required this.message});
+class _MessageBubble extends ConsumerWidget {
+  final Map<String, dynamic> message;
+  final DmConversation conversation;
+  final String channelId;
+
+  const _MessageBubble({
+    required this.message,
+    required this.conversation,
+    required this.channelId,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    final isMe = message['userId'] == 'me';
+    final history = ref.watch(chatHistoryProvider(channelId));
+    final isMe = history.isMyMessage(message);
     final content = message['content'] as String? ?? '';
     final createdAt =
         DateTime.tryParse(message['created_at']?.toString() ?? '')?.toLocal() ??
         DateTime.now();
+    final status = message['status'] as String?;
+    final messageId = message['id'] as String? ?? '';
 
-    final timeString = '${createdAt.hour}:${createdAt.minute.toString().padLeft(2, '0')}';
+    final hour = createdAt.hour > 12 ? createdAt.hour - 12 : (createdAt.hour == 0 ? 12 : createdAt.hour);
+    final minute = createdAt.minute.toString().padLeft(2, '0');
+    final period = createdAt.hour >= 12 ? 'PM' : 'AM';
+    final timeString = '$hour:$minute $period';
+
+    final senderName = isMe
+        ? history.currentUserName
+        : conversation.displayName;
+
+    final senderAvatarUrl = isMe
+        ? history.currentUserAvatarUrl
+        : conversation.effectiveAvatarUrl;
+
+    final senderInitial = senderName.isNotEmpty
+        ? senderName[0].toUpperCase()
+        : '?';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -270,10 +306,22 @@ class _MessageBubble extends StatelessWidget {
         mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!isMe) ...[
-            const CircleAvatar(
+            CircleAvatar(
               radius: 16,
-              backgroundColor: Color(0xFF6458F5),
-              child: Icon(Icons.person, size: 16, color: Colors.white),
+              backgroundColor: const Color(0xFF6458F5),
+              backgroundImage: senderAvatarUrl != null && senderAvatarUrl.isNotEmpty
+                  ? NetworkImage(senderAvatarUrl)
+                  : null,
+              child: senderAvatarUrl == null || senderAvatarUrl.isEmpty
+                  ? Text(
+                      senderInitial,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    )
+                  : null,
             ),
             const SizedBox(width: 12),
           ],
@@ -281,31 +329,30 @@ class _MessageBubble extends StatelessWidget {
             child: Column(
               crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
-                if (!isMe)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'User',
-                          style: TextStyle(
-                            color: colors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        senderName,
+                        style: TextStyle(
+                          color: colors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          timeString,
-                          style: TextStyle(
-                            color: colors.textHint,
-                            fontSize: 11,
-                          ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        timeString,
+                        style: TextStyle(
+                          color: colors.textHint,
+                          fontSize: 11,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
+                ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
@@ -320,16 +367,37 @@ class _MessageBubble extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (isMe)
+                if (isMe && status != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      message['status'] == 'sending' ? 'Sending...' : (message['status'] == 'failed' ? 'Failed - Tap to retry' : timeString),
-                      style: TextStyle(
-                        color: message['status'] == 'failed' ? colors.error : colors.textHint,
-                        fontSize: 11,
-                      ),
-                    ),
+                    child: status == 'failed'
+                        ? GestureDetector(
+                            onTap: () {
+                              ref.read(chatHistoryProvider(channelId)).retryMessage(messageId);
+                            },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.error_outline, size: 13, color: colors.error),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Failed – Tap to retry',
+                                  style: TextStyle(
+                                    color: colors.error,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : Text(
+                            status == 'sending' ? 'Sending...' : '',
+                            style: TextStyle(
+                              color: colors.textHint,
+                              fontSize: 11,
+                            ),
+                          ),
                   ),
               ],
             ),
