@@ -81,14 +81,20 @@ class MagicLinkDeepLinkParser {
       return false;
     }
 
-    if (scheme == 'zedu' && (host == 'auth' || host.isEmpty)) {
-    
-      return anySegmentContainsMagic();
+    if (scheme == 'zedu') {
+      return anySegmentContainsMagic() || segmentsContainAuthMagic();
     }
 
+  
     if (scheme == 'https' || scheme == 'http') {
-     
-      return host == 'auth' || segmentsContainAuthMagic();
+      const knownHosts = {
+        'zedu.chat',
+        'www.zedu.chat',
+        'staging.zedu.chat',
+        'app.zedu.chat',
+      };
+      if (!knownHosts.contains(host)) return false;
+      return segmentsContainAuthMagic();
     }
 
     return false;
