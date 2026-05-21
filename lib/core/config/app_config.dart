@@ -1,4 +1,4 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:zedu/core/core.dart';
 
 class AppConfig {
   const AppConfig({
@@ -11,8 +11,8 @@ class AppConfig {
     this.googleClientSecret = '',
   });
 
-  /// Resolves config after [loadAppEnv] has run in [main] (`.env` then
-  /// `.env.example` as bundled assets; optional `--dart-define` overrides).
+  /// Resolves config after [loadAppEnv] has run in [main] (root `.env` /
+  /// `.env.example`, bundled as assets).
   ///
   /// Precedence: `--dart-define` wins, then dotenv keys from those files, then
   /// defaults. See [String.fromEnvironment](https://api.flutter.dev/flutter/dart-ui/String/String.fromEnvironment.html).
@@ -37,7 +37,7 @@ class AppConfig {
         ? _parseBool(defineUsesMock, defaultValue: false)
         : envUsesMock != null && envUsesMock.isNotEmpty
         ? _parseBool(envUsesMock, defaultValue: false)
-        : false;
+        : true; // Default to true so it doesn't hang forever without a backend
 
     final googleClientId = defineClientId.isNotEmpty
         ? defineClientId

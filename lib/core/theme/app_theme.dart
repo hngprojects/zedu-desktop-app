@@ -1,5 +1,4 @@
 import 'package:zedu/core/core.dart';
-import 'app_typography.dart';
 
 abstract final class AppTheme {
   static const _buttonRadius = 6.0;
@@ -35,8 +34,8 @@ abstract final class AppTheme {
           backgroundColor: palette.primary,
           shape: _buttonShape,
           padding: _buttonPadding,
-          foregroundColor: Colors.white,
-          textStyle: _buttonTextStyle.copyWith(color: Colors.white),
+          foregroundColor: palette.onPrimary,
+          textStyle: _buttonTextStyle.copyWith(color: palette.onPrimary),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(

@@ -1,4 +1,4 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:zedu/core/core.dart';
 
 class SecureStorageService {
   SecureStorageService() : _storage = const FlutterSecureStorage();
