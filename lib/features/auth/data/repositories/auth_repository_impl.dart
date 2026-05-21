@@ -67,7 +67,16 @@ class AuthRepositoryImpl implements AuthRepository {
       AppLogger.w('Magic link request failed — ${failure.message}', tag: _tag);
       return Failure(failure);
     } catch (error) {
-      AppLogger.e('Unexpected magic link request error', tag: _tag, error: error);
+      AppLogger.e(
+        'Unexpected magic link request error',
+        tag: _tag,
+        error: error,
+      );
+      return Failure(ApiFailure.unknown(error));
+    }
+  }
+
+  @override
   Future<Result<void>> signUp({
     required String email,
     required String password,
@@ -86,7 +95,10 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<AuthSession>> verifyMagicLink({required String token}) async {
     try {
       final response = await _remote.verifyMagicLink(token: token);
-      AppLogger.i('Magic link verification successful — ${response.user.email}', tag: _tag);
+      AppLogger.i(
+        'Magic link verification successful — ${response.user.email}',
+        tag: _tag,
+      );
       return Success(
         AuthSession(
           user: response.user.toEntity(),
@@ -95,10 +107,22 @@ class AuthRepositoryImpl implements AuthRepository {
         ),
       );
     } on ApiFailure catch (failure) {
-      AppLogger.w('Magic link verification failed — ${failure.message}', tag: _tag);
+      AppLogger.w(
+        'Magic link verification failed — ${failure.message}',
+        tag: _tag,
+      );
       return Failure(failure);
     } catch (error) {
-      AppLogger.e('Unexpected magic link verification error', tag: _tag, error: error);
+      AppLogger.e(
+        'Unexpected magic link verification error',
+        tag: _tag,
+        error: error,
+      );
+      return Failure(ApiFailure.unknown(error));
+    }
+  }
+
+  @override
   Future<Result<void>> forgotPassword({required String email}) async {
     try {
       await _remote.forgotPassword(email: email);
@@ -120,7 +144,10 @@ class AuthRepositoryImpl implements AuthRepository {
         grantCode: grantCode,
         redirectUri: redirectUri,
       );
-      AppLogger.i('Google sign-in successful — ${response.user.email}', tag: _tag);
+      AppLogger.i(
+        'Google sign-in successful — ${response.user.email}',
+        tag: _tag,
+      );
       return Success(
         AuthSession(
           user: response.user.toEntity(),
@@ -133,6 +160,11 @@ class AuthRepositoryImpl implements AuthRepository {
       return Failure(failure);
     } catch (error) {
       AppLogger.e('Unexpected Google sign-in error', tag: _tag, error: error);
+      return Failure(ApiFailure.unknown(error));
+    }
+  }
+
+  @override
   Future<Result<void>> resetPassword({
     required String email,
     required String token,

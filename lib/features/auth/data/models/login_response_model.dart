@@ -24,8 +24,8 @@ class LoginResponseModel {
     );
   }
 
-  static const Map<String, dynamic> _mockLoginResponse = {
-    "access_token": "mock-access-token-123",
+  // static const Map<String, dynamic> _mockLoginResponse = {
+  //   "access_token": "mock-access-token-123",};
   static final String _mockAccessToken = [
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
     "eyJhY2Nlc3NfdXVpZCI6IjAxOWUxMDFiLTYzZmItN2Y5Zi04MTBlLWE1NjAzMjllYTRhNCIsImF1dGhvcmlzZWQiOnRydWUsImV4cCI6MTc3ODk5MTQ5MSwib3JnX2lkIjoiMDE5ZTBmNTYtNmJhYi03ZjlmLWE3ZmMtZDExOWU1ZGI1ODhiIiwicm9sZV9pZCI6bnVsbCwidXNlcl9pZCI6IjAxOWUwZjU2LTZiMDYtN2Y5ZS1hZDlkLTgyMDExYmNiNWUxYiJ9",

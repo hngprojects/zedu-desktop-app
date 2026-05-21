@@ -12,6 +12,7 @@ abstract interface class AuthRemoteDataSource {
   Future<LoginResponseModel> signInWithGoogle({
     required String grantCode,
     String? redirectUri,
+  });
   Future<void> signUp({required String email, required String password});
   Future<void> forgotPassword({required String email});
   Future<void> resetPassword({
