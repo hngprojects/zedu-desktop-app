@@ -83,8 +83,7 @@ class _DesktopManagerState extends ConsumerState<DesktopManager> with WindowList
       await windowManager.show();
       await windowManager.focus();
     } else if (menuItem.key == 'exit_app') {
-      await windowManager.destroy(); // Truly close app
-    }
+      await windowManager.destroy(); 
   }
 
   @override
