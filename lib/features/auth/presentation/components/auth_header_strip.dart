@@ -1,5 +1,5 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/core/theme/app_typography.dart';
+
 
 class AuthHeaderStrip extends StatelessWidget {
   const AuthHeaderStrip({
