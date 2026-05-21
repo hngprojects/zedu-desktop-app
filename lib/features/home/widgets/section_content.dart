@@ -86,9 +86,9 @@ class _ChannelsDirectoryContentState
         );
 
     if (error != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
     }
   }
 
@@ -383,9 +383,7 @@ class _FileEmptyState extends StatelessWidget {
           context.gapV(14),
           Text(
             subtitle,
-            style: textTheme.bodyLarge?.copyWith(
-              color: colors.textSecondary,
-            ),
+            style: textTheme.bodyLarge?.copyWith(color: colors.textSecondary),
           ),
           if (showUploadButton) ...[
             context.gapV(26),
