@@ -64,9 +64,9 @@ class OrganisationModel {
       country: json['country'] as String,
       ownerId: json['owner_id'] as String,
       logoUrl: json['logo_url'] as String,
-      creditBalance: json['credit_balance'] as int,
-      channelsCount: json['channels_count'] as int,
-      totalMessagesCount: json['total_messages_count'] as int,
+      creditBalance: (json['credit_balance'] as num?)?.toInt() ?? 0,
+      channelsCount: (json['channels_count'] as num?)?.toInt() ?? 0,
+      totalMessagesCount: (json['total_messages_count'] as num?)?.toInt() ?? 0,
       orgRoles: json['org_roles'] as List<dynamic>,
       pinned: json['pinned'] as bool,
       users: json['Users'],
@@ -85,8 +85,7 @@ class OrganisationModel {
       ),
     );
   }
-
-  OrganizationModel toOrganizationModel() {
+ OrganizationModel toOrganizationModel() {
     return OrganizationModel(
       id: id,
       name: name,
@@ -126,4 +125,5 @@ class OrganisationModel {
       updatedAt: updatedAt,
     );
   }
+
 }
