@@ -31,14 +31,82 @@ class SectionContent extends StatelessWidget {
   }
 }
 
-class ChatArea extends StatelessWidget {
+class ChatArea extends ConsumerWidget {
   const ChatArea({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const EmptyStatePanel(
-      title: 'Select a channel',
-      icon: Icons.chat_bubble_outline,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(channelProvider.notifier).selectedChannel;
+    final colors = context.colors;
+
+    if (selected == null) {
+      return const EmptyStatePanel(
+        title: 'Select a channel',
+        icon: Icons.chat_bubble_outline,
+      );
+    }
+
+    return Column(
+      children: [
+        Container(
+          height: 72,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: colors.divider)),
+          ),
+          child: Row(
+            children: [
+              Text(
+                '${selected.isPrivate ? 'Private ' : '# '}${selected.name}',
+                style: TextStyle(
+                  color: colors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const Spacer(),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                offset: const Offset(0, 44),
+                onSelected: (value) async {
+                  if (value == 'details') {
+                    await showDialog<void>(
+                      context: context,
+                      builder: (_) => ChannelDetailsModal(channel: selected),
+                    );
+                  }
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(
+                    value: 'details',
+                    child: Text('Open channel details'),
+                  ),
+                  PopupMenuItem(
+                    value: 'notifications',
+                    child: Text('Notification Settings'),
+                  ),
+                  PopupMenuItem(
+                    value: 'search',
+                    child: Text('Search in channel'),
+                  ),
+                  PopupMenuDivider(),
+                  PopupMenuItem(value: 'leave', child: Text('Leave channel')),
+                ],
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Center(
+            child: Text(
+              selected.description.isEmpty
+                  ? 'No description yet'
+                  : selected.description,
+              style: TextStyle(color: colors.textSecondary),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -103,108 +171,294 @@ class ChannelsDirectoryContent extends ConsumerWidget {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
-          child: Row(
-            children: [
-              Expanded(
-                child: Container(
-                  height: 36,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: colors.divider),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.search, size: 16, color: colors.textHint),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Find a channel',
-                        style: TextStyle(color: colors.textHint, fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              OutlinedButton.icon(
-                onPressed: () async {
-                  final result = await showDialog<Map<String, dynamic>>(
-                    context: context,
-                    builder: (_) => const CreateChannelModal(),
-                  );
-
-                  if (result == null) return;
-
-                  final error = await ref
-                      .read(channelProvider.notifier)
-                      .createChannelRemote(
-                        name: result['name'] as String,
-                        visibility: result['type'] == 'Private'
-                            ? ChannelVisibility.private
-                            : ChannelVisibility.public,
-                        category: switch (result['category'] as String) {
-                          'Class' => ChannelCategory.classGroup,
-                          'Team' => ChannelCategory.team,
-                          _ => ChannelCategory.general,
-                        },
-                        organisationId: '019146f9-3d17-7294-93ac-9963ada4b7c1',
-                        username: 'aimz',
-                      );
-
-                  if (error != null && context.mounted) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text(error)));
-                  }
-                },
-                icon: const Icon(Icons.add),
-                label: const Text('New Channel'),
-              ),
-            ],
-          ),
-        ),
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: channels.length,
-            itemBuilder: (context, index) {
-              final channel = channels[index];
-
-              return Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  border: Border.all(color: colors.divider),
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(index == 0 ? 8 : 0),
-                    bottom: Radius.circular(
-                      index == channels.length - 1 ? 8 : 0,
-                    ),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+            child: Column(
+              children: [
+                Row(
                   children: [
-                    Text(
-                      '${channel.isPrivate ? 'Private ' : '# '}${channel.name}',
-                      style: TextStyle(
-                        color: colors.textPrimary,
-                        fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: Container(
+                        height: 42,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: colors.divider),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.search, size: 18, color: colors.textHint),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Search for channels',
+                              style: TextStyle(
+                                color: colors.textHint,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Joined   ${channel.membersCount} members',
-                      style: TextStyle(color: colors.success, fontSize: 12),
+                    const SizedBox(width: 12),
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        final result = await showDialog<Map<String, dynamic>>(
+                          context: context,
+                          builder: (_) => const CreateChannelModal(),
+                        );
+
+                        if (result == null) return;
+
+                        final error = ref
+                            .read(channelProvider.notifier)
+                            .createChannel(
+                              name: result['name'] as String,
+                              visibility: result['type'] == 'Private'
+                                  ? ChannelVisibility.private
+                                  : ChannelVisibility.public,
+                              category: switch (result['category'] as String) {
+                                'Class' => ChannelCategory.classGroup,
+                                'Team' => ChannelCategory.team,
+                                _ => ChannelCategory.general,
+                              },
+                            );
+
+                        if (error != null && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(error)),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('New Channel'),
                     ),
                   ],
                 ),
-              );
-            },
+                const SizedBox(height: 26),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(28),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAF8FC),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFC7E6F0)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Organize your team’s conversations',
+                              style: TextStyle(
+                                color: colors.textPrimary,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              'Channels are spaces for gathering all the right people, messages, files and tools. Organize them by any project, group, initiative or topic of your choosing.',
+                              style: TextStyle(
+                                color: colors.textPrimary,
+                                fontSize: 14,
+                                height: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            OutlinedButton.icon(
+                              onPressed: () async {
+                                final result =
+                                    await showDialog<Map<String, dynamic>>(
+                                  context: context,
+                                  builder: (_) => const CreateChannelModal(),
+                                );
+
+                                if (result == null) return;
+
+                                final error = ref
+                                    .read(channelProvider.notifier)
+                                    .createChannel(
+                                      name: result['name'] as String,
+                                      visibility: result['type'] == 'Private'
+                                          ? ChannelVisibility.private
+                                          : ChannelVisibility.public,
+                                      category:
+                                          switch (result['category'] as String) {
+                                        'Class' => ChannelCategory.classGroup,
+                                        'Team' => ChannelCategory.team,
+                                        _ => ChannelCategory.general,
+                                      },
+                                    );
+
+                                if (error != null && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(error)),
+                                  );
+                                }
+                              },
+                              icon: const Icon(Icons.add),
+                              label: const Text('New Channel'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.close, color: colors.textSecondary),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 28),
+                Row(
+                  children: [
+                    OutlinedButton(
+                      onPressed: () {},
+                      child: const Text('All channels'),
+                    ),
+                    const SizedBox(width: 10),
+                    OutlinedButton(
+                      onPressed: () {},
+                      child: const Text('All channel type'),
+                    ),
+                    const Spacer(),
+                    OutlinedButton(
+                      onPressed: () {},
+                      child: const Text('A to Z'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: colors.divider),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Column(
+                    children: [
+                      for (int index = 0; index < channels.length; index++)
+                        _ChannelDirectoryItem(
+                          channel: channels[index],
+                          isLast: index == channels.length - 1,
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ChannelDirectoryItem extends ConsumerStatefulWidget {
+  const _ChannelDirectoryItem({
+    required this.channel,
+    required this.isLast,
+  });
+
+  final WorkspaceChannel channel;
+  final bool isLast;
+
+  @override
+  ConsumerState<_ChannelDirectoryItem> createState() =>
+      _ChannelDirectoryItemState();
+}
+
+class _ChannelDirectoryItemState extends ConsumerState<_ChannelDirectoryItem> {
+  bool isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final channel = widget.channel;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => isHovered = true),
+      onExit: (_) => setState(() => isHovered = false),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        decoration: BoxDecoration(
+          color: isHovered
+              ? colors.primary.withValues(alpha: 0.04)
+              : colors.background,
+          border: Border(
+            bottom: widget.isLast
+                ? BorderSide.none
+                : BorderSide(color: colors.divider),
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${channel.isPrivate ? 'Private ' : '# '}${channel.name}',
+                    style: TextStyle(
+                      color: colors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Text(
+                        '✓ Joined',
+                        style: TextStyle(
+                          color: colors.success,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${channel.membersCount} members',
+                        style: TextStyle(
+                          color: colors.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                      if (channel.description.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          '•',
+                          style: TextStyle(color: colors.textSecondary),
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            channel.description,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: colors.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            if (isHovered)
+              OutlinedButton(
+                onPressed: () {
+                  ref.read(channelProvider.notifier).selectChannel(channel);
+                  ref.read(menuProvider.notifier).select(MenuSection.home);
+                },
+                child: const Text('Open in Home'),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

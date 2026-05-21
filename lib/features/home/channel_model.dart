@@ -23,6 +23,26 @@ class WorkspaceChannel {
 
   bool get isPrivate => visibility == ChannelVisibility.private;
 
+  WorkspaceChannel copyWith({
+    String? id,
+    String? name,
+    String? description,
+    String? topic,
+    ChannelVisibility? visibility,
+    ChannelCategory? category,
+    int? membersCount,
+  }) {
+    return WorkspaceChannel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      topic: topic ?? this.topic,
+      visibility: visibility ?? this.visibility,
+      category: category ?? this.category,
+      membersCount: membersCount ?? this.membersCount,
+    );
+  }
+
   factory WorkspaceChannel.fromJson(Map<String, dynamic> json) {
     return WorkspaceChannel(
       id: json['channels_id'] as String?,

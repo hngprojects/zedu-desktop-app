@@ -202,36 +202,42 @@ class FilesSidebar extends StatelessWidget {
   }
 }
 
-class ChannelItem extends StatelessWidget {
+class ChannelItem extends ConsumerWidget {
   const ChannelItem({required this.channel, super.key});
 
   final WorkspaceChannel channel;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        children: [
-          Icon(
-            channel.isPrivate ? Icons.lock_outline : Icons.tag,
-            color: colors.onPrimary.withValues(alpha: 0.62),
-            size: 17,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              channel.name,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: colors.onPrimary.withValues(alpha: 0.78),
-                fontSize: 15,
+    return InkWell(
+      onTap: () {
+        ref.read(channelProvider.notifier).selectChannel(channel);
+        ref.read(menuProvider.notifier).select(MenuSection.home);
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            Icon(
+              channel.isPrivate ? Icons.lock_outline : Icons.tag,
+              color: colors.onPrimary.withValues(alpha: 0.62),
+              size: 17,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                channel.name,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: colors.onPrimary.withValues(alpha: 0.78),
+                  fontSize: 15,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

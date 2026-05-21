@@ -77,4 +77,16 @@ class ChannelRemoteDataSource {
       description: description,
     );
   }
+
+  Future<void> updateChannel({
+    required String channelId,
+    required String name,
+    required String description,
+    required String topic,
+  }) async {
+    await _apiBaseService.patch<Map<String, dynamic>>(
+      path: '/channels/$channelId',
+      data: {'name': name, 'description': description, 'topic': topic},
+    );
+  }
 }
