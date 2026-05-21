@@ -4,44 +4,71 @@ import 'package:zedu/core/core.dart';
 class WorkspaceNotifier extends Notifier<WorkspaceState> {
   @override
   WorkspaceState build() {
-    return _getInitialState();
+    // Watch auth state so we re-build when user logs in / out.
+    final authState = ref.watch(authNotifierProvider);
+    return _resolveState(authState);
   }
 
-  WorkspaceState _getInitialState() {
-    final workspaces = [
-      const Workspace(
-        id: '1',
-        name: 'HNG Workspace',
-        avatar: '',
-        unreadCount: 1351,
-        membersCount: 1351,
-      ),
-      const Workspace(
-        id: '2',
-        name: 'TeamFlow Collective',
-        avatar: '',
-        unreadCount: 15,
-        membersCount: 42,
-      ),
-      const Workspace(
-        id: '3',
-        name: 'Coffee & Code House',
-        avatar: '',
-        unreadCount: 0,
-        membersCount: 12,
-      ),
-      const Workspace(
-        id: '4',
-        name: 'ConnectHub',
-        avatar: '',
-        unreadCount: 3,
-        membersCount: 89,
-      ),
-    ];
+  WorkspaceState _resolveState(AuthState authState) {
+    if (authState.status != AuthStatus.authenticated ||
+        authState.user == null) {
+      return const WorkspaceState();
+    }
+
+    final user = authState.user!;
+    final workspaces = _buildWorkspacesFromUser(user);
+
+    String? previousId;
+    try {
+      previousId = state.selectedWorkspace?.id;
+    } catch (_) {
+      // First build — no previous state.
+    }
+
+    final selected = previousId != null
+        ? workspaces.firstWhere(
+            (ws) => ws.id == previousId,
+            orElse: () => workspaces.first,
+          )
+        : workspaces.first;
 
     return WorkspaceState(
       workspaces: workspaces,
-      selectedWorkspace: workspaces.first,
+      selectedWorkspace: selected,
+    );
+  }
+
+  List<Workspace> _buildWorkspacesFromUser(User user) {
+    final workspaces = <Workspace>[];
+
+    if (user.currentOrg.isNotEmpty) {
+      workspaces.add(Workspace(
+        id: user.currentOrg,
+        name: user.currentOrganisationSlug.isNotEmpty
+            ? user.currentOrganisationSlug
+            : '${user.firstName}\'s Workspace',
+        avatar: '',
+      ));
+    }
+
+    if (workspaces.isEmpty) {
+      workspaces.add(const Workspace(
+        id: '01910544-d1e1-7ada-bdac-c761e527ec91',
+        name: 'Default Workspace',
+        avatar: '',
+      ));
+    }
+
+    return workspaces;
+  }
+
+  void addWorkspace(Workspace workspace, {bool switchTo = true}) {
+    final current = state.workspaces;
+    if (current.any((w) => w.id == workspace.id)) return;
+    final updated = [...current, workspace];
+    state = state.copyWith(
+      workspaces: updated,
+      selectedWorkspace: switchTo ? workspace : state.selectedWorkspace,
     );
   }
 
@@ -50,8 +77,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
 
     state = state.copyWith(isLoading: true);
 
-    // Simulate network delay for switching
-    await Future<void>.delayed(const Duration(milliseconds: 800));
+    await Future<void>.delayed(const Duration(milliseconds: 300));
 
     state = state.copyWith(selectedWorkspace: workspace, isLoading: false);
   }

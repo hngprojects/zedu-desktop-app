@@ -7,17 +7,30 @@ class DmListTile extends ConsumerWidget {
   const DmListTile({super.key, required this.conversation});
 
   String _formatTime(DateTime dt) {
-    final hour = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
-    final minute = dt.minute.toString().padLeft(2, '0');
-    final period = dt.hour >= 12 ? 'PM' : 'AM';
-    return '$hour:$minute $period';
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final messageDay = DateTime(dt.year, dt.month, dt.day);
+
+    if (messageDay == today) {
+      final hour = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
+      final minute = dt.minute.toString().padLeft(2, '0');
+      final period = dt.hour >= 12 ? 'PM' : 'AM';
+      return '$hour:$minute $period';
+    }
+
+    final yesterday = today.subtract(const Duration(days: 1));
+    if (messageDay == yesterday) {
+      return 'Yesterday';
+    }
+
+    return '${dt.day}/${dt.month}/${dt.year}';
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final selected = ref.watch(selectedDmProvider);
-    final isSelected = selected?.id == conversation.id;
+    final isSelected = selected?.channelId == conversation.channelId;
     final hasUnread = conversation.unreadCount > 0;
 
     return InkWell(
@@ -37,12 +50,12 @@ class DmListTile extends ConsumerWidget {
             CircleAvatar(
               radius: 18,
               backgroundColor: const Color(0xFF6458F5),
-              backgroundImage: conversation.participantAvatarUrl != null
-                  ? NetworkImage(conversation.participantAvatarUrl!)
+              backgroundImage: conversation.effectiveAvatarUrl != null
+                  ? NetworkImage(conversation.effectiveAvatarUrl!)
                   : null,
-              child: conversation.participantAvatarUrl == null
+              child: conversation.effectiveAvatarUrl == null
                   ? Text(
-                      conversation.participantName[0].toUpperCase(),
+                      conversation.displayName[0].toUpperCase(),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -58,7 +71,7 @@ class DmListTile extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    conversation.participantName,
+                    conversation.displayName,
                     style: TextStyle(
                       color: colors.onPrimary,
                       fontSize: 14,
@@ -69,7 +82,7 @@ class DmListTile extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    conversation.lastMessage,
+                    conversation.previewMessage,
                     style: TextStyle(
                       color: colors.onPrimary.withValues(alpha: 0.55),
                       fontSize: 12,
@@ -86,7 +99,7 @@ class DmListTile extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  _formatTime(conversation.lastMessageAt),
+                  _formatTime(conversation.lastActivityAt),
                   style: TextStyle(
                     color: colors.onPrimary.withValues(alpha: 0.5),
                     fontSize: 11,

@@ -7,24 +7,43 @@ final dmRepositoryProvider = Provider<DmRepository>((ref) {
 });
 
 class DmRepository {
-  static const int pageSize = 50;
-  static const String _defaultOrgId = '01910544-d1e1-7ada-bdac-c761e527ec91';
+  static const int pageSize = 20;
 
   final ApiBaseService _apiClient;
 
   DmRepository(this._apiClient);
 
-  Future<List<DmConversation>> getConversations({int page = 1}) async {
+  /// Fetches paginated DM conversations for the given [orgId].
+  ///
+  /// Uses `GET /organisations/{org_id}/dms` with pagination and optional
+  /// [recentDm] / [search] filters. Results are sorted client-side by
+  /// most-recent activity to guarantee AC-1 ordering regardless of backend.
+  Future<List<DmConversation>> getConversations({
+    required String orgId,
+    int page = 1,
+    bool recentDm = false,
+    String? search,
+  }) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
-      path: '/organizations/$_defaultOrgId/recent-dm',
-      queryParameters: {'page': page, 'limit': pageSize},
+      path: '/organisations/$orgId/dms',
+      queryParameters: {
+        'page': page,
+        'limit': pageSize,
+        'recent_dm': recentDm,
+        if (search != null && search.isNotEmpty) 'search': search,
+      },
     );
 
     final data = response.data;
     final rawList = data['data'];
     final list = (rawList is List ? rawList : const <dynamic>[])
-        .map((e) => DmConversation.fromJson(e as Map<String, dynamic>))
+        .whereType<Map<String, dynamic>>()
+        .map(DmConversation.fromJson)
         .toList();
+
+    // Client-side sort: most recent activity first (AC-1 guarantee).
+    list.sort((a, b) => b.lastActivityAt.compareTo(a.lastActivityAt));
+
     return list;
   }
 

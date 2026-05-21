@@ -264,7 +264,7 @@ class _MainSidebar extends StatelessWidget {
     final colors = context.colors;
 
     return Container(
-      width: 260,
+      width: 320,
       color: colors.sidebar,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
