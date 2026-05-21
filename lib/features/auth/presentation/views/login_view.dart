@@ -124,11 +124,8 @@ class _LoginViewState extends ConsumerState<LoginView> {
                 SocialAuthButton(
                   icon: 'assets/svgs/google_logo.svg',
                   label: 'Sign up with Google',
-                  onPressed: () => AppToastService.show(
-                    context,
-                    type: AppToastType.info,
-                    message: 'Google sign in is not available yet.',
-                  ),
+                  onPressed: () =>
+                      ref.read(authNotifierProvider.notifier).loginWithGoogle(),
                 ),
                 context.gapV(12),
                 SocialAuthButton(
@@ -241,12 +238,15 @@ class _LoginViewState extends ConsumerState<LoginView> {
                 context.gapV(12),
                 Align(
                   alignment: Alignment.topLeft,
-                  child: Text(
-                    'Login with magic link',
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w400,
-                      color: context.colors.primary,
-                      fontFamily: FontFamily.roboto,
+                  child: InkWell(
+                    onTap: () => context.go(AppRouter.magicLinkRequest),
+                    child: Text(
+                      'Login with magic link',
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w400,
+                        color: context.colors.primary,
+                        fontFamily: FontFamily.roboto,
+                      ),
                     ),
                   ),
                 ),
