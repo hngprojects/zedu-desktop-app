@@ -28,7 +28,7 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
   }
 
   String get _recipientHandle {
-    final parts = widget.conversation.participantName
+    final parts = widget.conversation.displayName
         .trim()
         .split(RegExp(r'\s+'))
         .where((part) => part.isNotEmpty)
@@ -64,7 +64,7 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                 Expanded(
                   child: Consumer(
                     builder: (context, ref, child) {
-                      final historyState = ref.watch(chatHistoryProvider(widget.conversation.id));
+                      final historyState = ref.watch(chatHistoryProvider(widget.conversation.channelId));
                       final messages = historyState.messages;
 
                       return NotificationListener<ScrollNotification>(
@@ -72,7 +72,7 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                           if (!historyState.isLoading &&
                               historyState.hasMore &&
                               scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent * 0.8) {
-                            ref.read(chatHistoryProvider(widget.conversation.id)).loadMore();
+                            ref.read(chatHistoryProvider(widget.conversation.channelId)).loadMore();
                           }
                           return false;
                         },
@@ -116,7 +116,7 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                 DmMessageComposer(
                   recipientName: _recipientHandle,
                   onSend: (text) {
-                    ref.read(chatHistoryProvider(widget.conversation.id)).sendMessage(text, media: List<XFile>.of(_pendingFiles));
+                    ref.read(chatHistoryProvider(widget.conversation.channelId)).sendMessage(text, media: List<XFile>.of(_pendingFiles));
                     setState(() {
                       _pendingFiles.clear();
                     });
@@ -163,9 +163,9 @@ class _DmChatHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final participantInitial = conversation.participantName.trim().isEmpty
+    final participantInitial = conversation.displayName.trim().isEmpty
         ? '?'
-        : conversation.participantName.trim()[0].toUpperCase();
+        : conversation.displayName.trim()[0].toUpperCase();
     
     return Container(
       height: 64,
@@ -179,10 +179,10 @@ class _DmChatHeader extends StatelessWidget {
           CircleAvatar(
             radius: 14,
             backgroundColor: const Color(0xFF6458F5),
-            backgroundImage: conversation.participantAvatarUrl != null
-                ? NetworkImage(conversation.participantAvatarUrl!)
+            backgroundImage: conversation.effectiveAvatarUrl != null
+                ? NetworkImage(conversation.effectiveAvatarUrl!)
                 : null,
-            child: conversation.participantAvatarUrl == null
+            child: conversation.effectiveAvatarUrl == null
                 ? Text(
                     participantInitial,
                     style: const TextStyle(
@@ -195,7 +195,7 @@ class _DmChatHeader extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Text(
-            conversation.participantName,
+            conversation.displayName,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -207,15 +207,15 @@ class _DmChatHeader extends StatelessWidget {
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => BuzzPreparationView(
-                  remoteUserName: conversation.participantName,
+                  remoteUserName: conversation.displayName,
                   onCancel: () => Navigator.of(context).pop(),
                   onJoin: () {
                     Navigator.of(context).pushReplacement(MaterialPageRoute(
                       builder: (_) => BuzzMeetingView(
-                        channelName: conversation.id,
+                        channelName: conversation.channelId,
                         token: '',
                         localUid: 0,
-                        remoteUserName: conversation.participantName,
+                        remoteUserName: conversation.displayName,
                       ),
                     ));
                   },

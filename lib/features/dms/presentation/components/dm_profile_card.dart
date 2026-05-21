@@ -10,6 +10,11 @@ class DmProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final name = conversation.displayName;
+    final nameParts = name.trim().split(RegExp(r'\s+'));
+    final handle = nameParts.length > 1
+        ? '@${nameParts.first}_${nameParts.last}'
+        : '@${nameParts.first}';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(40, 40, 40, 0),
@@ -20,12 +25,12 @@ class DmProfileCard extends StatelessWidget {
           CircleAvatar(
             radius: 36,
             backgroundColor: const Color(0xFF6458F5),
-            backgroundImage: conversation.participantAvatarUrl != null
-                ? NetworkImage(conversation.participantAvatarUrl!)
+            backgroundImage: conversation.effectiveAvatarUrl != null
+                ? NetworkImage(conversation.effectiveAvatarUrl!)
                 : null,
-            child: conversation.participantAvatarUrl == null
+            child: conversation.effectiveAvatarUrl == null
                 ? Text(
-                    conversation.participantName[0].toUpperCase(),
+                    name.isNotEmpty ? name[0].toUpperCase() : '?',
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -37,7 +42,7 @@ class DmProfileCard extends StatelessWidget {
           const SizedBox(height: 12),
           // Name
           Text(
-            conversation.participantName,
+            name,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -54,7 +59,7 @@ class DmProfileCard extends StatelessWidget {
                   text: 'This conversation is just between you and ',
                 ),
                 TextSpan(
-                  text: '@${conversation.participantName.split(' ').first}_${conversation.participantName.split(' ').last}',
+                  text: handle,
                   style: const TextStyle(
                     color: Color(0xFF6458F5),
                     fontWeight: FontWeight.w500,

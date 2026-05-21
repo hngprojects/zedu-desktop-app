@@ -9,7 +9,7 @@ class DmSidebarList extends ConsumerWidget {
     final colors = context.colors;
 
     return Container(
-      width: 260,
+      width: 320,
       color: colors.sidebar,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,12 +71,26 @@ class DmSidebarList extends ConsumerWidget {
                     ),
                   );
                 }
-                return ListView.builder(
-                  padding: EdgeInsets.zero,
-                  itemCount: conversations.length,
-                  itemBuilder: (context, index) {
-                    return DmListTile(conversation: conversations[index]);
+                return NotificationListener<ScrollNotification>(
+                  onNotification: (scrollInfo) {
+                    if (scrollInfo is ScrollEndNotification &&
+                        scrollInfo.metrics.pixels >=
+                            scrollInfo.metrics.maxScrollExtent * 0.85) {
+                      // Trigger next page load when near the bottom.
+                      final notifier = ref.read(dmListProvider.notifier);
+                      if (notifier.hasMore) {
+                        notifier.loadMore();
+                      }
+                    }
+                    return false;
                   },
+                  child: ListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: conversations.length,
+                    itemBuilder: (context, index) {
+                      return DmListTile(conversation: conversations[index]);
+                    },
+                  ),
                 );
               },
             ),

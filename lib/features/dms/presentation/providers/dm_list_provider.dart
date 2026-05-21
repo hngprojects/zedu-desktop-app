@@ -1,6 +1,17 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
+/// Provides the current organisation ID from the selected workspace.
+///
+/// All DM queries are scoped to this org ID. When the user switches
+/// workspaces the provider automatically emits a new value, which in
+/// turn causes [dmListProvider] to re-fetch.
+final currentOrgIdProvider = Provider<String>((ref) {
+  final workspace = ref.watch(workspaceProvider).selectedWorkspace;
+  // The Workspace.id is the organisation UUID coming from the backend.
+  return workspace?.id ?? '';
+});
+
 final dmListProvider =
     AsyncNotifierProvider<DmListNotifier, List<DmConversation>>(() {
   return DmListNotifier();
@@ -27,14 +38,21 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
 
   @override
   Future<List<DmConversation>> build() async {
+    // Watch the org ID so that switching workspaces triggers a full re-fetch.
+    final orgId = ref.watch(currentOrgIdProvider);
+    if (orgId.isEmpty) return const [];
+
     _currentPage = 1;
     _hasMore = true;
-    return _fetchPage(1);
+    return _fetchPage(orgId, 1);
   }
 
-  Future<List<DmConversation>> _fetchPage(int page) async {
+  Future<List<DmConversation>> _fetchPage(String orgId, int page) async {
     final repository = ref.read(dmRepositoryProvider);
-    final results = await repository.getConversations(page: page);
+    final results = await repository.getConversations(
+      orgId: orgId,
+      page: page,
+    );
     if (results.length < DmRepository.pageSize) {
       _hasMore = false;
     }
@@ -43,16 +61,22 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
 
   Future<void> loadMore() async {
     if (!_hasMore) return;
+    final orgId = ref.read(currentOrgIdProvider);
+    if (orgId.isEmpty) return;
+
     final current = state.value ?? [];
     _currentPage++;
-    final next = await _fetchPage(_currentPage);
+    final next = await _fetchPage(orgId, _currentPage);
     state = AsyncValue.data([...current, ...next]);
   }
 
   Future<void> refresh() async {
+    final orgId = ref.read(currentOrgIdProvider);
+    if (orgId.isEmpty) return;
+
     _currentPage = 1;
     _hasMore = true;
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _fetchPage(1));
+    state = await AsyncValue.guard(() => _fetchPage(orgId, 1));
   }
 }
