@@ -6,7 +6,7 @@ final buzzRepositoryProvider = Provider<BuzzRepository>((ref) {
 
 class BuzzRepository {
   Future<Map<String, dynamic>> initiateDirectCall(String participantId) async {
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future<void>.delayed(const Duration(milliseconds: 600));
     return {
       'success': true,
       'buzzId': 'mock-buzz-id-${DateTime.now().millisecondsSinceEpoch}',
@@ -17,13 +17,13 @@ class BuzzRepository {
 
   /// POST /buzz/invitation/respond
   Future<bool> respondToInvitation(String buzzId, bool accept) async {
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future<void>.delayed(const Duration(milliseconds: 500));
     return true;
   }
 
   /// POST /buzz/{buzzId}/respond
   Future<bool> respondToDirectCall(String buzzId, bool accept) async {
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future<void>.delayed(const Duration(milliseconds: 500));
     return true;
   }
 }

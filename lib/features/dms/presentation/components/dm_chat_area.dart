@@ -52,15 +52,24 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                 Expanded(
                   child: Consumer(
                     builder: (context, ref, child) {
-                      final historyState = ref.watch(chatHistoryProvider(widget.conversation.channelId));
+                      final historyState = ref.watch(
+                        chatHistoryProvider(widget.conversation.channelId),
+                      );
                       final messages = historyState.messages;
 
                       return NotificationListener<ScrollNotification>(
                         onNotification: (ScrollNotification scrollInfo) {
                           if (!historyState.isLoading &&
                               historyState.hasMore &&
-                              scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent * 0.8) {
-                            ref.read(chatHistoryProvider(widget.conversation.channelId)).loadMore();
+                              scrollInfo.metrics.pixels >=
+                                  scrollInfo.metrics.maxScrollExtent * 0.8) {
+                            ref
+                                .read(
+                                  chatHistoryProvider(
+                                    widget.conversation.channelId,
+                                  ),
+                                )
+                                .loadMore();
                           }
                           return false;
                         },
@@ -68,31 +77,38 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                           reverse: true,
                           slivers: [
                             SliverPadding(
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 16,
+                              ),
                               sliver: SliverList(
-                                delegate: SliverChildBuilderDelegate(
-                                  (context, index) {
-                                    final msg = messages[index];
-                                    return _MessageBubble(
-                                      message: msg,
-                                      conversation: widget.conversation,
-                                      channelId: widget.conversation.channelId,
-                                    );
-                                  },
-                                  childCount: messages.length,
-                                ),
+                                delegate: SliverChildBuilderDelegate((
+                                  context,
+                                  index,
+                                ) {
+                                  final msg = messages[index];
+                                  return _MessageBubble(
+                                    message: msg,
+                                    conversation: widget.conversation,
+                                    channelId: widget.conversation.channelId,
+                                  );
+                                }, childCount: messages.length),
                               ),
                             ),
                             if (historyState.isLoading)
                               const SliverToBoxAdapter(
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(vertical: 16),
-                                  child: Center(child: CircularProgressIndicator()),
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
                                 ),
                               ),
                             if (!historyState.hasMore)
                               SliverToBoxAdapter(
-                                child: DmProfileCard(conversation: widget.conversation),
+                                child: DmProfileCard(
+                                  conversation: widget.conversation,
+                                ),
                               ),
                           ],
                         ),
@@ -108,15 +124,14 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                 ),
               ],
             ),
-            
+
             // FULL PAGE MODE INJECTION
             Consumer(
               builder: (context, ref, child) {
                 final activeCall = ref.watch(activeCallProvider);
-                if (activeCall.state.status == CallStatus.active && activeCall.state.isFullPage) {
-                  return const Positioned.fill(
-                    child: BuzzMeetingView(),
-                  );
+                if (activeCall.state.status == CallStatus.active &&
+                    activeCall.state.isFullPage) {
+                  return const Positioned.fill(child: BuzzMeetingView());
                 }
                 return const SizedBox.shrink();
               },
@@ -126,7 +141,8 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
             Consumer(
               builder: (context, ref, child) {
                 final activeCall = ref.watch(activeCallProvider);
-                if (activeCall.state.status == CallStatus.active && !activeCall.state.isFullPage) {
+                if (activeCall.state.status == CallStatus.active &&
+                    !activeCall.state.isFullPage) {
                   return const BuzzMeetingView();
                 }
                 return const SizedBox.shrink();
@@ -174,11 +190,19 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                                 children: [
                                   Text(
                                     'Calling...',
-                                    style: TextStyle(color: colors.textHint, fontSize: 12),
+                                    style: TextStyle(
+                                      color: colors.textHint,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                   Text(
-                                    activeCall.state.remoteUserName ?? 'Unknown',
-                                    style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.bold, fontSize: 16),
+                                    activeCall.state.remoteUserName ??
+                                        'Unknown',
+                                    style: TextStyle(
+                                      color: colors.textPrimary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -187,7 +211,9 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                               icon: const Icon(Icons.call_end),
                               color: Colors.red,
                               onPressed: () {
-                                ref.read(activeCallProvider.notifier).cancelCall();
+                                ref
+                                    .read(activeCallProvider.notifier)
+                                    .cancelCall();
                               },
                             ),
                           ],
@@ -206,7 +232,10 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                   color: colors.primary.withValues(alpha: 0.2),
                   child: Center(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: colors.primary,
                         borderRadius: BorderRadius.circular(8),
@@ -229,7 +258,6 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
     );
   }
 }
-
 
 class _DmChatHeader extends StatelessWidget {
   final DmConversation conversation;
@@ -285,17 +313,23 @@ class _DmChatHeader extends StatelessWidget {
                 tooltip: 'Test Notification (Delayed 5s)',
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Notification will fire in 5 seconds. Minimize the app now!')),
+                    const SnackBar(
+                      content: Text(
+                        'Notification will fire in 5 seconds. Minimize the app now!',
+                      ),
+                    ),
                   );
                   Future.delayed(const Duration(seconds: 5), () {
-                    ref.read(notificationServiceProvider).handleIncomingMessage(
-                      {
-                        'user_id': conversation.participantId,
-                        'content': 'Hello! This is a test DM notification.',
-                      },
-                      conversation.channelId,
-                      conversation.displayName,
-                    );
+                    ref
+                        .read(notificationServiceProvider)
+                        .handleIncomingMessage(
+                          {
+                            'user_id': conversation.participantId,
+                            'content': 'Hello! This is a test DM notification.',
+                          },
+                          conversation.channelId,
+                          conversation.displayName,
+                        );
                   });
                 },
               );
@@ -306,37 +340,46 @@ class _DmChatHeader extends StatelessWidget {
             builder: (context, ref, child) {
               return InkWell(
                 onTap: () {
-                  ref.read(activeCallProvider.notifier).initiateCall(
-                    remoteUserId: conversation.participantId,
-                    remoteUserName: conversation.displayName,
-                    channelId: conversation.channelId,
-                    remoteAvatarUrl: conversation.effectiveAvatarUrl,
-                  );
+                  ref
+                      .read(activeCallProvider.notifier)
+                      .initiateCall(
+                        remoteUserId: conversation.participantId,
+                        remoteUserName: conversation.displayName,
+                        channelId: conversation.channelId,
+                        remoteAvatarUrl: conversation.effectiveAvatarUrl,
+                      );
                 },
                 borderRadius: BorderRadius.circular(8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                border: Border.all(color: colors.divider),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.videocam_outlined, size: 18, color: colors.textPrimary),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Start Buzz',
-                    style: TextStyle(
-                      color: colors.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
                   ),
-                ],
-              ),
-              ),
-            );
+                  decoration: BoxDecoration(
+                    border: Border.all(color: colors.divider),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.videocam_outlined,
+                        size: 18,
+                        color: colors.textPrimary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Start Buzz',
+                        style: TextStyle(
+                          color: colors.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
             },
           ),
           const SizedBox(width: 12),
@@ -346,7 +389,6 @@ class _DmChatHeader extends StatelessWidget {
     );
   }
 }
-
 
 class _MessageBubble extends ConsumerWidget {
   final Map<String, dynamic> message;
@@ -368,36 +410,64 @@ class _MessageBubble extends ConsumerWidget {
     final codeRegex = RegExp(r'`(.*?)`', dotAll: true);
 
     final allPatterns = [boldRegex, italicRegex, strikeRegex, codeRegex];
-    final combined = RegExp(allPatterns.map((r) => r.pattern).join('|'), dotAll: true);
+    final combined = RegExp(
+      allPatterns.map((r) => r.pattern).join('|'),
+      dotAll: true,
+    );
 
     final spans = <TextSpan>[];
     int lastEnd = 0;
 
     for (final match in combined.allMatches(text)) {
       if (match.start > lastEnd) {
-        spans.add(TextSpan(text: text.substring(lastEnd, match.start), style: defaultStyle));
+        spans.add(
+          TextSpan(
+            text: text.substring(lastEnd, match.start),
+            style: defaultStyle,
+          ),
+        );
       }
 
       final raw = match.group(0)!;
       if (boldRegex.hasMatch(raw)) {
-        final inner = match.group(1) ?? boldRegex.firstMatch(raw)?.group(1) ?? raw;
-        spans.add(TextSpan(text: inner, style: defaultStyle.copyWith(fontWeight: FontWeight.bold)));
+        final inner =
+            match.group(1) ?? boldRegex.firstMatch(raw)?.group(1) ?? raw;
+        spans.add(
+          TextSpan(
+            text: inner,
+            style: defaultStyle.copyWith(fontWeight: FontWeight.bold),
+          ),
+        );
       } else if (strikeRegex.hasMatch(raw)) {
         final inner = strikeRegex.firstMatch(raw)?.group(1) ?? raw;
-        spans.add(TextSpan(text: inner, style: defaultStyle.copyWith(decoration: TextDecoration.lineThrough)));
+        spans.add(
+          TextSpan(
+            text: inner,
+            style: defaultStyle.copyWith(
+              decoration: TextDecoration.lineThrough,
+            ),
+          ),
+        );
       } else if (codeRegex.hasMatch(raw)) {
         final inner = codeRegex.firstMatch(raw)?.group(1) ?? raw;
-        spans.add(TextSpan(
-          text: inner,
-          style: defaultStyle.copyWith(
-            fontFamily: 'monospace',
-            backgroundColor: const Color(0x1A6458F5),
-            color: const Color(0xFF6458F5),
+        spans.add(
+          TextSpan(
+            text: inner,
+            style: defaultStyle.copyWith(
+              fontFamily: 'monospace',
+              backgroundColor: const Color(0x1A6458F5),
+              color: const Color(0xFF6458F5),
+            ),
           ),
-        ));
+        );
       } else if (italicRegex.hasMatch(raw)) {
         final inner = italicRegex.firstMatch(raw)?.group(1) ?? raw;
-        spans.add(TextSpan(text: inner, style: defaultStyle.copyWith(fontStyle: FontStyle.italic)));
+        spans.add(
+          TextSpan(
+            text: inner,
+            style: defaultStyle.copyWith(fontStyle: FontStyle.italic),
+          ),
+        );
       } else {
         spans.add(TextSpan(text: raw, style: defaultStyle));
       }
@@ -423,7 +493,9 @@ class _MessageBubble extends ConsumerWidget {
     final status = message['status'] as String?;
     final messageId = message['id'] as String? ?? '';
 
-    final hour = createdAt.hour > 12 ? createdAt.hour - 12 : (createdAt.hour == 0 ? 12 : createdAt.hour);
+    final hour = createdAt.hour > 12
+        ? createdAt.hour - 12
+        : (createdAt.hour == 0 ? 12 : createdAt.hour);
     final minute = createdAt.minute.toString().padLeft(2, '0');
     final period = createdAt.hour >= 12 ? 'PM' : 'AM';
     final timeString = '$hour:$minute $period';
@@ -446,13 +518,16 @@ class _MessageBubble extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: [
           if (!isMe) ...[
             CircleAvatar(
               radius: 16,
               backgroundColor: const Color(0xFF6458F5),
-              backgroundImage: senderAvatarUrl != null && senderAvatarUrl.isNotEmpty
+              backgroundImage:
+                  senderAvatarUrl != null && senderAvatarUrl.isNotEmpty
                   ? NetworkImage(senderAvatarUrl)
                   : null,
               child: senderAvatarUrl == null || senderAvatarUrl.isEmpty
@@ -470,7 +545,9 @@ class _MessageBubble extends ConsumerWidget {
           ],
           Flexible(
             child: Column(
-              crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isMe
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
@@ -488,19 +565,21 @@ class _MessageBubble extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Text(
                         timeString,
-                        style: TextStyle(
-                          color: colors.textHint,
-                          fontSize: 11,
-                        ),
+                        style: TextStyle(color: colors.textHint, fontSize: 11),
                       ),
                     ],
                   ),
                 ),
                 if (content.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
-                      color: isMe ? const Color(0xFF6458F5) : colors.onPrimary.withValues(alpha: 0.05),
+                      color: isMe
+                          ? const Color(0xFF6458F5)
+                          : colors.onPrimary.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: RichText(
@@ -524,12 +603,18 @@ class _MessageBubble extends ConsumerWidget {
                     child: status == 'failed'
                         ? GestureDetector(
                             onTap: () {
-                              ref.read(chatHistoryProvider(channelId)).retryMessage(messageId);
+                              ref
+                                  .read(chatHistoryProvider(channelId))
+                                  .retryMessage(messageId);
                             },
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.error_outline, size: 13, color: colors.error),
+                                Icon(
+                                  Icons.error_outline,
+                                  size: 13,
+                                  color: colors.error,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   'Failed – Tap to retry',
@@ -572,7 +657,12 @@ class _AttachmentBubbleList extends StatelessWidget {
     }
   }
 
-  Widget _buildGenericFile(String fileName, String fileLink, bool isImage, BuildContext context) {
+  Widget _buildGenericFile(
+    String fileName,
+    String fileLink,
+    bool isImage,
+    BuildContext context,
+  ) {
     final colors = context.colors;
     return GestureDetector(
       onTap: fileLink.isNotEmpty ? () => _launchUrl(fileLink) : null,
@@ -580,9 +670,15 @@ class _AttachmentBubbleList extends StatelessWidget {
         width: 120,
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isMe ? colors.primary.withValues(alpha: 0.15) : colors.onPrimary.withValues(alpha: 0.1),
+          color: isMe
+              ? colors.primary.withValues(alpha: 0.15)
+              : colors.onPrimary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: isMe ? colors.primary.withValues(alpha: 0.3) : colors.divider),
+          border: Border.all(
+            color: isMe
+                ? colors.primary.withValues(alpha: 0.3)
+                : colors.divider,
+          ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -620,13 +716,16 @@ class _AttachmentBubbleList extends StatelessWidget {
       children: media.map((item) {
         final String fileName = (item['file_name'] ?? 'Attachment').toString();
         final String fileLink = (item['file_link'] ?? '').toString();
-        final isImage = ['png', 'jpg', 'jpeg', 'gif', 'webp'].contains((item['file_type'] ?? '').toString().toLowerCase());
+        final isImage = [
+          'png',
+          'jpg',
+          'jpeg',
+          'gif',
+          'webp',
+        ].contains((item['file_type'] ?? '').toString().toLowerCase());
 
         if (isImage && fileLink.isNotEmpty) {
           final isNetwork = fileLink.startsWith('http');
-          Widget imageWidget = isNetwork
-              ? Image.network(fileLink, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildGenericFile(fileName, fileLink, isImage, context))
-              : Image.asset(fileLink, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildGenericFile(fileName, fileLink, isImage, context)); // Use asset/file depending on your local storage setup, assuming network mostly
 
           return GestureDetector(
             onTap: () => _launchUrl(fileLink),
@@ -639,7 +738,29 @@ class _AttachmentBubbleList extends StatelessWidget {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: isNetwork ? Image.network(fileLink, fit: BoxFit.cover) : _buildGenericFile(fileName, fileLink, isImage, context),
+                child: isNetwork
+                    ? Image.network(
+                        fileLink,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildGenericFile(
+                              fileName,
+                              fileLink,
+                              isImage,
+                              context,
+                            ),
+                      )
+                    : Image.asset(
+                        fileLink,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildGenericFile(
+                              fileName,
+                              fileLink,
+                              isImage,
+                              context,
+                            ),
+                      ),
               ),
             ),
           );
