@@ -6,7 +6,8 @@ class AppConfig {
     required this.usesMockData,
     // Web Client ID: '764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com'
     // Desktop Client ID:
-    this.googleClientId = '764182056638-qtmk2mattvq035th78hjgpe5docu0oh1.apps.googleusercontent.com',
+    this.googleClientId =
+        '764182056638-qtmk2mattvq035th78hjgpe5docu0oh1.apps.googleusercontent.com',
     this.googleClientSecret = '',
   });
 
@@ -44,8 +45,7 @@ class AppConfig {
         ? envClientId!
         // Web Client ID: '764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com'
         // Desktop Client ID:
-        : '764182056638-qtmk2mattvq035th78hjgpe5docu0oh1.apps.googleusercontent.com'
-        ;
+        : '764182056638-08g88e196e643mhpa2tuv5dpr7iumd1j.apps.googleusercontent.com';
 
     final googleClientSecret = defineClientSecret.isNotEmpty
         ? defineClientSecret
