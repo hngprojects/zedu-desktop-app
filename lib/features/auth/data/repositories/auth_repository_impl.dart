@@ -58,6 +58,25 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Result<void>> sendMagicLink({required String email}) async {
+    try {
+      await _remote.sendMagicLink(email: email);
+      AppLogger.i('Magic link request sent — $email', tag: _tag);
+      return const Success(null);
+    } on ApiFailure catch (failure) {
+      AppLogger.w('Magic link request failed — ${failure.message}', tag: _tag);
+      return Failure(failure);
+    } catch (error) {
+      AppLogger.e(
+        'Unexpected magic link request error',
+        tag: _tag,
+        error: error,
+      );
+      return Failure(ApiFailure.unknown(error));
+    }
+  }
+
+  @override
   Future<Result<void>> signUp({
     required String email,
     required String password,
@@ -73,6 +92,37 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Result<AuthSession>> verifyMagicLink({required String token}) async {
+    try {
+      final response = await _remote.verifyMagicLink(token: token);
+      AppLogger.i(
+        'Magic link verification successful — ${response.user.email}',
+        tag: _tag,
+      );
+      return Success(
+        AuthSession(
+          user: response.user.toEntity(),
+          accessToken: response.accessToken,
+          accessTokenExpiresIn: response.accessTokenExpiresIn,
+        ),
+      );
+    } on ApiFailure catch (failure) {
+      AppLogger.w(
+        'Magic link verification failed — ${failure.message}',
+        tag: _tag,
+      );
+      return Failure(failure);
+    } catch (error) {
+      AppLogger.e(
+        'Unexpected magic link verification error',
+        tag: _tag,
+        error: error,
+      );
+      return Failure(ApiFailure.unknown(error));
+    }
+  }
+
+  @override
   Future<Result<void>> forgotPassword({required String email}) async {
     try {
       await _remote.forgotPassword(email: email);
@@ -80,6 +130,36 @@ class AuthRepositoryImpl implements AuthRepository {
     } on ApiFailure catch (failure) {
       return Failure(failure);
     } catch (error) {
+      return Failure(ApiFailure.unknown(error));
+    }
+  }
+
+  @override
+  Future<Result<AuthSession>> signInWithGoogle({
+    required String grantCode,
+    String? redirectUri,
+  }) async {
+    try {
+      final response = await _remote.signInWithGoogle(
+        grantCode: grantCode,
+        redirectUri: redirectUri,
+      );
+      AppLogger.i(
+        'Google sign-in successful — ${response.user.email}',
+        tag: _tag,
+      );
+      return Success(
+        AuthSession(
+          user: response.user.toEntity(),
+          accessToken: response.accessToken,
+          accessTokenExpiresIn: response.accessTokenExpiresIn,
+        ),
+      );
+    } on ApiFailure catch (failure) {
+      AppLogger.w('Google sign-in failed — ${failure.message}', tag: _tag);
+      return Failure(failure);
+    } catch (error) {
+      AppLogger.e('Unexpected Google sign-in error', tag: _tag, error: error);
       return Failure(ApiFailure.unknown(error));
     }
   }
