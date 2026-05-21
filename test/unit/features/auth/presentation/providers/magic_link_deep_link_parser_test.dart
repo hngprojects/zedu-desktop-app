@@ -63,6 +63,24 @@ void main() {
       expect(token, 'abc123');
     });
 
+    test('accepts staging https auth login magic-link URL', () {
+      final uri = Uri.parse(
+        'https://zedu.chat/auth/login/magic-link?token=755095',
+      );
+
+      final token = MagicLinkDeepLinkParser.extractToken(uri);
+
+      expect(token, '755095');
+    });
+
+    test('accepts token as path segment after magic-link', () {
+      final uri = Uri.parse('https://zedu.chat/auth/login/magic-link/755095');
+
+      final token = MagicLinkDeepLinkParser.extractToken(uri);
+
+      expect(token, '755095');
+    });
+
     test('returns null for non-auth path', () {
       final uri = Uri.parse('zedu://other/magick-link?token=abc123');
 

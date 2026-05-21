@@ -31,6 +31,25 @@ class MagicLinkDeepLinkParser {
       }
     }
 
+    // Some links may encode the token directly after the magic-link segment.
+    const reservedNextSegments = {
+      'auth',
+      'login',
+      'magic-link',
+      'magick-link',
+      'verify',
+    };
+    for (var i = 0; i < segments.length; i++) {
+      final segment = segments[i].toLowerCase();
+      if (segment.contains('magic') && i + 1 < segments.length) {
+        final pathToken = segments[i + 1].trim();
+        if (pathToken.isNotEmpty &&
+            !reservedNextSegments.contains(pathToken.toLowerCase())) {
+          return pathToken;
+        }
+      }
+    }
+
     return null;
   }
 
@@ -63,14 +82,13 @@ class MagicLinkDeepLinkParser {
     }
 
     if (scheme == 'zedu' && (host == 'auth' || host.isEmpty)) {
-      // For custom scheme the host is usually 'auth', but some URI forms
-      // may omit an authority component while still carrying the path.
+    
       return anySegmentContainsMagic();
     }
 
     if (scheme == 'https' || scheme == 'http') {
-      // Accept wrapped viewers (e.g., temp-mail) where '/auth/..' may appear later in path
-      return segmentsContainAuthMagic();
+     
+      return host == 'auth' || segmentsContainAuthMagic();
     }
 
     return false;
