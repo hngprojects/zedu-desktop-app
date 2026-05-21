@@ -16,4 +16,10 @@ std::string Utf8FromUtf16(const wchar_t* utf16_string);
 // encoded in UTF-8. Returns an empty std::vector<std::string> on failure.
 std::vector<std::string> GetCommandLineArguments();
 
+// Registers a custom URI scheme handler for the current user on Windows.
+// This allows the app to open directly when a link like `zedu://...` is clicked.
+bool RegisterWindowsUriScheme(const std::wstring& scheme,
+                               const std::wstring& command,
+                               const std::wstring& description);
+
 #endif  // RUNNER_UTILS_H_

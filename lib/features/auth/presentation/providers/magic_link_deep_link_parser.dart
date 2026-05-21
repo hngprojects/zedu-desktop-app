@@ -62,8 +62,9 @@ class MagicLinkDeepLinkParser {
       return false;
     }
 
-    if (scheme == 'zedu' && host == 'auth') {
-      // For custom scheme the host is 'auth' and path contains the magic-link part
+    if (scheme == 'zedu' && (host == 'auth' || host.isEmpty)) {
+      // For custom scheme the host is usually 'auth', but some URI forms
+      // may omit an authority component while still carrying the path.
       return anySegmentContainsMagic();
     }
 
@@ -74,5 +75,4 @@ class MagicLinkDeepLinkParser {
 
     return false;
   }
-
 }

@@ -17,6 +17,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // plugins.
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
+  wchar_t executable_path[MAX_PATH];
+  if (::GetModuleFileNameW(nullptr, executable_path, MAX_PATH) > 0) {
+    const std::wstring command =
+        std::wstring(L"\"") + executable_path + L"\" \"%1\"";
+    RegisterWindowsUriScheme(L"zedu", command, L"URL:Zedu Protocol");
+  }
+
   flutter::DartProject project(L"data");
 
   std::vector<std::string> command_line_arguments =

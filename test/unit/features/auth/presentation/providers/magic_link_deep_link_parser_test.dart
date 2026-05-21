@@ -37,6 +37,22 @@ void main() {
       expect(token, 'abc123');
     });
 
+    test('accepts zedu magic-link path without verify segment', () {
+      final uri = Uri.parse('zedu://auth/magic-link?token=abc123');
+
+      final token = MagicLinkDeepLinkParser.extractToken(uri);
+
+      expect(token, 'abc123');
+    });
+
+    test('accepts zedu scheme without explicit host authority', () {
+      final uri = Uri.parse('zedu:auth/login/magic-link?token=abc123');
+
+      final token = MagicLinkDeepLinkParser.extractToken(uri);
+
+      expect(token, 'abc123');
+    });
+
     test('accepts temp-mail wrapped viewer path', () {
       final uri = Uri.parse(
         'https://temp-mail.org/en/view/auth/login/magic-link?token=abc123',

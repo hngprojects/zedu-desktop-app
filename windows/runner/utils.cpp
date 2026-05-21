@@ -63,3 +63,65 @@ std::string Utf8FromUtf16(const wchar_t* utf16_string) {
   }
   return utf8_string;
 }
+
+bool RegisterWindowsUriScheme(const std::wstring& scheme,
+                               const std::wstring& command,
+                               const std::wstring& description) {
+  const std::wstring key_path = L"Software\\Classes\\" + scheme;
+  HKEY key = nullptr;
+  if (::RegCreateKeyExW(
+          HKEY_CURRENT_USER,
+          key_path.c_str(),
+          0,
+          nullptr,
+          REG_OPTION_NON_VOLATILE,
+          KEY_WRITE,
+          nullptr,
+          &key,
+          nullptr) != ERROR_SUCCESS) {
+    return false;
+  }
+
+  const std::wstring default_value = description;
+  ::RegSetValueExW(
+      key,
+      nullptr,
+      0,
+      REG_SZ,
+      reinterpret_cast<const BYTE*>(default_value.c_str()),
+      static_cast<DWORD>((default_value.size() + 1) * sizeof(wchar_t)));
+
+  const std::wstring url_protocol = L"";
+  ::RegSetValueExW(
+      key,
+      L"URL Protocol",
+      0,
+      REG_SZ,
+      reinterpret_cast<const BYTE*>(url_protocol.c_str()),
+      static_cast<DWORD>(sizeof(wchar_t)));
+
+  const std::wstring command_key_path = key_path + L"\\shell\\open\\command";
+  HKEY command_key = nullptr;
+  if (::RegCreateKeyExW(
+          HKEY_CURRENT_USER,
+          command_key_path.c_str(),
+          0,
+          nullptr,
+          REG_OPTION_NON_VOLATILE,
+          KEY_WRITE,
+          nullptr,
+          &command_key,
+          nullptr) == ERROR_SUCCESS) {
+    ::RegSetValueExW(
+        command_key,
+        nullptr,
+        0,
+        REG_SZ,
+        reinterpret_cast<const BYTE*>(command.c_str()),
+        static_cast<DWORD>((command.size() + 1) * sizeof(wchar_t)));
+    ::RegCloseKey(command_key);
+  }
+
+  ::RegCloseKey(key);
+  return true;
+}
