@@ -76,7 +76,7 @@ class _CreateOrganizationPageState
     final state = ref.watch(createOrganizationControllerProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: context.colors.background,
       body: Center(
         child: SingleChildScrollView(
           child: ConstrainedBox(
