@@ -1,7 +1,15 @@
 import 'package:zedu/core/core.dart';
 
 class AppConfig {
-  const AppConfig({required this.apiBaseUrl, required this.usesMockData});
+  const AppConfig({
+    required this.apiBaseUrl,
+    required this.usesMockData,
+    // Web Client ID: '764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com'
+    // Desktop Client ID:
+    this.googleClientId =
+        '764182056638-qtmk2mattvq035th78hjgpe5docu0oh1.apps.googleusercontent.com',
+    this.googleClientSecret = '',
+  });
 
   /// Resolves config after [loadAppEnv] has run in [main] (root `.env` /
   /// `.env.example`, bundled as assets).
@@ -11,9 +19,13 @@ class AppConfig {
   factory AppConfig.fromEnvironment() {
     const defineBaseUrl = String.fromEnvironment('API_BASE_URL');
     const defineUsesMock = String.fromEnvironment('USE_MOCK_DATA');
+    const defineClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
+    const defineClientSecret = String.fromEnvironment('GOOGLE_CLIENT_SECRET');
 
     final envBaseUrl = dotenv.maybeGet('API_BASE_URL')?.trim();
     final envUsesMock = dotenv.maybeGet('USE_MOCK_DATA')?.trim();
+    final envClientId = dotenv.maybeGet('GOOGLE_CLIENT_ID')?.trim();
+    final envClientSecret = dotenv.maybeGet('GOOGLE_CLIENT_SECRET')?.trim();
 
     final apiBaseUrl = defineBaseUrl.isNotEmpty
         ? defineBaseUrl
@@ -27,11 +39,32 @@ class AppConfig {
         ? _parseBool(envUsesMock, defaultValue: false)
         : true; // Default to true so it doesn't hang forever without a backend
 
-    return AppConfig(apiBaseUrl: apiBaseUrl, usesMockData: usesMockData);
+    final googleClientId = defineClientId.isNotEmpty
+        ? defineClientId
+        : (envClientId?.isNotEmpty ?? false)
+        ? envClientId!
+        // Web Client ID: '764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com'
+        // Desktop Client ID:
+        : '764182056638-08g88e196e643mhpa2tuv5dpr7iumd1j.apps.googleusercontent.com';
+
+    final googleClientSecret = defineClientSecret.isNotEmpty
+        ? defineClientSecret
+        : (envClientSecret?.isNotEmpty ?? false)
+        ? envClientSecret!
+        : '';
+
+    return AppConfig(
+      apiBaseUrl: apiBaseUrl,
+      usesMockData: usesMockData,
+      googleClientId: googleClientId,
+      googleClientSecret: googleClientSecret,
+    );
   }
 
   final String apiBaseUrl;
   final bool usesMockData;
+  final String googleClientId;
+  final String googleClientSecret;
 }
 
 bool _parseBool(String raw, {required bool defaultValue}) {
