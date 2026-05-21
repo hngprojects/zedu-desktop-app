@@ -18,6 +18,8 @@ class HomeView extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
+                Image.asset('assets/pngs/zedu_logo.png', height: 24, width: 24),
+                const SizedBox(width: 8),
                 Text(
                   'Zedu',
                   style: TextStyle(
@@ -563,6 +565,12 @@ class _ChatArea extends StatelessWidget {
             Row(
               children: [
                 Icon(Icons.add, color: colors.textHint.withValues(alpha: 0.75)),
+                const SizedBox(width: 12),
+                Icon(
+                  Icons.font_download_outlined,
+                  color: colors.textHint.withValues(alpha: 0.75),
+                  size: 20,
+                ),
                 const SizedBox(width: 12),
                 Icon(
                   Icons.emoji_emotions_outlined,

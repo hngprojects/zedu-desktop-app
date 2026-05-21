@@ -86,17 +86,45 @@ class WorkspaceSwitcherList extends ConsumerWidget {
               ),
             ),
             Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                itemCount: 1,
-                itemBuilder: (context, index) {
-                  return _WorkspaceListItem(
-                    org: activeOrg,
-                    isActive: true,
-                    onTap: () => Navigator.pop(context),
+              child: ref.watch(userOrganizationsProvider).when(
+                data: (organizations) {
+                  if (organizations.isEmpty) return const SizedBox.shrink();
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    padding: EdgeInsets.zero,
+                    itemCount: organizations.length,
+                    itemBuilder: (context, index) {
+                      final org = organizations[index];
+                      final isActive = activeOrg.id == org.id;
+                      return _WorkspaceListItem(
+                        org: org,
+                        isActive: isActive,
+                        onTap: () async {
+                          try {
+                            await ref.read(activeOrganizationProvider.notifier).switchOrganization(org);
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Failed to switch workspace')),
+                              );
+                            }
+                          }
+                        },
+                      );
+                    },
                   );
                 },
+                loading: () => const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                error: (error, stack) => Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Center(child: Text('Failed to load workspaces', style: TextStyle(color: colors.error))),
+                ),
               ),
             ),
             Divider(height: 1, color: colors.divider),

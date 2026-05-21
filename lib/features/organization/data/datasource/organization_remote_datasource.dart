@@ -10,6 +10,9 @@ abstract interface class OrganizationRemoteDataSource {
     UpdateOrganizationRequest request,
   );
   Future<OrganizationModel> getOrganization(String orgId);
+  Future<void> deleteOrganization(String orgId);
+  Future<List<OrganizationModel>> getOrganizations();
+  Future<void> switchOrganization(String orgId);
 }
 
 class OrganizationRemoteDataSourceImpl implements OrganizationRemoteDataSource {
@@ -277,6 +280,81 @@ class OrganizationRemoteDataSourceImpl implements OrganizationRemoteDataSource {
       throw ApiFailure.fromParsingError(error, path: '/organisations/$orgId');
     }
   }
+
+  @override
+  Future<void> deleteOrganization(String orgId) async {
+    try {
+      if (_config.usesMockData) {
+        AppLogger.d('Using mock data for DELETE /organisations/$orgId', tag: _tag);
+        return;
+      }
+      AppLogger.d('DELETE /organisations/$orgId', tag: _tag);
+      await _apiBaseService.delete<Map<String, dynamic>>(
+        path: '/organisations/$orgId',
+      );
+    } on ApiFailure {
+      rethrow;
+    } catch (error) {
+      AppLogger.e(
+        'Failed to parse /organisations/$orgId delete response',
+        tag: _tag,
+        error: error,
+      );
+      throw ApiFailure.fromParsingError(error, path: '/organisations/$orgId');
+    }
+  }
+
+  @override
+  Future<List<OrganizationModel>> getOrganizations() async {
+    try {
+      if (_config.usesMockData) {
+        AppLogger.d('Using mock data for GET /users/organisations', tag: _tag);
+        return _mockOrganizations;
+      }
+      AppLogger.d('GET /users/organisations', tag: _tag);
+      final response = await _apiBaseService.get<Map<String, dynamic>>(
+        path: '/users/organisations',
+      );
+      final data = response.data['data'] as List<dynamic>;
+      return data
+          .cast<Map<String, dynamic>>()
+          .map(OrganizationModel.fromJson)
+          .toList();
+    } on ApiFailure {
+      rethrow;
+    } catch (error) {
+      AppLogger.e(
+        'Failed to parse /users/organisations response',
+        tag: _tag,
+        error: error,
+      );
+      throw ApiFailure.fromParsingError(error, path: '/users/organisations');
+    }
+  }
+
+  @override
+  Future<void> switchOrganization(String orgId) async {
+    try {
+      if (_config.usesMockData) {
+        AppLogger.d('Using mock data for POST /users/switch-org', tag: _tag);
+        return;
+      }
+      AppLogger.d('POST /users/switch-org — $orgId', tag: _tag);
+      await _apiBaseService.post<Map<String, dynamic>>(
+        path: '/users/switch-org',
+        data: {'current_org': orgId},
+      );
+    } on ApiFailure {
+      rethrow;
+    } catch (error) {
+      AppLogger.e(
+        'Failed to parse /users/switch-org response',
+        tag: _tag,
+        error: error,
+      );
+      throw ApiFailure.fromParsingError(error, path: '/users/switch-org');
+    }
+  }
   MediaType? _getMediaType(String filename) {
     final ext = filename.split('.').last.toLowerCase();
     if (ext == 'png') return MediaType('image', 'png');
@@ -306,3 +384,148 @@ class OrganizationRemoteDataSourceImpl implements OrganizationRemoteDataSource {
     return null;
   }
 }
+
+final _mockPlan = OrganizationPlanModel(
+  id: 'mock-plan-id',
+  organizationId: 'mock-id',
+  planId: 'mock-plan-id',
+  startedAt: DateTime.now(),
+  endedAt: DateTime.now().add(const Duration(days: 30)),
+  status: 'Active',
+  sessionId: 'mock-session-id',
+  invoicePdfUrl: 'mock-pdf-url',
+  createdAt: DateTime.now(),
+  updatedAt: DateTime.now(),
+  planDetails: OrganizationPlanDetailsModel(
+    id: 'mock-plan-details-id',
+    name: 'Zedu Free',
+    description: 'Mock Plan Description',
+    benefits: [],
+    fee: 0,
+    credits: 0,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+  ),
+);
+
+final List<OrganizationModel> _mockOrganizations = [
+  OrganizationModel(
+    id: 'org-hng',
+    name: 'HNG Workspace',
+    description: 'HNG Internship Workspace',
+    email: 'hello@hng.tech',
+    country: 'Nigeria',
+    industry: 'user default org',
+    location: 'Lagos',
+    ownerId: 'user-1',
+    logoUrl: '',
+    channelsCount: 15,
+    totalMessagesCount: 12050,
+    userRole: 'owner',
+    organizationPlan: _mockPlan,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+  ),
+  OrganizationModel(
+    id: 'org-tf',
+    name: 'TeamFlow Collective',
+    description: 'Workspace for TeamFlow',
+    email: 'team@teamflow.com',
+    country: 'USA',
+    industry: 'Software',
+    location: 'San Francisco',
+    ownerId: 'user-2',
+    logoUrl: '',
+    channelsCount: 5,
+    totalMessagesCount: 300,
+    userRole: 'member',
+    organizationPlan: _mockPlan,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+  ),
+  OrganizationModel(
+    id: 'org-cc',
+    name: 'Coffee & Code House',
+    description: 'Coffee lovers and coders',
+    email: 'coffee@code.com',
+    country: 'UK',
+    industry: 'Technology',
+    location: 'London',
+    ownerId: 'user-3',
+    logoUrl: '',
+    channelsCount: 2,
+    totalMessagesCount: 50,
+    userRole: 'member',
+    organizationPlan: _mockPlan,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+  ),
+  OrganizationModel(
+    id: 'org-ch',
+    name: 'ConnectHub',
+    description: 'ConnectHub main space',
+    email: 'info@connecthub.com',
+    country: 'Canada',
+    industry: 'Networking',
+    location: 'Toronto',
+    ownerId: 'user-4',
+    logoUrl: '',
+    channelsCount: 8,
+    totalMessagesCount: 1200,
+    userRole: 'admin',
+    organizationPlan: _mockPlan,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+  ),
+  OrganizationModel(
+    id: 'org-ad',
+    name: 'Apex Digital',
+    description: 'Apex Digital agency',
+    email: 'hello@apexdigital.com',
+    country: 'Australia',
+    industry: 'Marketing',
+    location: 'Sydney',
+    ownerId: 'user-5',
+    logoUrl: '',
+    channelsCount: 12,
+    totalMessagesCount: 5400,
+    userRole: 'member',
+    organizationPlan: _mockPlan,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+  ),
+  OrganizationModel(
+    id: 'org-lb',
+    name: 'LoopBase',
+    description: 'LoopBase engineering',
+    email: 'eng@loopbase.io',
+    country: 'Germany',
+    industry: 'Software',
+    location: 'Berlin',
+    ownerId: 'user-6',
+    logoUrl: '',
+    channelsCount: 4,
+    totalMessagesCount: 200,
+    userRole: 'member',
+    organizationPlan: _mockPlan,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+  ),
+  OrganizationModel(
+    id: 'org-cn',
+    name: 'CreativeNest',
+    description: 'Creative design agency',
+    email: 'design@creativenest.com',
+    country: 'Netherlands',
+    industry: 'Design',
+    location: 'Amsterdam',
+    ownerId: 'user-7',
+    logoUrl: '',
+    channelsCount: 6,
+    totalMessagesCount: 800,
+    userRole: 'member',
+    organizationPlan: _mockPlan,
+    createdAt: DateTime.now(),
+    updatedAt: DateTime.now(),
+  ),
+];

@@ -35,7 +35,18 @@ class UserProfileView extends ConsumerWidget {
 
     return ProfileSettingsShell(
       selectedSection: state.section,
-      onSectionSelected: notifier.selectSection,
+      onSectionSelected: (section) {
+        if (section == UserProfileSection.organization) {
+          final activeOrg = ref.read(activeOrganizationProvider);
+          if (activeOrg != null) {
+            context.go(AppRouter.organizationSettings(activeOrg.id));
+          } else {
+            notifier.selectSection(section);
+          }
+        } else {
+          notifier.selectSection(section);
+        }
+      },
       child: _ProfileContent(state: state, notifier: notifier),
     );
   }

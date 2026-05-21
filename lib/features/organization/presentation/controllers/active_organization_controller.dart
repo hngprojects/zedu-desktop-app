@@ -4,5 +4,17 @@ import 'package:zedu/features/features.dart';
 class ActiveOrganizationNotifier extends Notifier<Organization?> {
   @override
   Organization? build() => null;
+  
   set active(Organization? org) => state = org;
+
+  Future<void> switchOrganization(Organization org) async {
+    try {
+      final repository = ref.read(organizationRepositoryProvider);
+      await repository.switchOrganization(org.id);
+      state = org;
+    } catch (e) {
+      AppLogger.e('Failed to switch organization', error: e);
+      rethrow;
+    }
+  }
 }

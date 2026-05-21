@@ -23,4 +23,32 @@ class OrganizationRepositoryImpl implements OrganizationRepository {
   Future<Organization> getOrganization(String orgId) async {
     return _remoteDataSource.getOrganization(orgId);
   }
+
+  @override
+  Future<void> deleteOrganization(String orgId) async {
+    try {
+      await _remoteDataSource.deleteOrganization(orgId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<Organization>> getOrganizations() async {
+    try {
+      final models = await _remoteDataSource.getOrganizations();
+      return models.map((e) => e.toEntity()).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> switchOrganization(String orgId) async {
+    try {
+      await _remoteDataSource.switchOrganization(orgId);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

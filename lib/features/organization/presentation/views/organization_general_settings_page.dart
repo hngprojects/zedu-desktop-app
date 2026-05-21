@@ -14,6 +14,7 @@ class OrganizationGeneralSettingsPage extends ConsumerStatefulWidget {
 class _OrganizationGeneralSettingsPageState
     extends ConsumerState<OrganizationGeneralSettingsPage> {
   bool _isLoading = true;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -40,166 +41,205 @@ class _OrganizationGeneralSettingsPageState
     }
   }
 
-  void _openEditModal(Organization org) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => UpdateOrganizationModal(organization: org),
+  Future<void> _deleteOrganization(Organization org) async {
+    setState(() => _isSaving = true);
+    try {
+      final repository = ref.read(organizationRepositoryProvider);
+      await repository.deleteOrganization(org.id);
+
+      if (mounted) {
+        AppToastService.show(
+          context,
+          type: AppToastType.success,
+          message: 'Organization deleted successfully.',
+        );
+        context.go(AppRouter.home);
+      }
+    } catch (e) {
+      if (mounted) {
+        AppToastService.show(
+          context,
+          type: AppToastType.error,
+          message: 'Failed to delete organization: $e',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _confirmDelete(Organization org) async {
+    if (org.industry.toLowerCase().contains('default') ||
+        org.name.toLowerCase().contains('default')) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Cannot delete organization'),
+          content: const Text('You cannot delete the default organization.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    await showProfileConfirmDialog(
+      context,
+      title: 'Delete organization?',
+      message:
+          'This will remove the organization and its related workspace data.',
+      confirmLabel: 'Delete organization',
+      onConfirm: () => _deleteOrganization(org),
+      destructive: true,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final org = ref.watch(activeOrganizationProvider);
+    final notifier = ref.read(userProfileNotifierProvider.notifier);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: _isLoading
+    return ProfileSettingsShell(
+      selectedSection: UserProfileSection.organization,
+      onSectionSelected: (section) {
+        if (section == UserProfileSection.organization) return;
+        notifier.selectSection(section);
+        context.go(AppRouter.profile);
+      },
+      child: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 36),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Settings',
-                    style: context.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-
-                  Text(
-                    'Your Organisation Information',
-                    style: context.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: context.colors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Manage your account data with ease.',
-                    style: context.textTheme.bodySmall?.copyWith(
-                      color: context.colors.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  if (org != null) ...[
-                    Container(
-                      constraints: const BoxConstraints(maxWidth: 480),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: context.colors.borderOutline),
-                        borderRadius: BorderRadius.circular(8),
+              padding: const EdgeInsets.fromLTRB(28, 32, 40, 48),
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1000),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const ProfileSectionHeader(
+                        title: 'Your Organisation Information',
+                        subtitle: 'Manage your account data with ease.',
                       ),
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              OrganizationLogo(
-                                logoUrl: org.logoUrl,
-                                name: org.name,
-                                size: 72,
-                              ),
-
-                              const Spacer(),
-
-                              GestureDetector(
-                                onTap: () => _openEditModal(org),
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: context.colors.borderOutline,
+                      const SizedBox(height: 28),
+                      if (org != null) ...[
+                        ProfileCard(
+                          padding: const EdgeInsets.all(24),
+                          child: SizedBox(
+                            width: 480,
+                            child: Stack(
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _OrganizationAvatar(
+                                      initials: _getInitials(org.name),
                                     ),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Icon(
-                                    Icons.edit_outlined,
-                                    size: 18,
-                                    color: context.colors.textSecondary,
+                                    const SizedBox(height: 24),
+                                    const ProfileFieldLabel('Name'),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      org.name,
+                                      style: context.textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 18),
+                                    const ProfileFieldLabel('Nature of Business'),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      org.industry,
+                                      style: context.textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 18),
+                                    const ProfileFieldLabel('Country'),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      org.country,
+                                      style: context.textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: SquareIconButton(
+                                    icon: Icons.edit_outlined,
+                                    onTap: () {
+                                      showDialog<void>(
+                                        context: context,
+                                        builder: (_) => UpdateOrganizationModal(
+                                            organization: org),
+                                      );
+                                    },
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-
-                          _InfoRow(label: 'Name', value: org.name),
-                          const SizedBox(height: 12),
-
-                          _InfoRow(
-                            label: 'Nature of Business',
-                            value: org.industry,
-                          ),
-                          const SizedBox(height: 12),
-
-                          _InfoRow(label: 'Country', value: org.country),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    OutlinedButton(
-                      onPressed: () {
-                        // TODO: wire up delete organisation logic
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: context.colors.error,
-                        side: BorderSide(color: context.colors.error),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.fieldRadius,
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      child: const Text('Delete this organisation'),
-                    ),
-                  ],
-                ],
+                        const SizedBox(height: 48),
+                        AppButton.outlined(
+                          label: 'Delete this organisation',
+                          expand: false,
+                          height: 44,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: context.colors.error,
+                            side: BorderSide(color: context.colors.error),
+                            padding: const EdgeInsets.symmetric(horizontal: 18),
+                          ),
+                          loading: _isSaving,
+                          onPressed: () => _confirmDelete(org),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ),
     );
   }
 
+  String _getInitials(String name) {
+    final words = name.trim().split(RegExp(r'\s+'));
+    if (words.isEmpty || words.first.isEmpty) return 'ZO';
+    if (words.length == 1) return words.first.substring(0, 1).toUpperCase();
+    return '${words.first[0]}${words.last[0]}'.toUpperCase();
+  }
 }
 
+class _OrganizationAvatar extends StatelessWidget {
+  const _OrganizationAvatar({required this.initials});
 
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
+  final String initials;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: context.textTheme.bodySmall?.copyWith(
-            color: context.colors.primary,
-            fontWeight: FontWeight.w500,
+    return Container(
+      width: 120,
+      height: 120,
+      decoration: BoxDecoration(
+        color: context.colors.divider,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Center(
+        child: Text(
+          initials,
+          style: TextStyle(
+            fontSize: 40,
+            fontWeight: FontWeight.w600,
+            color: context.colors.sidebar,
           ),
         ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: context.textTheme.bodyMedium?.copyWith(
-            color: context.colors.textPrimary,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
