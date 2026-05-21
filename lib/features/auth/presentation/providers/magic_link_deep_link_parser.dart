@@ -75,9 +75,4 @@ class MagicLinkDeepLinkParser {
     return false;
   }
 
-  static String _normalizePath(String path) {
-    final trimmed = path.trim();
-    if (trimmed.isEmpty) return '/';
-    return trimmed.startsWith('/') ? trimmed : '/$trimmed';
-  }
 }
