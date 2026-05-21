@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
@@ -122,9 +120,7 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
     final newText = text.substring(0, atIndex) + replacement + after;
     _controller.value = TextEditingValue(
       text: newText,
-      selection: TextSelection.collapsed(
-        offset: atIndex + replacement.length,
-      ),
+      selection: TextSelection.collapsed(offset: atIndex + replacement.length),
     );
     setState(() => _mentionSuggestions = []);
     _focusNode.requestFocus();
@@ -207,7 +203,7 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
         (HardwareKeyboard.instance.isControlPressed ||
             HardwareKeyboard.instance.isMetaPressed)) {
       _handlePaste();
-     return KeyEventResult.ignored;
+      return KeyEventResult.ignored;
     }
 
     return KeyEventResult.ignored;
@@ -300,7 +296,7 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
         }
         validFiles.add(file);
       } catch (e) {
-        validFiles.add(file); 
+        validFiles.add(file);
       }
     }
     setState(() {
@@ -316,19 +312,24 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
     if (result == null) return;
     final picked = result.files
         .where((PlatformFile f) => f.path != null)
-        .map((PlatformFile f) => XFile(f.path!, name: f.name, mimeType: f.extension))
+        .map(
+          (PlatformFile f) =>
+              XFile(f.path!, name: f.name, mimeType: f.extension),
+        )
         .toList();
     await addFiles(picked);
   }
 
   void _removeFile(int index) {
-    setState(() => _pendingFiles = List<XFile>.of(_pendingFiles)..removeAt(index));
+    setState(
+      () => _pendingFiles = List<XFile>.of(_pendingFiles)..removeAt(index),
+    );
   }
 
   Future<void> _handlePaste() async {
     final reader = await SystemClipboard.instance?.read();
     if (reader == null || !reader.canProvide(Formats.png)) return;
-    
+
     reader.getFile(Formats.png, (file) async {
       final stream = file.getStream();
       final bytesBuilder = <int>[];
@@ -337,7 +338,13 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
       }
       final bytes = Uint8List.fromList(bytesBuilder);
       if (bytes.isNotEmpty) {
-        addFiles([XFile.fromData(bytes, mimeType: 'image/png', name: 'Pasted Image.png')]);
+        addFiles([
+          XFile.fromData(
+            bytes,
+            mimeType: 'image/png',
+            name: 'Pasted Image.png',
+          ),
+        ]);
       }
     });
   }
@@ -483,8 +490,7 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
                           fontSize: 14,
                         ),
                         border: InputBorder.none,
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 8),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
                       ),
                       style: TextStyle(
                         color: colors.textPrimary,
@@ -520,12 +526,14 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
                         onTap: () {
                           final text = _controller.text;
                           final sel = _controller.selection;
-                          final pos = sel.isValid ? sel.baseOffset : text.length;
-                          final newText = '${text.substring(0, pos)}@${text.substring(pos)}';
+                          final pos = sel.isValid
+                              ? sel.baseOffset
+                              : text.length;
+                          final newText =
+                              '${text.substring(0, pos)}@${text.substring(pos)}';
                           _controller.value = TextEditingValue(
                             text: newText,
-                            selection:
-                                TextSelection.collapsed(offset: pos + 1),
+                            selection: TextSelection.collapsed(offset: pos + 1),
                           );
                           _focusNode.requestFocus();
                         },
@@ -573,7 +581,10 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
                 color: colors.primary.withValues(alpha: 0.1),
                 child: Center(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: colors.primary,
                       borderRadius: BorderRadius.circular(8),
@@ -595,5 +606,3 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
     );
   }
 }
-
-

@@ -1,5 +1,4 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/features.dart';
 
 final buzzEngineProvider = Provider<BuzzEngineService>((ref) {
   return BuzzEngineService();
@@ -12,10 +11,12 @@ class BuzzEngineService {
   Future<void> initEngine(String appId) async {
     if (_isEngineInit) return;
     _engine = createAgoraRtcEngine();
-    await _engine.initialize(RtcEngineContext(
-      appId: appId,
-      channelProfile: ChannelProfileType.channelProfileCommunication,
-    ));
+    await _engine.initialize(
+      RtcEngineContext(
+        appId: appId,
+        channelProfile: ChannelProfileType.channelProfileCommunication,
+      ),
+    );
     _isEngineInit = true;
   }
 

@@ -1,5 +1,4 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/features.dart';
 
 class BuzzPreparationView extends StatelessWidget {
   final String remoteUserName;
@@ -31,10 +30,7 @@ class BuzzPreparationView extends StatelessWidget {
             const SizedBox(height: 32),
             Text(
               'Preparing your buzz with',
-              style: TextStyle(
-                color: colors.textHint,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: colors.textHint, fontSize: 16),
             ),
             const SizedBox(height: 8),
             Text(
@@ -52,7 +48,10 @@ class BuzzPreparationView extends StatelessWidget {
                 OutlinedButton(
                   onPressed: onCancel,
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 16,
+                    ),
                     side: BorderSide(color: colors.divider),
                   ),
                   child: Text(
@@ -65,7 +64,10 @@ class BuzzPreparationView extends StatelessWidget {
                   onPressed: onJoin,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6458F5),
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 16,
+                    ),
                   ),
                   child: const Text(
                     'Join Call',
