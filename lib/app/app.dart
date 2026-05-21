@@ -5,11 +5,13 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      title: 'Zedu',
-      theme: AppTheme.light,
-      routerConfig: AppRouter.router,
+    return DesktopManager(
+      child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
+        title: 'Zedu',
+        theme: AppTheme.light,
+        routerConfig: AppRouter.router,
+      ),
     );
   }
 }

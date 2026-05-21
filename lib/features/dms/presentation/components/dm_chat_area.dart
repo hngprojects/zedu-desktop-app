@@ -1,3 +1,4 @@
+import 'package:url_launcher/url_launcher.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -12,20 +13,7 @@ class DmChatArea extends ConsumerStatefulWidget {
 
 class _DmChatAreaState extends ConsumerState<DmChatArea> {
   bool _isDragging = false;
-  final List<XFile> _pendingFiles = [];
-
-  void _addFiles(List<XFile> files) {
-    setState(() {
-      _pendingFiles.addAll(files);
-    });
-  }
-
-  void _removeFile(int index) {
-    if (index < 0 || index >= _pendingFiles.length) return;
-    setState(() {
-      _pendingFiles.removeAt(index);
-    });
-  }
+  final _composerKey = GlobalKey<DmMessageComposerState>();
 
   String get _recipientHandle {
     final parts = widget.conversation.displayName
@@ -45,7 +33,7 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
 
     return DropTarget(
       onDragDone: (detail) {
-        _addFiles(detail.files);
+        _composerKey.currentState?.addFiles(detail.files);
         setState(() => _isDragging = false);
       },
       onDragEntered: (detail) {
@@ -112,20 +100,11 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                     },
                   ),
                 ),
-                if (_pendingFiles.isNotEmpty)
-                  _AttachmentPreviewList(
-                    files: _pendingFiles,
-                    onRemove: _removeFile,
-                  ),
                 DmMessageComposer(
+                  key: _composerKey,
                   recipientName: _recipientHandle,
                   channelId: widget.conversation.channelId,
-                  onSend: (text) {
-                    ref.read(chatHistoryProvider(widget.conversation.channelId)).sendMessage(text, media: List<XFile>.of(_pendingFiles));
-                    setState(() {
-                      _pendingFiles.clear();
-                    });
-                  },
+                  participants: widget.conversation.participants,
                 ),
               ],
             ),
@@ -171,7 +150,7 @@ class _DmChatHeader extends StatelessWidget {
     final participantInitial = conversation.displayName.trim().isEmpty
         ? '?'
         : conversation.displayName.trim()[0].toUpperCase();
-    
+
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -207,14 +186,38 @@ class _DmChatHeader extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          Consumer(
+            builder: (context, ref, child) {
+              return IconButton(
+                icon: const Icon(Icons.notifications_active_outlined),
+                tooltip: 'Test Notification (Delayed 5s)',
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Notification will fire in 5 seconds. Minimize the app now!')),
+                  );
+                  Future.delayed(const Duration(seconds: 5), () {
+                    ref.read(notificationServiceProvider).handleIncomingMessage(
+                      {
+                        'user_id': conversation.participantId,
+                        'content': 'Hello! This is a test DM notification.',
+                      },
+                      conversation.channelId,
+                      conversation.displayName,
+                    );
+                  });
+                },
+              );
+            },
+          ),
+          const SizedBox(width: 8),
           InkWell(
             onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(
+              Navigator.of(context).push(MaterialPageRoute<void>(
                 builder: (_) => BuzzPreparationView(
                   remoteUserName: conversation.displayName,
                   onCancel: () => Navigator.of(context).pop(),
                   onJoin: () {
-                    Navigator.of(context).pushReplacement(MaterialPageRoute(
+                    Navigator.of(context).pushReplacement(MaterialPageRoute<void>(
                       builder: (_) => BuzzMeetingView(
                         channelName: conversation.channelId,
                         token: '',
@@ -299,6 +302,8 @@ class _MessageBubble extends ConsumerWidget {
         ? senderName[0].toUpperCase()
         : '?';
 
+    final List<dynamic> media = (message['media'] as List<dynamic>?) ?? [];
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -353,20 +358,26 @@ class _MessageBubble extends ConsumerWidget {
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: isMe ? const Color(0xFF6458F5) : colors.onPrimary.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    content,
-                    style: TextStyle(
-                      color: isMe ? Colors.white : colors.textPrimary,
-                      fontSize: 14,
+                if (content.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isMe ? const Color(0xFF6458F5) : colors.onPrimary.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      content,
+                      style: TextStyle(
+                        color: isMe ? Colors.white : colors.textPrimary,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
-                ),
+                if (media.isNotEmpty)
+                  Padding(
+                    padding: EdgeInsets.only(top: content.isNotEmpty ? 8 : 0),
+                    child: _AttachmentBubbleList(media: media, isMe: isMe),
+                  ),
                 if (isMe && status != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
@@ -408,76 +419,68 @@ class _MessageBubble extends ConsumerWidget {
   }
 }
 
-class _AttachmentPreviewList extends StatelessWidget {
-  final List<XFile> files;
-  final Function(int) onRemove;
+class _AttachmentBubbleList extends StatelessWidget {
+  final List<dynamic> media;
+  final bool isMe;
 
-  const _AttachmentPreviewList({
-    required this.files,
-    required this.onRemove,
-  });
+  const _AttachmentBubbleList({required this.media, required this.isMe});
+
+  void _launchUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri != null && await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    return Container(
-      height: 100,
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: colors.background,
-        border: Border(top: BorderSide(color: colors.divider)),
-      ),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: files.length,
-        itemBuilder: (context, index) {
-          final file = files[index];
-          return Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                width: 80,
-                margin: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
-                  color: colors.onPrimary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: colors.divider),
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      alignment: isMe ? WrapAlignment.end : WrapAlignment.start,
+      children: media.map((item) {
+        final String fileName = (item['file_name'] ?? 'Attachment').toString();
+        final String fileLink = (item['file_link'] ?? '').toString();
+        final isImage = ['png', 'jpg', 'jpeg', 'gif', 'webp'].contains((item['file_type'] ?? '').toString().toLowerCase());
+
+        return GestureDetector(
+          onTap: fileLink.isNotEmpty ? () => _launchUrl(fileLink) : null,
+          child: Container(
+            width: 120,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isMe ? colors.primary.withValues(alpha: 0.15) : colors.onPrimary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: isMe ? colors.primary.withValues(alpha: 0.3) : colors.divider),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  isImage ? Icons.image_rounded : Icons.insert_drive_file_rounded,
+                  color: isMe ? colors.primary : colors.textPrimary,
+                  size: 28,
                 ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.insert_drive_file, color: colors.textHint),
-                      const SizedBox(height: 4),
-                      Text(
-                        file.name,
-                        style: TextStyle(color: colors.textPrimary, fontSize: 10),
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                const SizedBox(height: 6),
+                Text(
+                  fileName,
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              Positioned(
-                top: -4,
-                right: 4,
-                child: InkWell(
-                  onTap: () => onRemove(index),
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.close, size: 12, color: Colors.white),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

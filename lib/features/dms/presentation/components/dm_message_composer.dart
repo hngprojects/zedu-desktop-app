@@ -1,34 +1,138 @@
+import 'dart:typed_data';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+
+import 'composer/composer.dart';
 
 class DmMessageComposer extends ConsumerStatefulWidget {
   final String recipientName;
   final String channelId;
+  final List<DmParticipant> participants;
   final ValueChanged<String>? onSend;
-  final ValueChanged<List<XFile>>? onFilesAttached;
 
   const DmMessageComposer({
     super.key,
     required this.recipientName,
     required this.channelId,
+    this.participants = const [],
     this.onSend,
-    this.onFilesAttached,
   });
 
   @override
-  ConsumerState<DmMessageComposer> createState() => _DmMessageComposerState();
+  ConsumerState<DmMessageComposer> createState() => DmMessageComposerState();
 }
 
-class _DmMessageComposerState extends ConsumerState<DmMessageComposer> {
-  final _controller = TextEditingController();
+class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
+  late final RichTextController _controller;
   final _focusNode = FocusNode();
+  final _scrollController = ScrollController();
+
   bool _showEmojiPicker = false;
   bool _isEditMode = false;
   String? _editingMessageId;
 
+  bool _isBold = false;
+  bool _isItalic = false;
+  bool _isStrikethrough = false;
+  bool _isCode = false;
+
+  List<XFile> _pendingFiles = [];
+
+  List<DmParticipant> _mentionSuggestions = [];
+  String _mentionQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = RichTextController();
+    _controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onTextChanged);
+    _controller.dispose();
+    _focusNode.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    _updateFormattingState();
+    _updateMentionSuggestions();
+  }
+
+  void _updateFormattingState() {
+    final text = _controller.text;
+    final sel = _controller.selection;
+    if (!sel.isValid || !sel.isCollapsed) {
+      setState(() {
+        _isBold = false;
+        _isItalic = false;
+        _isStrikethrough = false;
+        _isCode = false;
+      });
+      return;
+    }
+    final before = text.substring(0, sel.baseOffset);
+    setState(() {
+      _isBold = '**'.allMatches(before).length % 2 != 0;
+      _isItalic = RegExp(r'(?<!\*)\*(?!\*)').allMatches(before).length % 2 != 0;
+      _isStrikethrough = '~~'.allMatches(before).length % 2 != 0;
+      _isCode = '`'.allMatches(before).length % 2 != 0;
+    });
+  }
+
+  void _updateMentionSuggestions() {
+    final text = _controller.text;
+    final sel = _controller.selection;
+    if (!sel.isValid || !sel.isCollapsed) {
+      setState(() => _mentionSuggestions = []);
+      return;
+    }
+    final before = text.substring(0, sel.baseOffset);
+    final atMatch = RegExp(r'@(\w*)$').firstMatch(before);
+    if (atMatch == null) {
+      setState(() {
+        _mentionSuggestions = [];
+        _mentionQuery = '';
+      });
+      return;
+    }
+    final query = atMatch.group(1)!.toLowerCase();
+    _mentionQuery = query;
+    final suggestions = widget.participants.where((p) {
+      return p.username.toLowerCase().contains(query) ||
+          p.email.toLowerCase().contains(query);
+    }).toList();
+    setState(() => _mentionSuggestions = suggestions);
+  }
+
+  void _insertMention(DmParticipant participant) {
+    final text = _controller.text;
+    final sel = _controller.selection;
+    final before = text.substring(0, sel.baseOffset);
+    final atIndex = before.lastIndexOf('@');
+    if (atIndex == -1) return;
+
+    final after = text.substring(sel.baseOffset);
+    final replacement = '@${participant.username} ';
+    final newText = text.substring(0, atIndex) + replacement + after;
+    _controller.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(
+        offset: atIndex + replacement.length,
+      ),
+    );
+    setState(() => _mentionSuggestions = []);
+    _focusNode.requestFocus();
+  }
+
   void _handleSend() {
     final text = _controller.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty && _pendingFiles.isEmpty) return;
 
     if (_isEditMode && _editingMessageId != null) {
       ref
@@ -36,9 +140,14 @@ class _DmMessageComposerState extends ConsumerState<DmMessageComposer> {
           .saveEdit(_editingMessageId!, text);
       _exitEditMode();
     } else {
+      ref
+          .read(chatHistoryProvider(widget.channelId))
+          .sendMessage(text, media: List<XFile>.of(_pendingFiles));
       widget.onSend?.call(text);
     }
+
     _controller.clear();
+    setState(() => _pendingFiles = []);
     _focusNode.requestFocus();
   }
 
@@ -47,9 +156,7 @@ class _DmMessageComposerState extends ConsumerState<DmMessageComposer> {
       _isEditMode = true;
       _editingMessageId = messageId;
       _controller.text = content;
-      _controller.selection = TextSelection.fromPosition(
-        TextPosition(offset: content.length),
-      );
+      _controller.selection = TextSelection.collapsed(offset: content.length);
     });
     _focusNode.requestFocus();
   }
@@ -58,8 +165,8 @@ class _DmMessageComposerState extends ConsumerState<DmMessageComposer> {
     setState(() {
       _isEditMode = false;
       _editingMessageId = null;
-      _controller.clear();
     });
+    _controller.clear();
     ref.read(chatHistoryProvider(widget.channelId)).cancelEditing();
   }
 
@@ -75,9 +182,15 @@ class _DmMessageComposerState extends ConsumerState<DmMessageComposer> {
       return KeyEventResult.handled;
     }
 
-    if (key == LogicalKeyboardKey.escape && _isEditMode) {
-      _exitEditMode();
-      return KeyEventResult.handled;
+    if (key == LogicalKeyboardKey.escape) {
+      if (_mentionSuggestions.isNotEmpty) {
+        setState(() => _mentionSuggestions = []);
+        return KeyEventResult.handled;
+      }
+      if (_isEditMode) {
+        _exitEditMode();
+        return KeyEventResult.handled;
+      }
     }
 
     if (key == LogicalKeyboardKey.arrowUp && _controller.text.isEmpty) {
@@ -90,6 +203,13 @@ class _DmMessageComposerState extends ConsumerState<DmMessageComposer> {
       }
     }
 
+    if (key == LogicalKeyboardKey.keyV &&
+        (HardwareKeyboard.instance.isControlPressed ||
+            HardwareKeyboard.instance.isMetaPressed)) {
+      _handlePaste();
+     return KeyEventResult.ignored;
+    }
+
     return KeyEventResult.ignored;
   }
 
@@ -98,21 +218,27 @@ class _DmMessageComposerState extends ConsumerState<DmMessageComposer> {
     final text = _controller.text;
     final sel = _controller.selection;
 
+    if (!sel.isValid) return;
+
     if (sel.isCollapsed) {
       final insert = '$before$after';
-      final newText = text.replaceRange(sel.start, sel.end, insert);
-      _controller.text = newText;
-      _controller.selection = TextSelection.collapsed(
-        offset: sel.start + before.length,
+      final newText =
+          text.substring(0, sel.start) + insert + text.substring(sel.end);
+      _controller.value = TextEditingValue(
+        text: newText,
+        selection: TextSelection.collapsed(offset: sel.start + before.length),
       );
     } else {
       final selected = text.substring(sel.start, sel.end);
       final replacement = '$before$selected$after';
-      final newText = text.replaceRange(sel.start, sel.end, replacement);
-      _controller.text = newText;
-      _controller.selection = TextSelection(
-        baseOffset: sel.start + before.length,
-        extentOffset: sel.start + before.length + selected.length,
+      final newText =
+          text.substring(0, sel.start) + replacement + text.substring(sel.end);
+      _controller.value = TextEditingValue(
+        text: newText,
+        selection: TextSelection(
+          baseOffset: sel.start + before.length,
+          extentOffset: sel.start + before.length + selected.length,
+        ),
       );
     }
     _focusNode.requestFocus();
@@ -122,16 +248,21 @@ class _DmMessageComposerState extends ConsumerState<DmMessageComposer> {
   void _insertItalic() => _wrapSelection('*');
   void _insertStrikethrough() => _wrapSelection('~~');
   void _insertCode() => _wrapSelection('`');
+
   void _insertLink() => _wrapSelection('[', '](url)');
 
   void _insertQuote() {
     final text = _controller.text;
     final sel = _controller.selection;
-    final insert = sel.isCollapsed ? '> ' : '> ${text.substring(sel.start, sel.end)}';
-    final newText = text.replaceRange(sel.start, sel.end, insert);
-    _controller.text = newText;
-    _controller.selection = TextSelection.collapsed(
-      offset: sel.start + insert.length,
+    if (!sel.isValid) return;
+    final insert = sel.isCollapsed
+        ? '> '
+        : '> ${text.substring(sel.start, sel.end)}';
+    final newText =
+        text.substring(0, sel.start) + insert + text.substring(sel.end);
+    _controller.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: sel.start + insert.length),
     );
     _focusNode.requestFocus();
   }
@@ -144,26 +275,88 @@ class _DmMessageComposerState extends ConsumerState<DmMessageComposer> {
     final text = _controller.text;
     final sel = _controller.selection;
     final pos = sel.isValid ? sel.baseOffset : text.length;
-    final newText = text.replaceRange(pos, pos, emoji);
-    _controller.text = newText;
-    _controller.selection = TextSelection.collapsed(offset: pos + emoji.length);
+    final newText = text.substring(0, pos) + emoji + text.substring(pos);
+    _controller.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: pos + emoji.length),
+    );
     _focusNode.requestFocus();
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    _focusNode.dispose();
-    super.dispose();
+  bool _isDragging = false;
+
+  Future<void> addFiles(List<XFile> newFiles) async {
+    final validFiles = <XFile>[];
+    for (final file in newFiles) {
+      try {
+        final length = await file.length();
+        if (length > 20 * 1024 * 1024) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('File ${file.name} exceeds 20MB limit.')),
+            );
+          }
+          continue;
+        }
+        validFiles.add(file);
+      } catch (e) {
+        validFiles.add(file); 
+      }
+    }
+    setState(() {
+      _pendingFiles.addAll(validFiles);
+    });
+  }
+
+  Future<void> _pickFiles() async {
+    final result = await FilePicker.pickFiles(
+      allowMultiple: true,
+      type: FileType.any,
+    );
+    if (result == null) return;
+    final picked = result.files
+        .where((PlatformFile f) => f.path != null)
+        .map((PlatformFile f) => XFile(f.path!, name: f.name, mimeType: f.extension))
+        .toList();
+    await addFiles(picked);
+  }
+
+  void _removeFile(int index) {
+    setState(() => _pendingFiles = List<XFile>.of(_pendingFiles)..removeAt(index));
+  }
+
+  Future<void> _handlePaste() async {
+    final reader = await SystemClipboard.instance?.read();
+    if (reader == null || !reader.canProvide(Formats.png)) return;
+    
+    reader.getFile(Formats.png, (file) async {
+      final stream = file.getStream();
+      final bytesBuilder = <int>[];
+      await for (final chunk in stream) {
+        bytesBuilder.addAll(chunk);
+      }
+      final bytes = Uint8List.fromList(bytesBuilder);
+      if (bytes.isNotEmpty) {
+        addFiles([XFile.fromData(bytes, mimeType: 'image/png', name: 'Pasted Image.png')]);
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
 
-    return Column(
+    final mainColumn = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (_mentionSuggestions.isNotEmpty)
+          MentionSuggestionList(
+            suggestions: _mentionSuggestions,
+            query: _mentionQuery,
+            colors: colors,
+            onSelect: _insertMention,
+          ),
+
         if (_showEmojiPicker)
           Align(
             alignment: Alignment.bottomLeft,
@@ -174,6 +367,13 @@ class _DmMessageComposerState extends ConsumerState<DmMessageComposer> {
                 onClose: () => setState(() => _showEmojiPicker = false),
               ),
             ),
+          ),
+
+        if (_pendingFiles.isNotEmpty)
+          AttachmentPreviewBar(
+            files: _pendingFiles,
+            onRemove: _removeFile,
+            colors: colors,
           ),
 
         if (_isEditMode)
@@ -197,10 +397,7 @@ class _DmMessageComposerState extends ConsumerState<DmMessageComposer> {
                   onTap: _exitEditMode,
                   child: Text(
                     'Cancel (Esc)',
-                    style: TextStyle(
-                      color: colors.textHint,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: colors.textHint, fontSize: 12),
                   ),
                 ),
               ],
@@ -213,6 +410,7 @@ class _DmMessageComposerState extends ConsumerState<DmMessageComposer> {
             decoration: BoxDecoration(
               border: Border.all(
                 color: _isEditMode ? colors.primary : colors.divider,
+                width: 1.5,
               ),
               borderRadius: BorderRadius.circular(12),
             ),
@@ -223,38 +421,42 @@ class _DmMessageComposerState extends ConsumerState<DmMessageComposer> {
                   padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
                   child: Row(
                     children: [
-                      _ToolbarButton(
+                      ToolbarButton(
                         icon: Icons.format_bold,
-                        tooltip: 'Bold',
+                        tooltip: 'Bold (Ctrl+B)',
                         onTap: _insertBold,
                         colors: colors,
+                        isActive: _isBold,
                       ),
-                      _ToolbarButton(
+                      ToolbarButton(
                         icon: Icons.format_italic,
-                        tooltip: 'Italic',
+                        tooltip: 'Italic (Ctrl+I)',
                         onTap: _insertItalic,
                         colors: colors,
+                        isActive: _isItalic,
                       ),
-                      _ToolbarButton(
+                      ToolbarButton(
                         icon: Icons.strikethrough_s,
                         tooltip: 'Strikethrough',
                         onTap: _insertStrikethrough,
                         colors: colors,
+                        isActive: _isStrikethrough,
                       ),
-                      _ToolbarButton(
-                        icon: Icons.link,
+                      ToolbarButton(
+                        icon: Icons.link_rounded,
                         tooltip: 'Link',
                         onTap: _insertLink,
                         colors: colors,
                       ),
-                      _ToolbarButton(
-                        icon: Icons.code,
+                      ToolbarButton(
+                        icon: Icons.code_rounded,
                         tooltip: 'Inline code',
                         onTap: _insertCode,
                         colors: colors,
+                        isActive: _isCode,
                       ),
-                      _ToolbarButton(
-                        icon: Icons.format_quote_outlined,
+                      ToolbarButton(
+                        icon: Icons.format_quote_rounded,
                         tooltip: 'Block quote',
                         onTap: _insertQuote,
                         colors: colors,
@@ -262,7 +464,7 @@ class _DmMessageComposerState extends ConsumerState<DmMessageComposer> {
                     ],
                   ),
                 ),
-                Divider(height: 16, color: colors.divider),
+                Divider(height: 12, color: colors.divider),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Focus(
@@ -277,56 +479,71 @@ class _DmMessageComposerState extends ConsumerState<DmMessageComposer> {
                             ? 'Editing message…'
                             : 'Message ${widget.recipientName}',
                         hintStyle: TextStyle(
-                          color: colors.textHint.withValues(alpha: 0.6),
+                          color: colors.textHint.withValues(alpha: 0.55),
                           fontSize: 14,
                         ),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: 8),
                       ),
                       style: TextStyle(
                         color: colors.textPrimary,
                         fontSize: 14,
+                        height: 1.5,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
                   child: Row(
                     children: [
-                      _ToolbarButton(
-                        icon: Icons.attach_file_outlined,
+                      ToolbarButton(
+                        icon: Icons.attach_file_rounded,
                         tooltip: 'Attach file',
-                        onTap: () => widget.onFilesAttached?.call([]),
+                        onTap: _pickFiles,
                         colors: colors,
+                        isActive: _pendingFiles.isNotEmpty,
                       ),
-                      const SizedBox(width: 4),
-                      _ToolbarButton(
+                      const SizedBox(width: 2),
+                      ToolbarButton(
                         icon: Icons.emoji_emotions_outlined,
                         tooltip: 'Emoji',
                         onTap: _toggleEmojiPicker,
                         colors: colors,
                         isActive: _showEmojiPicker,
                       ),
-                      _ToolbarButton(
-                        icon: Icons.alternate_email,
-                        tooltip: 'Mention',
-                        onTap: () => _wrapSelection('@'),
+                      ToolbarButton(
+                        icon: Icons.alternate_email_rounded,
+                        tooltip: 'Mention someone',
+                        onTap: () {
+                          final text = _controller.text;
+                          final sel = _controller.selection;
+                          final pos = sel.isValid ? sel.baseOffset : text.length;
+                          final newText = '${text.substring(0, pos)}@${text.substring(pos)}';
+                          _controller.value = TextEditingValue(
+                            text: newText,
+                            selection:
+                                TextSelection.collapsed(offset: pos + 1),
+                          );
+                          _focusNode.requestFocus();
+                        },
                         colors: colors,
                       ),
                       const Spacer(),
-                      InkWell(
+                      GestureDetector(
                         onTap: _handleSend,
-                        borderRadius: BorderRadius.circular(4),
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: Icon(
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: colors.primary,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Icon(
                             Icons.send_rounded,
-                            color: _isEditMode
-                                ? colors.primary
-                                : colors.textHint.withValues(alpha: 0.5),
-                            size: 20,
+                            color: Colors.white,
+                            size: 16,
                           ),
                         ),
                       ),
@@ -339,42 +556,44 @@ class _DmMessageComposerState extends ConsumerState<DmMessageComposer> {
         ),
       ],
     );
-  }
-}
 
-class _ToolbarButton extends StatelessWidget {
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-  final AppPalette colors;
-  final bool isActive;
-
-  const _ToolbarButton({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-    required this.colors,
-    this.isActive = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(4),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-          child: Icon(
-            icon,
-            size: 18,
-            color: isActive
-                ? colors.primary
-                : colors.textHint.withValues(alpha: 0.75),
-          ),
-        ),
+    return DropTarget(
+      onDragDone: (detail) {
+        addFiles(detail.files);
+        setState(() => _isDragging = false);
+      },
+      onDragEntered: (detail) => setState(() => _isDragging = true),
+      onDragExited: (detail) => setState(() => _isDragging = false),
+      child: Stack(
+        children: [
+          mainColumn,
+          if (_isDragging)
+            Positioned.fill(
+              child: Container(
+                color: colors.primary.withValues(alpha: 0.1),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: colors.primary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'Drop files to attach',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
 }
+
+
