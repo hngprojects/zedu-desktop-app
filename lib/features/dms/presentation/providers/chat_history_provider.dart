@@ -5,7 +5,7 @@ import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
 class ChatHistoryNotifier extends ChangeNotifier {
-  final String arg;
+  final String channelId;
   final Ref ref;
 
   List<Map<String, dynamic>> messages = [];
@@ -13,18 +13,61 @@ class ChatHistoryNotifier extends ChangeNotifier {
   bool hasMore = true;
   int page = 1;
 
-  ChatHistoryNotifier(this.arg, this.ref) {
+  String? editingMessageId;
+  String? _editingOriginalContent;
+
+  ChatHistoryNotifier(this.channelId, this.ref) {
     _loadInitial();
+  }
+
+  String get _currentUserId {
+    final authState = ref.read(authNotifierProvider);
+    return authState.user?.id ?? '';
+  }
+
+  String get currentUserName {
+    final user = ref.read(authNotifierProvider).user;
+    if (user == null) return 'You';
+    final name = '${user.firstName} ${user.lastName}'.trim();
+    return name.isNotEmpty ? name : user.username;
+  }
+
+  String? get currentUserAvatarUrl {
+    final user = ref.read(authNotifierProvider).user;
+    if (user == null) return null;
+    return user.avatarUrl.isNotEmpty ? user.avatarUrl : user.defaultAvatarUrl;
+  }
+
+  bool isMyMessage(Map<String, dynamic> message) {
+    final senderId = message['user_id'] ?? message['userId'];
+    return senderId == _currentUserId || senderId == 'me';
+  }
+
+  String? get lastSentMessageContent {
+    for (final msg in messages) {
+      if (isMyMessage(msg) && msg['status'] != 'failed') {
+        return msg['content'] as String?;
+      }
+    }
+    return null;
+  }
+
+  String? get lastSentMessageId {
+    for (final msg in messages) {
+      if (isMyMessage(msg) && msg['status'] != 'failed') {
+        return msg['id'] as String?;
+      }
+    }
+    return null;
   }
 
   Future<void> _loadInitial() async {
     try {
       final repository = ref.read(dmRepositoryProvider);
-      messages = await repository.getMessages(arg, page: 1);
+      messages = await repository.getMessages(channelId, page: 1);
       hasMore = messages.length >= DmRepository.pageSize;
       page = 1;
-    } catch (e) {
-      // Ignore
+    } catch (_) {
     } finally {
       isLoading = false;
       notifyListeners();
@@ -40,13 +83,12 @@ class ChatHistoryNotifier extends ChangeNotifier {
     try {
       final repository = ref.read(dmRepositoryProvider);
       final nextPage = page + 1;
-      final newMessages = await repository.getMessages(arg, page: nextPage);
+      final newMessages = await repository.getMessages(channelId, page: nextPage);
 
       messages = [...messages, ...newMessages];
       hasMore = newMessages.length >= DmRepository.pageSize;
       page = nextPage;
-    } catch (e) {
-      // Ignore
+    } catch (_) {
     } finally {
       isLoading = false;
       notifyListeners();
@@ -62,8 +104,9 @@ class ChatHistoryNotifier extends ChangeNotifier {
     final optimisticMessage = {
       "id": tempId,
       "content": content,
-      "channel_id": arg,
-      "userId": "me",
+      "channel_id": channelId,
+      "user_id": _currentUserId,
+      "userId": _currentUserId,
       "type": "user",
       "created_at": DateTime.now().toIso8601String(),
       "status": "sending",
@@ -75,7 +118,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
     try {
       final repository = ref.read(dmRepositoryProvider);
       await repository.sendMessage(
-        arg,
+        channelId,
         content,
         media: media,
         mentions: mentions,
@@ -89,7 +132,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
         }
         return m;
       }).toList();
-    } catch (e) {
+    } catch (_) {
       messages = messages.map((m) {
         if (m['id'] == tempId) {
           final newMsg = Map<String, dynamic>.from(m);
@@ -102,9 +145,101 @@ class ChatHistoryNotifier extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> retryMessage(String messageId) async {
+    final idx = messages.indexWhere((m) => m['id'] == messageId);
+    if (idx == -1) return;
+
+    final failedMsg = Map<String, dynamic>.from(messages[idx]);
+    final content = failedMsg['content'] as String? ?? '';
+
+    failedMsg['status'] = 'sending';
+    messages = List<Map<String, dynamic>>.from(messages);
+    messages[idx] = failedMsg;
+    notifyListeners();
+
+    try {
+      final repository = ref.read(dmRepositoryProvider);
+      await repository.sendMessage(channelId, content);
+
+      messages = messages.map((m) {
+        if (m['id'] == messageId) {
+          final newMsg = Map<String, dynamic>.from(m);
+          newMsg.remove('status');
+          return newMsg;
+        }
+        return m;
+      }).toList();
+    } catch (_) {
+      messages = messages.map((m) {
+        if (m['id'] == messageId) {
+          final newMsg = Map<String, dynamic>.from(m);
+          newMsg['status'] = 'failed';
+          return newMsg;
+        }
+        return m;
+      }).toList();
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  void startEditing(String messageId) {
+    final msg = messages.firstWhere(
+      (m) => m['id'] == messageId,
+      orElse: () => <String, dynamic>{},
+    );
+    if (msg.isEmpty) return;
+
+    editingMessageId = messageId;
+    _editingOriginalContent = msg['content'] as String?;
+    notifyListeners();
+  }
+
+  void cancelEditing() {
+    editingMessageId = null;
+    _editingOriginalContent = null;
+    notifyListeners();
+  }
+
+  Future<void> saveEdit(String messageId, String newContent) async {
+    if (newContent.trim().isEmpty) {
+      cancelEditing();
+      return;
+    }
+
+    messages = messages.map((m) {
+      if (m['id'] == messageId) {
+        final updated = Map<String, dynamic>.from(m);
+        updated['content'] = newContent;
+        return updated;
+      }
+      return m;
+    }).toList();
+    editingMessageId = null;
+    _editingOriginalContent = null;
+    notifyListeners();
+
+    try {
+      final repository = ref.read(dmRepositoryProvider);
+      await repository.editMessage(channelId, content: newContent);
+    } catch (_) {
+      if (_editingOriginalContent != null) {
+        messages = messages.map((m) {
+          if (m['id'] == messageId) {
+            final reverted = Map<String, dynamic>.from(m);
+            reverted['content'] = _editingOriginalContent;
+            return reverted;
+          }
+          return m;
+        }).toList();
+        notifyListeners();
+      }
+    }
+  }
 }
 
 final chatHistoryProvider =
     ChangeNotifierProvider.family<ChatHistoryNotifier, String>(
-  (ref, arg) => ChatHistoryNotifier(arg, ref),
+  (ref, channelId) => ChatHistoryNotifier(channelId, ref),
 );

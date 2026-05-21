@@ -1,14 +1,8 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
-/// Provides the current organisation ID from the selected workspace.
-///
-/// All DM queries are scoped to this org ID. When the user switches
-/// workspaces the provider automatically emits a new value, which in
-/// turn causes [dmListProvider] to re-fetch.
 final currentOrgIdProvider = Provider<String>((ref) {
   final workspace = ref.watch(workspaceProvider).selectedWorkspace;
-  // The Workspace.id is the organisation UUID coming from the backend.
   return workspace?.id ?? '';
 });
 
@@ -38,7 +32,6 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
 
   @override
   Future<List<DmConversation>> build() async {
-    // Watch the org ID so that switching workspaces triggers a full re-fetch.
     final orgId = ref.watch(currentOrgIdProvider);
     if (orgId.isEmpty) return const [];
 

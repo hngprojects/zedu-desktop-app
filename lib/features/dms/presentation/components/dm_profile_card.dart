@@ -1,7 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/dms/domain/domain.dart';
 
-/// Profile card shown at the top of a DM thread, matching Figma design.
 class DmProfileCard extends StatelessWidget {
   final DmConversation conversation;
 
@@ -21,7 +20,6 @@ class DmProfileCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar
           CircleAvatar(
             radius: 36,
             backgroundColor: const Color(0xFF6458F5),
@@ -40,7 +38,6 @@ class DmProfileCard extends StatelessWidget {
                 : null,
           ),
           const SizedBox(height: 12),
-          // Name
           Text(
             name,
             style: TextStyle(
@@ -50,7 +47,6 @@ class DmProfileCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          // Bio / description
           RichText(
             text: TextSpan(
               style: TextStyle(fontSize: 14, color: colors.textPrimary),
@@ -72,11 +68,8 @@ class DmProfileCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          // View Profile button
           OutlinedButton(
-            onPressed: () {
-              // TODO: Navigate to profile detail
-            },
+            onPressed: () {},
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: colors.divider),
               shape: RoundedRectangleBorder(

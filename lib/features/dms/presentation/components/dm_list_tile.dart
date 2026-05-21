@@ -46,7 +46,6 @@ class DmListTile extends ConsumerWidget {
         ),
         child: Row(
           children: [
-            // Avatar
             CircleAvatar(
               radius: 18,
               backgroundColor: const Color(0xFF6458F5),
@@ -65,7 +64,6 @@ class DmListTile extends ConsumerWidget {
                   : null,
             ),
             const SizedBox(width: 10),
-            // Name + message preview
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,7 +92,6 @@ class DmListTile extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 8),
-            // Timestamp + unread badge
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [

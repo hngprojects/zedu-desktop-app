@@ -76,7 +76,6 @@ class DmSidebarList extends ConsumerWidget {
                     if (scrollInfo is ScrollEndNotification &&
                         scrollInfo.metrics.pixels >=
                             scrollInfo.metrics.maxScrollExtent * 0.85) {
-                      // Trigger next page load when near the bottom.
                       final notifier = ref.read(dmListProvider.notifier);
                       if (notifier.hasMore) {
                         notifier.loadMore();
