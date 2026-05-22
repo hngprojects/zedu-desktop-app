@@ -49,7 +49,9 @@ class CreditsState {
       usageReport: usageReport ?? this.usageReport,
       transactions: transactions ?? this.transactions,
       error: clearError ? null : (error ?? this.error),
-      successMessage: clearSuccess ? null : (successMessage ?? this.successMessage),
+      successMessage: clearSuccess
+          ? null
+          : (successMessage ?? this.successMessage),
       purchasingPackageId: clearPurchasing
           ? null
           : (purchasingPackageId ?? this.purchasingPackageId),

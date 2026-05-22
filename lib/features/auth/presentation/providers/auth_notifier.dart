@@ -364,7 +364,10 @@ class AuthNotifier extends Notifier<AuthState> {
         return true;
 
       case Failure<void>():
-        AppLogger.w('Status change failed — ${result.error.message}', tag: _tag);
+        AppLogger.w(
+          'Status change failed — ${result.error.message}',
+          tag: _tag,
+        );
         state = state.copyWith(
           isLoading: false,
           error: result.error.friendlyMessage,
@@ -424,7 +427,9 @@ class AuthNotifier extends Notifier<AuthState> {
 
     if (result is Success<void>) {
       state = state.copyWith(
-        user: currentUser._withStatus(currentStatus.copyWith(online: newOnline)),
+        user: currentUser._withStatus(
+          currentStatus.copyWith(online: newOnline),
+        ),
       );
     }
   }
@@ -435,8 +440,7 @@ class AuthNotifier extends Notifier<AuthState> {
       StatusTimeout.thirtyMinutes => now.add(const Duration(minutes: 30)),
       StatusTimeout.oneHour => now.add(const Duration(hours: 1)),
       StatusTimeout.today => DateTime(now.year, now.month, now.day, 23, 59),
-      StatusTimeout.thisWeek =>
-        now.add(Duration(days: 7 - now.weekday)),
+      StatusTimeout.thisWeek => now.add(Duration(days: 7 - now.weekday)),
       StatusTimeout.dontRemove => null,
     };
   }
@@ -445,22 +449,22 @@ class AuthNotifier extends Notifier<AuthState> {
 // Private extension to create a new User with a swapped status field.
 extension _UserStatusSwap on User {
   User _withStatus(UserStatus newStatus) => User(
-        id: id,
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        phone: phone,
-        username: username,
-        isVerified: isVerified,
-        isOnboarded: isOnboarded,
-        createdAt: createdAt,
-        currentOrg: currentOrg,
-        currentOrganisationSlug: currentOrganisationSlug,
-        avatarUrl: avatarUrl,
-        defaultAvatarUrl: defaultAvatarUrl,
-        creditBalance: creditBalance,
-        subscriptionPlanId: subscriptionPlanId,
-        aiCreditsPurchasable: aiCreditsPurchasable,
-        status: newStatus,
-      );
+    id: id,
+    firstName: firstName,
+    lastName: lastName,
+    email: email,
+    phone: phone,
+    username: username,
+    isVerified: isVerified,
+    isOnboarded: isOnboarded,
+    createdAt: createdAt,
+    currentOrg: currentOrg,
+    currentOrganisationSlug: currentOrganisationSlug,
+    avatarUrl: avatarUrl,
+    defaultAvatarUrl: defaultAvatarUrl,
+    creditBalance: creditBalance,
+    subscriptionPlanId: subscriptionPlanId,
+    aiCreditsPurchasable: aiCreditsPurchasable,
+    status: newStatus,
+  );
 }

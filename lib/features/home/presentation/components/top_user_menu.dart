@@ -54,7 +54,11 @@ class TopUserMenu extends ConsumerWidget {
           value: 'buy_credits',
           child: Row(
             children: [
-              Icon(Icons.shopping_cart_outlined, size: 20, color: colors.primary),
+              Icon(
+                Icons.shopping_cart_outlined,
+                size: 20,
+                color: colors.primary,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Buy AI credits',

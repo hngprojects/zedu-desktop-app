@@ -120,10 +120,20 @@ class CreditPackagesGrid extends StatelessWidget {
       // Find matching package from API to get the correct real ID for purchases
       final apiMatch = packages.where((p) {
         final slug = p.planSlug?.toLowerCase() ?? p.name.toLowerCase();
-        if (uiPkg.name == 'Pro Plus') return slug.contains('pro_plus') || slug.contains('pro plus') || slug.contains('pro-plus');
-        if (uiPkg.name == 'Pro') return slug.contains('pro') && !slug.contains('plus');
-        if (uiPkg.name == 'Business') return slug.contains('business');
-        if (uiPkg.name == 'Enterprise') return slug.contains('enterprise');
+        if (uiPkg.name == 'Pro Plus') {
+          return slug.contains('pro_plus') ||
+              slug.contains('pro plus') ||
+              slug.contains('pro-plus');
+        }
+        if (uiPkg.name == 'Pro') {
+          return slug.contains('pro') && !slug.contains('plus');
+        }
+        if (uiPkg.name == 'Business') {
+          return slug.contains('business');
+        }
+        if (uiPkg.name == 'Enterprise') {
+          return slug.contains('enterprise');
+        }
         return false;
       }).firstOrNull;
 
@@ -142,7 +152,7 @@ class CreditPackagesGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = _displayPackages;
-    
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -169,7 +179,8 @@ class CreditPackagesGrid extends StatelessWidget {
   bool _isCurrentPlan(CreditPackage package) {
     final slug = package.planSlug;
     if (slug == null || currentPlanSlug == null) {
-      return package.isFree && (currentPlanSlug == null || currentPlanSlug == 'free');
+      return package.isFree &&
+          (currentPlanSlug == null || currentPlanSlug == 'free');
     }
     return slug == currentPlanSlug;
   }

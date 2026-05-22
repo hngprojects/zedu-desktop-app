@@ -81,11 +81,7 @@ class _CreditsPaymentDeepLinkListenerState
 
     final error = ref.read(creditsNotifierProvider).error;
     if (error != null) {
-      AppToastService.show(
-        context,
-        type: AppToastType.error,
-        message: error,
-      );
+      AppToastService.show(context, type: AppToastType.error, message: error);
     }
   }
 

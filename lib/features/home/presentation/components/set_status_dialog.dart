@@ -62,7 +62,9 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
     setState(() => _isSaving = true);
 
     final online = ref.read(authNotifierProvider).user?.status.online ?? true;
-    final success = await ref.read(authNotifierProvider.notifier).changeStatus(
+    final success = await ref
+        .read(authNotifierProvider.notifier)
+        .changeStatus(
           icon: _selectedEmoji ?? '',
           text: _textCtrl.text.trim(),
           timeout: _timeout,
@@ -141,7 +143,10 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
                         left: Radius.circular(8),
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                         child: _selectedEmoji != null
                             ? Text(
                                 _selectedEmoji!,
@@ -154,7 +159,11 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
                               ),
                       ),
                     ),
-                    Container(width: 1, height: 28, color: colors.borderOutline),
+                    Container(
+                      width: 1,
+                      height: 28,
+                      color: colors.borderOutline,
+                    ),
                     // Text input
                     Expanded(
                       child: TextField(
@@ -175,14 +184,23 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
                           color: colors.textPrimary,
                         ),
                         maxLength: 100,
-                        buildCounter: (_, {required currentLength, maxLength, required isFocused}) =>
-                            null,
+                        buildCounter:
+                            (
+                              _, {
+                              required currentLength,
+                              maxLength,
+                              required isFocused,
+                            }) => null,
                       ),
                     ),
                     // Clear button
                     if (_textCtrl.text.isNotEmpty || _selectedEmoji != null)
                       IconButton(
-                        icon: Icon(Icons.close, size: 16, color: colors.textHint),
+                        icon: Icon(
+                          Icons.close,
+                          size: 16,
+                          color: colors.textHint,
+                        ),
                         splashRadius: 14,
                         onPressed: () => setState(() {
                           _textCtrl.clear();
@@ -209,10 +227,16 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
                   onTap: () => _applyPreset(preset),
                   borderRadius: BorderRadius.circular(6),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 7,
+                      horizontal: 4,
+                    ),
                     child: Row(
                       children: [
-                        Text(preset.emoji, style: const TextStyle(fontSize: 18)),
+                        Text(
+                          preset.emoji,
+                          style: const TextStyle(fontSize: 18),
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -260,8 +284,9 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
                         setState(() => _pauseNotifications = v ?? false),
                   ),
                   GestureDetector(
-                    onTap: () =>
-                        setState(() => _pauseNotifications = !_pauseNotifications),
+                    onTap: () => setState(
+                      () => _pauseNotifications = !_pauseNotifications,
+                    ),
                     child: Text(
                       'Pause notifications',
                       style: context.textTheme.bodyMedium?.copyWith(
@@ -278,11 +303,16 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   OutlinedButton(
-                    onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+                    onPressed: _isSaving
+                        ? null
+                        : () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: colors.textPrimary,
                       side: BorderSide(color: colors.borderOutline),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -294,7 +324,10 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
                     onPressed: _isSaving ? null : _save,
                     style: FilledButton.styleFrom(
                       backgroundColor: colors.primary,
-                      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 28,
+                        vertical: 12,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -352,16 +385,15 @@ class _TimeoutDropdown extends StatelessWidget {
         isExpanded: true,
         underline: const SizedBox.shrink(),
         icon: Icon(Icons.keyboard_arrow_down, color: colors.textHint),
-        style: context.textTheme.bodyMedium?.copyWith(color: colors.textPrimary),
+        style: context.textTheme.bodyMedium?.copyWith(
+          color: colors.textPrimary,
+        ),
         dropdownColor: colors.background,
         onChanged: (v) {
           if (v != null) onChanged(v);
         },
         items: StatusTimeout.values.map((t) {
-          return DropdownMenuItem(
-            value: t,
-            child: Text(t.label),
-          );
+          return DropdownMenuItem(value: t, child: Text(t.label));
         }).toList(),
       ),
     );

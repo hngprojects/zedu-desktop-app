@@ -88,7 +88,10 @@ class CreditsNotifier extends Notifier<CreditsState> {
 
     switch (result) {
       case Success<CreditCheckoutSession>():
-        state = state.copyWith(status: CreditsStatus.ready, clearPurchasing: true);
+        state = state.copyWith(
+          status: CreditsStatus.ready,
+          clearPurchasing: true,
+        );
         return result.value;
       case Failure<CreditCheckoutSession>():
         AppLogger.w('Purchase failed — ${result.error.message}', tag: _tag);

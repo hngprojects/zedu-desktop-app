@@ -16,10 +16,10 @@ class UserStatus {
   /// true = Active (green dot), false = Away (grey dot).
   final bool online;
 
-  bool get hasCustomStatus => emoji != null || (text != null && text!.isNotEmpty);
+  bool get hasCustomStatus =>
+      emoji != null || (text != null && text!.isNotEmpty);
 
-  bool get isExpired =>
-      expiresAt != null && DateTime.now().isAfter(expiresAt!);
+  bool get isExpired => expiresAt != null && DateTime.now().isAfter(expiresAt!);
 
   UserStatus copyWith({
     String? emoji,
@@ -58,10 +58,10 @@ enum StatusTimeout {
 
   /// Human-readable label shown in the dropdown.
   String get label => switch (this) {
-        StatusTimeout.thirtyMinutes => '30 minutes',
-        StatusTimeout.oneHour => '1 hour',
-        StatusTimeout.today => 'Today',
-        StatusTimeout.thisWeek => 'This week',
-        StatusTimeout.dontRemove => "Don't remove",
-      };
+    StatusTimeout.thirtyMinutes => '30 minutes',
+    StatusTimeout.oneHour => '1 hour',
+    StatusTimeout.today => 'Today',
+    StatusTimeout.thisWeek => 'This week',
+    StatusTimeout.dontRemove => "Don't remove",
+  };
 }

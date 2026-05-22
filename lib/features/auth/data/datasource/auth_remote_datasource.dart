@@ -308,6 +308,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw ApiFailure.fromParsingError(error, path: '/auth/google');
     }
   }
+
   @override
   Future<void> changeStatus({
     required String icon,
@@ -319,7 +320,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) async {
     try {
       if (_config.usesMockData) {
-        AppLogger.d('Using mock data for POST /profile/change-status', tag: _tag);
+        AppLogger.d(
+          'Using mock data for POST /profile/change-status',
+          tag: _tag,
+        );
         await Future<void>.delayed(const Duration(milliseconds: 400));
         return;
       }

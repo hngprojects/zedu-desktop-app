@@ -27,9 +27,7 @@ class PersonalProfilePanel extends ConsumerWidget {
             offset: const Offset(-4, 0),
           ),
         ],
-        border: Border(
-          left: BorderSide(color: colors.divider),
-        ),
+        border: Border(left: BorderSide(color: colors.divider)),
       ),
       child: Column(
         children: [
@@ -38,9 +36,7 @@ class PersonalProfilePanel extends ConsumerWidget {
             height: 48,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: colors.divider),
-              ),
+              border: Border(bottom: BorderSide(color: colors.divider)),
             ),
             child: Row(
               children: [
@@ -85,11 +81,7 @@ class PersonalProfilePanel extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(
-                      child: Icon(
-                        Icons.person,
-                        size: 80,
-                        color: colors.accent,
-                      ),
+                      child: Icon(Icons.person, size: 80, color: colors.accent),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -165,11 +157,7 @@ class PersonalProfilePanel extends ConsumerWidget {
                   const SizedBox(height: 4),
 
                   // Time icon
-                  Icon(
-                    Icons.access_time,
-                    size: 14,
-                    color: colors.textHint,
-                  ),
+                  Icon(Icons.access_time, size: 14, color: colors.textHint),
                   const SizedBox(height: 16),
 
                   // Action buttons row
@@ -255,13 +243,9 @@ class PersonalProfilePanel extends ConsumerWidget {
     WidgetRef ref,
     ProfileAccount account,
   ) {
-    showEditProfileDialog(
-      context,
-      account,
-      (updated) {
-        ref.read(userProfileNotifierProvider.notifier).updateAccount(updated);
-      },
-    );
+    showEditProfileDialog(context, account, (updated) {
+      ref.read(userProfileNotifierProvider.notifier).updateAccount(updated);
+    });
   }
 }
 

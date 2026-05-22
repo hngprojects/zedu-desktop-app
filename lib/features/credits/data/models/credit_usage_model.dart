@@ -9,13 +9,16 @@ class CreditUsageModel extends CreditUsage {
 
   factory CreditUsageModel.fromJson(Map<String, dynamic> json) {
     return CreditUsageModel(
-      balance: (json['balance'] as num?)?.toInt() ??
+      balance:
+          (json['balance'] as num?)?.toInt() ??
           (json['credit_balance'] as num?)?.toInt() ??
           0,
-      totalPurchased: (json['total_purchased'] as num?)?.toInt() ??
+      totalPurchased:
+          (json['total_purchased'] as num?)?.toInt() ??
           (json['purchased'] as num?)?.toInt() ??
           0,
-      totalConsumed: (json['total_consumed'] as num?)?.toInt() ??
+      totalConsumed:
+          (json['total_consumed'] as num?)?.toInt() ??
           (json['consumed'] as num?)?.toInt() ??
           0,
     );
