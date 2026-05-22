@@ -3,9 +3,9 @@ import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
 class AuthNotifier extends Notifier<AuthState> {
-  late final AuthRepository _repository;
-  late final SecureStorageService _storage;
-  late final AuthInterceptor _interceptor;
+  late AuthRepository _repository;
+  late SecureStorageService _storage;
+  late AuthInterceptor _interceptor;
 
   static const _tag = 'AuthNotifier';
 

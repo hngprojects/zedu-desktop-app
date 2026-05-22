@@ -37,7 +37,10 @@ class UserMenuDialog extends ConsumerWidget {
             children: [
               // ── Profile header ─────────────────────────────────────────────
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     // Avatar with presence dot overlay
@@ -82,7 +85,9 @@ class UserMenuDialog extends ConsumerWidget {
                           Text(
                             isOnline ? 'Active' : 'Away',
                             style: TextStyle(
-                              color: isOnline ? colors.presenceActive : colors.textHint,
+                              color: isOnline
+                                  ? colors.presenceActive
+                                  : colors.textHint,
                               fontSize: 12,
                             ),
                           ),
@@ -180,16 +185,18 @@ class UserMenuDialog extends ConsumerWidget {
                   label: 'Clear status',
                   onTap: () async {
                     Navigator.pop(context);
-                    await ref
-                        .read(authNotifierProvider.notifier)
-                        .clearStatus();
+                    await ref.read(authNotifierProvider.notifier).clearStatus();
                   },
                 ),
 
               // ── Set yourself as active / away toggle ──────────────────────
               _MenuItemButton(
-                icon: isOnline ? Icons.radio_button_checked : Icons.radio_button_off,
-                label: isOnline ? 'Set yourself as away' : 'Set yourself as active',
+                icon: isOnline
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_off,
+                label: isOnline
+                    ? 'Set yourself as away'
+                    : 'Set yourself as active',
                 iconColor: isOnline ? colors.presenceActive : colors.textHint,
                 onTap: () async {
                   Navigator.pop(context);
@@ -247,7 +254,8 @@ class UserMenuDialog extends ConsumerWidget {
               // ── Sign out ───────────────────────────────────────────────────
               _MenuItemButton(
                 icon: Icons.logout_rounded,
-                label: 'Sign out of ${authUser?.currentOrganisationSlug ?? 'Zedu'}',
+                label:
+                    'Sign out of ${authUser?.currentOrganisationSlug ?? 'Zedu'}',
                 isError: true,
                 onTap: () async {
                   Navigator.pop(context);
@@ -270,7 +278,6 @@ class _MenuItemButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  final Widget? trailing;
   final Color? iconColor;
   final bool isHighlight;
   final bool isError;
@@ -279,7 +286,6 @@ class _MenuItemButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.trailing,
     this.iconColor,
     this.isHighlight = false,
     this.isError = false,
@@ -313,7 +319,6 @@ class _MenuItemButton extends StatelessWidget {
                 ),
               ),
             ),
-            if (trailing != null) trailing!,
           ],
         ),
       ),
