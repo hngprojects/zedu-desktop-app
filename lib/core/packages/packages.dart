@@ -1,6 +1,7 @@
 export 'package:flutter/material.dart';
 export 'package:flutter/foundation.dart';
 export 'package:flutter_riverpod/flutter_riverpod.dart';
+export 'package:flutter_riverpod/legacy.dart';
 export 'package:flutter_secure_storage/flutter_secure_storage.dart';
 export 'package:flutter_svg/flutter_svg.dart';
 export 'package:google_fonts/google_fonts.dart';
@@ -8,6 +9,9 @@ export 'package:dio/dio.dart';
 export 'package:flutter_dotenv/flutter_dotenv.dart';
 export 'package:go_router/go_router.dart';
 export 'package:get_it/get_it.dart';
+export 'package:url_launcher/url_launcher.dart';
+export 'package:app_links/app_links.dart';
+export 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart';
 export 'package:agora_rtc_engine/agora_rtc_engine.dart' hide LogLevel;
 export 'package:desktop_drop/desktop_drop.dart';
 export 'package:cross_file/cross_file.dart';

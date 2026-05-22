@@ -1,5 +1,5 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/dms/domain/domain.dart';
+import 'package:zedu/features/features.dart';
 
 class DmProfileCard extends StatelessWidget {
   final DmConversation conversation;

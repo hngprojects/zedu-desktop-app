@@ -1,5 +1,5 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/dms/domain/domain.dart';
+import 'package:zedu/features/features.dart';
 
 final dmRepositoryProvider = Provider<DmRepository>((ref) {
   final apiClient = locator<ApiBaseService>();

@@ -1,7 +1,5 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/dms/presentation/providers/active_call_provider.dart';
-import 'package:zedu/features/home/presentation/components/user_menu_button.dart';
-import 'package:zedu/features/home/presentation/providers/home_sidebar_provider.dart';
+import 'package:zedu/features/features.dart';
 
 class AppSidebarRail extends ConsumerWidget {
   const AppSidebarRail({

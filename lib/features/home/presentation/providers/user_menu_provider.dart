@@ -1,4 +1,4 @@
-import 'package:riverpod/riverpod.dart';
+import 'package:zedu/core/core.dart';
 
 /// State for user menu UI
 class UserMenuState {
