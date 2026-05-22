@@ -30,9 +30,7 @@ class CreditsRepositoryImpl implements CreditsRepository {
     required String planId,
     required String email,
   }) {
-    return _guard(
-      () => _remote.purchaseCredits(planId: planId, email: email),
-    );
+    return _guard(() => _remote.purchaseCredits(planId: planId, email: email));
   }
 
   @override

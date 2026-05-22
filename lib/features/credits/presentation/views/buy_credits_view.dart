@@ -143,10 +143,7 @@ class _BuyCreditsViewState extends ConsumerState<BuyCreditsView> {
     }
 
     try {
-      final launched = await launchUrl(
-        uri,
-        mode: LaunchMode.platformDefault,
-      );
+      final launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
       if (!launched && context.mounted) {
         AppToastService.show(
           context,

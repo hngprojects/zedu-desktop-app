@@ -17,8 +17,10 @@ class AppPalette {
   final Color error;
   final Color errorBg;
   final Color primaryBg;
+
   /// Green dot — user is active/online.
   final Color presenceActive;
+
   /// Dark semi-transparent dot — user is away/offline.
   final Color presenceAway;
 

@@ -71,15 +71,15 @@ class CreditsRemoteDataSourceImpl implements CreditsRemoteDataSource {
   @override
   Future<List<CreditTransactionModel>> getTransactions(String orgId) async {
     if (_config.usesMockData) {
-      return _mockTransactions
-          .map(CreditTransactionModel.fromJson)
-          .toList();
+      return _mockTransactions.map(CreditTransactionModel.fromJson).toList();
     }
     final response = await _api.get<Map<String, dynamic>>(
       path: '/credits/transactions/$orgId',
     );
     final data = response.data['data'];
-    final list = data is List ? data : (data is Map ? data['transactions'] : null);
+    final list = data is List
+        ? data
+        : (data is Map ? data['transactions'] : null);
     if (list is! List) return [];
     return list
         .cast<Map<String, dynamic>>()
@@ -112,8 +112,7 @@ class CreditsRemoteDataSourceImpl implements CreditsRemoteDataSource {
   @override
   Future<void> verifyPayment({required String sessionId}) async {
     if (_config.usesMockData) {
-      _mockUsage['balance'] =
-          ((_mockUsage['balance'] as int?) ?? 0) + 1000;
+      _mockUsage['balance'] = ((_mockUsage['balance'] as int?) ?? 0) + 1000;
       _mockUsage['total_purchased'] =
           ((_mockUsage['total_purchased'] as int?) ?? 0) + 1000;
       return;

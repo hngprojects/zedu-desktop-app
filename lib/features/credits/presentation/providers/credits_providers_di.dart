@@ -9,13 +9,13 @@ final creditsRemoteDataSourceProvider = Provider<CreditsRemoteDataSource>(
 );
 
 final creditsRepositoryProvider = Provider<CreditsRepository>(
-  (ref) => CreditsRepositoryImpl(
-    remote: ref.watch(creditsRemoteDataSourceProvider),
-  ),
+  (ref) =>
+      CreditsRepositoryImpl(remote: ref.watch(creditsRemoteDataSourceProvider)),
 );
 
-final creditsNotifierProvider =
-    NotifierProvider<CreditsNotifier, CreditsState>(CreditsNotifier.new);
+final creditsNotifierProvider = NotifierProvider<CreditsNotifier, CreditsState>(
+  CreditsNotifier.new,
+);
 
 final orgCreditBalanceProvider = Provider<int>((ref) {
   final creditsState = ref.watch(creditsNotifierProvider);

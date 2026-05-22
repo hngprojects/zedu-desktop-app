@@ -92,7 +92,9 @@ class ChatHistoryNotifier extends ChangeNotifier {
     }
 
     // Poll every 10 seconds for new messages.
-    _pollingTimer = Stream<int>.periodic(const Duration(seconds: 10)).listen((_) {
+    _pollingTimer = Stream<int>.periodic(const Duration(seconds: 10)).listen((
+      _,
+    ) {
       _pollForNewMessages();
     });
   }
@@ -141,7 +143,6 @@ class ChatHistoryNotifier extends ChangeNotifier {
     (_pollingTimer as dynamic)?.cancel();
     super.dispose();
   }
-
 
   Future<void> loadMore() async {
     if (isLoading || !hasMore) return;

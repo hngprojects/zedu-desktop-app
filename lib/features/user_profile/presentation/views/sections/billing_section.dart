@@ -91,9 +91,7 @@ class _BillingSectionState extends ConsumerState<BillingSection> {
         Container(
           padding: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: colors.primary, width: 2),
-            ),
+            border: Border(bottom: BorderSide(color: colors.primary, width: 2)),
           ),
           child: Text(
             'Payment history',
@@ -103,10 +101,7 @@ class _BillingSectionState extends ConsumerState<BillingSection> {
             ),
           ),
         ),
-        Container(
-          height: 1,
-          color: colors.divider,
-        ),
+        Container(height: 1, color: colors.divider),
         const SizedBox(height: 48),
         Center(
           child: Column(
