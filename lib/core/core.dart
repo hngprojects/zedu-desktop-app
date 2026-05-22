@@ -4,6 +4,7 @@ export 'locator/locator.dart';
 export 'navigator/navigator.dart';
 export 'secure_storage/secure_storage.dart';
 export 'utils/utils.dart';
+export 'layout/layout.dart';
 export 'theme/theme.dart';
 export 'widgets/widgets.dart';
 export 'mock/mock.dart';

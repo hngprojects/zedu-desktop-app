@@ -289,7 +289,7 @@ class OrganizationRemoteDataSourceImpl implements OrganizationRemoteDataSource {
         return;
       }
       AppLogger.d('DELETE /organisations/$orgId', tag: _tag);
-      await _apiBaseService.delete<Map<String, dynamic>>(
+      await _apiBaseService.delete<dynamic>(
         path: '/organisations/$orgId',
       );
     } on ApiFailure {
@@ -340,7 +340,7 @@ class OrganizationRemoteDataSourceImpl implements OrganizationRemoteDataSource {
         return;
       }
       AppLogger.d('POST /users/switch-org — $orgId', tag: _tag);
-      await _apiBaseService.post<Map<String, dynamic>>(
+      await _apiBaseService.post<dynamic>(
         path: '/users/switch-org',
         data: {'current_org': orgId},
       );

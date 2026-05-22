@@ -89,32 +89,35 @@ class WorkspaceSwitcherList extends ConsumerWidget {
               child: ref.watch(userOrganizationsProvider).when(
                 data: (organizations) {
                   if (organizations.isEmpty) return const SizedBox.shrink();
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    padding: EdgeInsets.zero,
-                    itemCount: organizations.length,
-                    itemBuilder: (context, index) {
-                      final org = organizations[index];
-                      final isActive = activeOrg.id == org.id;
-                      return _WorkspaceListItem(
-                        org: org,
-                        isActive: isActive,
-                        onTap: () async {
-                          try {
-                            await ref.read(activeOrganizationProvider.notifier).switchOrganization(org);
-                            if (context.mounted) {
-                              Navigator.pop(context);
+                  return ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 250),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.zero,
+                      itemCount: organizations.length,
+                      itemBuilder: (context, index) {
+                        final org = organizations[index];
+                        final isActive = activeOrg.id == org.id;
+                        return _WorkspaceListItem(
+                          org: org,
+                          isActive: isActive,
+                          onTap: () async {
+                            try {
+                              await ref.read(activeOrganizationProvider.notifier).switchOrganization(org);
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Failed to switch workspace')),
+                                );
+                              }
                             }
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Failed to switch workspace')),
-                              );
-                            }
-                          }
-                        },
-                      );
-                    },
+                          },
+                        );
+                      },
+                    ),
                   );
                 },
                 loading: () => const Padding(

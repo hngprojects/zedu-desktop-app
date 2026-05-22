@@ -21,17 +21,6 @@ class AppRouter {
     initialLocation: login,
     routes: [
       GoRoute(path: login, builder: (context, state) => const LoginView()),
-      GoRoute(
-        path: createOrganization,
-        builder: (context, state) => const CreateOrganizationPage(),
-      ),
-      GoRoute(
-        path: '$_orgSettingsBase/:orgId',
-        builder: (context, state) => OrganizationGeneralSettingsPage(
-          orgId: state.pathParameters['orgId']!,
-        ),
-      ),
-      GoRoute(path: home, builder: (context, state) => const HomeView()),
       GoRoute(path: signup, builder: (context, state) => const SignUpView()),
       GoRoute(
         path: forgotPassword,
@@ -51,9 +40,25 @@ class AppRouter {
           return ChangePasswordView(email: email);
         },
       ),
-      GoRoute(
-        path: profile,
-        builder: (context, state) => const UserProfileView(),
+      ShellRoute(
+        builder: (context, state, child) => GlobalAppLayout(child: child),
+        routes: [
+          GoRoute(
+            path: createOrganization,
+            builder: (context, state) => const CreateOrganizationPage(),
+          ),
+          GoRoute(
+            path: '$_orgSettingsBase/:orgId',
+            builder: (context, state) => OrganizationGeneralSettingsPage(
+              orgId: state.pathParameters['orgId']!,
+            ),
+          ),
+          GoRoute(path: home, builder: (context, state) => const HomeView()),
+          GoRoute(
+            path: profile,
+            builder: (context, state) => const UserProfileView(),
+          ),
+        ],
       ),
     ],
   );

@@ -87,14 +87,12 @@ class _OrganizationGeneralSettingsPageState
       return;
     }
 
-    await showProfileConfirmDialog(
-      context,
-      title: 'Delete organization?',
-      message:
-          'This will remove the organization and its related workspace data.',
-      confirmLabel: 'Delete organization',
-      onConfirm: () => _deleteOrganization(org),
-      destructive: true,
+    showDialog<void>(
+      context: context,
+      builder: (_) => DeleteOrganizationModal(
+        organization: org,
+        onConfirm: () => _deleteOrganization(org),
+      ),
     );
   }
 

@@ -297,63 +297,60 @@ class _UpdateOrganizationModalState
                             ),
                             const SizedBox(height: 12),
 
-                            Center(
-                              child: OrganizationLogo(
-                                logoUrl: _isImageRemoved ? '' : widget.organization.logoUrl,
-                                logoFile: _pickedImage,
-                                name: widget.organization.name,
-                                size: 100,
-                                borderRadius: 8,
-                              ),
+                            OrganizationLogo(
+                              logoUrl: _isImageRemoved ? '' : widget.organization.logoUrl,
+                              logoFile: _pickedImage,
+                              name: widget.organization.name,
+                              size: 100,
+                              borderRadius: 8,
                             ),
 
                             const SizedBox(height: 16),
 
-                            Center(
-                              child: Column(
-                                children: [
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.upload_outlined,
-                                        size: 16,
-                                        color: context.colors.primary,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      GestureDetector(
-                                        onTap: _pickImage,
-                                        child: Text(
-                                          'Upload photo',
-                                          style: context.textTheme.bodySmall
-                                              ?.copyWith(
-                                            color: context.colors.primary,
-                                            decoration:
-                                                TextDecoration.underline,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  if (_pickedImage != null ||
-                                      (!_isImageRemoved &&
-                                          widget.organization.logoUrl.isNotEmpty)) ...[
-                                    const SizedBox(height: 4),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.upload_outlined,
+                                      size: 16,
+                                      color: context.colors.primary,
+                                    ),
+                                    const SizedBox(width: 4),
                                     GestureDetector(
-                                      onTap: _removeImage,
+                                      onTap: _pickImage,
                                       child: Text(
-                                        'Remove photo',
+                                        'Upload photo',
                                         style: context.textTheme.bodySmall
                                             ?.copyWith(
-                                          color: context.colors.error,
+                                          color: context.colors.primary,
                                           decoration:
                                               TextDecoration.underline,
                                         ),
                                       ),
                                     ),
                                   ],
+                                ),
+                                if (_pickedImage != null ||
+                                    (!_isImageRemoved &&
+                                        widget.organization.logoUrl.isNotEmpty)) ...[
+                                  const SizedBox(height: 4),
+                                  GestureDetector(
+                                    onTap: _removeImage,
+                                    child: Text(
+                                      'Remove photo',
+                                      style: context.textTheme.bodySmall
+                                          ?.copyWith(
+                                        color: context.colors.error,
+                                        decoration:
+                                            TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ),
                                 ],
-                              ),
+                              ],
                             ),
                           ],
                         ),

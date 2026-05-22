@@ -67,7 +67,7 @@ class OrganisationModel {
       creditBalance: (json['credit_balance'] as num?)?.toInt() ?? 0,
       channelsCount: (json['channels_count'] as num?)?.toInt() ?? 0,
       totalMessagesCount: (json['total_messages_count'] as num?)?.toInt() ?? 0,
-      orgRoles: json['org_roles'] as List<dynamic>,
+      orgRoles: (json['org_roles'] as List<dynamic>?) ?? <dynamic>[],
       pinned: json['pinned'] as bool,
       users: json['Users'],
       createdAt: DateTime.parse(json['created_at'] as String),
@@ -85,7 +85,7 @@ class OrganisationModel {
       ),
     );
   }
- OrganizationModel toOrganizationModel() {
+  OrganizationModel toOrganizationModel() {
     return OrganizationModel(
       id: id,
       name: name,
@@ -125,5 +125,4 @@ class OrganisationModel {
       updatedAt: updatedAt,
     );
   }
-
 }
