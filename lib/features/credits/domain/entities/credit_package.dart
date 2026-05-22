@@ -19,7 +19,7 @@ class CreditPackage {
 
   bool get isFree => price == 0;
 
-  String get priceLabel => price == 0 ? '\$0' : '\$$price';
+  String get priceLabel => price == 0 ? r'$0' : '\$$price';
 
   String get ctaLabel {
     if (isFree) return 'Current Plan';
