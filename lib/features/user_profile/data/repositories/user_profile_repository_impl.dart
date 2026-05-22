@@ -56,6 +56,21 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   }
 
   @override
+  Future<Result<OrganizationProfile>> createOrganization({
+    required String name,
+    required String type,
+    required String country,
+  }) {
+    return _guard(
+      () => _remote.createOrganization(
+        name: name,
+        type: type,
+        country: country,
+      ),
+    );
+  }
+
+  @override
   Future<Result<OrganizationProfile>> updateOrganization(
     OrganizationProfile organization,
   ) {
@@ -68,16 +83,17 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   }
 
   @override
-  Future<Result<List<TeamMember>>> getTeamMembers() {
-    return _guard(_remote.getTeamMembers);
+  Future<Result<List<TeamMember>>> getTeamMembers({String? orgId}) {
+    return _guard(() => _remote.getTeamMembers(orgId: orgId));
   }
 
   @override
   Future<Result<TeamMember>> inviteMember({
     required String email,
     required String role,
+    required String orgId,
   }) {
-    return _guard(() => _remote.inviteMember(email: email, role: role));
+    return _guard(() => _remote.inviteMember(email: email, role: role, orgId: orgId));
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:zedu/core/core.dart';
+import 'package:zedu/features/features.dart';
 
 class AuthInterceptor extends Interceptor {
   AuthInterceptor({required SecureStorageService storage}) : _storage = storage;
@@ -21,7 +22,7 @@ class AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     if (err.response?.statusCode == 401) {
-      await _storage.clearAll();
+      await _storage.deleteAccessToken();
       onUnauthorized?.call();
     }
     handler.next(err);

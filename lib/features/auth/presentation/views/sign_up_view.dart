@@ -11,11 +11,13 @@ class SignUpView extends ConsumerStatefulWidget {
 class _SignUpViewState extends ConsumerState<SignUpView> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   void dispose() {
     _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -26,6 +28,7 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
     ref
         .read(authNotifierProvider.notifier)
         .signUp(
+          username: _usernameController.text.trim(),
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
@@ -135,6 +138,19 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      AppTextField(
+                        controller: _usernameController,
+                        label: 'Username',
+                        hint: 'Enter your username',
+                        textInputAction: TextInputAction.next,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Username is required';
+                          }
+                          return null;
+                        },
+                      ),
+                      context.gapV(16),
                       AppTextField(
                         controller: _emailController,
                         label: 'Email address',

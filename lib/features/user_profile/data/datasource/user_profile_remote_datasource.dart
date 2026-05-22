@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -15,14 +17,20 @@ abstract interface class UserProfileRemoteDataSource {
     required String newPassword,
   });
   Future<OrganizationProfileModel> getOrganization();
+  Future<OrganizationProfileModel> createOrganization({
+    required String name,
+    required String type,
+    required String country,
+  });
   Future<OrganizationProfileModel> updateOrganization(
     OrganizationProfile organization,
   );
   Future<void> deleteOrganization();
-  Future<List<TeamMemberModel>> getTeamMembers();
+  Future<List<TeamMemberModel>> getTeamMembers({String? orgId});
   Future<TeamMemberModel> inviteMember({
     required String email,
     required String role,
+    required String orgId,
   });
   Future<TeamMemberModel> updateMember(TeamMember member);
   Future<void> removeMember(String memberId);
@@ -179,6 +187,7 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
   ) async {
     if (_config.usesMockData) {
       return OrganizationProfileModel(
+        id: organization.id,
         name: organization.name,
         natureOfBusiness: organization.natureOfBusiness,
         country: organization.country,
@@ -187,6 +196,7 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     final response = await _apiBaseService.patch<Map<String, dynamic>>(
       path: '/profile/organization',
       data: OrganizationProfileModel(
+        id: organization.id,
         name: organization.name,
         natureOfBusiness: organization.natureOfBusiness,
         country: organization.country,
@@ -198,6 +208,40 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
   }
 
   @override
+  Future<OrganizationProfileModel> createOrganization({
+    required String name,
+    required String type,
+    required String country,
+  }) async {
+    if (_config.usesMockData) {
+      return OrganizationProfileModel(
+        id: '019700db-4e22-7f90-a20e-f9116291ef24',
+        name: name,
+        natureOfBusiness: type,
+        country: country,
+      );
+    }
+    try {
+      final response = await _apiBaseService.post<Map<String, dynamic>>(
+        path: '/organisations',
+        data: {
+          'name': name,
+          'type': type,
+          'country': country,
+        },
+      );
+      // Small delay to ensure the event loop has processed the request
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      return OrganizationProfileModel.fromJson(response.data['data'] as Map<String, dynamic>);
+    } catch (e) {
+      if (e is DioException) {
+        throw ApiFailure.fromDioException(e);
+      }
+      throw ApiFailure.unknown(e);
+    }
+  }
+
+  @override
   Future<void> deleteOrganization() async {
     if (_config.usesMockData) return;
     await _apiBaseService.delete<Map<String, dynamic>>(
@@ -206,24 +250,81 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
   }
 
   @override
-  Future<List<TeamMemberModel>> getTeamMembers() async {
+  @override
+  Future<List<TeamMemberModel>> getTeamMembers({String? orgId}) async {
     if (_config.usesMockData) {
-      return _members.map(TeamMemberModel.fromJson).toList();
+      List<TeamMemberModel> loadedTeamMembers = [];
+      
+      // Load persisted mock members if they exist
+      if (orgId != null) {
+        final storage = locator<SecureStorageService>();
+        final data = await storage.readData('mock_team_members_$orgId');
+        if (data != null) {
+          try {
+            final List<dynamic> decoded = jsonDecode(data) as List<dynamic>;
+            loadedTeamMembers = decoded
+                .map((e) => TeamMemberModel.fromJson(e as Map<String, dynamic>))
+                .toList();
+          } catch (_) {}
+        }
+      }
+
+      if (loadedTeamMembers.isNotEmpty) {
+        return loadedTeamMembers;
+      }
+
+      final list = _members.map(TeamMemberModel.fromJson).toList();
+      // Dynamically generate 1000+ mock members to demonstrate efficient search and scroll!
+      if (list.length < 100) {
+        final roles = ['User', 'Guess', 'Manager', 'Project Lead'];
+        for (int i = 1; i <= 1000; i++) {
+          list.add(TeamMemberModel(
+            id: 'member-mock-$i',
+            email: 'teammate$i@zedu.app',
+            role: roles[i % roles.length],
+            dateJoined: 'May ${i % 20 + 1}, 2026',
+            status: TeamMemberStatus.active,
+            name: 'Teammate $i',
+            avatarUrl: null,
+          ));
+        }
+      }
+      return list;
     }
-    final response = await _apiBaseService.get<Map<String, dynamic>>(
-      path: '/profile/organization/members',
-    );
-    final data = response.data['data'] as List<dynamic>;
-    return data
-        .cast<Map<String, dynamic>>()
-        .map(TeamMemberModel.fromJson)
-        .toList();
+
+    if (orgId == null || orgId.length < 36) {
+      orgId = '019700db-4e22-7f90-a20e-f9116291ef24';
+    }
+
+    try {
+      final response = await _apiBaseService.get<Map<String, dynamic>>(
+        path: '/organisations/$orgId/users',
+      );
+      final data = response.data['data'] as List<dynamic>?;
+      if (data == null) return [];
+      
+      return data.cast<Map<String, dynamic>>().map((user) {
+        // Map backend user to TeamMemberModel
+        return TeamMemberModel(
+          id: user['id'] as String? ?? '',
+          email: user['email'] as String? ?? '',
+          role: user['role'] as String? ?? 'User',
+          dateJoined: user['created_at'] as String? ?? '',
+          status: TeamMemberStatus.active, // Or parse from user['status']
+          name: user['name'] as String? ?? user['username'] as String? ?? 'Unknown',
+          avatarUrl: user['avatar_url'] as String?,
+        );
+      }).toList();
+    } catch (e) {
+      return [];
+    }
   }
 
   @override
   Future<TeamMemberModel> inviteMember({
     required String email,
     required String role,
+    required String orgId,
   }) async {
     if (_config.usesMockData) {
       return TeamMemberModel(
@@ -232,14 +333,37 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
         role: role,
         dateJoined: 'Pending',
         status: TeamMemberStatus.pending,
+        name: email.split('@').first,
       );
     }
     final response = await _apiBaseService.post<Map<String, dynamic>>(
-      path: '/profile/organization/members',
-      data: {'email': email, 'role': role},
+      path: '/invite',
+      data: {
+        'org_id': orgId,
+        'emails': [email],
+        'role_id': role,
+      },
     );
-    return TeamMemberModel.fromJson(
-      response.data['data'] as Map<String, dynamic>,
+    final data = response.data['data'] as Map<String, dynamic>;
+    final invites = data['invitations'] as List<dynamic>? ?? [];
+    if (invites.isNotEmpty) {
+      final invite = invites.first as Map<String, dynamic>;
+      return TeamMemberModel(
+        id: invite['id'] as String? ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        email: invite['email'] as String? ?? email,
+        role: role,
+        dateJoined: invite['sent_at'] as String? ?? 'Pending',
+        status: TeamMemberStatus.pending,
+        name: email.split('@').first,
+      );
+    }
+    return TeamMemberModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      email: email,
+      role: role,
+      dateJoined: 'Pending',
+      status: TeamMemberStatus.pending,
+      name: email.split('@').first,
     );
   }
 
@@ -252,6 +376,8 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
         role: member.role,
         dateJoined: member.dateJoined,
         status: member.status,
+        name: member.name,
+        avatarUrl: member.avatarUrl,
       );
     }
     final response = await _apiBaseService.patch<Map<String, dynamic>>(
@@ -351,6 +477,39 @@ const _members = [
     'role': 'Administrator',
     'date_joined': 'May 3, 2026',
     'status': 'active',
+    'name': 'Anonymoususer',
+  },
+  {
+    'id': 'member-2',
+    'email': 'ruby@zedu.app',
+    'role': 'User',
+    'date_joined': 'May 4, 2026',
+    'status': 'active',
+    'name': 'Ruby - Social Media Handler',
+  },
+  {
+    'id': 'member-3',
+    'email': 'alice@zedu.app',
+    'role': 'User',
+    'date_joined': 'May 5, 2026',
+    'status': 'active',
+    'name': 'Alice - Product Designer',
+  },
+  {
+    'id': 'member-4',
+    'email': 'bob@zedu.app',
+    'role': 'User',
+    'date_joined': 'May 6, 2026',
+    'status': 'active',
+    'name': 'Bob - Software Engineer',
+  },
+  {
+    'id': 'member-5',
+    'email': 'charlie@zedu.app',
+    'role': 'Manager',
+    'date_joined': 'May 7, 2026',
+    'status': 'active',
+    'name': 'Charlie - Product Lead',
   },
 ];
 

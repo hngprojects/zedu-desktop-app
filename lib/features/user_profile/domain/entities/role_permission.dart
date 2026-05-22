@@ -1,3 +1,6 @@
+import 'package:zedu/core/core.dart';
+import 'package:zedu/features/features.dart';
+
 class RolePermission {
   const RolePermission({
     required this.role,

@@ -1,3 +1,6 @@
+import 'package:zedu/core/core.dart';
+import 'package:zedu/features/features.dart';
+
 // import 'package:zedu/core/core.dart';
 class PlanDetailsModel {
   const PlanDetailsModel({
@@ -64,10 +67,10 @@ class PlanDetailsModel {
       name: json['name'] as String? ?? '',
       description: json['description'] as String? ?? '',
       benefits: (json['benefits'] as List<dynamic>?)?.cast<String>(),
-      fee: json['fee'] as int? ?? 0,
-      maxChannels: json['max_channels'] as int? ?? 0,
-      maxUsers: json['max_users'] as int? ?? 0,
-      maxNotifications: json['max_notifications'] as int? ?? 0,
+      fee: (json['fee'] as num?)?.toInt() ?? 0,
+      maxChannels: (json['max_channels'] as num?)?.toInt() ?? 0,
+      maxUsers: (json['max_users'] as num?)?.toInt() ?? 0,
+      maxNotifications: (json['max_notifications'] as num?)?.toInt() ?? 0,
       canUpgradeNotifications:
           json['can_upgrade_notifications'] as bool? ?? false,
       canAddUnlimitedChannels:
@@ -80,9 +83,9 @@ class PlanDetailsModel {
       createYourOwnAiCoWorkers:
           json['create_your_own_ai_co_workers'] as bool? ?? false,
       aiCreditsPurchasable: json['ai_credits_purchasable'] as bool? ?? false,
-      maxCallDuration: json['max_call_duration'] as int? ?? 0,
-      maxBuzzParticipants: json['max_buzz_participants'] as int? ?? 0,
-      maxActiveCalls: json['max_active_calls'] as int? ?? 0,
+      maxCallDuration: (json['max_call_duration'] as num?)?.toInt() ?? 0,
+      maxBuzzParticipants: (json['max_buzz_participants'] as num?)?.toInt() ?? 0,
+      maxActiveCalls: (json['max_active_calls'] as num?)?.toInt() ?? 0,
       callRecordsAvailable: json['call_records_available'] as bool? ?? false,
       transcriptAvailable: json['transcript_available'] as bool? ?? false,
       advancedControls: json['advanced_controls'] as bool? ?? false,
@@ -90,7 +93,7 @@ class PlanDetailsModel {
       createdAt: DateTime.parse(
         json['created_at'] as String? ?? '0001-01-01T00:00:00Z',
       ),
-      credits: json['credits'] as int? ?? 0,
+      credits: (json['credits'] as num?)?.toInt() ?? 0,
       updatedAt: DateTime.parse(
         json['updated_at'] as String? ?? '0001-01-01T00:00:00Z',
       ),
