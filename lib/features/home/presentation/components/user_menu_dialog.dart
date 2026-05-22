@@ -1,11 +1,26 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
-class UserMenuDialog extends ConsumerWidget {
+class UserMenuDialog extends ConsumerStatefulWidget {
   const UserMenuDialog({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<UserMenuDialog> createState() => _UserMenuDialogState();
+}
+
+class _UserMenuDialogState extends ConsumerState<UserMenuDialog> {
+  bool _isEmojiPickerOpen = false;
+  String? _selectedEmoji;
+
+  final List<String> _emojis = const [
+    '😀', '😅', '😊', '😍', '😎', '🤔',
+    '😴', '🥳', '😭', '😡', '👍', '🙏',
+    '🔥', '✨', '🎉', '🚀', '👀', '💯',
+    '❤️', '🙌', '👏', '🤝', '💼', '💻',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.colors;
     final menuState = ref.watch(userMenuStateProvider);
     final menuNotifier = ref.read(userMenuStateProvider.notifier);
@@ -110,35 +125,69 @@ class UserMenuDialog extends ConsumerWidget {
 
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    showDialog<void>(
-                      context: context,
-                      builder: (context) => const UpdateStatusDialog(),
-                    );
-                  },
-                  icon: Icon(
-                    Icons.sentiment_satisfied_alt,
-                    size: 20,
-                    color: colors.textPrimary,
-                  ),
-                  label: Text(
-                    'Update your status',
-                    style: TextStyle(
-                      color: colors.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.normal,
+                child: Column(
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _isEmojiPickerOpen = !_isEmojiPickerOpen;
+                        });
+                      },
+                      icon: _selectedEmoji != null
+                          ? Text(_selectedEmoji!, style: const TextStyle(fontSize: 18))
+                          : Icon(
+                              Icons.sentiment_satisfied_alt,
+                              size: 20,
+                              color: colors.textPrimary,
+                            ),
+                      label: Text(
+                        _selectedEmoji != null ? 'Status updated' : 'Update your status',
+                        style: TextStyle(
+                          color: colors.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(40),
+                        alignment: Alignment.centerLeft,
+                        side: BorderSide(color: colors.divider),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
                     ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(40),
-                    alignment: Alignment.centerLeft,
-                    side: BorderSide(color: colors.divider),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
+                    if (_isEmojiPickerOpen) ...[
+                      const SizedBox(height: 12),
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _emojis.length,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 6,
+                          mainAxisSpacing: 8,
+                          crossAxisSpacing: 8,
+                        ),
+                        itemBuilder: (context, index) {
+                          return InkWell(
+                            onTap: () {
+                              setState(() {
+                                _selectedEmoji = _emojis[index];
+                                _isEmojiPickerOpen = false;
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            child: Center(
+                              child: Text(
+                                _emojis[index],
+                                style: const TextStyle(fontSize: 20),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ],
                 ),
               ),
               const SizedBox(height: 12),
@@ -176,9 +225,7 @@ class UserMenuDialog extends ConsumerWidget {
                 label: 'Profile...',
                 onTap: () {
                   Navigator.pop(context);
-                  if (context.mounted) {
-                    context.go(AppRouter.profile);
-                  }
+                  ref.read(personalProfilePanelProvider.notifier).state = true;
                 },
               ),
               const SizedBox(height: 12),
@@ -188,6 +235,9 @@ class UserMenuDialog extends ConsumerWidget {
                 label: 'Preferences...',
                 onTap: () {
                   Navigator.pop(context);
+                  if (context.mounted) {
+                    context.go(AppRouter.profile);
+                  }
                 },
               ),
               const SizedBox(height: 12),

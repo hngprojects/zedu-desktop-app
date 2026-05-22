@@ -20,6 +20,9 @@ class TopUserMenu extends ConsumerWidget {
             context.go(AppRouter.buyCredits);
           }
         } else if (value == 'profile') {
+          // Toggle the personal profile panel overlay
+          ref.read(personalProfilePanelProvider.notifier).state = true;
+        } else if (value == 'preferences') {
           if (context.mounted) {
             context.go(AppRouter.profile);
           }
@@ -71,6 +74,20 @@ class TopUserMenu extends ConsumerWidget {
               Icon(Icons.person_outline, size: 20, color: colors.textPrimary),
               const SizedBox(width: 8),
               const Text('Profile'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'preferences',
+          child: Row(
+            children: [
+              Icon(
+                Icons.settings_outlined,
+                size: 20,
+                color: colors.textPrimary,
+              ),
+              const SizedBox(width: 8),
+              const Text('Preferences'),
             ],
           ),
         ),
