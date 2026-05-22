@@ -12,57 +12,130 @@ class BillingSection extends ConsumerStatefulWidget {
 
 class _BillingSectionState extends ConsumerState<BillingSection> {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final orgId = ref.read(authNotifierProvider).user?.currentOrg;
-      if (orgId != null && orgId.isNotEmpty) {
-        ref.read(creditsNotifierProvider.notifier).load(orgId: orgId);
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final creditsState = ref.watch(creditsNotifierProvider);
-    final authUser = ref.watch(authNotifierProvider).user;
+    final colors = context.colors;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ProfileSectionHeader(
-          title: 'Billing & Plans',
-          subtitle: widget.billing.description,
-          trailing: TextButton(
-            onPressed: () => context.go(AppRouter.buyCredits),
-            child: const Text('Buy AI credits'),
+        Text(
+          'Your Organisation Billing Information',
+          style: context.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: colors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'Current subscription: ${widget.billing.plan}',
-          style: context.textTheme.bodyMedium,
-        ),
-        const SizedBox(height: 28),
-        Text(
-          'All Plans',
-          style: context.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF374151),
+          'Securely manage your organization\'s billing details, payment history, and subscriptions.',
+          style: context.textTheme.bodyMedium?.copyWith(
+            color: colors.textSecondary.withValues(alpha: 0.7),
           ),
         ),
-        const SizedBox(height: 20),
-        if (creditsState.isLoading)
-          const Padding(
-            padding: EdgeInsets.all(32),
-            child: Center(child: CircularProgressIndicator()),
-          )
-        else
-          CreditPackagesGrid(
-            packages: creditsState.packages,
-            currentPlanSlug: authUser?.subscriptionPlanId,
-            onPurchase: (_) => context.go(AppRouter.buyCredits),
+        const SizedBox(height: 32),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          decoration: BoxDecoration(
+            color: colors.primaryBg,
+            borderRadius: BorderRadius.circular(8),
           ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Zedu Free',
+                      style: context.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'You are enjoying the full Zedu experience with ability to add as many users to your organisation.',
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: colors.textSecondary.withValues(alpha: 0.6),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 24),
+              OutlinedButton(
+                onPressed: () {},
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: colors.primary,
+                  side: BorderSide(color: colors.borderOutline),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                child: const Text(
+                  'Invite People',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 48),
+        Container(
+          padding: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: colors.primary, width: 2),
+            ),
+          ),
+          child: Text(
+            'Payment history',
+            style: context.textTheme.bodyMedium?.copyWith(
+              color: colors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Container(
+          height: 1,
+          color: colors.divider,
+        ),
+        const SizedBox(height: 48),
+        Center(
+          child: Column(
+            children: [
+              Image.asset(
+                'assets/pngs/empty_box.png',
+                width: 140,
+                height: 140,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No payment history found.',
+                style: context.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Your payment and transaction history will appear here once you start using paid features.',
+                textAlign: TextAlign.center,
+                style: context.textTheme.bodySmall?.copyWith(
+                  color: colors.textSecondary.withValues(alpha: 0.6),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }

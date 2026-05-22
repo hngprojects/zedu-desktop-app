@@ -54,7 +54,12 @@ class _BuyCreditsViewState extends ConsumerState<BuyCreditsView> {
         ? state.usage.balance
         : (authUser?.creditBalance ?? 0);
 
-    return CreditsPurchaseShell(
+    return ProfileSettingsShell(
+      selectedSection: UserProfileSection.billing,
+      onSectionSelected: (section) {
+        ref.read(userProfileNotifierProvider.notifier).selectSection(section);
+        context.go(AppRouter.profile);
+      },
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(28, 32, 40, 48),
         child: Align(
@@ -109,6 +114,15 @@ class _BuyCreditsViewState extends ConsumerState<BuyCreditsView> {
   }
 
   Future<void> _onPurchase(BuildContext context, CreditPackage package) async {
+    if (package.name.toLowerCase() == 'enterprise') {
+      AppToastService.show(
+        context,
+        type: AppToastType.success,
+        message: 'Contacting Sales... We will reach out to you shortly!',
+      );
+      return;
+    }
+
     final user = ref.read(authNotifierProvider).user;
     if (user == null) return;
 

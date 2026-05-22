@@ -25,6 +25,14 @@ abstract interface class AuthRemoteDataSource {
     required String oldPassword,
     required String newPassword,
   });
+  Future<void> changeStatus({
+    required String icon,
+    required String text,
+    required bool pauseNotifications,
+    required String statusTimeout,
+    required bool clearStatus,
+    required bool online,
+  });
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -298,6 +306,41 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         error: error,
       );
       throw ApiFailure.fromParsingError(error, path: '/auth/google');
+    }
+  }
+  @override
+  Future<void> changeStatus({
+    required String icon,
+    required String text,
+    required bool pauseNotifications,
+    required String statusTimeout,
+    required bool clearStatus,
+    required bool online,
+  }) async {
+    try {
+      if (_config.usesMockData) {
+        AppLogger.d('Using mock data for POST /profile/change-status', tag: _tag);
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+        return;
+      }
+
+      AppLogger.d('POST /profile/change-status', tag: _tag);
+      await _apiBaseService.post<dynamic>(
+        path: 'profile/change-status',
+        data: {
+          'icon': icon,
+          'text': text,
+          'pause_notification': pauseNotifications,
+          'status_timeout': statusTimeout,
+          'clear_status': clearStatus,
+          'online': online,
+        },
+      );
+    } on ApiFailure {
+      rethrow;
+    } catch (error) {
+      AppLogger.e('Failed /profile/change-status', tag: _tag, error: error);
+      throw ApiFailure.unknown(error);
     }
   }
 }

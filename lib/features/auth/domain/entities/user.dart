@@ -1,4 +1,6 @@
-// import 'package:zedu/core/core.dart';
+// ignore_for_file: unused_import
+import 'user_status.dart';
+
 class User {
   const User({
     required this.id,
@@ -17,6 +19,7 @@ class User {
     this.creditBalance = 0,
     this.subscriptionPlanId = 'free',
     this.aiCreditsPurchasable = true,
+    this.status = UserStatus.empty,
   });
 
   final String id;
@@ -35,6 +38,9 @@ class User {
   final int creditBalance;
   final String subscriptionPlanId;
   final bool aiCreditsPurchasable;
+
+  /// Live presence and custom status for this user.
+  final UserStatus status;
 
   String get fullname => '$firstName $lastName';
 }
