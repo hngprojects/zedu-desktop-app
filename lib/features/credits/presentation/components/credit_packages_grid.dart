@@ -25,80 +25,8 @@ class CreditPackagesGrid extends StatelessWidget {
     return const Color(0xFF8B5CF6);
   }
 
-  CreditPackage _enrichPackageWithUI(CreditPackage apiPackage) {
-    final slug = apiPackage.planSlug?.toLowerCase() ?? apiPackage.name.toLowerCase();
-    
-    String name = apiPackage.name;
-    String desc = apiPackage.description;
-    List<String> benefits = apiPackage.benefits;
-    int credits = apiPackage.credits;
-
-    if (slug.contains('pro_plus') || slug.contains('pro plus') || slug.contains('pro-plus')) {
-      name = 'Pro Plus';
-      desc = 'Built for advanced learning teams';
-      benefits = [
-        'Create your own AI Co Workers',
-        'Unlimited AI Co Workers',
-        'AI Credits purchaeable',
-        '1 hour maximum call duration',
-        'Up to 500 buzz partiipants',
-        'Up to 500 active calls per workspace',
-        'Advanced controls for administrator only',
-        'Call records available',
-      ];
-    } else if (slug.contains('pro') && !slug.contains('plus')) {
-      name = 'Pro';
-      desc = 'Ideal for growing learners';
-      benefits = [
-        'Create your own AI Co Workers',
-        'Unlimited AI Co Workers',
-        'AI Credits purchaeable',
-        '1 hour maximum call duration',
-        'Up to 50 buzz participants',
-        'Up to 50 active calls per workspace',
-        'Advanced controls for administrator only',
-      ];
-    } else if (slug.contains('business')) {
-      name = 'Business';
-      desc = 'Designed for organizations';
-      benefits = [
-        'Create your own AI Co Workers',
-        'Unlimited AI Co Workers',
-        'AI Credits purchaeable',
-        'Unlimited call duration',
-        'Up to 1500 buzz participants',
-        'Up to 1500 active calls per workspace',
-        'Call records and transcript available',
-        'Advanced controls for administrator only',
-      ];
-    } else if (slug.contains('enterprise')) {
-      name = 'Enterprise';
-      desc = 'Tailored for large institutions';
-      benefits = [
-        'Create your own AI Co Workers',
-        'Unlimited AI Co Workers',
-        'AI Credits purchaeable',
-        'Unlimited call duration',
-        'Unlimited buzz participants',
-        'Up to 1000 active calls per workspace',
-        'Call records and transcript available',
-        'Advanced controls for every user',
-      ];
-    }
-
-    return CreditPackage(
-      id: apiPackage.id,
-      name: name,
-      description: desc,
-      price: apiPackage.price,
-      credits: credits,
-      benefits: benefits.isEmpty ? apiPackage.benefits : benefits,
-      planSlug: apiPackage.planSlug,
-    );
-  }
-
   List<CreditPackage> get _displayPackages {
-    final list = <CreditPackage>[
+    final defaultPackages = [
       const CreditPackage(
         id: 'free',
         name: 'Free',
@@ -115,12 +43,100 @@ class CreditPackagesGrid extends StatelessWidget {
         ],
         planSlug: 'free',
       ),
+      const CreditPackage(
+        id: 'pro',
+        name: 'Pro',
+        description: 'Ideal for growing learners',
+        price: 20,
+        credits: 5000,
+        benefits: [
+          'Create your own AI Co Workers',
+          'Unlimited AI Co Workers',
+          'AI Credits purchaeable',
+          '1 hour maximum call duration',
+          'Up to 50 buzz participants',
+          'Up to 50 active calls per workspace',
+          'Advanced controls for administrator only',
+        ],
+        planSlug: 'pro',
+      ),
+      const CreditPackage(
+        id: 'business',
+        name: 'Business',
+        description: 'Designed for organizations',
+        price: 50,
+        credits: 15000,
+        benefits: [
+          'Create your own AI Co Workers',
+          'Unlimited AI Co Workers',
+          'AI Credits purchaeable',
+          'Unlimited call duration',
+          'Up to 1500 buzz participants',
+          'Up to 1500 active calls per workspace',
+          'Call records and transcript available',
+          'Advanced controls for administrator only',
+        ],
+        planSlug: 'business',
+      ),
+      const CreditPackage(
+        id: 'pro_plus',
+        name: 'Pro Plus',
+        description: 'Built for advanced learning teams',
+        price: 100,
+        credits: 35000,
+        benefits: [
+          'Create your own AI Co Workers',
+          'Unlimited AI Co Workers',
+          'AI Credits purchaeable',
+          '1 hour maximum call duration',
+          'Up to 500 buzz partiipants',
+          'Up to 500 active calls per workspace',
+          'Advanced controls for administrator only',
+          'Call records available',
+        ],
+        planSlug: 'pro_plus',
+      ),
+      const CreditPackage(
+        id: 'enterprise',
+        name: 'Enterprise',
+        description: 'Tailored for large institutions',
+        price: 0,
+        credits: 100000,
+        benefits: [
+          'Create your own AI Co Workers',
+          'Unlimited AI Co Workers',
+          'AI Credits purchaeable',
+          'Unlimited call duration',
+          'Unlimited buzz participants',
+          'Up to 1000 active calls per workspace',
+          'Call records and transcript available',
+          'Advanced controls for every user',
+        ],
+        planSlug: 'enterprise',
+      ),
     ];
-    
-    for (final p in packages) {
-      list.add(_enrichPackageWithUI(p));
-    }
-    return list;
+
+    return defaultPackages.map((uiPkg) {
+      // Find matching package from API to get the correct real ID for purchases
+      final apiMatch = packages.where((p) {
+        final slug = p.planSlug?.toLowerCase() ?? p.name.toLowerCase();
+        if (uiPkg.name == 'Pro Plus') return slug.contains('pro_plus') || slug.contains('pro plus') || slug.contains('pro-plus');
+        if (uiPkg.name == 'Pro') return slug.contains('pro') && !slug.contains('plus');
+        if (uiPkg.name == 'Business') return slug.contains('business');
+        if (uiPkg.name == 'Enterprise') return slug.contains('enterprise');
+        return false;
+      }).firstOrNull;
+
+      return CreditPackage(
+        id: apiMatch?.id ?? uiPkg.id,
+        name: uiPkg.name,
+        description: uiPkg.description,
+        price: uiPkg.price,
+        credits: uiPkg.credits,
+        benefits: uiPkg.benefits,
+        planSlug: uiPkg.planSlug,
+      );
+    }).toList();
   }
 
   @override
