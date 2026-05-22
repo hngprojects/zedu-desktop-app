@@ -10,11 +10,16 @@ class TopUserMenu extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
+    final balance = ref.watch(orgCreditBalanceProvider);
 
     return PopupMenuButton<String>(
       offset: const Offset(0, 40),
       onSelected: (value) async {
-        if (value == 'profile') {
+        if (value == 'buy_credits') {
+          if (context.mounted) {
+            context.go(AppRouter.buyCredits);
+          }
+        } else if (value == 'profile') {
           if (context.mounted) {
             context.go(AppRouter.profile);
           }
@@ -26,6 +31,39 @@ class TopUserMenu extends ConsumerWidget {
         }
       },
       itemBuilder: (context) => [
+        PopupMenuItem(
+          enabled: false,
+          child: Row(
+            children: [
+              Icon(Icons.auto_awesome, size: 20, color: colors.primary),
+              const SizedBox(width: 8),
+              Text(
+                'AI Credits: $balance',
+                style: TextStyle(
+                  color: colors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'buy_credits',
+          child: Row(
+            children: [
+              Icon(Icons.shopping_cart_outlined, size: 20, color: colors.primary),
+              const SizedBox(width: 8),
+              Text(
+                'Buy AI credits',
+                style: TextStyle(
+                  color: colors.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const PopupMenuDivider(),
         PopupMenuItem(
           value: 'profile',
           child: Row(

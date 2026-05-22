@@ -1,18 +1,34 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
-class HomeView extends ConsumerWidget {
+class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends ConsumerState<HomeView> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final orgId = ref.read(authNotifierProvider).user?.currentOrg;
+      if (orgId != null && orgId.isNotEmpty) {
+        ref.read(creditsNotifierProvider.notifier).load(orgId: orgId);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.colors;
 
     return Scaffold(
       backgroundColor: colors.background,
       body: Column(
         children: [
-          _HomeAppBar(ref: ref),
+          const _HomeAppBar(),
           Expanded(
             child: Row(
               children: [
@@ -28,14 +44,14 @@ class HomeView extends ConsumerWidget {
   }
 }
 
-class _HomeAppBar extends StatelessWidget {
-  final WidgetRef ref;
-
-  const _HomeAppBar({required this.ref});
+class _HomeAppBar extends ConsumerWidget {
+  const _HomeAppBar();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
+    final userName =
+        ref.watch(authNotifierProvider).user?.fullname ?? 'Zedu User';
 
     return Container(
       height: 44,
@@ -53,7 +69,7 @@ class _HomeAppBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          const TopUserMenu(userName: 'Zedu User'),
+          TopUserMenu(userName: userName),
           const Spacer(),
           Flexible(
             child: Container(

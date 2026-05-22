@@ -9,6 +9,9 @@ class UserMenuDialog extends ConsumerWidget {
     final colors = context.colors;
     final menuState = ref.watch(userMenuStateProvider);
     final menuNotifier = ref.read(userMenuStateProvider.notifier);
+    final authUser = ref.watch(authNotifierProvider).user;
+    final balance = ref.watch(orgCreditBalanceProvider);
+    final displayName = authUser?.fullname ?? 'AnonymousUser';
 
     return Dialog(
       insetPadding: const EdgeInsets.only(bottom: 24, left: 74),
@@ -32,7 +35,6 @@ class UserMenuDialog extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // User Profile Section
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -61,7 +63,7 @@ class UserMenuDialog extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'AnonymousUser',
+                            displayName,
                             style: TextStyle(
                               color: colors.textPrimary,
                               fontSize: 14,
@@ -77,6 +79,25 @@ class UserMenuDialog extends ConsumerWidget {
                               fontSize: 12,
                             ),
                           ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.auto_awesome,
+                                size: 14,
+                                color: colors.primary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '$balance AI credits',
+                                style: TextStyle(
+                                  color: colors.primary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -87,7 +108,6 @@ class UserMenuDialog extends ConsumerWidget {
               Divider(height: 0, color: colors.divider),
               const SizedBox(height: 8),
 
-              // Update Your Status
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: OutlinedButton.icon(
@@ -123,7 +143,6 @@ class UserMenuDialog extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
 
-              // Set Yourself as Away
               _MenuItemButton(
                 icon: Icons.access_time,
                 label: 'Set yourself as away',
@@ -136,7 +155,6 @@ class UserMenuDialog extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
 
-              // Pause Notifications
               _MenuItemButton(
                 icon: Icons.notifications_off_outlined,
                 label: 'Pause notifications',
@@ -153,7 +171,6 @@ class UserMenuDialog extends ConsumerWidget {
               Divider(height: 0, color: colors.divider),
               const SizedBox(height: 8),
 
-              // Profile
               _MenuItemButton(
                 icon: Icons.person_outline,
                 label: 'Profile...',
@@ -166,7 +183,6 @@ class UserMenuDialog extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
 
-              // Preferences
               _MenuItemButton(
                 icon: Icons.settings_outlined,
                 label: 'Preferences...',
@@ -176,27 +192,27 @@ class UserMenuDialog extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
 
-              // Buy AI Credit
               _MenuItemButton(
                 icon: Icons.shopping_cart_outlined,
                 label: 'Buy AI credits',
                 isHighlight: true,
                 onTap: () {
                   Navigator.pop(context);
+                  if (context.mounted) {
+                    context.go(AppRouter.buyCredits);
+                  }
                 },
               ),
               const SizedBox(height: 12),
               Divider(height: 0, color: colors.divider),
               const SizedBox(height: 8),
 
-              // Logout
               _MenuItemButton(
                 icon: Icons.logout_rounded,
                 label: 'Sign out of Zedu users',
                 isError: true,
                 onTap: () async {
                   Navigator.pop(context);
-                  // Access ref through context to avoid closure issues
                   final authRef = ref.read(authNotifierProvider.notifier);
                   await authRef.logout();
                   if (context.mounted) {
