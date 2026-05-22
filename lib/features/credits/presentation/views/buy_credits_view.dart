@@ -118,37 +118,6 @@ class _BuyCreditsViewState extends ConsumerState<BuyCreditsView> {
 
     if (!context.mounted || checkout == null) return;
 
-    final config = locator<AppConfig>();
-    if (config.usesMockData) {
-      final shouldSimulate = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Complete payment (dev)'),
-          content: Text(
-            'Mock checkout opened.\n\nSession: ${checkout.checkoutSessionId}\n\n'
-            'Simulate a successful Stripe return?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Simulate success'),
-            ),
-          ],
-        ),
-      );
-      if (shouldSimulate == true && context.mounted) {
-        await ref.read(creditsNotifierProvider.notifier).verifyPayment(
-          sessionId: checkout.checkoutSessionId,
-          orgId: user.currentOrg,
-        );
-      }
-      return;
-    }
-
     final uri = Uri.tryParse(checkout.checkoutSessionUrl);
     if (uri == null) {
       AppToastService.show(
@@ -159,13 +128,26 @@ class _BuyCreditsViewState extends ConsumerState<BuyCreditsView> {
       return;
     }
 
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!launched && context.mounted) {
-      AppToastService.show(
-        context,
-        type: AppToastType.error,
-        message: 'Could not open payment page. Check your browser settings.',
+    try {
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.platformDefault,
       );
+      if (!launched && context.mounted) {
+        AppToastService.show(
+          context,
+          type: AppToastType.error,
+          message: 'Could not open payment page automatically.',
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        AppToastService.show(
+          context,
+          type: AppToastType.error,
+          message: 'Error launching payment page: $e',
+        );
+      }
     }
   }
 }
