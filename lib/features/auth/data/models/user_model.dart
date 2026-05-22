@@ -116,5 +116,9 @@ class UserModel {
     isVerified: isVerified,
     isOnboarded: isOnboarded,
     createdAt: createdAt,
+    currentOrg: currentOrg,
+    currentOrganisationSlug: currentOrganisationSlug,
+    avatarUrl: avatarUrl,
+    defaultAvatarUrl: defaultAvatarUrl,
   );
 }
