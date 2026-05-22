@@ -15,13 +15,15 @@ class CreditPackagesGrid extends StatelessWidget {
   final void Function(CreditPackage package) onPurchase;
   final String? purchasingPackageId;
 
-  static const _accentColors = [
-    Color(0xFF6458F5),
-    Color(0xFF22C55E),
-    Color(0xFF6458F5),
-    Color(0xFFFBBF24),
-    Color(0xFF3B82F6),
-  ];
+  Color _getColorForPackage(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('free')) return const Color(0xFFD1D5DB); // Gray-300
+    if (lower.contains('pro plus')) return const Color(0xFFF59E0B); // Amber/Gold
+    if (lower.contains('pro')) return const Color(0xFF22C55E); // Green
+    if (lower.contains('business')) return const Color(0xFF8B5CF6); // Purple
+    if (lower.contains('enterprise')) return const Color(0xFF0EA5E9); // Light Blue
+    return const Color(0xFF8B5CF6);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,15 +31,15 @@ class CreditPackagesGrid extends StatelessWidget {
       spacing: 20,
       runSpacing: 20,
       children: [
-        for (var i = 0; i < packages.length; i++)
+        for (final package in packages)
           CreditPackageCard(
-            package: packages[i],
-            accentColor: _accentColors[i % _accentColors.length],
-            isCurrentPlan: _isCurrentPlan(packages[i]),
-            isLoading: purchasingPackageId == packages[i].id,
-            onPurchase: packages[i].isFree
+            package: package,
+            accentColor: _getColorForPackage(package.name),
+            isCurrentPlan: _isCurrentPlan(package),
+            isLoading: purchasingPackageId == package.id,
+            onPurchase: package.isFree
                 ? null
-                : () => onPurchase(packages[i]),
+                : () => onPurchase(package),
           ),
       ],
     );

@@ -26,9 +26,10 @@ class CreditPackageCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accentColor, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -37,15 +38,6 @@ class CreditPackageCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            height: 4,
-            decoration: BoxDecoration(
-              color: accentColor,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
-            ),
-          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
             child: Column(
@@ -207,7 +199,9 @@ class CreditPackageCard extends StatelessWidget {
                               ),
                             )
                           : Text(
-                              'Upgrade to Zedu ${package.name}',
+                              package.name.toLowerCase().contains('enterprise')
+                                  ? 'Contact Sales'
+                                  : 'Upgrade to Zedu ${package.name}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.w600,
                               ),

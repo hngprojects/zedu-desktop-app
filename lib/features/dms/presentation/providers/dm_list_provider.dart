@@ -48,8 +48,6 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
       _hasMore = false;
     }
 
-    // Inject a test mock if the list is empty, just for testing DM-02.
-    // This will let you test the chat composer without building the "Start DM" flow first.
     if (results.isEmpty && page == 1) {
       return [
         DmConversation(
