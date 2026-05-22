@@ -23,6 +23,6 @@ class CreditPackage {
 
   String get ctaLabel {
     if (isFree) return 'Current Plan';
-    return 'Buy ${name}';
+    return 'Buy $name';
   }
 }
