@@ -22,7 +22,6 @@ class CreditPackageCard extends StatelessWidget {
     final colors = context.colors;
 
     return Container(
-      width: 280,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -194,12 +193,12 @@ class CreditPackageCard extends StatelessWidget {
                   else
                     SizedBox(
                       width: double.infinity,
-                      height: 44,
                       child: FilledButton(
                         onPressed: isLoading ? null : onPurchase,
                         style: FilledButton.styleFrom(
                           backgroundColor: colors.primary,
                           foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -213,14 +212,17 @@ class CreditPackageCard extends StatelessWidget {
                                   color: Colors.white,
                                 ),
                               )
-                            : Text(
-                                package.name.toLowerCase().contains(
-                                      'enterprise',
-                                    )
-                                    ? 'Contact Sales'
-                                    : 'Upgrade to Zedu ${package.name}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
+                            : FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  package.name.toLowerCase().contains(
+                                        'enterprise',
+                                      )
+                                      ? 'Contact Sales'
+                                      : 'Upgrade to Zedu ${package.name}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                       ),

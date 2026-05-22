@@ -17,6 +17,10 @@ class AppPalette {
   final Color error;
   final Color errorBg;
   final Color primaryBg;
+  /// Green dot — user is active/online.
+  final Color presenceActive;
+  /// Dark semi-transparent dot — user is away/offline.
+  final Color presenceAway;
 
   const AppPalette({
     required this.brightness,
@@ -35,6 +39,8 @@ class AppPalette {
     required this.error,
     required this.errorBg,
     required this.primaryBg,
+    required this.presenceActive,
+    required this.presenceAway,
   });
 
   static const light = AppPalette(
@@ -54,5 +60,7 @@ class AppPalette {
     error: Color(0xFFEF4444),
     errorBg: Color(0xFFFFF1F1),
     primaryBg: Color(0xFFF3EFFF),
+    presenceActive: Color(0xFF22C55E),
+    presenceAway: Color(0x661E1E1E),
   );
 }

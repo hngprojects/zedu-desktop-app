@@ -322,4 +322,145 @@ class AuthNotifier extends Notifier<AuthState> {
       await server?.close();
     }
   }
+
+  // ── Status / Presence ────────────────────────────────────────────────────────
+
+  /// Updates user's custom status and online presence.
+  /// On success, the local [AuthState.user.status] is updated immediately
+  /// so every widget watching [authNotifierProvider] reacts without a re-fetch.
+  Future<bool> changeStatus({
+    required String icon,
+    required String text,
+    required StatusTimeout timeout,
+    required bool pauseNotifications,
+    required bool online,
+  }) async {
+    AppLogger.d('changeStatus — "$text" online=$online', tag: _tag);
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    final result = await _repository.changeStatus(
+      icon: icon,
+      text: text,
+      pauseNotifications: pauseNotifications,
+      statusTimeout: timeout.apiValue,
+      clearStatus: false,
+      online: online,
+    );
+
+    switch (result) {
+      case Success<void>():
+        AppLogger.i('Status changed successfully', tag: _tag);
+        final updatedStatus = UserStatus(
+          emoji: icon.isEmpty ? null : icon,
+          text: text.isEmpty ? null : text,
+          expiresAt: _expiryFromTimeout(timeout),
+          pauseNotifications: pauseNotifications,
+          online: online,
+        );
+        state = state.copyWith(
+          isLoading: false,
+          user: state.user?._withStatus(updatedStatus),
+        );
+        return true;
+
+      case Failure<void>():
+        AppLogger.w('Status change failed — ${result.error.message}', tag: _tag);
+        state = state.copyWith(
+          isLoading: false,
+          error: result.error.friendlyMessage,
+        );
+        return false;
+    }
+  }
+
+  /// Clears the current custom status while keeping presence unchanged.
+  Future<bool> clearStatus() async {
+    AppLogger.d('clearStatus', tag: _tag);
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    final currentOnline = state.user?.status.online ?? true;
+    final result = await _repository.changeStatus(
+      icon: '',
+      text: '',
+      pauseNotifications: false,
+      statusTimeout: StatusTimeout.dontRemove.apiValue,
+      clearStatus: true,
+      online: currentOnline,
+    );
+
+    switch (result) {
+      case Success<void>():
+        state = state.copyWith(
+          isLoading: false,
+          user: state.user?._withStatus(UserStatus(online: currentOnline)),
+        );
+        return true;
+      case Failure<void>():
+        state = state.copyWith(
+          isLoading: false,
+          error: result.error.friendlyMessage,
+        );
+        return false;
+    }
+  }
+
+  /// Toggles between Active (online=true) and Away (online=false).
+  Future<void> toggleOnlineStatus() async {
+    final currentUser = state.user;
+    if (currentUser == null) return;
+
+    final newOnline = !currentUser.status.online;
+    AppLogger.d('toggleOnlineStatus → online=$newOnline', tag: _tag);
+
+    final currentStatus = currentUser.status;
+    final result = await _repository.changeStatus(
+      icon: currentStatus.emoji ?? '',
+      text: currentStatus.text ?? '',
+      pauseNotifications: currentStatus.pauseNotifications,
+      statusTimeout: StatusTimeout.dontRemove.apiValue,
+      clearStatus: false,
+      online: newOnline,
+    );
+
+    if (result is Success<void>) {
+      state = state.copyWith(
+        user: currentUser._withStatus(currentStatus.copyWith(online: newOnline)),
+      );
+    }
+  }
+
+  DateTime? _expiryFromTimeout(StatusTimeout timeout) {
+    final now = DateTime.now();
+    return switch (timeout) {
+      StatusTimeout.thirtyMinutes => now.add(const Duration(minutes: 30)),
+      StatusTimeout.oneHour => now.add(const Duration(hours: 1)),
+      StatusTimeout.today => DateTime(now.year, now.month, now.day, 23, 59),
+      StatusTimeout.thisWeek =>
+        now.add(Duration(days: 7 - now.weekday)),
+      StatusTimeout.dontRemove => null,
+    };
+  }
+}
+
+// Private extension to create a new User with a swapped status field.
+extension _UserStatusSwap on User {
+  User _withStatus(UserStatus newStatus) => User(
+        id: id,
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phone: phone,
+        username: username,
+        isVerified: isVerified,
+        isOnboarded: isOnboarded,
+        createdAt: createdAt,
+        currentOrg: currentOrg,
+        currentOrganisationSlug: currentOrganisationSlug,
+        avatarUrl: avatarUrl,
+        defaultAvatarUrl: defaultAvatarUrl,
+        creditBalance: creditBalance,
+        subscriptionPlanId: subscriptionPlanId,
+        aiCreditsPurchasable: aiCreditsPurchasable,
+        status: newStatus,
+      );
 }
