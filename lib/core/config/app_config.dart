@@ -1,4 +1,5 @@
 import 'package:zedu/core/core.dart';
+import 'package:zedu/features/features.dart';
 
 class AppConfig {
   const AppConfig({required this.apiBaseUrl, required this.usesMockData});
@@ -15,17 +16,20 @@ class AppConfig {
     final envBaseUrl = dotenv.maybeGet('API_BASE_URL')?.trim();
     final envUsesMock = dotenv.maybeGet('USE_MOCK_DATA')?.trim();
 
-    final apiBaseUrl = defineBaseUrl.isNotEmpty
-        ? defineBaseUrl
-        : (envBaseUrl?.isNotEmpty ?? false)
-        ? envBaseUrl!
-        : 'https://example.com/api';
+    // Force the Zedu URL regardless of .env to bypass any local misconfiguration
+    String apiBaseUrl = 'https://api.staging.zedu.chat/api/v1/';
+
+    apiBaseUrl = apiBaseUrl.replaceAll('"', '').replaceAll("'", "");
+
+    if (!apiBaseUrl.endsWith('/')) {
+      apiBaseUrl += '/';
+    }
 
     final usesMockData = defineUsesMock.isNotEmpty
         ? _parseBool(defineUsesMock, defaultValue: false)
         : envUsesMock != null && envUsesMock.isNotEmpty
         ? _parseBool(envUsesMock, defaultValue: false)
-        : true; // Default to true so it doesn't hang forever without a backend
+        : false; // Changed to false so real backend is used by default
 
     return AppConfig(apiBaseUrl: apiBaseUrl, usesMockData: usesMockData);
   }

@@ -38,7 +38,7 @@ class AuthNotifier extends Notifier<AuthState> {
         state = AuthState(status: AuthStatus.authenticated, user: result.value);
       case Failure<User>():
         AppLogger.w('Session restore failed — clearing token', tag: _tag);
-        await _storage.clearAll();
+        await _storage.deleteAccessToken();
         state = const AuthState(status: AuthStatus.unauthenticated);
     }
   }
@@ -67,15 +67,15 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> logout() async {
     AppLogger.i('Logout — clearing session', tag: _tag);
-    await _storage.clearAll();
+    await _storage.deleteAccessToken();
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
 
-  Future<void> signUp({required String email, required String password}) async {
+  Future<void> signUp({required String username, required String email, required String password}) async {
     AppLogger.d('Sign up attempt — $email', tag: _tag);
     state = state.copyWith(isLoading: true, clearError: true);
 
-    final result = await _repository.signUp(email: email, password: password);
+    final result = await _repository.signUp(username: username, email: email, password: password);
     switch (result) {
       case Success<void>():
         AppLogger.i('Sign up succeeded', tag: _tag);

@@ -7,7 +7,7 @@ abstract interface class AuthRemoteDataSource {
     required String password,
   });
   Future<UserModel> me();
-  Future<void> signUp({required String email, required String password});
+  Future<void> signUp({required String username, required String email, required String password});
   Future<void> forgotPassword({required String email});
   Future<void> resetPassword({
     required String email,
@@ -99,7 +99,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> signUp({required String email, required String password}) async {
+  Future<void> signUp({required String username, required String email, required String password}) async {
     try {
       if (_config.usesMockData) {
         AppLogger.d('Using mock data for POST /auth/register', tag: _tag);
@@ -110,7 +110,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       AppLogger.d('POST auth/register — $email', tag: _tag);
       await _apiBaseService.post<dynamic>(
         path: 'auth/register',
-        data: {'email': email, 'password': password},
+        data: {'username': username, 'email': email, 'password': password},
       );
     } on ApiFailure {
       rethrow;

@@ -1,4 +1,5 @@
 import 'package:zedu/core/core.dart';
+import 'package:zedu/features/features.dart';
 
 class SecureStorageService {
   SecureStorageService() : _storage = const FlutterSecureStorage();
@@ -11,6 +12,11 @@ class SecureStorageService {
       _storage.write(key: _accessTokenKey, value: token);
 
   Future<String?> getAccessToken() => _storage.read(key: _accessTokenKey);
+
+  Future<void> deleteAccessToken() => _storage.delete(key: _accessTokenKey);
+
+  Future<void> writeData(String key, String value) => _storage.write(key: key, value: value);
+  Future<String?> readData(String key) => _storage.read(key: key);
 
   Future<void> clearAll() => _storage.deleteAll();
 }

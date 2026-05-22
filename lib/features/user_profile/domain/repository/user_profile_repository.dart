@@ -18,15 +18,21 @@ abstract interface class UserProfileRepository {
   });
 
   Future<Result<OrganizationProfile>> getOrganization();
+  Future<Result<OrganizationProfile>> createOrganization({
+    required String name,
+    required String type,
+    required String country,
+  });
   Future<Result<OrganizationProfile>> updateOrganization(
     OrganizationProfile organization,
   );
   Future<Result<void>> deleteOrganization();
 
-  Future<Result<List<TeamMember>>> getTeamMembers();
+  Future<Result<List<TeamMember>>> getTeamMembers({String? orgId});
   Future<Result<TeamMember>> inviteMember({
     required String email,
     required String role,
+    required String orgId,
   });
   Future<Result<TeamMember>> updateMember(TeamMember member);
   Future<Result<void>> removeMember(String memberId);
