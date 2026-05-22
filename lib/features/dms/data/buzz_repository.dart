@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:zedu/core/core.dart';
 
 final buzzRepositoryProvider = Provider<BuzzRepository>((ref) {
   return BuzzRepository();

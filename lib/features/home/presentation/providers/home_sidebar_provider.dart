@@ -1,4 +1,4 @@
-import 'package:riverpod/riverpod.dart';
+import 'package:zedu/core/core.dart';
 
 enum HomeSidebarType { home, dms, people, files, buzz }
 
