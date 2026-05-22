@@ -14,6 +14,9 @@ class User {
     required this.currentOrganisationSlug,
     required this.avatarUrl,
     required this.defaultAvatarUrl,
+    this.creditBalance = 0,
+    this.subscriptionPlanId = 'free',
+    this.aiCreditsPurchasable = true,
   });
 
   final String id;
@@ -29,6 +32,9 @@ class User {
   final String currentOrganisationSlug;
   final String avatarUrl;
   final String defaultAvatarUrl;
+  final int creditBalance;
+  final String subscriptionPlanId;
+  final bool aiCreditsPurchasable;
 
   String get fullname => '$firstName $lastName';
 }

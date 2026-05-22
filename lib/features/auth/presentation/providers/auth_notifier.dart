@@ -206,6 +206,19 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<String?> get accessToken => _storage.getAccessToken();
 
+  Future<void> refreshCurrentUser() async {
+    final result = await _repository.getCurrentUser();
+    switch (result) {
+      case Success<User>():
+        state = state.copyWith(user: result.value);
+      case Failure<User>():
+        AppLogger.w(
+          'Failed to refresh user — ${result.error.message}',
+          tag: _tag,
+        );
+    }
+  }
+
   Future<void> loginWithGoogle() async {
     AppLogger.d('Google Sign-In attempt', tag: _tag);
     state = state.copyWith(isLoading: true, clearError: true);
