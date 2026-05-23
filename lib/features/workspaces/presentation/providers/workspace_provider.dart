@@ -70,9 +70,59 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       ),
     ];
 
-    return WorkspaceState(
-      workspaces: workspaces,
-      selectedWorkspace: workspaces.first,
+    final user = authState.user!;
+    final workspaces = _buildWorkspacesFromUser(user);
+
+    String? previousId;
+    try {
+      previousId = state.selectedWorkspace?.id;
+    } catch (_) {}
+
+    final selected = previousId != null
+        ? workspaces.firstWhere(
+            (ws) => ws.id == previousId,
+            orElse: () => workspaces.first,
+          )
+        : workspaces.first;
+
+    return WorkspaceState(workspaces: workspaces, selectedWorkspace: selected);
+  }
+
+  List<Workspace> _buildWorkspacesFromUser(User user) {
+    final workspaces = <Workspace>[];
+
+    if (user.currentOrg.isNotEmpty) {
+      workspaces.add(
+        Workspace(
+          id: user.currentOrg,
+          name: user.currentOrganisationSlug.isNotEmpty
+              ? user.currentOrganisationSlug
+              : '${user.firstName}\'s Workspace',
+          avatar: '',
+        ),
+      );
+    }
+
+    if (workspaces.isEmpty) {
+      workspaces.add(
+        const Workspace(
+          id: '01910544-d1e1-7ada-bdac-c761e527ec91',
+          name: 'Default Workspace',
+          avatar: '',
+        ),
+      );
+    }
+
+    return workspaces;
+  }
+
+  void addWorkspace(Workspace workspace, {bool switchTo = true}) {
+    final current = state.workspaces;
+    if (current.any((w) => w.id == workspace.id)) return;
+    final updated = [...current, workspace];
+    state = state.copyWith(
+      workspaces: updated,
+      selectedWorkspace: switchTo ? workspace : state.selectedWorkspace,
     );
   }
 
@@ -81,8 +131,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
 
     state = state.copyWith(isLoading: true);
 
-    // Simulate network delay for switching
-    await Future<void>.delayed(const Duration(milliseconds: 800));
+    await Future<void>.delayed(const Duration(milliseconds: 300));
 
     state = state.copyWith(selectedWorkspace: workspace, isLoading: false);
   }

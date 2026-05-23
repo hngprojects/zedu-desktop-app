@@ -254,7 +254,7 @@ class _TabLabel extends StatelessWidget {
               style: context.textTheme.bodyMedium?.copyWith(
                 fontWeight: active ? FontWeight.w600 : FontWeight.w400,
                 color: active
-                    ? const Color(0xFF39368A)
+                    ? context.colors.sidebar
                     : const Color(0xFF6B7280),
               ),
             ),
@@ -271,7 +271,7 @@ class _TabLabel extends StatelessWidget {
                 count.toString(),
                 style: context.textTheme.labelSmall?.copyWith(
                   color: active
-                      ? const Color(0xFF39368A)
+                      ? context.colors.sidebar
                       : const Color(0xFF6B7280),
                   fontSize: 10,
                 ),
@@ -281,7 +281,7 @@ class _TabLabel extends StatelessWidget {
         ),
         if (active) ...[
           const SizedBox(height: 8),
-          Container(height: 2, width: 80, color: const Color(0xFF39368A)),
+          Container(height: 2, width: 80, color: context.colors.sidebar),
         ],
       ],
     );
