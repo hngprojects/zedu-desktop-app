@@ -1,4 +1,3 @@
-// import 'package:zedu/core/core.dart';
 class PlanDetailsModel {
   const PlanDetailsModel({
     required this.id,

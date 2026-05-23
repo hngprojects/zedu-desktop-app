@@ -24,7 +24,7 @@ void main() {
 
         final result = await datasource.login(
           email: 'test@example.com',
-          password: 'password',
+          password: 'password123',
         );
 
         expect(result, isA<LoginResponseModel>());

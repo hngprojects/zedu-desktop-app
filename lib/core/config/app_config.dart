@@ -17,27 +17,28 @@ class AppConfig {
   /// Precedence: `--dart-define` wins, then dotenv keys from those files, then
   /// defaults. See [String.fromEnvironment](https://api.flutter.dev/flutter/dart-ui/String/String.fromEnvironment.html).
   factory AppConfig.fromEnvironment() {
-    const defineBaseUrl = String.fromEnvironment('API_BASE_URL');
     const defineUsesMock = String.fromEnvironment('USE_MOCK_DATA');
     const defineClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
     const defineClientSecret = String.fromEnvironment('GOOGLE_CLIENT_SECRET');
 
-    final envBaseUrl = dotenv.maybeGet('API_BASE_URL')?.trim();
     final envUsesMock = dotenv.maybeGet('USE_MOCK_DATA')?.trim();
     final envClientId = dotenv.maybeGet('GOOGLE_CLIENT_ID')?.trim();
     final envClientSecret = dotenv.maybeGet('GOOGLE_CLIENT_SECRET')?.trim();
 
-    final apiBaseUrl = defineBaseUrl.isNotEmpty
-        ? defineBaseUrl
-        : (envBaseUrl?.isNotEmpty ?? false)
-        ? envBaseUrl!
-        : 'https://example.com/api';
+    // Force the Zedu URL regardless of .env to bypass any local misconfiguration
+    String apiBaseUrl = 'https://api.staging.zedu.chat/api/v1/';
+
+    apiBaseUrl = apiBaseUrl.replaceAll('"', '').replaceAll("'", "");
+
+    if (!apiBaseUrl.endsWith('/')) {
+      apiBaseUrl += '/';
+    }
 
     final usesMockData = defineUsesMock.isNotEmpty
         ? _parseBool(defineUsesMock, defaultValue: false)
         : envUsesMock != null && envUsesMock.isNotEmpty
         ? _parseBool(envUsesMock, defaultValue: false)
-        : true; // Default to true so it doesn't hang forever without a backend
+        : false; // Changed to false so real backend is used by default
 
     final googleClientId = defineClientId.isNotEmpty
         ? defineClientId

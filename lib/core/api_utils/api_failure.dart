@@ -1,4 +1,5 @@
 import 'package:zedu/core/core.dart';
+
 // core/network/api_failure.dart
 
 class ApiFailure implements Exception {
@@ -45,8 +46,8 @@ class ApiFailure implements Exception {
     ApiFailureKind.notFound => 'The resource was not found.',
     ApiFailureKind.server =>
       'Something went wrong on our end. Please try again later.',
-    ApiFailureKind.parsing => 'Something went wrong. Please try again.',
-    ApiFailureKind.unknown => 'Something went wrong. Please try again.',
+    ApiFailureKind.parsing => 'Parsing error: $message',
+    ApiFailureKind.unknown => 'Unknown error: $message',
     // 4xx client errors carry a structured server message safe to show (e.g. "Invalid credentials")
     ApiFailureKind.client => message,
   };
@@ -82,8 +83,11 @@ class ApiFailure implements Exception {
       if (data['message'] is String) return data['message'] as String;
       if (data['error'] is String) return data['error'] as String;
     }
+    if (data is String) {
+      return data;
+    }
     if (error.message case final message?) return message;
-    return 'Request failed.';
+    return 'Request failed. Raw data: $data';
   }
 
   static ApiFailureKind _kindFromDio(DioException error) {

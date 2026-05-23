@@ -1,4 +1,3 @@
-// import 'package:zedu/core/core.dart';
 class UserRoleModel {
   const UserRoleModel({required this.roleId, required this.roleName});
 

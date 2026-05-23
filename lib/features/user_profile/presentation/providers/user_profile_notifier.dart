@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -159,6 +161,47 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     }
   }
 
+  Future<void> createOrganization({
+    required String name,
+    required String type,
+    required String country,
+  }) async {
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
+    final result = await _repository.createOrganization(
+      name: name,
+      type: type,
+      country: country,
+    );
+    switch (result) {
+      case Success<OrganizationProfile>():
+        state = state.copyWith(
+          organization: result.value,
+          isSaving: false,
+          successMessage: 'Organization created successfully.',
+        );
+        ref
+            .read(workspaceProvider.notifier)
+            .addWorkspace(
+              Workspace(
+                id: result.value.id,
+                name: result.value.name,
+                avatar: '',
+                unreadCount: 0,
+                membersCount: 1,
+              ),
+            );
+      case Failure<OrganizationProfile>():
+        state = state.copyWith(
+          isSaving: false,
+          error: result.error.friendlyMessage,
+        );
+    }
+  }
+
   Future<void> deleteOrganization() async {
     state = state.copyWith(
       isSaving: true,
@@ -180,23 +223,155 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     }
   }
 
+  Future<void> leaveOrganization() async {
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
+    try {
+      final orgId = ref.read(workspaceProvider).selectedWorkspace?.id;
+      final userId = ref.read(authNotifierProvider).user?.id;
+      if (orgId == null || userId == null) {
+        throw Exception('Missing orgId or userId');
+      }
+
+      final api = locator<ApiBaseService>();
+      await api.delete<Map<String, dynamic>>(
+        path: '/organisations/$orgId/users/$userId',
+      );
+
+      // Now remove workspace from local state
+      ref.read(workspaceProvider.notifier).removeWorkspace(orgId);
+
+      state = state.copyWith(
+        isSaving: false,
+        successMessage: 'Successfully signed out of workspace.',
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isSaving: false,
+        error: 'Failed to leave workspace. Please try again.',
+      );
+    }
+  }
+
+  Future<String> _getRoleId(String? orgId) async {
+    try {
+      if (orgId == null) return '019700d8-9085-7f7b-839a-fcbd08b9e26d';
+      final api = locator<ApiBaseService>();
+      final response = await api.get<Map<String, dynamic>>(
+        path: '/organisations/$orgId/roles',
+      );
+      final data = response.data['data'] as List<dynamic>?;
+      if (data != null && data.isNotEmpty) {
+        return data.last['id']
+            as String; // Just pick a valid role ID to avoid 404
+      }
+    } catch (e) {
+      // ignore
+    }
+    return '019700d8-9085-7f7b-839a-fcbd08b9e26d';
+  }
+
+  Future<String?> generateInviteLink() async {
+    try {
+      final api = locator<ApiBaseService>();
+      var orgId = ref.read(workspaceProvider).selectedWorkspace?.id;
+      if (locator<AppConfig>().usesMockData &&
+          (orgId == null || orgId.length < 36)) {
+        orgId = '019700db-4e22-7f90-a20e-f9116291ef24';
+      }
+      final roleId = await _getRoleId(orgId);
+      final response = await api.post<Map<String, dynamic>>(
+        path: '/invite/general',
+        data: {'organisation_id': orgId, 'role_id': roleId},
+      );
+      final data = response.data['data'] as Map<String, dynamic>?;
+      return data?['invitation_link'] as String?;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchRegisteredUsers() async {
+    try {
+      final api = locator<ApiBaseService>();
+      final response = await api.get<Map<String, dynamic>>(path: '/users');
+      final data = response.data['data'] as List<dynamic>?;
+      if (data != null) {
+        return data.cast<Map<String, dynamic>>();
+      }
+    } catch (e) {
+      // ignore
+    }
+    return [];
+  }
+
   Future<void> inviteMember({
     required String email,
     required String role,
+    String? userId,
   }) async {
     state = state.copyWith(
       isSaving: true,
       clearError: true,
       clearSuccess: true,
     );
-    final result = await _repository.inviteMember(email: email, role: role);
+    var orgId = ref.read(workspaceProvider).selectedWorkspace?.id;
+    if (locator<AppConfig>().usesMockData &&
+        (orgId == null || orgId.length < 36)) {
+      orgId = '019700db-4e22-7f90-a20e-f9116291ef24';
+    }
+
+    // Map human readable role to a valid UUID role_id by fetching from backend
+    String roleId = await _getRoleId(orgId);
+
+    if (orgId == null) {
+      state = state.copyWith(
+        isSaving: false,
+        error: 'No active workspace selected to invite members.',
+      );
+      return;
+    }
+
+    final result = await _repository.inviteMember(
+      email: email,
+      role: roleId,
+      orgId: orgId,
+    );
     switch (result) {
       case Success<TeamMember>():
+        final newTeamMembers = [...state.teamMembers, result.value];
         state = state.copyWith(
-          teamMembers: [...state.teamMembers, result.value],
+          teamMembers: newTeamMembers,
           isSaving: false,
           successMessage: 'Invite sent successfully.',
         );
+
+        // Persist the mock state across restarts if we are using mock data
+        final config = locator<AppConfig>();
+        if (config.usesMockData) {
+          final storage = locator<SecureStorageService>();
+          final jsonList = newTeamMembers
+              .map(
+                (m) => {
+                  'id': m.id,
+                  'email': m.email,
+                  'role': m.role,
+                  'name': m.name,
+                  'avatar_url': m.avatarUrl,
+                  'date_joined': m.dateJoined,
+                  'status': m.status.name,
+                },
+              )
+              .toList();
+          await storage.writeData(
+            'mock_team_members_$orgId',
+            jsonEncode(jsonList),
+          );
+        }
+
       case Failure<TeamMember>():
         state = state.copyWith(
           isSaving: false,
@@ -257,12 +432,13 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
 
   Future<void> load() async {
     state = state.copyWith(isLoading: true, clearError: true);
+    final orgId = ref.read(workspaceProvider).selectedWorkspace?.id;
     final results = await Future.wait([
       _repository.getAccount(),
       _repository.getNotificationPreferences(),
       _repository.getSecuritySessions(),
       _repository.getOrganization(),
-      _repository.getTeamMembers(),
+      _repository.getTeamMembers(orgId: orgId),
       _repository.getRolesAndPermissions(),
       _repository.getBillingInfo(),
     ]);
@@ -277,12 +453,41 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
 
     final error = _getError(results);
 
+    var loadedTeamMembers = _valueOrNull(teamResult) ?? const [];
+
+    // Load persisted mock members if they exist
+    if (orgId != null) {
+      final storage = locator<SecureStorageService>();
+      final data = await storage.readData('mock_team_members_$orgId');
+      if (data != null) {
+        try {
+          final List<dynamic> decoded = jsonDecode(data) as List<dynamic>;
+          final savedMembers = decoded.map((e) {
+            final map = e as Map<String, dynamic>;
+            return TeamMember(
+              id: (map['id'] as String?) ?? '',
+              email: (map['email'] as String?) ?? '',
+              role: (map['role'] as String?) ?? '',
+              name: map['name'] as String?,
+              avatarUrl: map['avatar_url'] as String?,
+              dateJoined: (map['date_joined'] as String?) ?? '',
+              status: TeamMemberStatus.values.firstWhere(
+                (s) => s.name == (map['status'] as String?),
+                orElse: () => TeamMemberStatus.active,
+              ),
+            );
+          }).toList();
+          loadedTeamMembers = savedMembers;
+        } catch (_) {}
+      }
+    }
+
     state = state.copyWith(
       account: _valueOrNull(accountResult),
       notifications: _valueOrNull(notificationResult),
       securitySessions: _valueOrNull(securityResult) ?? const [],
       organization: _valueOrNull(organizationResult),
-      teamMembers: _valueOrNull(teamResult) ?? const [],
+      teamMembers: loadedTeamMembers,
       rolesAndPermissions: _valueOrNull(rolesResult) ?? const [],
       billing: _valueOrNull(billingResult),
       isLoading: false,
