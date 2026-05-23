@@ -15,13 +15,11 @@ class BuzzRepository {
     };
   }
 
-  /// POST /buzz/invitation/respond
   Future<bool> respondToInvitation(String buzzId, bool accept) async {
     await Future<void>.delayed(const Duration(milliseconds: 500));
     return true;
   }
 
-  /// POST /buzz/{buzzId}/respond
   Future<bool> respondToDirectCall(String buzzId, bool accept) async {
     await Future<void>.delayed(const Duration(milliseconds: 500));
     return true;

@@ -2,16 +2,30 @@ import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
 class AppSidebarRail extends ConsumerWidget {
-  const AppSidebarRail({super.key});
+  const AppSidebarRail({
+    super.key,
+    this.activeTypeOverride,
+    this.onTypeSelected,
+  });
 
   static const double width = 50;
+
+  /// When set, overrides [homeSidebarProvider] for standalone routes.
+  final HomeSidebarType? activeTypeOverride;
+
+  /// When set, replaces the default provider-only selection behavior.
+  final ValueChanged<HomeSidebarType>? onTypeSelected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    final activeType = ref.watch(homeSidebarProvider);
+    final activeType = activeTypeOverride ?? ref.watch(homeSidebarProvider);
 
     void select(HomeSidebarType type) {
+      if (onTypeSelected != null) {
+        onTypeSelected!(type);
+        return;
+      }
       ref.read(homeSidebarProvider.notifier).setType(type);
     }
 
@@ -181,6 +195,7 @@ class _RailBottomIcon extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(7),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 7),
         child: Stack(

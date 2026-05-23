@@ -1,6 +1,5 @@
 import 'package:zedu/core/core.dart';
 
-/// State for user menu UI
 class UserMenuState {
   final bool isAway;
   final bool notificationsPaused;
@@ -15,7 +14,6 @@ class UserMenuState {
   }
 }
 
-/// Provider for managing user menu state (away status, notifications paused, etc)
 final userMenuStateProvider = NotifierProvider<UserMenuNotifier, UserMenuState>(
   UserMenuNotifier.new,
 );
