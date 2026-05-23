@@ -7,8 +7,11 @@ class UserMenuDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    final menuState = ref.watch(userMenuStateProvider);
-    final menuNotifier = ref.read(userMenuStateProvider.notifier);
+    final authUser = ref.watch(authNotifierProvider).user;
+    final balance = ref.watch(orgCreditBalanceProvider);
+    final displayName = authUser?.fullname ?? 'AnonymousUser';
+    final status = authUser?.status ?? UserStatus.empty;
+    final isOnline = status.online;
 
     return Dialog(
       insetPadding: const EdgeInsets.only(bottom: 24, left: 74),
@@ -32,7 +35,7 @@ class UserMenuDialog extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // User Profile Section
+              // ── Profile header ─────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -40,20 +43,30 @@ class UserMenuDialog extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: context.colors.sidebar,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 32,
+                    // Avatar with presence dot overlay
+                    Stack(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: colors.sidebar,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.person,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
                         ),
-                      ),
+                        Positioned(
+                          bottom: 2,
+                          right: 2,
+                          child: PresenceDot(online: isOnline, size: 12),
+                        ),
+                      ],
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -61,21 +74,41 @@ class UserMenuDialog extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'AnonymousUser',
+                            displayName,
                             style: TextStyle(
                               color: colors.textPrimary,
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          // Presence label
                           Text(
-                            menuState.isAway ? 'Away' : 'Active',
+                            isOnline ? 'Active' : 'Away',
                             style: TextStyle(
-                              color: menuState.isAway
-                                  ? colors.textHint
-                                  : colors.success,
+                              color: isOnline
+                                  ? colors.presenceActive
+                                  : colors.textHint,
                               fontSize: 12,
                             ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.auto_awesome,
+                                size: 14,
+                                color: colors.primary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '$balance AI credits',
+                                style: TextStyle(
+                                  color: colors.primary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -87,121 +120,147 @@ class UserMenuDialog extends ConsumerWidget {
               Divider(height: 0, color: colors.divider),
               const SizedBox(height: 8),
 
-              // Update Your Status
+              // ── Custom status row ──────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: OutlinedButton.icon(
-                  onPressed: () {
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () async {
                     Navigator.pop(context);
-                    showDialog<void>(
+                    await showDialog<void>(
                       context: context,
-                      builder: (context) => const UpdateStatusDialog(),
+                      builder: (_) => const SetStatusDialog(),
                     );
                   },
-                  icon: Icon(
-                    Icons.sentiment_satisfied_alt,
-                    size: 20,
-                    color: colors.textPrimary,
-                  ),
-                  label: Text(
-                    'Update your status',
-                    style: TextStyle(
-                      color: colors.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.normal,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
                     ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(40),
-                    alignment: Alignment.centerLeft,
-                    side: BorderSide(color: colors.divider),
-                    shape: RoundedRectangleBorder(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: colors.divider),
                       borderRadius: BorderRadius.circular(8),
                     ),
+                    child: Row(
+                      children: [
+                        if (status.hasCustomStatus)
+                          Text(
+                            status.emoji ?? '😶',
+                            style: const TextStyle(fontSize: 18),
+                          )
+                        else
+                          Icon(
+                            Icons.sentiment_satisfied_alt_outlined,
+                            color: colors.textHint,
+                            size: 20,
+                          ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            status.hasCustomStatus
+                                ? (status.text ?? 'Status set')
+                                : 'Update your status',
+                            style: TextStyle(
+                              color: status.hasCustomStatus
+                                  ? colors.textPrimary
+                                  : colors.textHint,
+                              fontSize: 13,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
 
-              // Set Yourself as Away
-              _MenuItemButton(
-                icon: Icons.access_time,
-                label: 'Set yourself as away',
-                trailing: Icon(
-                  menuState.isAway ? Icons.check : Icons.close,
-                  size: 18,
-                  color: menuState.isAway ? colors.success : colors.textHint,
+              // ── Clear status (only visible when status is set) ─────────────
+              if (status.hasCustomStatus)
+                _MenuItemButton(
+                  icon: Icons.clear_all_outlined,
+                  label: 'Clear status',
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await ref.read(authNotifierProvider.notifier).clearStatus();
+                  },
                 ),
-                onTap: menuNotifier.toggleAwayStatus,
-              ),
-              const SizedBox(height: 12),
 
-              // Pause Notifications
+              // ── Set yourself as active / away toggle ──────────────────────
+              _MenuItemButton(
+                icon: isOnline
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_off,
+                label: isOnline
+                    ? 'Set yourself as away'
+                    : 'Set yourself as active',
+                iconColor: isOnline ? colors.presenceActive : colors.textHint,
+                onTap: () async {
+                  Navigator.pop(context);
+                  await ref
+                      .read(authNotifierProvider.notifier)
+                      .toggleOnlineStatus();
+                },
+              ),
+
+              // ── Pause notifications ────────────────────────────────────────
               _MenuItemButton(
                 icon: Icons.notifications_off_outlined,
                 label: 'Pause notifications',
-                trailing: Icon(
-                  menuState.notificationsPaused ? Icons.check : Icons.close,
-                  size: 18,
-                  color: menuState.notificationsPaused
-                      ? colors.success
-                      : colors.textHint,
-                ),
-                onTap: menuNotifier.toggleNotifications,
+                onTap: () {
+                  Navigator.pop(context);
+                  ref
+                      .read(notificationSettingsProvider.notifier)
+                      .setDndMode(const Duration(hours: 1));
+                },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Divider(height: 0, color: colors.divider),
               const SizedBox(height: 8),
 
-              // Profile
+              // ── Settings shortcuts ─────────────────────────────────────────
               _MenuItemButton(
                 icon: Icons.person_outline,
-                label: 'Profile...',
+                label: 'Profile…',
                 onTap: () {
                   Navigator.pop(context);
-                  if (context.mounted) {
-                    context.go(AppRouter.profile);
-                  }
+                  ref.read(personalProfilePanelProvider.notifier).state = true;
                 },
               ),
-              const SizedBox(height: 12),
-
-              // Preferences
               _MenuItemButton(
                 icon: Icons.settings_outlined,
-                label: 'Preferences...',
+                label: 'Preferences…',
                 onTap: () {
                   Navigator.pop(context);
+                  if (context.mounted) context.go(AppRouter.profile);
                 },
               ),
-              const SizedBox(height: 12),
-
-              // Buy AI Credit
               _MenuItemButton(
                 icon: Icons.shopping_cart_outlined,
                 label: 'Buy AI credits',
                 isHighlight: true,
                 onTap: () {
                   Navigator.pop(context);
+                  if (context.mounted) context.go(AppRouter.buyCredits);
                 },
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Divider(height: 0, color: colors.divider),
               const SizedBox(height: 8),
 
-              // Logout
+              // ── Sign out ───────────────────────────────────────────────────
               _MenuItemButton(
                 icon: Icons.logout_rounded,
-                label: 'Sign out of Zedu users',
+                label:
+                    'Sign out of ${authUser?.currentOrganisationSlug ?? 'Zedu'}',
                 isError: true,
                 onTap: () async {
                   Navigator.pop(context);
-                  // Access ref through context to avoid closure issues
-                  final authRef = ref.read(authNotifierProvider.notifier);
-                  await authRef.logout();
-                  if (context.mounted) {
-                    context.go(AppRouter.login);
-                  }
+                  await ref.read(authNotifierProvider.notifier).logout();
+                  if (context.mounted) context.go(AppRouter.login);
                 },
               ),
               const SizedBox(height: 8),
@@ -213,11 +272,13 @@ class UserMenuDialog extends ConsumerWidget {
   }
 }
 
+// ── Internal helper widget ─────────────────────────────────────────────────────
+
 class _MenuItemButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  final Widget? trailing;
+  final Color? iconColor;
   final bool isHighlight;
   final bool isError;
 
@@ -225,7 +286,7 @@ class _MenuItemButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.trailing,
+    this.iconColor,
     this.isHighlight = false,
     this.isError = false,
   });
@@ -236,6 +297,7 @@ class _MenuItemButton extends StatelessWidget {
     final itemColor = isError
         ? colors.error
         : (isHighlight ? colors.accent : colors.textPrimary);
+    final resolvedIconColor = iconColor ?? itemColor;
 
     return InkWell(
       onTap: onTap,
@@ -243,7 +305,7 @@ class _MenuItemButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: itemColor),
+            Icon(icon, size: 20, color: resolvedIconColor),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -257,7 +319,6 @@ class _MenuItemButton extends StatelessWidget {
                 ),
               ),
             ),
-            ?trailing,
           ],
         ),
       ),

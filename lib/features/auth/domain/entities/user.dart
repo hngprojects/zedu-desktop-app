@@ -1,3 +1,5 @@
+import 'user_status.dart';
+
 class User {
   const User({
     required this.id,
@@ -13,6 +15,10 @@ class User {
     required this.currentOrganisationSlug,
     required this.avatarUrl,
     required this.defaultAvatarUrl,
+    this.creditBalance = 0,
+    this.subscriptionPlanId = 'free',
+    this.aiCreditsPurchasable = true,
+    this.status = UserStatus.empty,
   });
 
   final String id;
@@ -28,6 +34,12 @@ class User {
   final String currentOrganisationSlug;
   final String avatarUrl;
   final String defaultAvatarUrl;
+  final int creditBalance;
+  final String subscriptionPlanId;
+  final bool aiCreditsPurchasable;
+
+  /// Live presence and custom status for this user.
+  final UserStatus status;
 
   String get fullname => '$firstName $lastName';
 }
