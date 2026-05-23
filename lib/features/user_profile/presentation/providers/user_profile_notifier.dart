@@ -7,7 +7,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   @override
   UserProfileState build() {
     _repository = ref.read(userProfileRepositoryProvider);
-    load();
+    Future.microtask(load);
     return const UserProfileState(isLoading: true);
   }
 
@@ -276,6 +276,8 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     final billingResult = results[6] as Result<BillingInfo>;
 
     final error = _getError(results);
+
+    if (!ref.mounted) return;
 
     state = state.copyWith(
       account: _valueOrNull(accountResult),

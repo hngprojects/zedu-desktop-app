@@ -16,7 +16,7 @@ class TopUserMenu extends ConsumerWidget {
       onSelected: (value) async {
         if (value == 'profile') {
           if (context.mounted) {
-            context.go(AppRouter.profile);
+            openWorkspaceSettings(ref, context: context);
           }
         } else if (value == 'logout') {
           await ref.read(authNotifierProvider.notifier).logout();

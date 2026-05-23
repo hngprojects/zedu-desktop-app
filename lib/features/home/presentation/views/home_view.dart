@@ -16,7 +16,7 @@ class HomeView extends ConsumerWidget {
           Expanded(
             child: Row(
               children: [
-                AppSidebarRail(activeType: ref.watch(homeSidebarProvider)),
+                const AppSidebarRail(),
                 const _MainSidebarSwitcher(),
                 const Expanded(child: _ChatAreaSwitcher()),
               ],
@@ -90,19 +90,29 @@ class _HomeAppBar extends StatelessWidget {
   }
 }
 
+/// Swaps the list sidebar based on [homeSidebarProvider].
 class _MainSidebarSwitcher extends ConsumerWidget {
   const _MainSidebarSwitcher();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(homeSidebarProvider);
-    if (state == HomeSidebarType.dms) {
-      return const DmSidebarList();
-    }
-    return const _MainSidebar();
+    final type = ref.watch(homeSidebarProvider);
+
+    return switch (type) {
+      HomeSidebarType.home => const _MainSidebar(),
+      HomeSidebarType.dms => const DmSidebarList(),
+      HomeSidebarType.settings => const SettingsModuleSidebar(),
+      HomeSidebarType.people ||
+      HomeSidebarType.files ||
+      HomeSidebarType.buzz ||
+      HomeSidebarType.notifications => WorkspacePlaceholderSidebar(
+        config: WorkspacePlaceholders.forType(type),
+      ),
+    };
   }
 }
 
+/// Swaps the center panel based on [homeSidebarProvider].
 class _ChatAreaSwitcher extends ConsumerWidget {
   const _ChatAreaSwitcher();
 
@@ -111,22 +121,31 @@ class _ChatAreaSwitcher extends ConsumerWidget {
     final state = ref.watch(homeSidebarProvider);
     final selectedDm = ref.watch(selectedDmProvider);
 
-    if (state == HomeSidebarType.dms) {
-      if (selectedDm != null) {
-        return DmChatArea(conversation: selectedDm);
-      } else {
-        return Container(
-          color: context.colors.background,
-          child: Center(
-            child: Text(
-              'Select a conversation to start messaging',
-              style: TextStyle(color: context.colors.textHint, fontSize: 16),
-            ),
-          ),
-        );
-      }
-    }
-    return const _ChatArea();
+    return switch (state) {
+      HomeSidebarType.home => const _ChatArea(),
+      HomeSidebarType.settings => const SettingsModuleContent(),
+      HomeSidebarType.people ||
+      HomeSidebarType.files ||
+      HomeSidebarType.buzz ||
+      HomeSidebarType.notifications => WorkspacePlaceholderContent(
+        config: WorkspacePlaceholders.forType(state),
+      ),
+      HomeSidebarType.dms =>
+        selectedDm != null
+            ? DmChatArea(conversation: selectedDm)
+            : Container(
+                color: context.colors.background,
+                child: Center(
+                  child: Text(
+                    'Select a conversation to start messaging',
+                    style: TextStyle(
+                      color: context.colors.textHint,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+    };
   }
 }
 

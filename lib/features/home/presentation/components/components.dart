@@ -3,4 +3,5 @@ export 'user_menu_dialog.dart';
 export 'update_status_dialog.dart';
 export 'emoji_picker_dialog.dart';
 export 'app_sidebar_rail.dart';
+export 'workspace_module_panels.dart';
 export 'top_user_menu.dart';

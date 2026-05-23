@@ -157,22 +157,14 @@ class UserMenuDialog extends ConsumerWidget {
               _MenuItemButton(
                 icon: Icons.person_outline,
                 label: 'Profile...',
-                onTap: () {
-                  Navigator.pop(context);
-                  if (context.mounted) {
-                    context.go(AppRouter.profile);
-                  }
-                },
+                onTap: () => _openSettings(context, ref),
               ),
               const SizedBox(height: 12),
 
-              // Preferences
               _MenuItemButton(
                 icon: Icons.settings_outlined,
                 label: 'Preferences...',
-                onTap: () {
-                  Navigator.pop(context);
-                },
+                onTap: () => _openSettings(context, ref),
               ),
               const SizedBox(height: 12),
 
@@ -262,5 +254,12 @@ class _MenuItemButton extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+void _openSettings(BuildContext context, WidgetRef ref) {
+  Navigator.pop(context);
+  if (context.mounted) {
+    openWorkspaceSettings(ref, context: context);
   }
 }
