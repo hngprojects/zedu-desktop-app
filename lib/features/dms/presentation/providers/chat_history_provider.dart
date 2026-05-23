@@ -69,6 +69,79 @@ class ChatHistoryNotifier extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
+    // Start polling for new messages now that the initial load is done.
+    _startPolling();
+  }
+
+  // ── Realtime notification polling ────────────────────────────────────────────
+
+  /// Set of message IDs we have already seen. Used to detect truly-new messages
+  /// so we don't re-fire a notification on every poll cycle.
+  final Set<String> _seenIds = {};
+
+  /// Keep track of the polling timer so we can cancel it on dispose.
+  // ignore: cancel_subscriptions
+  dynamic _pollingTimer;
+
+  void _startPolling() {
+    // Record all initially-loaded IDs as "already seen" so we only notify
+    // about messages that arrive AFTER the initial load.
+    for (final m in messages) {
+      final id = m['id']?.toString();
+      if (id != null) _seenIds.add(id);
+    }
+
+    // Poll every 10 seconds for new messages.
+    _pollingTimer = Stream<int>.periodic(const Duration(seconds: 10)).listen((
+      _,
+    ) {
+      _pollForNewMessages();
+    });
+  }
+
+  Future<void> _pollForNewMessages() async {
+    try {
+      final repository = ref.read(dmRepositoryProvider);
+      final fresh = await repository.getMessages(channelId, page: 1);
+
+      bool hadNew = false;
+      for (final msg in fresh) {
+        final id = msg['id']?.toString();
+        if (id == null || _seenIds.contains(id)) continue;
+
+        _seenIds.add(id);
+        hadNew = true;
+
+        // Only notify for messages from other users.
+        if (!isMyMessage(msg)) {
+          final senderName =
+              (msg['sender_name'] ?? msg['username'] ?? 'Someone').toString();
+          ref
+              .read(notificationServiceProvider)
+              .handleIncomingMessage(msg, channelId, senderName);
+        }
+      }
+
+      if (hadNew) {
+        // Prepend only the genuinely new messages at the top.
+        final existingIds = messages.map((m) => m['id']?.toString()).toSet();
+        final newOnly = fresh
+            .where((m) => !existingIds.contains(m['id']?.toString()))
+            .toList();
+        if (newOnly.isNotEmpty) {
+          messages = [...newOnly, ...messages];
+          notifyListeners();
+        }
+      }
+    } catch (_) {
+      // Silent — polling failures should not surface to the UI.
+    }
+  }
+
+  @override
+  void dispose() {
+    (_pollingTimer as dynamic)?.cancel();
+    super.dispose();
   }
 
   Future<void> loadMore() async {

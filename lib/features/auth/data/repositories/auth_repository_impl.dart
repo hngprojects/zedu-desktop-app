@@ -203,4 +203,33 @@ class AuthRepositoryImpl implements AuthRepository {
       return Failure(ApiFailure.unknown(error));
     }
   }
+
+  @override
+  Future<Result<void>> changeStatus({
+    required String icon,
+    required String text,
+    required bool pauseNotifications,
+    required String statusTimeout,
+    required bool clearStatus,
+    required bool online,
+  }) async {
+    try {
+      await _remote.changeStatus(
+        icon: icon,
+        text: text,
+        pauseNotifications: pauseNotifications,
+        statusTimeout: statusTimeout,
+        clearStatus: clearStatus,
+        online: online,
+      );
+      AppLogger.i('Status updated successfully', tag: _tag);
+      return const Success(null);
+    } on ApiFailure catch (failure) {
+      AppLogger.w('Status update failed — ${failure.message}', tag: _tag);
+      return Failure(failure);
+    } catch (error) {
+      AppLogger.e('Unexpected status update error', tag: _tag, error: error);
+      return Failure(ApiFailure.unknown(error));
+    }
+  }
 }

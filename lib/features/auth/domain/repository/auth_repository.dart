@@ -29,4 +29,12 @@ abstract interface class AuthRepository {
     required String oldPassword,
     required String newPassword,
   });
+  Future<Result<void>> changeStatus({
+    required String icon,
+    required String text,
+    required bool pauseNotifications,
+    required String statusTimeout,
+    required bool clearStatus,
+    required bool online,
+  });
 }
