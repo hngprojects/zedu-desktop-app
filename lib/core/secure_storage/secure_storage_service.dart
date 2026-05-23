@@ -12,5 +12,11 @@ class SecureStorageService {
 
   Future<String?> getAccessToken() => _storage.read(key: _accessTokenKey);
 
+  Future<void> deleteAccessToken() => _storage.delete(key: _accessTokenKey);
+
+  Future<void> writeData(String key, String value) =>
+      _storage.write(key: key, value: value);
+  Future<String?> readData(String key) => _storage.read(key: key);
+
   Future<void> clearAll() => _storage.deleteAll();
 }

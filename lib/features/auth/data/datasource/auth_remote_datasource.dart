@@ -7,13 +7,11 @@ abstract interface class AuthRemoteDataSource {
     required String password,
   });
   Future<UserModel> me();
-  Future<void> sendMagicLink({required String email});
-  Future<LoginResponseModel> verifyMagicLink({required String token});
-  Future<LoginResponseModel> signInWithGoogle({
-    required String grantCode,
-    String? redirectUri,
+  Future<void> signUp({
+    required String username,
+    required String email,
+    required String password,
   });
-  Future<void> signUp({required String email, required String password});
   Future<void> forgotPassword({required String email});
   Future<void> resetPassword({
     required String email,
@@ -24,6 +22,12 @@ abstract interface class AuthRemoteDataSource {
     required String email,
     required String oldPassword,
     required String newPassword,
+  });
+  Future<void> sendMagicLink({required String email});
+  Future<LoginResponseModel> verifyMagicLink({required String token});
+  Future<LoginResponseModel> signInWithGoogle({
+    required String grantCode,
+    String? redirectUri,
   });
   Future<void> changeStatus({
     required String icon,
@@ -68,7 +72,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       AppLogger.d('POST /auth/login — $email', tag: _tag);
       final response = await _apiBaseService.post<Map<String, dynamic>>(
-        path: 'auth/login',
+        path: '/auth/login',
         data: {'email': email, 'password': password},
       );
 
@@ -99,7 +103,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       AppLogger.d('GET /auth/me', tag: _tag);
       final response = await _apiBaseService.get<Map<String, dynamic>>(
-        path: 'auth/me',
+        path: '/auth/me',
       );
 
       final data = response.data['data'] as Map<String, dynamic>;
@@ -113,7 +117,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> signUp({required String email, required String password}) async {
+  Future<void> signUp({
+    required String username,
+    required String email,
+    required String password,
+  }) async {
     try {
       if (_config.usesMockData) {
         AppLogger.d('Using mock data for POST /auth/register', tag: _tag);
@@ -123,8 +131,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       AppLogger.d('POST auth/register — $email', tag: _tag);
       await _apiBaseService.post<dynamic>(
-        path: 'auth/register',
-        data: {'email': email, 'password': password},
+        path: '/auth/register',
+        data: {'username': username, 'email': email, 'password': password},
       );
     } on ApiFailure {
       rethrow;
@@ -148,7 +156,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       AppLogger.d('POST auth/password-reset — $email', tag: _tag);
       await _apiBaseService.post<dynamic>(
-        path: 'auth/password-reset',
+        path: '/auth/password-reset',
         data: {'email': email},
       );
     } on ApiFailure {
@@ -177,7 +185,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       AppLogger.d('POST /auth/password-reset/verify', tag: _tag);
       await _apiBaseService.post<dynamic>(
-        path: 'auth/password-reset/verify',
+        path: '/auth/password-reset/verify',
         data: {'token': token, 'new_password': newPassword},
       );
     } on ApiFailure {
@@ -207,7 +215,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       AppLogger.d('PUT /auth/change-password', tag: _tag);
       await _apiBaseService.put<dynamic>(
-        path: 'auth/change-password',
+        path: '/auth/change-password',
         data: {'old_password': oldPassword, 'new_password': newPassword},
       );
     } on ApiFailure {

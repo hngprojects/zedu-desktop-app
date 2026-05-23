@@ -1,4 +1,3 @@
-// import 'package:zedu/core/core.dart';
 class ApiResponseModel<T> {
   const ApiResponseModel({
     required this.data,

@@ -1,6 +1,7 @@
-// data/repositories/auth_repository_impl.dart
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+
+// data/repositories/auth_repository_impl.dart
 
 class AuthRepositoryImpl implements AuthRepository {
   const AuthRepositoryImpl({required AuthRemoteDataSource remote})
@@ -78,11 +79,16 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Result<void>> signUp({
+    required String username,
     required String email,
     required String password,
   }) async {
     try {
-      await _remote.signUp(email: email, password: password);
+      await _remote.signUp(
+        username: username,
+        email: email,
+        password: password,
+      );
       return const Success(null);
     } on ApiFailure catch (failure) {
       return Failure(failure);

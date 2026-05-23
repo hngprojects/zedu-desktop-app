@@ -7,6 +7,8 @@ class TeamMember {
     required this.role,
     required this.dateJoined,
     required this.status,
+    this.name,
+    this.avatarUrl,
   });
 
   final String id;
@@ -14,6 +16,8 @@ class TeamMember {
   final String role;
   final String dateJoined;
   final TeamMemberStatus status;
+  final String? name;
+  final String? avatarUrl;
 
   TeamMember copyWith({
     String? id,
@@ -21,6 +25,8 @@ class TeamMember {
     String? role,
     String? dateJoined,
     TeamMemberStatus? status,
+    String? name,
+    String? avatarUrl,
   }) {
     return TeamMember(
       id: id ?? this.id,
@@ -28,6 +34,8 @@ class TeamMember {
       role: role ?? this.role,
       dateJoined: dateJoined ?? this.dateJoined,
       status: status ?? this.status,
+      name: name ?? this.name,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
     );
   }
 }

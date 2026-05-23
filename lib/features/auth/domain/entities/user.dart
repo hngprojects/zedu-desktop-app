@@ -1,4 +1,3 @@
-// ignore_for_file: unused_import
 import 'user_status.dart';
 
 class User {

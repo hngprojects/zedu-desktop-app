@@ -32,21 +32,29 @@ class WorkspaceSwitcherList extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildCurrentWorkspaceHeader(context, selectedWorkspace),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
                   Expanded(
                     child: _ActionButton(
                       icon: Icons.settings_outlined,
                       label: 'Settings',
+                      onPressed: () {},
                     ),
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: _ActionButton(
                       icon: Icons.person_add_alt,
                       label: 'Invite',
+                      onPressed: () {
+                        Navigator.pop(context);
+                        showDialog<void>(
+                          context: context,
+                          builder: (context) => InviteTeammatesModal(),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -152,7 +160,10 @@ class WorkspaceSwitcherList extends ConsumerWidget {
     final colors = context.colors;
 
     return InkWell(
-      onTap: () => Navigator.pop(context),
+      onTap: () {
+        Navigator.pop(context);
+        context.push(AppRouter.createOrganization);
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
@@ -173,15 +184,20 @@ class WorkspaceSwitcherList extends ConsumerWidget {
 class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
+  final VoidCallback onPressed;
 
-  const _ActionButton({required this.icon, required this.label});
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
 
     return OutlinedButton.icon(
-      onPressed: () {},
+      onPressed: onPressed,
       icon: Icon(icon, size: 18, color: colors.textPrimary),
       label: Text(
         label,

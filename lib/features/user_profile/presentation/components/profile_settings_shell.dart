@@ -16,7 +16,14 @@ class ProfileSettingsShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(userProfileNotifierProvider);
-    final userName = state.account?.name ?? 'Zedu User';
+    final authState = ref.watch(authNotifierProvider);
+
+    String userName = 'Zedu User';
+    if (authState.user != null && authState.user!.username.isNotEmpty) {
+      userName = authState.user!.username;
+    } else if (state.account?.name != null && state.account!.name.isNotEmpty) {
+      userName = state.account!.name;
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
