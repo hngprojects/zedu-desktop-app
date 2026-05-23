@@ -1,16 +1,18 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
-class App extends StatelessWidget {
+class App extends ConsumerWidget {
   const App({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Zedu',
       theme: AppTheme.light,
       routerConfig: AppRouter.router,
+      builder: (context, child) =>
+          AuthDeepLinkListener(child: child ?? const SizedBox.shrink()),
     );
   }
 }

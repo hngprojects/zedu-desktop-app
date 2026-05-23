@@ -203,4 +203,95 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw ApiFailure.unknown(error);
     }
   }
+
+  @override
+  Future<void> sendMagicLink({required String email}) async {
+    try {
+      if (_config.usesMockData) {
+        AppLogger.d('Using mock data for POST /auth/magick-link', tag: _tag);
+        return;
+      }
+
+      AppLogger.d('POST /auth/magick-link — $email', tag: _tag);
+      await _apiBaseService.post<Map<String, dynamic>>(
+        path: '/auth/magick-link',
+        data: {'email': email},
+      );
+    } on ApiFailure {
+      rethrow;
+    } catch (error) {
+      AppLogger.e('Failed to request magic link', tag: _tag, error: error);
+      throw ApiFailure.fromParsingError(error, path: '/auth/magick-link');
+    }
+  }
+
+  @override
+  Future<LoginResponseModel> verifyMagicLink({required String token}) async {
+    try {
+      if (_config.usesMockData) {
+        AppLogger.d(
+          'Using mock data for POST /auth/magick-link/verify',
+          tag: _tag,
+        );
+        return LoginResponseModel.fromJson(
+          LoginResponseModel.mockLoginResponse,
+        );
+      }
+
+      AppLogger.d('POST /auth/magick-link/verify', tag: _tag);
+      final response = await _apiBaseService.post<Map<String, dynamic>>(
+        path: '/auth/magick-link/verify',
+        data: {'token': token},
+      );
+
+      final payload = response.data['data'] as Map<String, dynamic>;
+      return LoginResponseModel.fromJson(payload);
+    } on ApiFailure {
+      rethrow;
+    } catch (error) {
+      AppLogger.e('Failed to verify magic link', tag: _tag, error: error);
+      throw ApiFailure.fromParsingError(
+        error,
+        path: '/auth/magick-link/verify',
+      );
+    }
+  }
+
+  @override
+  Future<LoginResponseModel> signInWithGoogle({
+    required String grantCode,
+    String? redirectUri,
+  }) async {
+    try {
+      if (_config.usesMockData) {
+        AppLogger.d('Using mock data for POST /auth/google', tag: _tag);
+        return LoginResponseModel.fromJson(
+          LoginResponseModel.mockLoginResponse,
+        );
+      }
+
+      AppLogger.d('POST /auth/google', tag: _tag);
+      final data = <String, dynamic>{'grant_code': grantCode};
+      if (redirectUri != null) {
+        data['redirect_uri'] = redirectUri;
+      }
+
+      final response = await _apiBaseService.post<Map<String, dynamic>>(
+        path: '/auth/google',
+        data: data,
+      );
+
+      final payload = response.data['data'] as Map<String, dynamic>;
+      return LoginResponseModel.fromJson(payload);
+    } on ApiFailure {
+      rethrow;
+    } catch (error) {
+      AppLogger.e(
+        'Failed to parse /auth/google response',
+        tag: _tag,
+        error: error,
+      );
+      throw ApiFailure.fromParsingError(error, path: '/auth/google');
+    }
+  }
 }

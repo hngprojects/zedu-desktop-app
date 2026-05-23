@@ -3,9 +3,18 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  audioplayers_windows
+  agora_rtc_engine
+  app_links
+  desktop_drop
   flutter_secure_storage_windows
-  record_windows
+  iris_method_channel
+  irondash_engine_context
+  local_notifier
+  screen_retriever_windows
+  super_native_extensions
+  tray_manager
+  url_launcher_windows
+  window_manager
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

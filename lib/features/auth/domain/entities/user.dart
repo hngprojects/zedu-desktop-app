@@ -13,6 +13,10 @@ class User {
     required this.isVerified,
     required this.isOnboarded,
     required this.createdAt,
+    required this.currentOrg,
+    required this.currentOrganisationSlug,
+    required this.avatarUrl,
+    required this.defaultAvatarUrl,
   });
 
   final String id;
@@ -24,6 +28,10 @@ class User {
   final bool isVerified;
   final bool isOnboarded;
   final DateTime createdAt;
+  final String currentOrg;
+  final String currentOrganisationSlug;
+  final String avatarUrl;
+  final String defaultAvatarUrl;
 
   String get fullname => '$firstName $lastName';
 }
