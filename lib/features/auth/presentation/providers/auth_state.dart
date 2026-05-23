@@ -1,4 +1,4 @@
-import '../../domain/entities/user.dart';
+import 'package:zedu/features/features.dart';
 
 enum AuthStatus { unknown, authenticated, unauthenticated }
 

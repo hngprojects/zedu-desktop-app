@@ -1,8 +1,5 @@
 import 'package:zedu/core/core.dart';
-
-import '../../domain/dm_conversation.dart';
-import '../../data/dm_repository.dart';
-import '../../../workspaces/presentation/providers/workspace_provider.dart';
+import 'package:zedu/features/features.dart';
 
 final currentOrgIdProvider = Provider<String>((ref) {
   final workspace = ref.watch(workspaceProvider).selectedWorkspace;

@@ -1,8 +1,5 @@
 import 'package:zedu/core/core.dart';
-
-import '../../auth/presentation/providers/auth_providers_di.dart';
-import '../presentation/providers/dm_list_provider.dart';
-import '../presentation/providers/notification_settings_provider.dart';
+import 'package:zedu/features/features.dart';
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService(ref);

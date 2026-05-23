@@ -1,5 +1,4 @@
-import '../../domain/entities/user.dart';
-import 'organisation_model.dart';
+import 'package:zedu/features/features.dart';
 
 class UserModel {
   const UserModel({
