@@ -328,6 +328,7 @@ class _DmChatHeader extends StatelessWidget {
                           },
                           conversation.channelId,
                           conversation.displayName,
+                          forceShow: true,
                         );
                   });
                 },
