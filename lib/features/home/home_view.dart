@@ -363,10 +363,13 @@ class _MainSidebar extends ConsumerWidget {
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
             )
-          else
+          else ...[
+            if (!channelState.channels.any((c) => c.name.toLowerCase() == 'general'))
+              const _ChannelItem(label: 'general'),
             ...channelState.channels.take(5).map((channel) {
               return _ChannelItem(label: channel.name);
             }),
+          ],
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: InkWell(
