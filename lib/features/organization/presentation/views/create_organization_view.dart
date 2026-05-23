@@ -5,10 +5,12 @@ class CreateOrganizationView extends ConsumerStatefulWidget {
   const CreateOrganizationView({super.key});
 
   @override
-  ConsumerState<CreateOrganizationView> createState() => _CreateOrganizationViewState();
+  ConsumerState<CreateOrganizationView> createState() =>
+      _CreateOrganizationViewState();
 }
 
-class _CreateOrganizationViewState extends ConsumerState<CreateOrganizationView> {
+class _CreateOrganizationViewState
+    extends ConsumerState<CreateOrganizationView> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _typeController = TextEditingController();
@@ -29,7 +31,7 @@ class _CreateOrganizationViewState extends ConsumerState<CreateOrganizationView>
     'Brazil',
     'Japan',
     'Singapore',
-    'Other'
+    'Other',
   ];
 
   @override
@@ -52,7 +54,7 @@ class _CreateOrganizationViewState extends ConsumerState<CreateOrganizationView>
     }
 
     final notifier = ref.read(userProfileNotifierProvider.notifier);
-    
+
     // Simulate loading state locally before notifying the user
     setState(() {}); // trigger rebuild if we had a local loading state
 
@@ -122,10 +124,7 @@ class _CreateOrganizationViewState extends ConsumerState<CreateOrganizationView>
                   Text(
                     'Input the details of your organization below',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: colors.textHint,
-                    ),
+                    style: TextStyle(fontSize: 16, color: colors.textHint),
                   ),
                   const SizedBox(height: 48),
 
@@ -159,7 +158,10 @@ class _CreateOrganizationViewState extends ConsumerState<CreateOrganizationView>
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: colors.primary),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -200,7 +202,10 @@ class _CreateOrganizationViewState extends ConsumerState<CreateOrganizationView>
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: colors.primary),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -256,7 +261,10 @@ class _CreateOrganizationViewState extends ConsumerState<CreateOrganizationView>
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: colors.primary),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -273,7 +281,9 @@ class _CreateOrganizationViewState extends ConsumerState<CreateOrganizationView>
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colors.primary,
                       foregroundColor: Colors.white,
-                      disabledBackgroundColor: colors.primary.withValues(alpha: 0.5),
+                      disabledBackgroundColor: colors.primary.withValues(
+                        alpha: 0.5,
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -286,7 +296,9 @@ class _CreateOrganizationViewState extends ConsumerState<CreateOrganizationView>
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : const Text(

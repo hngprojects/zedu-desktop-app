@@ -31,7 +31,9 @@ class ChannelRemoteDataSourceImpl implements ChannelRemoteDataSource {
     );
     final data = response.data['data'] as List?;
     if (data == null) return [];
-    return data.map((e) => Channel.fromJson(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => Channel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
@@ -49,7 +51,7 @@ class ChannelRemoteDataSourceImpl implements ChannelRemoteDataSource {
       'organisation_id': orgId,
       'username': username,
       'is_private': isPrivate,
-      if (topic != null) 'topic': topic,
+      'topic': ?topic,
     };
     final response = await apiBaseService.post<Map<String, dynamic>>(
       path: '/channels',
@@ -69,7 +71,7 @@ class ChannelRemoteDataSourceImpl implements ChannelRemoteDataSource {
     final data = <String, dynamic>{};
     if (topic != null) data['topic'] = topic;
     if (description != null) data['description'] = description;
-    
+
     await apiBaseService.put<Map<String, dynamic>>(
       path: '/channels/$channelId/',
       data: data,

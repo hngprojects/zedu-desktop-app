@@ -1,7 +1,12 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/features.dart';
 
-enum ActiveChatType { channel, groupDm, newGroupChat, directMessage, channelDirectory }
+enum ActiveChatType {
+  channel,
+  groupDm,
+  newGroupChat,
+  directMessage,
+  channelDirectory,
+}
 
 class ActiveChatState {
   final ActiveChatType type;
@@ -9,9 +14,16 @@ class ActiveChatState {
 
   const ActiveChatState({required this.type, this.id});
 
-  static const generalChannel = ActiveChatState(type: ActiveChatType.channel, id: 'general');
-  static const newGroupChat = ActiveChatState(type: ActiveChatType.newGroupChat);
-  static const channelDirectory = ActiveChatState(type: ActiveChatType.channelDirectory);
+  static const generalChannel = ActiveChatState(
+    type: ActiveChatType.channel,
+    id: 'general',
+  );
+  static const newGroupChat = ActiveChatState(
+    type: ActiveChatType.newGroupChat,
+  );
+  static const channelDirectory = ActiveChatState(
+    type: ActiveChatType.channelDirectory,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -52,6 +64,7 @@ class ActiveChatNotifier extends Notifier<ActiveChatState> {
   }
 }
 
-final activeChatProvider = NotifierProvider<ActiveChatNotifier, ActiveChatState>(
-  ActiveChatNotifier.new,
-);
+final activeChatProvider =
+    NotifierProvider<ActiveChatNotifier, ActiveChatState>(
+      ActiveChatNotifier.new,
+    );

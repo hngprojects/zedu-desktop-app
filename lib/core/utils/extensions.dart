@@ -1,5 +1,4 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/features.dart';
 
 extension AppPaletteX on BuildContext {
   AppPalette get colors => Theme.of(this).brightness == Brightness.light

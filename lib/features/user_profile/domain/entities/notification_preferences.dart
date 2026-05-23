@@ -1,6 +1,3 @@
-import 'package:zedu/core/core.dart';
-import 'package:zedu/features/features.dart';
-
 enum NotificationMode { allMessages, mentionsOnly, none }
 
 class NotificationPreferences {

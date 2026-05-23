@@ -1,7 +1,3 @@
-import 'package:zedu/core/core.dart';
-import 'package:zedu/features/features.dart';
-
-// import 'package:zedu/core/core.dart';
 class ApiResponseModel<T> {
   const ApiResponseModel({
     required this.data,

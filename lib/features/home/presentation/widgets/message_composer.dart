@@ -63,10 +63,12 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
   void _handleSend() {
     final text = _controller.text.trim();
     if (text.isEmpty && _attachedFiles.isEmpty) return;
-    
+
     String finalMessage = text;
     if (_attachedFiles.isNotEmpty) {
-      final attachmentsStr = _attachedFiles.map((f) => '[Attachment: $f]').join(' ');
+      final attachmentsStr = _attachedFiles
+          .map((f) => '[Attachment: $f]')
+          .join(' ');
       finalMessage = text.isEmpty ? attachmentsStr : '$text\n$attachmentsStr';
     }
 
@@ -93,7 +95,11 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
     final text = _controller.text;
     final lastAt = text.lastIndexOf('@');
     if (lastAt != -1) {
-      final newText = text.replaceRange(lastAt, text.length, '@${name.replaceAll(' ', '')} ');
+      final newText = text.replaceRange(
+        lastAt,
+        text.length,
+        '@${name.replaceAll(' ', '')} ',
+      );
       _controller.value = TextEditingValue(
         text: newText,
         selection: TextSelection.collapsed(offset: newText.length),
@@ -106,16 +112,28 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
   void _insertFormatting(String prefix, String suffix) {
     final text = _controller.text;
     final selection = _controller.selection;
-    
+
     if (selection.isValid && !selection.isCollapsed) {
       final selectedText = selection.textInside(text);
-      final newText = text.replaceRange(selection.start, selection.end, '$prefix$selectedText$suffix');
+      final newText = text.replaceRange(
+        selection.start,
+        selection.end,
+        '$prefix$selectedText$suffix',
+      );
       _controller.value = TextEditingValue(
         text: newText,
-        selection: TextSelection.collapsed(offset: selection.start + prefix.length + selectedText.length + suffix.length),
+        selection: TextSelection.collapsed(
+          offset:
+              selection.start +
+              prefix.length +
+              selectedText.length +
+              suffix.length,
+        ),
       );
     } else {
-      final offset = selection.baseOffset >= 0 ? selection.baseOffset : text.length;
+      final offset = selection.baseOffset >= 0
+          ? selection.baseOffset
+          : text.length;
       final newText = text.replaceRange(offset, offset, '$prefix$suffix');
       _controller.value = TextEditingValue(
         text: newText,
@@ -158,16 +176,33 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
                   return InkWell(
                     onTap: () => _insertMention(name),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       child: Row(
                         children: [
                           CircleAvatar(
                             radius: 12,
-                            backgroundColor: colors.primary.withValues(alpha: 0.1),
-                            child: Text(initial, style: TextStyle(fontSize: 10, color: colors.primary)),
+                            backgroundColor: colors.primary.withValues(
+                              alpha: 0.1,
+                            ),
+                            child: Text(
+                              initial,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: colors.primary,
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 8),
-                          Text(name, style: TextStyle(color: colors.textPrimary, fontSize: 13)),
+                          Text(
+                            name,
+                            style: TextStyle(
+                              color: colors.textPrimary,
+                              fontSize: 13,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -188,22 +223,51 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
               ),
               child: Row(
                 children: [
-                  _ToolbarButton(icon: Icons.format_bold, onPressed: () => _insertFormatting('**', '**'), tooltip: 'Bold'),
-                  _ToolbarButton(icon: Icons.format_italic, onPressed: () => _insertFormatting('*', '*'), tooltip: 'Italic'),
-                  _ToolbarButton(icon: Icons.code, onPressed: () => _insertFormatting('`', '`'), tooltip: 'Code'),
-                  _ToolbarButton(icon: Icons.format_list_bulleted, onPressed: () => _insertFormatting('- ', ''), tooltip: 'Bullet List'),
-                  _ToolbarButton(icon: Icons.format_list_numbered, onPressed: () => _insertFormatting('1. ', ''), tooltip: 'Numbered List'),
+                  _ToolbarButton(
+                    icon: Icons.format_bold,
+                    onPressed: () => _insertFormatting('**', '**'),
+                    tooltip: 'Bold',
+                  ),
+                  _ToolbarButton(
+                    icon: Icons.format_italic,
+                    onPressed: () => _insertFormatting('*', '*'),
+                    tooltip: 'Italic',
+                  ),
+                  _ToolbarButton(
+                    icon: Icons.code,
+                    onPressed: () => _insertFormatting('`', '`'),
+                    tooltip: 'Code',
+                  ),
+                  _ToolbarButton(
+                    icon: Icons.format_list_bulleted,
+                    onPressed: () => _insertFormatting('- ', ''),
+                    tooltip: 'Bullet List',
+                  ),
+                  _ToolbarButton(
+                    icon: Icons.format_list_numbered,
+                    onPressed: () => _insertFormatting('1. ', ''),
+                    tooltip: 'Numbered List',
+                  ),
                   const Spacer(),
-                  _ToolbarButton(icon: Icons.emoji_emotions_outlined, onPressed: () => _insertFormatting('😀', ''), tooltip: 'Emoji'),
+                  _ToolbarButton(
+                    icon: Icons.emoji_emotions_outlined,
+                    onPressed: () => _insertFormatting('😀', ''),
+                    tooltip: 'Emoji',
+                  ),
                 ],
               ),
             ),
           Container(
             decoration: BoxDecoration(
               color: colors.background,
-              border: Border.all(color: _isFocused ? colors.primary : colors.divider),
+              border: Border.all(
+                color: _isFocused ? colors.primary : colors.divider,
+              ),
               borderRadius: _isFocused
-                  ? const BorderRadius.only(bottomLeft: Radius.circular(8), bottomRight: Radius.circular(8))
+                  ? const BorderRadius.only(
+                      bottomLeft: Radius.circular(8),
+                      bottomRight: Radius.circular(8),
+                    )
                   : BorderRadius.circular(8),
             ),
             child: Row(
@@ -211,7 +275,7 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
               children: [
                 IconButton(
                   onPressed: () async {
-                    FilePickerResult? result = await FilePicker.platform.pickFiles(
+                    FilePickerResult? result = await FilePicker.pickFiles(
                       allowMultiple: true,
                     );
                     if (result != null) {
@@ -253,12 +317,15 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
                 else if (_isRecording)
                   Row(
                     children: [
-                      Text('Recording... 0:05', style: TextStyle(color: colors.error, fontSize: 12)),
+                      Text(
+                        'Recording... 0:05',
+                        style: TextStyle(color: colors.error, fontSize: 12),
+                      ),
                       IconButton(
                         onPressed: _stopRecording,
                         icon: Icon(Icons.stop_circle, color: colors.error),
                         splashRadius: 20,
-                      )
+                      ),
                     ],
                   )
                 else
@@ -278,8 +345,15 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
                 runSpacing: 8,
                 children: _attachedFiles.map((fileName) {
                   return Chip(
-                    label: Text(fileName, style: TextStyle(fontSize: 12, color: colors.textPrimary)),
-                    deleteIcon: Icon(Icons.close, size: 16, color: colors.textHint),
+                    label: Text(
+                      fileName,
+                      style: TextStyle(fontSize: 12, color: colors.textPrimary),
+                    ),
+                    deleteIcon: Icon(
+                      Icons.close,
+                      size: 16,
+                      color: colors.textHint,
+                    ),
                     onDeleted: () {
                       setState(() {
                         _attachedFiles.remove(fileName);

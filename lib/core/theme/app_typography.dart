@@ -1,5 +1,4 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/features.dart';
 
 class FontFamily {
   static const String lato = 'Lato';

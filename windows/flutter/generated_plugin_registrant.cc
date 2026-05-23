@@ -8,11 +8,13 @@
 
 #include <agora_rtc_engine/agora_rtc_engine_plugin.h>
 #include <app_links/app_links_plugin_c_api.h>
+#include <audioplayers_windows/audioplayers_windows_plugin.h>
 #include <desktop_drop/desktop_drop_plugin.h>
 #include <flutter_secure_storage_windows/flutter_secure_storage_windows_plugin.h>
 #include <iris_method_channel/iris_method_channel_plugin_c_api.h>
 #include <irondash_engine_context/irondash_engine_context_plugin_c_api.h>
 #include <local_notifier/local_notifier_plugin.h>
+#include <record_windows/record_windows_plugin_c_api.h>
 #include <screen_retriever_windows/screen_retriever_windows_plugin_c_api.h>
 #include <super_native_extensions/super_native_extensions_plugin_c_api.h>
 #include <tray_manager/tray_manager_plugin.h>
@@ -24,6 +26,8 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("AgoraRtcEnginePlugin"));
   AppLinksPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("AppLinksPluginCApi"));
+  AudioplayersWindowsPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("AudioplayersWindowsPlugin"));
   DesktopDropPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("DesktopDropPlugin"));
   FlutterSecureStorageWindowsPluginRegisterWithRegistrar(
@@ -34,6 +38,8 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("IrondashEngineContextPluginCApi"));
   LocalNotifierPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("LocalNotifierPlugin"));
+  RecordWindowsPluginCApiRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("RecordWindowsPluginCApi"));
   ScreenRetrieverWindowsPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("ScreenRetrieverWindowsPluginCApi"));
   SuperNativeExtensionsPluginCApiRegisterWithRegistrar(

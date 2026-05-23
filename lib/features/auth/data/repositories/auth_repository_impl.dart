@@ -84,7 +84,11 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
   }) async {
     try {
-      await _remote.signUp(username: username, email: email, password: password);
+      await _remote.signUp(
+        username: username,
+        email: email,
+        password: password,
+      );
       return const Success(null);
     } on ApiFailure catch (failure) {
       return Failure(failure);

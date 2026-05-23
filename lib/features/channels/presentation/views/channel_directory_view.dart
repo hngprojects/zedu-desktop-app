@@ -5,7 +5,8 @@ class ChannelDirectoryView extends ConsumerStatefulWidget {
   const ChannelDirectoryView({super.key});
 
   @override
-  ConsumerState<ChannelDirectoryView> createState() => _ChannelDirectoryViewState();
+  ConsumerState<ChannelDirectoryView> createState() =>
+      _ChannelDirectoryViewState();
 }
 
 class _ChannelDirectoryViewState extends ConsumerState<ChannelDirectoryView> {
@@ -68,50 +69,77 @@ class _ChannelDirectoryViewState extends ConsumerState<ChannelDirectoryView> {
           child: channelState.isLoading
               ? const Center(child: CircularProgressIndicator())
               : filteredChannels.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No channels found.',
-                        style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: filteredChannels.length,
-                      itemBuilder: (context, index) {
-                        final channel = filteredChannels[index];
-                        return ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-                          leading: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: colors.background,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: channel.isPrivate
-                                  ? Icon(Icons.lock, size: 20, color: colors.textSecondary)
-                                  : Text('#', style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: colors.textSecondary)),
-                            ),
-                          ),
-                          title: Text(
-                            channel.name,
-                            style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600, color: colors.textPrimary),
-                          ),
-                          subtitle: channel.description.isNotEmpty
-                              ? Text(
-                                  channel.description,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
-                                )
-                              : null,
-                          trailing: Text('${channel.membersCount} members', style: textTheme.bodySmall?.copyWith(color: colors.textSecondary)),
-                          onTap: () {
-                            ref.read(activeChatProvider.notifier).selectChannel(channel.name);
-                          },
-                        );
-                      },
+              ? Center(
+                  child: Text(
+                    'No channels found.',
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colors.textSecondary,
                     ),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: filteredChannels.length,
+                  itemBuilder: (context, index) {
+                    final channel = filteredChannels[index];
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 8.0,
+                      ),
+                      leading: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: colors.background,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: channel.isPrivate
+                              ? Icon(
+                                  Icons.lock,
+                                  size: 20,
+                                  color: colors.textSecondary,
+                                )
+                              : Text(
+                                  '#',
+                                  style: textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: colors.textSecondary,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      title: Text(
+                        channel.name,
+                        style: textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      subtitle: channel.description.isNotEmpty
+                          ? Text(
+                              channel.description,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.bodyMedium?.copyWith(
+                                color: colors.textSecondary,
+                              ),
+                            )
+                          : null,
+                      trailing: Text(
+                        '${channel.membersCount} members',
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                      onTap: () {
+                        ref
+                            .read(activeChatProvider.notifier)
+                            .selectChannel(channel.name);
+                      },
+                    );
+                  },
+                ),
         ),
       ],
     );

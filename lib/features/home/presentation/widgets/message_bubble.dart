@@ -1,5 +1,4 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/features.dart';
 
 class MessageBubble extends StatefulWidget {
   final String author;
@@ -46,7 +45,9 @@ class _MessageBubbleState extends State<MessageBubble> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final initial = widget.author.isNotEmpty ? widget.author.substring(0, 1).toUpperCase() : '?';
+    final initial = widget.author.isNotEmpty
+        ? widget.author.substring(0, 1).toUpperCase()
+        : '?';
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovering = true),
@@ -58,8 +59,8 @@ class _MessageBubbleState extends State<MessageBubble> {
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: widget.isSystem 
-                  ? colors.textHint.withValues(alpha: 0.1) 
+              backgroundColor: widget.isSystem
+                  ? colors.textHint.withValues(alpha: 0.1)
                   : colors.primary.withValues(alpha: 0.1),
               child: Text(
                 initial,
@@ -88,10 +89,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                       const SizedBox(width: 8),
                       Text(
                         widget.timestamp,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: colors.textHint,
-                        ),
+                        style: TextStyle(fontSize: 11, color: colors.textHint),
                       ),
                     ],
                   ),
@@ -108,18 +106,34 @@ class _MessageBubbleState extends State<MessageBubble> {
                               onTap: () => _toggleReaction(e.key),
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: colors.primary.withValues(alpha: 0.1),
-                                  border: Border.all(color: colors.primary.withValues(alpha: 0.3)),
+                                  border: Border.all(
+                                    color: colors.primary.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                  ),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Text(e.key, style: const TextStyle(fontSize: 12)),
+                                    Text(
+                                      e.key,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
                                     const SizedBox(width: 4),
-                                    Text('${e.value}', style: TextStyle(fontSize: 11, color: colors.primary)),
+                                    Text(
+                                      '${e.value}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: colors.primary,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -130,13 +144,33 @@ class _MessageBubbleState extends State<MessageBubble> {
                               onTap: () async {
                                 final emoji = await showMenu<String>(
                                   context: context,
-                                  position: const RelativeRect.fromLTRB(100, 100, 0, 0), // Adjust this or use a button's render box
+                                  position: const RelativeRect.fromLTRB(
+                                    100,
+                                    100,
+                                    0,
+                                    0,
+                                  ), // Adjust this or use a button's render box
                                   items: const [
-                                    PopupMenuItem(value: '👍', child: Text('👍')),
-                                    PopupMenuItem(value: '❤️', child: Text('❤️')),
-                                    PopupMenuItem(value: '😂', child: Text('😂')),
-                                    PopupMenuItem(value: '🎉', child: Text('🎉')),
-                                    PopupMenuItem(value: '👎', child: Text('👎')),
+                                    PopupMenuItem(
+                                      value: '👍',
+                                      child: Text('👍'),
+                                    ),
+                                    PopupMenuItem(
+                                      value: '❤️',
+                                      child: Text('❤️'),
+                                    ),
+                                    PopupMenuItem(
+                                      value: '😂',
+                                      child: Text('😂'),
+                                    ),
+                                    PopupMenuItem(
+                                      value: '🎉',
+                                      child: Text('🎉'),
+                                    ),
+                                    PopupMenuItem(
+                                      value: '👎',
+                                      child: Text('👎'),
+                                    ),
                                   ],
                                 );
                                 if (emoji != null) {
@@ -145,13 +179,20 @@ class _MessageBubbleState extends State<MessageBubble> {
                               },
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: colors.background,
                                   border: Border.all(color: colors.divider),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Icon(Icons.add_reaction_outlined, size: 14, color: colors.textHint),
+                                child: Icon(
+                                  Icons.add_reaction_outlined,
+                                  size: 14,
+                                  color: colors.textHint,
+                                ),
                               ),
                             ),
                         ],
@@ -196,12 +237,21 @@ class _MessageBody extends StatelessWidget {
                 image: DecorationImage(
                   image: const AssetImage('assets/pngs/waveform_mock.png'),
                   fit: BoxFit.cover,
-                  colorFilter: ColorFilter.mode(colors.primary, BlendMode.srcIn),
+                  colorFilter: ColorFilter.mode(
+                    colors.primary,
+                    BlendMode.srcIn,
+                  ),
                 ),
               ),
             ),
             const SizedBox(width: 8),
-            Text('0:05', style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold)),
+            Text(
+              '0:05',
+              style: TextStyle(
+                color: colors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       );
@@ -216,8 +266,16 @@ class _MessageBody extends StatelessWidget {
             data: cleanText,
             styleSheet: MarkdownStyleSheet(
               p: TextStyle(fontSize: 14, color: colors.textPrimary),
-              strong: TextStyle(fontSize: 14, color: colors.textPrimary, fontWeight: FontWeight.bold),
-              em: TextStyle(fontSize: 14, color: colors.textPrimary, fontStyle: FontStyle.italic),
+              strong: TextStyle(
+                fontSize: 14,
+                color: colors.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+              em: TextStyle(
+                fontSize: 14,
+                color: colors.textPrimary,
+                fontStyle: FontStyle.italic,
+              ),
               code: TextStyle(
                 fontSize: 13,
                 color: colors.primary,
@@ -240,12 +298,21 @@ class _MessageBody extends StatelessWidget {
             runSpacing: 8,
             children: attachments.map((fileName) {
               final lowerName = fileName.toLowerCase();
-              final isImage = lowerName.endsWith('.png') || lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg') || lowerName.endsWith('.gif');
-              final isVideo = lowerName.endsWith('.mp4') || lowerName.endsWith('.mov') || lowerName.endsWith('.avi');
-              
+              final isImage =
+                  lowerName.endsWith('.png') ||
+                  lowerName.endsWith('.jpg') ||
+                  lowerName.endsWith('.jpeg') ||
+                  lowerName.endsWith('.gif');
+              final isVideo =
+                  lowerName.endsWith('.mp4') ||
+                  lowerName.endsWith('.mov') ||
+                  lowerName.endsWith('.avi');
+
               return Container(
                 width: isImage || isVideo ? 200 : 180,
-                padding: isImage || isVideo ? EdgeInsets.zero : const EdgeInsets.all(12),
+                padding: isImage || isVideo
+                    ? EdgeInsets.zero
+                    : const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: colors.background,
                   border: Border.all(color: colors.divider),
@@ -270,13 +337,20 @@ class _MessageBody extends StatelessWidget {
                             ),
                           ),
                           if (isVideo)
-                            const Icon(Icons.play_circle_fill, color: Colors.white, size: 40),
+                            const Icon(
+                              Icons.play_circle_fill,
+                              color: Colors.white,
+                              size: 40,
+                            ),
                           Positioned(
                             bottom: 0,
                             left: 0,
                             right: 0,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 6,
+                              ),
                               decoration: const BoxDecoration(
                                 color: Colors.black54,
                                 borderRadius: BorderRadius.only(
@@ -286,7 +360,10 @@ class _MessageBody extends StatelessWidget {
                               ),
                               child: Text(
                                 fileName,
-                                style: const TextStyle(color: Colors.white, fontSize: 11),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -301,7 +378,10 @@ class _MessageBody extends StatelessWidget {
                           Expanded(
                             child: Text(
                               fileName,
-                              style: TextStyle(color: colors.textPrimary, fontSize: 13),
+                              style: TextStyle(
+                                color: colors.textPrimary,
+                                fontSize: 13,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),

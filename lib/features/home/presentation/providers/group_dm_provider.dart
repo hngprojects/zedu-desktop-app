@@ -93,7 +93,8 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
     final selectedIds = selectedMembers.map((m) => m.id).toSet();
     for (final group in state) {
       final groupIds = group.members.map((m) => m.id).toSet();
-      if (groupIds.length == selectedIds.length && groupIds.containsAll(selectedIds)) {
+      if (groupIds.length == selectedIds.length &&
+          groupIds.containsAll(selectedIds)) {
         return Success(group);
       }
     }
@@ -111,7 +112,7 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
     );
 
     state = [...state, newGroup];
-    
+
     // Tell websocket we are in this group now
     final activeIds = state.map((g) => g.id).toList();
     ref.read(chatWebsocketProvider).connect(activeIds);
@@ -121,7 +122,7 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
 
   Future<void> sendMessage(String groupDmId, String messageText) async {
     final network = ref.read(networkStatusProvider);
-    
+
     if (network == NetworkStatus.offline) {
       // Queue it
       _offlineQueue.putIfAbsent(groupDmId, () => []).add(messageText);
@@ -144,22 +145,20 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
     state = [
       for (final group in state)
         if (group.id == groupDmId)
-          group.copyWith(
-            messages: [...group.messages, messageText],
-          )
+          group.copyWith(messages: [...group.messages, messageText])
         else
           group,
     ];
-    
+
     await ref.read(chatStorageProvider).appendMessage(groupDmId, messageText);
   }
 
   Future<void> _flushOfflineQueue() async {
     if (_offlineQueue.isEmpty) return;
-    
+
     // Simulate sending queued messages
     await Future<void>.delayed(const Duration(milliseconds: 500));
-    
+
     // Just clear the queue for the mock and assume they were sent
     // We already appended "Pending..." so let's clean them up
     // In a real app we'd replace the pending messages with real ones
@@ -169,10 +168,7 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
   void renameGroupDm(String groupId, String newName) {
     state = [
       for (final group in state)
-        if (group.id == groupId)
-          group.copyWith(name: newName)
-        else
-          group,
+        if (group.id == groupId) group.copyWith(name: newName) else group,
     ];
   }
 }
@@ -180,4 +176,3 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
 final groupDmProvider = NotifierProvider<GroupDmNotifier, List<GroupDM>>(
   GroupDmNotifier.new,
 );
-

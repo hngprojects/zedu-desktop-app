@@ -3,7 +3,9 @@ import 'package:zedu/features/features.dart';
 
 final channelRepositoryProvider = Provider<ChannelRepository>((ref) {
   final apiBaseService = locator<ApiBaseService>();
-  final remoteDataSource = ChannelRemoteDataSourceImpl(apiBaseService: apiBaseService);
+  final remoteDataSource = ChannelRemoteDataSourceImpl(
+    apiBaseService: apiBaseService,
+  );
   return ChannelRepositoryImpl(remoteDataSource: remoteDataSource);
 });
 
@@ -45,14 +47,17 @@ class ChannelNotifier extends Notifier<ChannelState> {
     if (orgId == null) return;
 
     state = state.copyWith(isLoading: true, errorMessage: null);
-    
+
     final repository = ref.read(channelRepositoryProvider);
     final result = await repository.fetchChannels(orgId);
-    
+
     if (result is Success<List<Channel>>) {
       state = state.copyWith(isLoading: false, channels: result.value);
     } else if (result is Failure<List<Channel>>) {
-      state = state.copyWith(isLoading: false, errorMessage: result.error.message);
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: result.error.message,
+      );
     }
   }
 
@@ -65,7 +70,8 @@ class ChannelNotifier extends Notifier<ChannelState> {
     final workspaceState = ref.read(workspaceProvider);
     final authState = ref.read(authNotifierProvider);
     final String? orgId = workspaceState.selectedWorkspace?.id;
-    final String? username = authState.user?.username ?? authState.user?.email.split('@').first;
+    final String? username =
+        authState.user?.username ?? authState.user?.email.split('@').first;
 
     if (orgId == null || username == null) return false;
 
@@ -125,4 +131,6 @@ class ChannelNotifier extends Notifier<ChannelState> {
   }
 }
 
-final channelProvider = NotifierProvider<ChannelNotifier, ChannelState>(ChannelNotifier.new);
+final channelProvider = NotifierProvider<ChannelNotifier, ChannelState>(
+  ChannelNotifier.new,
+);

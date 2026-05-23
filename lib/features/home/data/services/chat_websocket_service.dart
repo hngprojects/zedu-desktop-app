@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/features.dart';
 
 class ChatWebsocketMessage {
   final String groupDmId;
@@ -38,17 +37,18 @@ class ChatWebsocketService {
 
   void _startMockingMessages(List<String> activeGroupDmIds) {
     if (activeGroupDmIds.isEmpty) return;
-    
+
     // Periodically send a fake incoming message to simulate real-time activity
     _mockTimer?.cancel();
     _mockTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
       // Pick a random group DM
       final groupId = activeGroupDmIds[timer.tick % activeGroupDmIds.length];
-      
+
       _messageController.add(
         ChatWebsocketMessage(
           groupDmId: groupId,
-          text: 'This is a simulated real-time incoming message (#${timer.tick})',
+          text:
+              'This is a simulated real-time incoming message (#${timer.tick})',
           authorName: 'Mock Member',
           timestamp: DateTime.now(),
         ),

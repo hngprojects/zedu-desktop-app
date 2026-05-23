@@ -1,5 +1,7 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/features.dart';
+
+import '../../data/models/workspace.dart';
+import 'workspace_state.dart';
 
 class WorkspaceNotifier extends Notifier<WorkspaceState> {
   @override
@@ -11,19 +13,23 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
   Future<void> _fetchWorkspaces() async {
     try {
       final api = locator<ApiBaseService>();
-      final response = await api.get<Map<String, dynamic>>(path: '/users/organisations');
+      final response = await api.get<Map<String, dynamic>>(
+        path: '/users/organisations',
+      );
       final data = response.data['data'] as List<dynamic>? ?? [];
-      
+
       if (data.isNotEmpty) {
         final List<Workspace> workspaces = [];
         for (var item in data) {
           if (item is Map<String, dynamic>) {
-            workspaces.add(Workspace(
-              id: item['id'] as String? ?? '1',
-              name: item['name'] as String? ?? 'Workspace',
-              avatar: item['logo_url'] as String? ?? '',
-              membersCount: (item['channels_count'] as num?)?.toInt() ?? 0,
-            ));
+            workspaces.add(
+              Workspace(
+                id: item['id'] as String? ?? '1',
+                name: item['name'] as String? ?? 'Workspace',
+                avatar: item['logo_url'] as String? ?? '',
+                membersCount: (item['channels_count'] as num?)?.toInt() ?? 0,
+              ),
+            );
           }
         }
         if (workspaces.isNotEmpty) {
@@ -70,9 +76,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       ),
     ];
 
-    final user = authState.user!;
-    final workspaces = _buildWorkspacesFromUser(user);
-
+    // We use the mock workspaces defined above for initial state
     String? previousId;
     try {
       previousId = state.selectedWorkspace?.id;
@@ -86,34 +90,6 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
         : workspaces.first;
 
     return WorkspaceState(workspaces: workspaces, selectedWorkspace: selected);
-  }
-
-  List<Workspace> _buildWorkspacesFromUser(User user) {
-    final workspaces = <Workspace>[];
-
-    if (user.currentOrg.isNotEmpty) {
-      workspaces.add(
-        Workspace(
-          id: user.currentOrg,
-          name: user.currentOrganisationSlug.isNotEmpty
-              ? user.currentOrganisationSlug
-              : '${user.firstName}\'s Workspace',
-          avatar: '',
-        ),
-      );
-    }
-
-    if (workspaces.isEmpty) {
-      workspaces.add(
-        const Workspace(
-          id: '01910544-d1e1-7ada-bdac-c761e527ec91',
-          name: 'Default Workspace',
-          avatar: '',
-        ),
-      );
-    }
-
-    return workspaces;
   }
 
   void addWorkspace(Workspace workspace, {bool switchTo = true}) {
@@ -136,18 +112,15 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     state = state.copyWith(selectedWorkspace: workspace, isLoading: false);
   }
 
-  void addWorkspace(Workspace workspace) {
-    state = state.copyWith(
-      workspaces: [...state.workspaces, workspace],
-      selectedWorkspace: workspace, // Optional: auto-switch to new workspace
-    );
-  }
-
   void removeWorkspace(String id) {
-    final updatedWorkspaces = state.workspaces.where((w) => w.id != id).toList();
+    final updatedWorkspaces = state.workspaces
+        .where((w) => w.id != id)
+        .toList();
     Workspace? nextSelected = state.selectedWorkspace;
     if (state.selectedWorkspace?.id == id) {
-      nextSelected = updatedWorkspaces.isNotEmpty ? updatedWorkspaces.first : null;
+      nextSelected = updatedWorkspaces.isNotEmpty
+          ? updatedWorkspaces.first
+          : null;
     }
     state = state.copyWith(
       workspaces: updatedWorkspaces,

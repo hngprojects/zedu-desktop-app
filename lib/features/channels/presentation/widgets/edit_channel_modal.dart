@@ -29,11 +29,13 @@ class _EditChannelModalState extends ConsumerState<EditChannelModal> {
   }
 
   void _saveChanges() {
-    ref.read(channelProvider.notifier).updateChannelTopicOrDescription(
-      channelId: widget.channel.id,
-      topic: _topicController.text.trim(),
-      description: _descController.text.trim(),
-    );
+    ref
+        .read(channelProvider.notifier)
+        .updateChannelTopicOrDescription(
+          channelId: widget.channel.id,
+          topic: _topicController.text.trim(),
+          description: _descController.text.trim(),
+        );
     Navigator.of(context).pop();
   }
 
@@ -63,22 +65,33 @@ class _EditChannelModalState extends ConsumerState<EditChannelModal> {
             const SizedBox(height: 24),
             Text(
               'Topic',
-              style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: colors.textPrimary),
+              style: textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colors.textPrimary,
+              ),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _topicController,
               decoration: InputDecoration(
                 hintText: 'Add a topic',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
               style: textTheme.bodyMedium?.copyWith(color: colors.textPrimary),
             ),
             const SizedBox(height: 16),
             Text(
               'Description',
-              style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: colors.textPrimary),
+              style: textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colors.textPrimary,
+              ),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -86,8 +99,13 @@ class _EditChannelModalState extends ConsumerState<EditChannelModal> {
               maxLines: 3,
               decoration: InputDecoration(
                 hintText: 'What is this channel about?',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
               style: textTheme.bodyMedium?.copyWith(color: colors.textPrimary),
             ),
@@ -97,23 +115,41 @@ class _EditChannelModalState extends ConsumerState<EditChannelModal> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: Text('Cancel', style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary)),
+                  child: Text(
+                    'Cancel',
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton(
                   onPressed: isLoading ? null : _saveChanges,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colors.primary,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   child: isLoading
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
                         )
-                      : Text('Save Changes', style: textTheme.bodyMedium?.copyWith(color: Colors.white)),
+                      : Text(
+                          'Save Changes',
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ],
             ),

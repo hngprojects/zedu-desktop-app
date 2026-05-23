@@ -1,5 +1,4 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/features.dart';
 
 enum NetworkStatus { online, offline }
 
@@ -18,10 +17,13 @@ class NetworkStatusNotifier extends Notifier<NetworkStatus> {
   }
 
   void toggle() {
-    state = state == NetworkStatus.online ? NetworkStatus.offline : NetworkStatus.online;
+    state = state == NetworkStatus.online
+        ? NetworkStatus.offline
+        : NetworkStatus.online;
   }
 }
 
-final networkStatusProvider = NotifierProvider<NetworkStatusNotifier, NetworkStatus>(
-  NetworkStatusNotifier.new,
-);
+final networkStatusProvider =
+    NotifierProvider<NetworkStatusNotifier, NetworkStatus>(
+      NetworkStatusNotifier.new,
+    );
