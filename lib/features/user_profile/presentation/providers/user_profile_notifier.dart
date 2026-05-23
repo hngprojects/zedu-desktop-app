@@ -183,15 +183,17 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           isSaving: false,
           successMessage: 'Organization created successfully.',
         );
-        ref.read(workspaceProvider.notifier).addWorkspace(
-          Workspace(
-            id: result.value.id,
-            name: result.value.name,
-            avatar: '',
-            unreadCount: 0,
-            membersCount: 1,
-          ),
-        );
+        ref
+            .read(workspaceProvider.notifier)
+            .addWorkspace(
+              Workspace(
+                id: result.value.id,
+                name: result.value.name,
+                avatar: '',
+                unreadCount: 0,
+                membersCount: 1,
+              ),
+            );
       case Failure<OrganizationProfile>():
         state = state.copyWith(
           isSaving: false,
@@ -258,10 +260,13 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     try {
       if (orgId == null) return '019700d8-9085-7f7b-839a-fcbd08b9e26d';
       final api = locator<ApiBaseService>();
-      final response = await api.get<Map<String, dynamic>>(path: '/organisations/$orgId/roles');
+      final response = await api.get<Map<String, dynamic>>(
+        path: '/organisations/$orgId/roles',
+      );
       final data = response.data['data'] as List<dynamic>?;
       if (data != null && data.isNotEmpty) {
-        return data.last['id'] as String; // Just pick a valid role ID to avoid 404
+        return data.last['id']
+            as String; // Just pick a valid role ID to avoid 404
       }
     } catch (e) {
       // ignore
@@ -273,16 +278,14 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     try {
       final api = locator<ApiBaseService>();
       var orgId = ref.read(workspaceProvider).selectedWorkspace?.id;
-      if (locator<AppConfig>().usesMockData && (orgId == null || orgId.length < 36)) {
+      if (locator<AppConfig>().usesMockData &&
+          (orgId == null || orgId.length < 36)) {
         orgId = '019700db-4e22-7f90-a20e-f9116291ef24';
       }
       final roleId = await _getRoleId(orgId);
       final response = await api.post<Map<String, dynamic>>(
         path: '/invite/general',
-        data: {
-          'organisation_id': orgId,
-          'role_id': roleId,
-        },
+        data: {'organisation_id': orgId, 'role_id': roleId},
       );
       final data = response.data['data'] as Map<String, dynamic>?;
       return data?['invitation_link'] as String?;
@@ -316,10 +319,11 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       clearSuccess: true,
     );
     var orgId = ref.read(workspaceProvider).selectedWorkspace?.id;
-    if (locator<AppConfig>().usesMockData && (orgId == null || orgId.length < 36)) {
+    if (locator<AppConfig>().usesMockData &&
+        (orgId == null || orgId.length < 36)) {
       orgId = '019700db-4e22-7f90-a20e-f9116291ef24';
     }
-    
+
     // Map human readable role to a valid UUID role_id by fetching from backend
     String roleId = await _getRoleId(orgId);
 
@@ -331,7 +335,11 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       return;
     }
 
-    final result = await _repository.inviteMember(email: email, role: roleId, orgId: orgId);
+    final result = await _repository.inviteMember(
+      email: email,
+      role: roleId,
+      orgId: orgId,
+    );
     switch (result) {
       case Success<TeamMember>():
         final newTeamMembers = [...state.teamMembers, result.value];
@@ -340,21 +348,28 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           isSaving: false,
           successMessage: 'Invite sent successfully.',
         );
-        
+
         // Persist the mock state across restarts if we are using mock data
         final config = locator<AppConfig>();
         if (config.usesMockData) {
           final storage = locator<SecureStorageService>();
-          final jsonList = newTeamMembers.map((m) => {
-            'id': m.id,
-            'email': m.email,
-            'role': m.role,
-            'name': m.name,
-            'avatar_url': m.avatarUrl,
-            'date_joined': m.dateJoined,
-            'status': m.status.name,
-          }).toList();
-          await storage.writeData('mock_team_members_$orgId', jsonEncode(jsonList));
+          final jsonList = newTeamMembers
+              .map(
+                (m) => {
+                  'id': m.id,
+                  'email': m.email,
+                  'role': m.role,
+                  'name': m.name,
+                  'avatar_url': m.avatarUrl,
+                  'date_joined': m.dateJoined,
+                  'status': m.status.name,
+                },
+              )
+              .toList();
+          await storage.writeData(
+            'mock_team_members_$orgId',
+            jsonEncode(jsonList),
+          );
         }
 
       case Failure<TeamMember>():
@@ -437,9 +452,9 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     final billingResult = results[6] as Result<BillingInfo>;
 
     final error = _getError(results);
-    
+
     var loadedTeamMembers = _valueOrNull(teamResult) ?? const [];
-    
+
     // Load persisted mock members if they exist
     if (orgId != null) {
       final storage = locator<SecureStorageService>();

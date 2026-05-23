@@ -5,11 +5,13 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   agora_rtc_engine
   app_links
+  audioplayers_windows
   desktop_drop
   flutter_secure_storage_windows
   iris_method_channel
   irondash_engine_context
   local_notifier
+  record_windows
   screen_retriever_windows
   super_native_extensions
   tray_manager

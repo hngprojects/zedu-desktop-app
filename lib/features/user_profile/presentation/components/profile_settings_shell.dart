@@ -17,7 +17,7 @@ class ProfileSettingsShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(userProfileNotifierProvider);
     final authState = ref.watch(authNotifierProvider);
-    
+
     String userName = 'Zedu User';
     if (authState.user != null && authState.user!.username.isNotEmpty) {
       userName = authState.user!.username;

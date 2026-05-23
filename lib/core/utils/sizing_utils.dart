@@ -1,5 +1,4 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/features.dart';
 
 extension MediaQueryValues on BuildContext {
   // ── Raw screen dimensions ────────────────────────────

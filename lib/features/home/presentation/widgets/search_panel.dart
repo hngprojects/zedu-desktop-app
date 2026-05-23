@@ -101,35 +101,41 @@ class _SearchPanelState extends State<SearchPanel> {
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: colors.primary),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
               ),
               onSubmitted: _performSearch,
             ),
           ),
           Expanded(
             child: _isSearching
-                ? Center(child: CircularProgressIndicator(color: colors.primary))
+                ? Center(
+                    child: CircularProgressIndicator(color: colors.primary),
+                  )
                 : _results.isEmpty
-                    ? Center(
-                        child: Text(
-                          _searchController.text.isEmpty
-                              ? 'Enter a search term'
-                              : 'No results found',
-                          style: TextStyle(color: colors.textHint),
-                        ),
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _results.length,
-                        separatorBuilder: (context, index) => Divider(color: colors.divider),
-                        itemBuilder: (context, index) {
-                          return MessageBubble(
-                            author: 'Jane Smith',
-                            text: _results[index],
-                            timestamp: 'Yesterday',
-                          );
-                        },
-                      ),
+                ? Center(
+                    child: Text(
+                      _searchController.text.isEmpty
+                          ? 'Enter a search term'
+                          : 'No results found',
+                      style: TextStyle(color: colors.textHint),
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _results.length,
+                    separatorBuilder: (context, index) =>
+                        Divider(color: colors.divider),
+                    itemBuilder: (context, index) {
+                      return MessageBubble(
+                        author: 'Jane Smith',
+                        text: _results[index],
+                        timestamp: 'Yesterday',
+                      );
+                    },
+                  ),
           ),
         ],
       ),

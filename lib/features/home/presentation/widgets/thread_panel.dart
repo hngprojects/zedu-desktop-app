@@ -76,18 +76,23 @@ class _ThreadPanelState extends State<ThreadPanel> {
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: Text(
                           '${_replies.length} replies',
-                          style: TextStyle(color: colors.textHint, fontSize: 12),
+                          style: TextStyle(
+                            color: colors.textHint,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                       Expanded(child: Divider(color: colors.divider)),
                     ],
                   ),
                 ),
-                ..._replies.map((reply) => MessageBubble(
-                      author: 'You',
-                      text: reply,
-                      timestamp: '3:20 PM',
-                    )),
+                ..._replies.map(
+                  (reply) => MessageBubble(
+                    author: 'You',
+                    text: reply,
+                    timestamp: '3:20 PM',
+                  ),
+                ),
               ],
             ),
           ),
@@ -112,7 +117,10 @@ class _ThreadPanelState extends State<ThreadPanel> {
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: colors.primary),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
                 suffixIcon: Icon(Icons.send, color: colors.primary),
               ),
               onSubmitted: (value) {

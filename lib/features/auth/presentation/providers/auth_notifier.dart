@@ -100,11 +100,19 @@ class AuthNotifier extends Notifier<AuthState> {
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
 
-  Future<void> signUp({required String username, required String email, required String password}) async {
+  Future<void> signUp({
+    required String username,
+    required String email,
+    required String password,
+  }) async {
     AppLogger.d('Sign up attempt — $email', tag: _tag);
     state = state.copyWith(isLoading: true, clearError: true);
 
-    final result = await _repository.signUp(username: username, email: email, password: password);
+    final result = await _repository.signUp(
+      username: username,
+      email: email,
+      password: password,
+    );
     switch (result) {
       case Success<void>():
         AppLogger.i('Sign up succeeded', tag: _tag);

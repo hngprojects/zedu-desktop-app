@@ -3,11 +3,13 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  audioplayers_linux
   desktop_drop
   flutter_secure_storage_linux
   gtk
   irondash_engine_context
   local_notifier
+  record_linux
   screen_retriever_linux
   super_native_extensions
   tray_manager

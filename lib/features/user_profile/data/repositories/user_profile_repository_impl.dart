@@ -62,11 +62,8 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     required String country,
   }) {
     return _guard(
-      () => _remote.createOrganization(
-        name: name,
-        type: type,
-        country: country,
-      ),
+      () =>
+          _remote.createOrganization(name: name, type: type, country: country),
     );
   }
 
@@ -93,7 +90,9 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     required String role,
     required String orgId,
   }) {
-    return _guard(() => _remote.inviteMember(email: email, role: role, orgId: orgId));
+    return _guard(
+      () => _remote.inviteMember(email: email, role: role, orgId: orgId),
+    );
   }
 
   @override

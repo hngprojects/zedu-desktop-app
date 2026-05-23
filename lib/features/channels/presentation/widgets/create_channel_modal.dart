@@ -24,13 +24,15 @@ class _CreateChannelModalState extends ConsumerState<CreateChannelModal> {
 
   void _createChannel() {
     if (_nameController.text.trim().isEmpty) return;
-    
-    ref.read(channelProvider.notifier).createChannel(
-      name: _nameController.text.trim(),
-      description: _descController.text.trim(),
-      topic: _topicController.text.trim(),
-      isPrivate: _isPrivate,
-    );
+
+    ref
+        .read(channelProvider.notifier)
+        .createChannel(
+          name: _nameController.text.trim(),
+          description: _descController.text.trim(),
+          topic: _topicController.text.trim(),
+          isPrivate: _isPrivate,
+        );
     Navigator.of(context).pop();
   }
 
@@ -60,48 +62,74 @@ class _CreateChannelModalState extends ConsumerState<CreateChannelModal> {
             const SizedBox(height: 8),
             Text(
               'Channels are where your team communicates. They’re best when organized around a topic — #marketing, for example.',
-              style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
+              style: textTheme.bodyMedium?.copyWith(
+                color: colors.textSecondary,
+              ),
             ),
             const SizedBox(height: 24),
             Text(
               'Name',
-              style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: colors.textPrimary),
+              style: textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colors.textPrimary,
+              ),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _nameController,
               decoration: InputDecoration(
                 hintText: 'e.g. plan-budget',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
               style: textTheme.bodyMedium?.copyWith(color: colors.textPrimary),
             ),
             const SizedBox(height: 16),
             Text(
               'Description (optional)',
-              style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: colors.textPrimary),
+              style: textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colors.textPrimary,
+              ),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _descController,
               decoration: InputDecoration(
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
               style: textTheme.bodyMedium?.copyWith(color: colors.textPrimary),
             ),
             const SizedBox(height: 16),
             Text(
               'Topic (optional)',
-              style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: colors.textPrimary),
+              style: textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colors.textPrimary,
+              ),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _topicController,
               decoration: InputDecoration(
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
               style: textTheme.bodyMedium?.copyWith(color: colors.textPrimary),
             ),
@@ -114,11 +142,16 @@ class _CreateChannelModalState extends ConsumerState<CreateChannelModal> {
                     children: [
                       Text(
                         'Make private',
-                        style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600, color: colors.textPrimary),
+                        style: textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: colors.textPrimary,
+                        ),
                       ),
                       Text(
                         'When a channel is set to private, it can only be viewed or joined by invitation.',
-                        style: textTheme.bodySmall?.copyWith(color: colors.textSecondary),
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -136,23 +169,41 @@ class _CreateChannelModalState extends ConsumerState<CreateChannelModal> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: Text('Cancel', style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary)),
+                  child: Text(
+                    'Cancel',
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colors.textSecondary,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton(
                   onPressed: isLoading ? null : _createChannel,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colors.primary,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   child: isLoading
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
                         )
-                      : Text('Create', style: textTheme.bodyMedium?.copyWith(color: Colors.white)),
+                      : Text(
+                          'Create',
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ],
             ),

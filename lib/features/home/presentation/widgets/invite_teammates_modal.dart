@@ -5,7 +5,8 @@ class InviteTeammatesModal extends ConsumerStatefulWidget {
   const InviteTeammatesModal({super.key});
 
   @override
-  ConsumerState<InviteTeammatesModal> createState() => _InviteTeammatesModalState();
+  ConsumerState<InviteTeammatesModal> createState() =>
+      _InviteTeammatesModalState();
 }
 
 class _InviteTeammatesModalState extends ConsumerState<InviteTeammatesModal> {
@@ -184,7 +185,9 @@ class _InviteTeammatesModalState extends ConsumerState<InviteTeammatesModal> {
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
-                border: Border.all(color: colors.primary.withValues(alpha: 0.5)),
+                border: Border.all(
+                  color: colors.primary.withValues(alpha: 0.5),
+                ),
                 borderRadius: BorderRadius.circular(6),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -193,25 +196,29 @@ class _InviteTeammatesModalState extends ConsumerState<InviteTeammatesModal> {
                 runSpacing: 4,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  ..._invites.map((invite) => Chip(
-                        label: Text(invite['email']!),
-                        labelStyle: TextStyle(
-                          fontSize: 13,
-                          color: colors.textPrimary,
-                        ),
-                        backgroundColor: colors.background,
-                        deleteIcon: const Icon(Icons.close, size: 16),
-                        onDeleted: () => _removeInvite(invite['email']!),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                          side: BorderSide(color: colors.divider),
-                        ),
-                      )),
+                  ..._invites.map(
+                    (invite) => Chip(
+                      label: Text(invite['email']!),
+                      labelStyle: TextStyle(
+                        fontSize: 13,
+                        color: colors.textPrimary,
+                      ),
+                      backgroundColor: colors.background,
+                      deleteIcon: const Icon(Icons.close, size: 16),
+                      onDeleted: () => _removeInvite(invite['email']!),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                        side: BorderSide(color: colors.divider),
+                      ),
+                    ),
+                  ),
                   IntrinsicWidth(
                     child: TextField(
                       controller: _emailController,
                       decoration: InputDecoration(
-                        hintText: _invites.isEmpty ? '|Enter name or email' : '',
+                        hintText: _invites.isEmpty
+                            ? '|Enter name or email'
+                            : '',
                         hintStyle: TextStyle(
                           color: colors.textHint.withValues(alpha: 0.7),
                         ),
@@ -244,11 +251,26 @@ class _InviteTeammatesModalState extends ConsumerState<InviteTeammatesModal> {
                     itemBuilder: (context, index) {
                       final user = _filteredUsers[index];
                       final email = user['email'] as String? ?? '';
-                      final name = user['full_name'] as String? ?? user['username'] as String? ?? 'Unknown';
+                      final name =
+                          user['full_name'] as String? ??
+                          user['username'] as String? ??
+                          'Unknown';
                       final userId = user['id'] as String?;
                       return ListTile(
-                        title: Text(name, style: TextStyle(color: colors.textPrimary, fontSize: 13)),
-                        subtitle: Text(email, style: TextStyle(color: colors.textHint, fontSize: 11)),
+                        title: Text(
+                          name,
+                          style: TextStyle(
+                            color: colors.textPrimary,
+                            fontSize: 13,
+                          ),
+                        ),
+                        subtitle: Text(
+                          email,
+                          style: TextStyle(
+                            color: colors.textHint,
+                            fontSize: 11,
+                          ),
+                        ),
                         onTap: () {
                           if (email.isNotEmpty) _addInvite(email, userId);
                         },
@@ -260,10 +282,7 @@ class _InviteTeammatesModalState extends ConsumerState<InviteTeammatesModal> {
             const SizedBox(height: 8),
             Text(
               'Search for people in your organisation and add them to #general.',
-              style: TextStyle(
-                fontSize: 12,
-                color: colors.textHint,
-              ),
+              style: TextStyle(fontSize: 12, color: colors.textHint),
             ),
             const SizedBox(height: 24),
             Divider(color: colors.divider.withValues(alpha: 0.5)),
@@ -277,14 +296,18 @@ class _InviteTeammatesModalState extends ConsumerState<InviteTeammatesModal> {
                       icon: Icon(Icons.link, color: colors.textPrimary),
                       tooltip: 'Copy Invite Link',
                       onPressed: () async {
-                        final notifier = ref.read(userProfileNotifierProvider.notifier);
+                        final notifier = ref.read(
+                          userProfileNotifierProvider.notifier,
+                        );
                         final link = await notifier.generateInviteLink();
                         if (link != null && context.mounted) {
                           await Clipboard.setData(ClipboardData(text: link));
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: const Text('Invite link copied to clipboard!'),
+                                content: const Text(
+                                  'Invite link copied to clipboard!',
+                                ),
                                 backgroundColor: colors.success,
                               ),
                             );
@@ -304,12 +327,18 @@ class _InviteTeammatesModalState extends ConsumerState<InviteTeammatesModal> {
                       style: TextButton.styleFrom(
                         backgroundColor: colors.background,
                         foregroundColor: colors.textPrimary,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
                         ),
                       ),
-                      child: const Text('Add everyone', style: TextStyle(fontWeight: FontWeight.w500)),
+                      child: const Text(
+                        'Add everyone',
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
                     ),
                   ],
                 ),
@@ -318,8 +347,13 @@ class _InviteTeammatesModalState extends ConsumerState<InviteTeammatesModal> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colors.primary,
                     foregroundColor: colors.onPrimary,
-                    disabledBackgroundColor: colors.primary.withValues(alpha: 0.5),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    disabledBackgroundColor: colors.primary.withValues(
+                      alpha: 0.5,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(6),
                     ),
@@ -331,10 +365,15 @@ class _InviteTeammatesModalState extends ConsumerState<InviteTeammatesModal> {
                           width: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(colors.onPrimary),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              colors.onPrimary,
+                            ),
                           ),
                         )
-                      : const Text('Add', style: TextStyle(fontWeight: FontWeight.w600)),
+                      : const Text(
+                          'Add',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
                 ),
               ],
             ),

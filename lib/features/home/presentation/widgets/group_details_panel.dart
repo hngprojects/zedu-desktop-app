@@ -122,7 +122,11 @@ class _GroupDetailsPanelState extends State<GroupDetailsPanel> {
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.edit, size: 18, color: colors.textHint),
+                        icon: Icon(
+                          Icons.edit,
+                          size: 18,
+                          color: colors.textHint,
+                        ),
                         onPressed: () => setState(() => _isEditingName = true),
                       ),
                     ],
@@ -137,20 +141,33 @@ class _GroupDetailsPanelState extends State<GroupDetailsPanel> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                ...widget.group.members.map((member) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 14,
-                            backgroundColor: colors.primary.withValues(alpha: 0.1),
-                            child: Text((member.name ?? member.email)[0], style: TextStyle(fontSize: 12, color: colors.primary)),
+                ...widget.group.members.map(
+                  (member) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 14,
+                          backgroundColor: colors.primary.withValues(
+                            alpha: 0.1,
                           ),
-                          const SizedBox(width: 12),
-                          Text(member.name ?? member.email, style: TextStyle(color: colors.textPrimary)),
-                        ],
-                      ),
-                    )),
+                          child: Text(
+                            (member.name ?? member.email)[0],
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colors.primary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          member.name ?? member.email,
+                          style: TextStyle(color: colors.textPrimary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 24),
                 Text(
                   'Pinned Messages',
@@ -161,7 +178,13 @@ class _GroupDetailsPanelState extends State<GroupDetailsPanel> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text('No pinned messages', style: TextStyle(color: colors.textHint, fontStyle: FontStyle.italic)),
+                Text(
+                  'No pinned messages',
+                  style: TextStyle(
+                    color: colors.textHint,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
                 const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
@@ -169,7 +192,9 @@ class _GroupDetailsPanelState extends State<GroupDetailsPanel> {
                     onPressed: widget.onLeave,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: colors.error,
-                      side: BorderSide(color: colors.error.withValues(alpha: 0.5)),
+                      side: BorderSide(
+                        color: colors.error.withValues(alpha: 0.5),
+                      ),
                     ),
                     child: const Text('Leave Group'),
                   ),
