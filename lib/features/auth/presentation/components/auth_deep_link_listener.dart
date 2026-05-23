@@ -1,10 +1,6 @@
 import 'dart:async';
-
 import 'package:zedu/core/core.dart';
-
-import '../providers/auth_providers_di.dart';
-import '../providers/auth_state.dart';
-import '../providers/magic_link_deep_link_parser.dart';
+import 'package:zedu/features/features.dart';
 
 class AuthDeepLinkListener extends ConsumerStatefulWidget {
   const AuthDeepLinkListener({super.key, required this.child, this.appLinks});

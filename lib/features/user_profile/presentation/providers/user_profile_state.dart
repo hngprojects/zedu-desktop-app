@@ -1,4 +1,4 @@
-import '../../domain/domain.dart';
+import 'package:zedu/features/features.dart';
 
 enum UserProfileSection {
   account,
