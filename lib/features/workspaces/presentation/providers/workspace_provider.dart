@@ -1,22 +1,82 @@
-import 'package:zedu/features/features.dart';
 import 'package:zedu/core/core.dart';
+
+import '../../data/models/workspace.dart';
+import 'workspace_state.dart';
 
 class WorkspaceNotifier extends Notifier<WorkspaceState> {
   @override
   WorkspaceState build() {
-    final authState = ref.watch(authNotifierProvider);
-    return _resolveState(authState);
+    Future.microtask(_fetchWorkspaces);
+    return _getInitialState();
   }
 
-  WorkspaceState _resolveState(AuthState authState) {
-    if (authState.status != AuthStatus.authenticated ||
-        authState.user == null) {
-      return const WorkspaceState();
+  Future<void> _fetchWorkspaces() async {
+    try {
+      final api = locator<ApiBaseService>();
+      final response = await api.get<Map<String, dynamic>>(
+        path: '/users/organisations',
+      );
+      final data = response.data['data'] as List<dynamic>? ?? [];
+
+      if (data.isNotEmpty) {
+        final List<Workspace> workspaces = [];
+        for (var item in data) {
+          if (item is Map<String, dynamic>) {
+            workspaces.add(
+              Workspace(
+                id: item['id'] as String? ?? '1',
+                name: item['name'] as String? ?? 'Workspace',
+                avatar: item['logo_url'] as String? ?? '',
+                membersCount: (item['channels_count'] as num?)?.toInt() ?? 0,
+              ),
+            );
+          }
+        }
+        if (workspaces.isNotEmpty) {
+          state = state.copyWith(
+            workspaces: workspaces,
+            selectedWorkspace: workspaces.first,
+          );
+        }
+      }
+    } catch (e) {
+      // Ignore API errors and fallback to mock data implicitly
     }
+  }
 
-    final user = authState.user!;
-    final workspaces = _buildWorkspacesFromUser(user);
+  WorkspaceState _getInitialState() {
+    final workspaces = [
+      const Workspace(
+        id: '1',
+        name: 'HNG Workspace',
+        avatar: '',
+        unreadCount: 1351,
+        membersCount: 1351,
+      ),
+      const Workspace(
+        id: '2',
+        name: 'TeamFlow Collective',
+        avatar: '',
+        unreadCount: 15,
+        membersCount: 42,
+      ),
+      const Workspace(
+        id: '3',
+        name: 'Coffee & Code House',
+        avatar: '',
+        unreadCount: 0,
+        membersCount: 12,
+      ),
+      const Workspace(
+        id: '4',
+        name: 'ConnectHub',
+        avatar: '',
+        unreadCount: 3,
+        membersCount: 89,
+      ),
+    ];
 
+    // We use the mock workspaces defined above for initial state
     String? previousId;
     try {
       previousId = state.selectedWorkspace?.id;
@@ -30,34 +90,6 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
         : workspaces.first;
 
     return WorkspaceState(workspaces: workspaces, selectedWorkspace: selected);
-  }
-
-  List<Workspace> _buildWorkspacesFromUser(User user) {
-    final workspaces = <Workspace>[];
-
-    if (user.currentOrg.isNotEmpty) {
-      workspaces.add(
-        Workspace(
-          id: user.currentOrg,
-          name: user.currentOrganisationSlug.isNotEmpty
-              ? user.currentOrganisationSlug
-              : '${user.firstName}\'s Workspace',
-          avatar: '',
-        ),
-      );
-    }
-
-    if (workspaces.isEmpty) {
-      workspaces.add(
-        const Workspace(
-          id: '01910544-d1e1-7ada-bdac-c761e527ec91',
-          name: 'Default Workspace',
-          avatar: '',
-        ),
-      );
-    }
-
-    return workspaces;
   }
 
   void addWorkspace(Workspace workspace, {bool switchTo = true}) {
@@ -78,6 +110,22 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
     await Future<void>.delayed(const Duration(milliseconds: 300));
 
     state = state.copyWith(selectedWorkspace: workspace, isLoading: false);
+  }
+
+  void removeWorkspace(String id) {
+    final updatedWorkspaces = state.workspaces
+        .where((w) => w.id != id)
+        .toList();
+    Workspace? nextSelected = state.selectedWorkspace;
+    if (state.selectedWorkspace?.id == id) {
+      nextSelected = updatedWorkspaces.isNotEmpty
+          ? updatedWorkspaces.first
+          : null;
+    }
+    state = state.copyWith(
+      workspaces: updatedWorkspaces,
+      selectedWorkspace: nextSelected,
+    );
   }
 }
 

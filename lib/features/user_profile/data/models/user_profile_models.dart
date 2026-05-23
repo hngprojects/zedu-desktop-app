@@ -63,6 +63,7 @@ class NotificationPreferencesModel extends NotificationPreferences {
 
 class OrganizationProfileModel extends OrganizationProfile {
   const OrganizationProfileModel({
+    required super.id,
     required super.name,
     required super.natureOfBusiness,
     required super.country,
@@ -70,6 +71,7 @@ class OrganizationProfileModel extends OrganizationProfile {
 
   factory OrganizationProfileModel.fromJson(Map<String, dynamic> json) {
     return OrganizationProfileModel(
+      id: json['id'] as String? ?? '019700db-4e22-7f90-a20e-f9116291ef24',
       name: json['name'] as String? ?? 'Anonymous user',
       natureOfBusiness:
           json['nature_of_business'] as String? ?? 'Design agency',
@@ -78,6 +80,7 @@ class OrganizationProfileModel extends OrganizationProfile {
   }
 
   Map<String, dynamic> toJson() => {
+    'id': id,
     'name': name,
     'nature_of_business': natureOfBusiness,
     'country': country,
@@ -111,6 +114,8 @@ class TeamMemberModel extends TeamMember {
     required super.role,
     required super.dateJoined,
     required super.status,
+    super.name,
+    super.avatarUrl,
   });
 
   factory TeamMemberModel.fromJson(Map<String, dynamic> json) {
@@ -120,6 +125,8 @@ class TeamMemberModel extends TeamMember {
       role: json['role'] as String? ?? 'Administrator',
       dateJoined: json['date_joined'] as String? ?? 'May 3, 2026',
       status: _statusFromJson(json['status'] as String?),
+      name: json['name'] as String?,
+      avatarUrl: json['avatar_url'] as String?,
     );
   }
 

@@ -13,6 +13,7 @@ class AppRouter {
   static const resetPassword = '/reset-password';
   static const changePassword = '/change-password';
   static const profile = '/profile';
+  static const createOrganization = '/create-organization';
   static const buyCredits = '/credits/buy';
 
   static final router = GoRouter(
@@ -58,6 +59,10 @@ class AppRouter {
       GoRoute(
         path: profile,
         builder: (context, state) => const UserProfileView(),
+      ),
+      GoRoute(
+        path: createOrganization,
+        builder: (context, state) => const CreateOrganizationView(),
       ),
       GoRoute(
         path: buyCredits,

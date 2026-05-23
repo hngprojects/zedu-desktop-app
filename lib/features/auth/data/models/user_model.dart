@@ -1,4 +1,3 @@
-// data/models/user_model.dart
 import 'package:zedu/features/features.dart';
 
 class UserModel {
