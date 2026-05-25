@@ -5,6 +5,7 @@ export 'navigator/navigator.dart';
 export 'network/network.dart';
 export 'secure_storage/secure_storage.dart';
 export 'utils/utils.dart';
+export 'services/services.dart';
 export 'theme/theme.dart';
 export 'widgets/widgets.dart';
 export 'mock/mock.dart';

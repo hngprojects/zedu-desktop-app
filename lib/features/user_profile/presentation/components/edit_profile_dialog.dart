@@ -1,3 +1,4 @@
+// import 'package:file_picker/file_picker.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -42,17 +43,17 @@ Future<void> showEditProfileDialog(
   );
 }
 
-class _EditProfileDialog extends StatefulWidget {
+class _EditProfileDialog extends ConsumerStatefulWidget {
   const _EditProfileDialog({required this.account, required this.onSave});
 
   final ProfileAccount account;
   final ValueChanged<ProfileAccount> onSave;
 
   @override
-  State<_EditProfileDialog> createState() => _EditProfileDialogState();
+  ConsumerState<_EditProfileDialog> createState() => _EditProfileDialogState();
 }
 
-class _EditProfileDialogState extends State<_EditProfileDialog> {
+class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
   late final TextEditingController nameCtrl;
   late final TextEditingController displayNameCtrl;
   late final TextEditingController usernameCtrl;
@@ -411,18 +412,44 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                                   color: colors.accent.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Icon(
-                                  Icons.person,
-                                  size: 80,
-                                  color: colors.accent,
-                                ),
+                                clipBehavior: Clip.antiAlias,
+                                child:
+                                    (widget.account.avatarUrl != null &&
+                                        widget.account.avatarUrl!.isNotEmpty)
+                                    ? Image.network(
+                                        widget.account.avatarUrl!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (
+                                              context,
+                                              error,
+                                              stackTrace,
+                                            ) => Image.asset(
+                                              'assets/pngs/default_avatar.png',
+                                              fit: BoxFit.cover,
+                                            ),
+                                      )
+                                    : Image.asset(
+                                        'assets/pngs/default_avatar.png',
+                                        fit: BoxFit.cover,
+                                      ),
                               ),
                             ),
                             const SizedBox(height: 12),
                             Center(
                               child: TextButton.icon(
-                                onPressed: () {
-                                  // Upload photo placeholder
+                                onPressed: () async {
+                                  final result = await FilePicker.pickFiles(type: FileType.image);
+                                  if (result != null &&
+                                      result.files.single.path != null) {
+                                    ref
+                                        .read(
+                                          userProfileNotifierProvider.notifier,
+                                        )
+                                        .uploadAvatar(
+                                          result.files.single.path!,
+                                        );
+                                  }
                                 },
                                 icon: Icon(
                                   Icons.upload_outlined,
@@ -441,7 +468,11 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                             Center(
                               child: TextButton(
                                 onPressed: () {
-                                  // Remove photo placeholder
+                                  ref
+                                      .read(
+                                        userProfileNotifierProvider.notifier,
+                                      )
+                                      .deleteAvatar();
                                 },
                                 child: Text(
                                   'Remove photo',

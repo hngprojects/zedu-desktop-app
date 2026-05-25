@@ -83,11 +83,14 @@ class ApiBaseService {
     String path, {
     Map<String, String>? headers,
   }) {
-    return <String, String>{
+    final defaultHeaders = <String, String>{
       'Accept': 'application/json',
       'Content-Type': 'application/json',
-      ...?headers,
     };
+    if (headers != null) {
+      defaultHeaders.addAll(headers);
+    }
+    return defaultHeaders;
   }
 
   Future<ApiResponseModel<T>> _request<T>({

@@ -11,9 +11,8 @@ class App extends ConsumerWidget {
       title: 'Zedu',
       theme: AppTheme.light,
       routerConfig: AppRouter.router,
-      builder: (context, child) => CreditsPaymentDeepLinkListener(
-        child: AuthDeepLinkListener(child: child ?? const SizedBox.shrink()),
-      ),
+      builder: (context, child) =>
+          AuthDeepLinkListener(child: child ?? const SizedBox.shrink()),
     );
   }
 }

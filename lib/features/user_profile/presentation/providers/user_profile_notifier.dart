@@ -10,6 +10,25 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   UserProfileState build() {
     _repository = ref.read(userProfileRepositoryProvider);
     load();
+
+    final orgId = ref.watch(workspaceProvider).selectedWorkspace?.id;
+    final realtimeService = ref.read(realtimeServiceProvider);
+
+    if (orgId != null) {
+      realtimeService.subscribeToOrg(orgId);
+    }
+
+    final subscription = realtimeService.profileUpdateStream.listen((payload) async {
+      final accountResult = await _repository.getAccount();
+      if (accountResult is Success<ProfileAccount>) {
+        state = state.copyWith(account: accountResult.value);
+      }
+    });
+
+    ref.onDispose(() {
+      subscription.cancel();
+    });
+
     return const UserProfileState(isLoading: true);
   }
 
@@ -56,6 +75,58 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           isSaving: false,
           successMessage: 'Account deleted successfully.',
         );
+      case Failure<void>():
+        state = state.copyWith(
+          isSaving: false,
+          error: result.error.friendlyMessage,
+        );
+    }
+  }
+
+  Future<void> uploadAvatar(String filePath) async {
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
+    final result = await _repository.uploadAvatar(filePath);
+    switch (result) {
+      case Success<void>():
+        state = state.copyWith(
+          isSaving: false,
+          successMessage: 'Avatar uploaded successfully.',
+        );
+        // Reload account to get new avatar URL
+        final accountResult = await _repository.getAccount();
+        if (accountResult is Success<ProfileAccount>) {
+          state = state.copyWith(account: accountResult.value);
+        }
+      case Failure<void>():
+        state = state.copyWith(
+          isSaving: false,
+          error: result.error.friendlyMessage,
+        );
+    }
+  }
+
+  Future<void> deleteAvatar() async {
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
+    final result = await _repository.deleteAvatar();
+    switch (result) {
+      case Success<void>():
+        state = state.copyWith(
+          isSaving: false,
+          successMessage: 'Avatar removed successfully.',
+        );
+        // Reload account
+        final accountResult = await _repository.getAccount();
+        if (accountResult is Success<ProfileAccount>) {
+          state = state.copyWith(account: accountResult.value);
+        }
       case Failure<void>():
         state = state.copyWith(
           isSaving: false,

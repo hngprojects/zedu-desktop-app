@@ -21,12 +21,27 @@ class UserMenuButton extends ConsumerWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: 48,
-              height: 48,
-              color: colors.sidebar,
-              child: Icon(Icons.person, color: colors.onPrimary, size: 32),
-            ),
+            child: () {
+              final avatarUrl = ref.watch(userProfileNotifierProvider).account?.avatarUrl;
+              return Container(
+                width: 48,
+                height: 48,
+                color: colors.sidebar,
+                child: (avatarUrl != null && avatarUrl.isNotEmpty)
+                    ? Image.network(
+                        avatarUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Image.asset(
+                          'assets/pngs/default_avatar.png',
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Image.asset(
+                        'assets/pngs/default_avatar.png',
+                        fit: BoxFit.cover,
+                      ),
+              );
+            }(),
           ),
           Positioned(
             right: 0,
