@@ -24,8 +24,8 @@ class UserMenuButton extends ConsumerWidget {
             child: () {
               final avatarUrl = ref.watch(userProfileNotifierProvider).account?.avatarUrl;
               return Container(
-                width: 48,
-                height: 48,
+                width: 32,
+                height: 32,
                 color: colors.sidebar,
                 child: (avatarUrl != null && avatarUrl.isNotEmpty)
                     ? Image.network(

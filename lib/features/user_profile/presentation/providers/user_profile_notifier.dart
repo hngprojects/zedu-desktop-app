@@ -4,7 +4,7 @@ import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
 class UserProfileNotifier extends Notifier<UserProfileState> {
-  late final UserProfileRepository _repository;
+  late UserProfileRepository _repository;
 
   @override
   UserProfileState build() {
