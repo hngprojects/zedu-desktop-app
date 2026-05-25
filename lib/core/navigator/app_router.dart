@@ -64,10 +64,10 @@ class AppRouter {
         path: createOrganization,
         builder: (context, state) => const CreateOrganizationView(),
       ),
-      GoRoute(
-        path: buyCredits,
-        builder: (context, state) => const BuyCreditsView(),
-      ),
+      // GoRoute(
+      //   path: buyCredits,
+      //   builder: (context, state) => const BuyCreditsView(),
+      // ),
     ],
   );
 }

@@ -21,7 +21,7 @@ class DmRepository {
     String? search,
   }) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
-      path: '/organisations/$orgId/dms',
+      path: ApiEndpoints.organizationDms(orgId),
       queryParameters: {
         'page': page,
         'limit': pageSize,
@@ -47,7 +47,7 @@ class DmRepository {
     int page = 1,
   }) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
-      path: '/channels/$channelId/messages',
+      path: ApiEndpoints.channelMessages(channelId),
       queryParameters: {'page': page, 'limit': pageSize},
     );
 
@@ -72,7 +72,7 @@ class DmRepository {
     List<dynamic>? mentions,
   }) async {
     await _apiClient.post<Map<String, dynamic>>(
-      path: '/channels/$channelId/messages',
+      path: ApiEndpoints.channelMessages(channelId),
       data: {
         "content": content,
         if (media != null && media.isNotEmpty)
@@ -98,7 +98,7 @@ class DmRepository {
     List<Map<String, dynamic>>? mentions,
   }) async {
     await _apiClient.put<Map<String, dynamic>>(
-      path: '/dms/messages/$channelId',
+      path: ApiEndpoints.dmsMessages(channelId),
       data: {
         'content': content,
         ...?(threadId != null ? {'thread_id': threadId} : null),

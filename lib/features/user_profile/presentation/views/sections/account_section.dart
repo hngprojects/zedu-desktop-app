@@ -33,7 +33,7 @@ class AccountSection extends StatelessWidget {
               children: [
                 Stack(
                   children: [
-                    _AvatarBlock(initials: account.initials),
+                    _AvatarBlock(account: account),
                     Positioned(
                       top: 8,
                       right: 8,
@@ -116,9 +116,9 @@ class AccountSection extends StatelessWidget {
 }
 
 class _AvatarBlock extends StatelessWidget {
-  const _AvatarBlock({required this.initials});
+  const _AvatarBlock({required this.account});
 
-  final String initials;
+  final ProfileAccount account;
 
   @override
   Widget build(BuildContext context) {
@@ -129,9 +129,20 @@ class _AvatarBlock extends StatelessWidget {
         color: const Color(0xFFE9FBFA),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Center(
-        child: Icon(Icons.person, size: 96, color: Color(0xFF17C9BD)),
-      ),
+      clipBehavior: Clip.antiAlias,
+      child: (account.avatarUrl != null && account.avatarUrl!.isNotEmpty)
+          ? Image.network(
+              account.avatarUrl!,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Image.asset(
+                'assets/pngs/default_avatar.png',
+                fit: BoxFit.cover,
+              ),
+            )
+          : Image.asset(
+              'assets/pngs/default_avatar.png',
+              fit: BoxFit.cover,
+            ),
     );
   }
 }

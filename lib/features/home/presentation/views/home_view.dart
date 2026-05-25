@@ -15,7 +15,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final orgId = ref.read(authNotifierProvider).user?.currentOrg;
       if (orgId != null && orgId.isNotEmpty) {
-        ref.read(creditsNotifierProvider.notifier).load(orgId: orgId);
+        // ref.read(creditsNotifierProvider.notifier).load(orgId: orgId);
       }
     });
   }

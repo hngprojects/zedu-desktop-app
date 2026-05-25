@@ -8,7 +8,7 @@ class UserMenuDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final authUser = ref.watch(authNotifierProvider).user;
-    final balance = ref.watch(orgCreditBalanceProvider);
+    // final balance = ref.watch(orgCreditBalanceProvider);
     final displayName = authUser?.fullname ?? 'AnonymousUser';
     final status = authUser?.status ?? UserStatus.empty;
     final isOnline = status.online;
@@ -101,7 +101,7 @@ class UserMenuDialog extends ConsumerWidget {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '$balance AI credits',
+                                ' AI credits',
                                 style: TextStyle(
                                   color: colors.primary,
                                   fontSize: 12,

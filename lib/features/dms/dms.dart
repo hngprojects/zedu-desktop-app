@@ -1,4 +1,3 @@
-export 'presentation/components/components.dart';
-export 'presentation/providers/providers.dart';
+export 'presentation/presentation.dart';
 export 'data/data.dart';
 export 'domain/domain.dart';

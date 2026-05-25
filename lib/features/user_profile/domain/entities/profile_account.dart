@@ -48,13 +48,16 @@ class ProfileAccount {
     String? namePronunciation,
     String? country,
   }) {
+    final e = email ?? this.email;
+    final u = username ?? this.username;
+    
     return ProfileAccount(
       name: name ?? this.name,
-      email: email ?? this.email,
+      email: e,
       timezone: timezone ?? this.timezone,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       displayName: displayName ?? this.displayName,
-      username: username ?? this.username,
+      username: u.isNotEmpty ? u : e.split('@').first,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       title: title ?? this.title,
       namePronunciation: namePronunciation ?? this.namePronunciation,

@@ -6,14 +6,18 @@ class ProfileAccountModel extends ProfileAccount {
     required super.email,
     required super.timezone,
     super.avatarUrl,
+    super.username,
   });
 
   factory ProfileAccountModel.fromJson(Map<String, dynamic> json) {
+    final e = json['email'] as String? ?? 'anonymoususer@email.com';
+    final u = json['username'] as String? ?? '';
     return ProfileAccountModel(
       name: json['name'] as String? ?? 'Anonymous user',
-      email: json['email'] as String? ?? 'anonymoususer@email.com',
+      email: e,
       timezone: json['timezone'] as String? ?? 'Africa/Lagos',
       avatarUrl: json['avatar_url'] as String?,
+      username: u.isNotEmpty ? u : e.split('@').first,
     );
   }
 
