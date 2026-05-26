@@ -128,8 +128,9 @@ class PersonalProfilePanel extends ConsumerWidget {
                   const SizedBox(height: 8),
 
                   // Status row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Icon(
                         menuState.notificationsPaused
@@ -162,33 +163,31 @@ class PersonalProfilePanel extends ConsumerWidget {
                   const SizedBox(height: 16),
 
                   // Action buttons row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       _ActionChip(
                         icon: Icons.star_outline,
                         label: '',
                         colors: colors,
                       ),
-                      const SizedBox(width: 8),
                       _ActionChip(
                         icon: Icons.notifications_off_outlined,
                         label: 'Mute',
                         colors: colors,
                       ),
-                      const SizedBox(width: 8),
                       _ActionChip(
                         icon: Icons.visibility_off_outlined,
                         label: 'Hide',
                         colors: colors,
                       ),
-                      const SizedBox(width: 8),
                       _ActionChip(
                         icon: Icons.description_outlined,
                         label: 'View Files',
                         colors: colors,
                       ),
-                      const SizedBox(width: 8),
                       _ActionChip(
                         icon: Icons.copy_outlined,
                         label: '',
