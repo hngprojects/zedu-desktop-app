@@ -6,7 +6,7 @@ import 'package:zedu/features/features.dart';
 abstract interface class UserProfileRemoteDataSource {
   Future<ProfileAccountModel> getAccount();
   Future<ProfileAccountModel> updateAccount(ProfileAccount account);
-  Future<void> deleteAccount();
+  Future<void> deleteAccount({required String password});
   Future<void> uploadAvatar(String filePath);
   Future<void> deleteAvatar();
   Future<NotificationPreferencesModel> getNotificationPreferences();
@@ -83,9 +83,10 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
   }
 
   @override
-  Future<void> deleteAccount() async {
+  Future<void> deleteAccount({required String password}) async {
     await _apiBaseService.delete<Map<String, dynamic>>(
       path: ApiEndpoints.deleteAccount,
+      data: {'password': password},
     );
   }
 

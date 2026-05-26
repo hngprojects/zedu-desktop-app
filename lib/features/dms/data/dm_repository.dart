@@ -68,7 +68,7 @@ class DmRepository {
   Future<void> sendMessage(
     String channelId,
     String content, {
-    List<XFile>? media,
+    List<Map<String, dynamic>>? media,
     List<dynamic>? mentions,
   }) async {
     await _apiClient.post<Map<String, dynamic>>(
@@ -76,18 +76,10 @@ class DmRepository {
       data: {
         "content": content,
         if (media != null && media.isNotEmpty)
-          "media": media.map(_mediaPayloadFromFile).toList(),
+          "media": media,
         ...?(mentions != null ? {'mentions': mentions} : null),
       },
     );
-  }
-
-  Map<String, dynamic> _mediaPayloadFromFile(XFile file) {
-    return {
-      'name': file.name,
-      'path': file.path,
-      if (file.mimeType != null) 'mime_type': file.mimeType,
-    };
   }
 
   Future<void> editMessage(

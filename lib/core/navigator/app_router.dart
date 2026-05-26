@@ -16,7 +16,10 @@ class AppRouter {
   static const createOrganization = '/create-organization';
   static const buyCredits = '/credits/buy';
 
+  static final navigatorKey = GlobalKey<NavigatorState>();
+
   static final router = GoRouter(
+    navigatorKey: navigatorKey,
     initialLocation: login,
     routes: [
       GoRoute(path: login, builder: (context, state) => const LoginView()),

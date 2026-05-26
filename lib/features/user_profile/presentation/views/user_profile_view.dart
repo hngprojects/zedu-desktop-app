@@ -60,7 +60,7 @@ class _ProfileContent extends StatelessWidget {
               account: state.account ?? ProfileAccount.empty(),
               isSaving: state.isSaving,
               onSave: notifier.updateAccount,
-              onDelete: notifier.deleteAccount,
+              onDelete: (pwd) => notifier.deleteAccount(password: pwd),
             ),
             UserProfileSection.notifications => NotificationsSection(
               preferences:

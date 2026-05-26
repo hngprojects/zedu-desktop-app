@@ -18,7 +18,8 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   }
 
   @override
-  Future<Result<void>> deleteAccount() => _guard(_remote.deleteAccount);
+  Future<Result<void>> deleteAccount({required String password}) =>
+      _guard(() => _remote.deleteAccount(password: password));
 
   @override
   Future<Result<void>> uploadAvatar(String filePath) => _guard(() => _remote.uploadAvatar(filePath));

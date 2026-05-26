@@ -48,17 +48,43 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
       _hasMore = false;
     }
 
-    if (results.isEmpty && page == 1) {
-      return [
-        DmConversation(
-          channelId: 'mock-channel-id-123',
-          username: 'Test User',
-          participantId: 'mock-user-id',
-          previewMessage:
-              'This is a test conversation. Tap to test the composer.',
+    if (page == 1) {
+      final user = ref.read(authNotifierProvider).user;
+      if (user != null) {
+        final selfConversation = DmConversation(
+          channelId: 'dm_${user.id}_${user.id}',
+          username: '${user.fullname} (You)',
+          participantId: user.id,
+          previewMessage: 'Saved messages',
           unreadCount: 0,
-        ),
-      ];
+          avatarUrl: user.avatarUrl,
+        );
+        // Only add if the backend hasn't already returned it.
+        if (!results.any((c) => c.participantId == user.id)) {
+          results.insert(0, selfConversation);
+        } else {
+          // If it exists, make sure its username is correctly suffixed and move it to top
+          final idx = results.indexWhere((c) => c.participantId == user.id);
+          final existing = results.removeAt(idx);
+          results.insert(
+            0,
+            existing.copyWith(username: '${user.fullname} (You)'),
+          );
+        }
+      }
+      
+      if (results.isEmpty) {
+        return [
+          DmConversation(
+            channelId: 'mock-channel-id-123',
+            username: 'Test User',
+            participantId: 'mock-user-id',
+            previewMessage:
+                'This is a test conversation. Tap to test the composer.',
+            unreadCount: 0,
+          ),
+        ];
+      }
     }
 
     return results;
@@ -85,3 +111,26 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
     state = await AsyncValue.guard(() => _fetchPage(orgId, 1));
   }
 }
+
+final dmSearchQueryProvider = StateProvider<String>((ref) => '');
+
+final dmSearchResultsProvider = FutureProvider<List<TeamMember>>((ref) async {
+  final query = ref.watch(dmSearchQueryProvider).toLowerCase();
+  if (query.isEmpty) return [];
+
+  final orgId = ref.watch(currentOrgIdProvider);
+  if (orgId.isEmpty) return [];
+
+  final repository = ref.watch(userProfileRepositoryProvider);
+  final result = await repository.getTeamMembers(orgId: orgId);
+  
+  if (result is Success<List<TeamMember>>) {
+    return result.value.where((member) {
+      final nameMatches = (member.name ?? '').toLowerCase().contains(query);
+      final emailMatches = member.email.toLowerCase().contains(query);
+      return nameMatches || emailMatches;
+    }).toList();
+  }
+  
+  return [];
+});
