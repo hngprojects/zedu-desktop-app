@@ -12,7 +12,11 @@ class App extends ConsumerWidget {
       theme: AppTheme.light,
       routerConfig: AppRouter.router,
       builder: (context, child) =>
-          AuthDeepLinkListener(child: child ?? const SizedBox.shrink()),
+          AuthDeepLinkListener(
+            child: GlobalProfileOverlay(
+              child: child ?? const SizedBox.shrink(),
+            ),
+          ),
     );
   }
 }

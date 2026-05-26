@@ -132,9 +132,12 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     final result = await _repository.deleteAvatar();
     switch (result) {
       case Success<void>():
+        final currentAccount = state.account;
         state = state.copyWith(
           isSaving: false,
           successMessage: 'Avatar removed successfully.',
+          clearLocalAvatar: true,
+          account: currentAccount?.copyWith(avatarUrl: ''),
         );
         // Reload account
         final accountResult = await _repository.getAccount();

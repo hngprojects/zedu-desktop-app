@@ -98,6 +98,8 @@ class AuthNotifier extends Notifier<AuthState> {
     AppLogger.i('Logout — clearing session', tag: _tag);
     await _storage.deleteAccessToken();
     state = const AuthState(status: AuthStatus.unauthenticated);
+    ref.invalidate(userProfileNotifierProvider);
+    ref.invalidate(workspaceProvider);
   }
 
   Future<void> signUp({

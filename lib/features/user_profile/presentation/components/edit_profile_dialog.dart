@@ -202,6 +202,7 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                               controller: emailCtrl,
                               hint: 'Enter your email',
                               keyboardType: TextInputType.emailAddress,
+                              readOnly: true,
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) {
                                   return 'Email is required';
