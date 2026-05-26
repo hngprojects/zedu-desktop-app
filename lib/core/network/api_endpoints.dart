@@ -7,6 +7,8 @@ class ApiEndpoints {
   // Replace this link anytime you get the exact swagger doc for image upload
   static const String uploadProfileImage = '/profile/image'; 
 
+  static const String uploadFiles = '/files/upload-files';
+  
   static const String getAccount = '/profile/account';
   static const String updateAccount = '/profile';
   static const String deleteAccount = '/profile/account';

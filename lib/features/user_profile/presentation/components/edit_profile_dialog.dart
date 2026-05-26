@@ -38,8 +38,7 @@ Future<void> showEditProfileDialog(
 ) async {
   await showDialog<void>(
     context: context,
-    builder: (context) =>
-        _EditProfileDialog(account: account, onSave: onSave),
+    builder: (context) => _EditProfileDialog(account: account, onSave: onSave),
   );
 }
 
@@ -73,7 +72,14 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
     nameCtrl = TextEditingController(text: widget.account.name);
     displayNameCtrl = TextEditingController(text: widget.account.displayName);
     usernameCtrl = TextEditingController(text: widget.account.username);
-    emailCtrl = TextEditingController(text: widget.account.email);
+    final authState = ref.read(authNotifierProvider);
+    final fallbackEmail = authState.user?.email ?? '';
+
+    emailCtrl = TextEditingController(
+      text: widget.account.email.isNotEmpty
+          ? widget.account.email
+          : fallbackEmail,
+    );
     phoneCtrl = TextEditingController(text: widget.account.phoneNumber);
     titleCtrl = TextEditingController(text: widget.account.title);
     pronunciationCtrl = TextEditingController(
@@ -107,15 +113,18 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
       final path = result.files.single.path!;
       // Immediately show local preview globally — all widgets watching
       // userProfileNotifierProvider will redraw with the local file
-      ref.read(userProfileNotifierProvider.notifier).previewAndUploadAvatar(path);
+      ref
+          .read(userProfileNotifierProvider.notifier)
+          .previewAndUploadAvatar(path);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final isSaving =
-        ref.watch(userProfileNotifierProvider.select((s) => s.isSaving));
+    final isSaving = ref.watch(
+      userProfileNotifierProvider.select((s) => s.isSaving),
+    );
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -170,10 +179,9 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                               label: 'Full Name',
                               controller: nameCtrl,
                               hint: 'Enter your full name',
-                              validator: (v) =>
-                                  (v == null || v.trim().isEmpty)
-                                      ? 'Name is required'
-                                      : null,
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? 'Name is required'
+                                  : null,
                             ),
                             const SizedBox(height: 16),
                             AppTextField(
@@ -249,25 +257,22 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                             DropdownButtonFormField<String>(
                               initialValue:
                                   _kTimezones.contains(selectedTimezone)
-                                      ? selectedTimezone
-                                      : _kTimezones.first,
+                                  ? selectedTimezone
+                                  : _kTimezones.first,
                               isExpanded: true,
                               decoration: InputDecoration(
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(6),
-                                  borderSide:
-                                      BorderSide(color: colors.divider),
+                                  borderSide: BorderSide(color: colors.divider),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(6),
-                                  borderSide:
-                                      BorderSide(color: colors.divider),
+                                  borderSide: BorderSide(color: colors.divider),
                                 ),
-                                contentPadding:
-                                    const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 14,
-                                    ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 14,
+                                ),
                               ),
                               items: _kTimezones
                                   .map(
@@ -307,97 +312,102 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                               onSelected: (value) {
                                 setState(() => selectedCountry = value);
                               },
-                              fieldViewBuilder: (
-                                context,
-                                controller,
-                                focusNode,
-                                onFieldSubmitted,
-                              ) {
-                                return TextFormField(
-                                  controller: controller,
-                                  focusNode: focusNode,
-                                  decoration: InputDecoration(
-                                    hintText: 'Search or select a country',
-                                    hintStyle: context.textTheme.bodySmall
-                                        ?.copyWith(color: colors.textHint),
-                                    border: OutlineInputBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(6),
-                                      borderSide: BorderSide(
-                                        color: colors.divider,
-                                      ),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(6),
-                                      borderSide: BorderSide(
-                                        color: colors.divider,
-                                      ),
-                                    ),
-                                    contentPadding:
-                                        const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 14,
+                              fieldViewBuilder:
+                                  (
+                                    context,
+                                    controller,
+                                    focusNode,
+                                    onFieldSubmitted,
+                                  ) {
+                                    return TextFormField(
+                                      controller: controller,
+                                      focusNode: focusNode,
+                                      decoration: InputDecoration(
+                                        hintText: 'Search or select a country',
+                                        hintStyle: context.textTheme.bodySmall
+                                            ?.copyWith(color: colors.textHint),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: colors.divider,
+                                          ),
                                         ),
-                                    suffixIcon: Icon(
-                                      Icons.keyboard_arrow_down,
-                                      color: colors.textHint,
-                                    ),
-                                  ),
-                                  style: context.textTheme.bodySmall,
-                                  onFieldSubmitted: (_) =>
-                                      onFieldSubmitted(),
-                                );
-                              },
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: colors.divider,
+                                          ),
+                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 14,
+                                            ),
+                                        suffixIcon: Icon(
+                                          Icons.keyboard_arrow_down,
+                                          color: colors.textHint,
+                                        ),
+                                      ),
+                                      style: context.textTheme.bodySmall,
+                                      onFieldSubmitted: (_) =>
+                                          onFieldSubmitted(),
+                                    );
+                                  },
                               optionsViewBuilder:
                                   (context, onSelected, options) {
-                                return Align(
-                                  alignment: Alignment.topLeft,
-                                  child: Material(
-                                    elevation: 4,
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Container(
-                                      width: 360,
-                                      constraints: const BoxConstraints(
-                                        maxHeight: 240,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: colors.background,
-                                        borderRadius:
-                                            BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: colors.divider,
+                                    return Align(
+                                      alignment: Alignment.topLeft,
+                                      child: Material(
+                                        elevation: 4,
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Container(
+                                          width: 360,
+                                          constraints: const BoxConstraints(
+                                            maxHeight: 240,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: colors.background,
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            border: Border.all(
+                                              color: colors.divider,
+                                            ),
+                                          ),
+                                          child: ListView.builder(
+                                            padding: EdgeInsets.zero,
+                                            shrinkWrap: true,
+                                            itemCount: options.length,
+                                            itemBuilder: (context, index) {
+                                              final option = options.elementAt(
+                                                index,
+                                              );
+                                              return InkWell(
+                                                onTap: () => onSelected(option),
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 10,
+                                                      ),
+                                                  child: Text(
+                                                    option,
+                                                    style: context
+                                                        .textTheme
+                                                        .bodySmall,
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          ),
                                         ),
                                       ),
-                                      child: ListView.builder(
-                                        padding: EdgeInsets.zero,
-                                        shrinkWrap: true,
-                                        itemCount: options.length,
-                                        itemBuilder: (context, index) {
-                                          final option =
-                                              options.elementAt(index);
-                                          return InkWell(
-                                            onTap: () =>
-                                                onSelected(option),
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 12,
-                                                    vertical: 10,
-                                                  ),
-                                              child: Text(
-                                                option,
-                                                style: context
-                                                    .textTheme.bodySmall,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
+                                    );
+                                  },
                             ),
                             const SizedBox(height: 16),
                           ],
@@ -422,10 +432,7 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                             // UserAvatar reacts immediately to the local file
                             // preview that previewAndUploadAvatar() sets
                             const Center(
-                              child: UserAvatar(
-                                size: 160,
-                                borderRadius: 8,
-                              ),
+                              child: UserAvatar(size: 160, borderRadius: 8),
                             ),
                             const SizedBox(height: 12),
                             if (isSaving)
@@ -436,7 +443,8 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                                     width: 20,
                                     height: 20,
                                     child: CircularProgressIndicator(
-                                        strokeWidth: 2),
+                                      strokeWidth: 2,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -450,8 +458,7 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                                 ),
                                 label: Text(
                                   'Upload photo',
-                                  style:
-                                      context.textTheme.bodySmall?.copyWith(
+                                  style: context.textTheme.bodySmall?.copyWith(
                                     color: colors.primary,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -472,8 +479,7 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                                       },
                                 child: Text(
                                   'Remove photo',
-                                  style:
-                                      context.textTheme.bodySmall?.copyWith(
+                                  style: context.textTheme.bodySmall?.copyWith(
                                     color: colors.error,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -492,8 +498,7 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
             // Footer
             Divider(height: 0, color: colors.divider),
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -522,8 +527,8 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                                   email: emailCtrl.text.trim(),
                                   phoneNumber: phoneCtrl.text.trim(),
                                   title: titleCtrl.text.trim(),
-                                  namePronunciation:
-                                      pronunciationCtrl.text.trim(),
+                                  namePronunciation: pronunciationCtrl.text
+                                      .trim(),
                                   timezone: selectedTimezone,
                                   country: selectedCountry,
                                 ),

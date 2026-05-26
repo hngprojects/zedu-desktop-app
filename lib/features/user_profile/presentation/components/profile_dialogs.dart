@@ -140,76 +140,90 @@ Future<void> showChangePasswordDialog(
   final newCtrl = TextEditingController();
   final confirmCtrl = TextEditingController();
   final formKey = GlobalKey<FormState>();
+  bool isLoading = false;
 
   await showDialog<void>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: Text(
-        'Change Password',
-        style: ctx.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-      ),
-      content: SizedBox(
-        width: 480,
-        child: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppTextField(
-                label: 'Current Password',
-                controller: currentCtrl,
-                hint: 'Enter current password',
-                isPassword: true,
-                validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'New Password',
-                controller: newCtrl,
-                hint: 'Enter new password',
-                isPassword: true,
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Required';
-                  if (v.length < 8) {
-                    return 'Password must be at least 8 characters';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'Confirm New Password',
-                controller: confirmCtrl,
-                hint: 'Re-enter new password',
-                isPassword: true,
-                validator: (v) =>
-                    v != newCtrl.text ? 'Passwords do not match' : null,
-              ),
-            ],
+    barrierDismissible: !isLoading,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setState) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Text(
+          'Change Password',
+          style: ctx.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        content: SizedBox(
+          width: 480,
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppTextField(
+                  label: 'Current Password',
+                  controller: currentCtrl,
+                  hint: 'Enter current password',
+                  isPassword: true,
+                  readOnly: isLoading,
+                  validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                ),
+                const SizedBox(height: 16),
+                AppTextField(
+                  label: 'New Password',
+                  controller: newCtrl,
+                  hint: 'Enter new password',
+                  isPassword: true,
+                  readOnly: isLoading,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Required';
+                    if (v.length < 8) {
+                      return 'Password must be at least 8 characters';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                AppTextField(
+                  label: 'Confirm New Password',
+                  controller: confirmCtrl,
+                  hint: 'Re-enter new password',
+                  isPassword: true,
+                  readOnly: isLoading,
+                  validator: (v) =>
+                      v != newCtrl.text ? 'Passwords do not match' : null,
+                ),
+              ],
+            ),
           ),
         ),
+        actions: [
+          TextButton(
+            onPressed: isLoading ? null : () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          AppButton(
+            label: 'Update Password',
+            expand: false,
+            height: 40,
+            loading: isLoading,
+            onPressed: isLoading
+                ? null
+                : () async {
+                    if (formKey.currentState?.validate() ?? false) {
+                      setState(() => isLoading = true);
+                      await onSave(
+                        currentPassword: currentCtrl.text,
+                        newPassword: newCtrl.text,
+                      );
+                      if (ctx.mounted) {
+                        setState(() => isLoading = false);
+                        Navigator.pop(ctx);
+                      }
+                    }
+                  },
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx),
-          child: const Text('Cancel'),
-        ),
-        AppButton(
-          label: 'Update Password',
-          expand: false,
-          height: 40,
-          onPressed: () async {
-            if (formKey.currentState?.validate() ?? false) {
-              Navigator.pop(ctx);
-              await onSave(
-                currentPassword: currentCtrl.text,
-                newPassword: newCtrl.text,
-              );
-            }
-          },
-        ),
-      ],
     ),
   );
 

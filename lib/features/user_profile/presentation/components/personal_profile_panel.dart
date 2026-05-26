@@ -16,8 +16,11 @@ class PersonalProfilePanel extends ConsumerWidget {
         : account.name;
     final roleTitle = account.title.isNotEmpty ? account.title : 'Member';
 
+    final authEmail = ref.watch(authNotifierProvider).user?.email ?? '';
+    final emailDisplay = account.email.isNotEmpty ? account.email : authEmail;
+
     final screenWidth = MediaQuery.of(context).size.width;
-    final panelWidth = (screenWidth * 0.3).clamp(320.0, 420.0);
+    final panelWidth = (screenWidth * 0.3).clamp(280.0, 420.0);
 
     return Container(
       width: panelWidth,
@@ -32,8 +35,10 @@ class PersonalProfilePanel extends ConsumerWidget {
         ],
         border: Border(left: BorderSide(color: colors.divider)),
       ),
-      child: Column(
-        children: [
+      child: Material(
+        color: Colors.transparent,
+        child: Column(
+          children: [
           // Header
           Container(
             height: 48,
@@ -224,7 +229,7 @@ class PersonalProfilePanel extends ConsumerWidget {
                   // Email
                   _ContactRow(
                     icon: Icons.email_outlined,
-                    label: account.email,
+                    label: emailDisplay,
                     colors: colors,
                     context: context,
                     isLink: true,
@@ -235,6 +240,7 @@ class PersonalProfilePanel extends ConsumerWidget {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -243,7 +249,8 @@ class PersonalProfilePanel extends ConsumerWidget {
     WidgetRef ref,
     ProfileAccount account,
   ) {
-    showEditProfileDialog(context, account, (updated, _) {
+    final navContext = AppRouter.navigatorKey.currentContext ?? context;
+    showEditProfileDialog(navContext, account, (updated, _) {
       ref.read(userProfileNotifierProvider.notifier).updateAccount(updated);
     });
   }

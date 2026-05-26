@@ -82,11 +82,14 @@ class ApiBaseService {
   Map<String, String> headersForPath(
     String path, {
     Map<String, String>? headers,
+    bool isMultipart = false,
   }) {
     final defaultHeaders = <String, String>{
       'Accept': 'application/json',
-      'Content-Type': 'application/json',
     };
+    if (!isMultipart) {
+      defaultHeaders['Content-Type'] = 'application/json';
+    }
     if (headers != null) {
       defaultHeaders.addAll(headers);
     }
@@ -107,7 +110,11 @@ class ApiBaseService {
         queryParameters: queryParameters,
         options: Options(
           method: method,
-          headers: headersForPath(path, headers: headers),
+          headers: headersForPath(
+            path, 
+            headers: headers,
+            isMultipart: data is FormData,
+          ),
         ),
       );
 

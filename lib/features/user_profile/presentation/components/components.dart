@@ -7,3 +7,4 @@ export 'profile_settings_shell.dart';
 export 'profile_widgets.dart';
 export 'user_avatar.dart';
 export 'global_profile_overlay.dart';
+export 'delete_account_dialog.dart';

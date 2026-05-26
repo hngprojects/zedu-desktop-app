@@ -97,13 +97,13 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     }
   }
 
-  Future<void> deleteAccount() async {
+  Future<void> deleteAccount({required String password}) async {
     state = state.copyWith(
       isSaving: true,
       clearError: true,
       clearSuccess: true,
     );
-    final result = await _repository.deleteAccount();
+    final result = await _repository.deleteAccount(password: password);
     switch (result) {
       case Success<void>():
         state = state.copyWith(

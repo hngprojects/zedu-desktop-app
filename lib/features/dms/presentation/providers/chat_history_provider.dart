@@ -189,11 +189,17 @@ class ChatHistoryNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
+      List<Map<String, dynamic>>? uploadedMedia;
+      if (media != null && media.isNotEmpty) {
+        final fileRepo = ref.read(fileRepositoryProvider);
+        uploadedMedia = await fileRepo.uploadFiles(media);
+      }
+
       final repository = ref.read(dmRepositoryProvider);
       await repository.sendMessage(
         channelId,
         content,
-        media: media,
+        media: uploadedMedia,
         mentions: mentions,
       );
 
@@ -201,6 +207,9 @@ class ChatHistoryNotifier extends ChangeNotifier {
         if (m['id'] == tempId) {
           final newMsg = Map<String, dynamic>.from(m);
           newMsg.remove('status');
+          if (uploadedMedia != null) {
+            newMsg['media'] = uploadedMedia;
+          }
           return newMsg;
         }
         return m;

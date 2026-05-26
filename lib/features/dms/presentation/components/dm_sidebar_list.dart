@@ -38,11 +38,25 @@ class DmSidebarList extends ConsumerWidget {
                           size: 16,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          'Find a Conversation',
-                          style: TextStyle(
-                            color: colors.onPrimary.withValues(alpha: 0.9),
-                            fontSize: 12,
+                        Expanded(
+                          child: TextField(
+                            onChanged: (val) {
+                              ref.read(dmSearchQueryProvider.notifier).state = val;
+                            },
+                            style: TextStyle(
+                              color: colors.onPrimary.withValues(alpha: 0.9),
+                              fontSize: 13,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Find a Conversation',
+                              hintStyle: TextStyle(
+                                color: colors.onPrimary.withValues(alpha: 0.6),
+                                fontSize: 13,
+                              ),
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: const EdgeInsets.only(bottom: 12),
+                            ),
                           ),
                         ),
                       ],
@@ -53,9 +67,84 @@ class DmSidebarList extends ConsumerWidget {
             ),
           ),
           Expanded(
-            child: ref
-                .watch(dmListProvider)
-                .when(
+            child: Consumer(
+              builder: (context, ref, child) {
+                final query = ref.watch(dmSearchQueryProvider);
+                if (query.isNotEmpty) {
+                  return ref.watch(dmSearchResultsProvider).when(
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
+                    ),
+                    error: (err, stack) => Center(
+                      child: Text(
+                        'Failed to search',
+                        style: TextStyle(color: colors.error),
+                      ),
+                    ),
+                    data: (members) {
+                      if (members.isEmpty) {
+                        return Center(
+                          child: Text(
+                            'No members found',
+                            style: TextStyle(
+                              color: colors.onPrimary.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        );
+                      }
+                      return ListView.builder(
+                        padding: EdgeInsets.zero,
+                        itemCount: members.length,
+                        itemBuilder: (context, index) {
+                          final member = members[index];
+                          return ListTile(
+                            leading: CircleAvatar(
+                              radius: 14,
+                              backgroundImage: member.avatarUrl != null
+                                  ? NetworkImage(member.avatarUrl!)
+                                  : null,
+                              child: member.avatarUrl == null
+                                  ? const Icon(Icons.person, size: 16)
+                                  : null,
+                            ),
+                            title: Text(
+                              member.name ?? 'Unknown',
+                              style: TextStyle(
+                                color: colors.onPrimary.withValues(alpha: 0.9),
+                                fontSize: 14,
+                              ),
+                            ),
+                            subtitle: Text(
+                              member.email,
+                              style: TextStyle(
+                                color: colors.onPrimary.withValues(alpha: 0.6),
+                                fontSize: 11,
+                              ),
+                            ),
+                            onTap: () {
+                              final currentUser = ref.read(authNotifierProvider).user;
+                              final isSelf = currentUser?.id == member.id;
+                              
+                              final nameStr = member.name ?? 'Unknown';
+                              final conversation = DmConversation(
+                                channelId: isSelf ? 'dm_${member.id}_${member.id}' : 'dm_temp_${member.id}',
+                                username: isSelf ? '$nameStr (You)' : nameStr,
+                                participantId: member.id,
+                                previewMessage: 'Start a new conversation',
+                                unreadCount: 0,
+                                avatarUrl: member.avatarUrl,
+                              );
+                              ref.read(selectedDmProvider.notifier).select(conversation);
+                              ref.read(dmSearchQueryProvider.notifier).state = '';
+                            },
+                          );
+                        },
+                      );
+                    },
+                  );
+                }
+
+                return ref.watch(dmListProvider).when(
                   loading: () => const Center(
                     child: CircularProgressIndicator(color: Colors.white),
                   ),
@@ -97,7 +186,9 @@ class DmSidebarList extends ConsumerWidget {
                       ),
                     );
                   },
-                ),
+                );
+              },
+            ),
           ),
         ],
       ),
