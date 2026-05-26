@@ -126,15 +126,22 @@ class DmSidebarList extends ConsumerWidget {
                               final isSelf = currentUser?.id == member.id;
                               
                               final nameStr = member.name ?? 'Unknown';
-                              final conversation = DmConversation(
-                                channelId: isSelf ? 'dm_${member.id}_${member.id}' : 'dm_temp_${member.id}',
-                                username: isSelf ? '$nameStr (You)' : nameStr,
-                                participantId: member.id,
-                                previewMessage: 'Start a new conversation',
-                                unreadCount: 0,
-                                avatarUrl: member.avatarUrl,
+                              
+                              // Check if we already have a conversation with this participant
+                              final existingList = ref.read(dmListProvider).value ?? [];
+                              final existingConvo = existingList.firstWhere(
+                                (c) => c.participantId == member.id,
+                                orElse: () => DmConversation(
+                                  channelId: isSelf ? 'dm_${member.id}_${member.id}' : 'dm_temp_${member.id}',
+                                  username: isSelf ? '$nameStr (You)' : nameStr,
+                                  participantId: member.id,
+                                  previewMessage: 'Start a new conversation',
+                                  unreadCount: 0,
+                                  avatarUrl: member.avatarUrl,
+                                ),
                               );
-                              ref.read(selectedDmProvider.notifier).select(conversation);
+                              
+                              ref.read(selectedDmProvider.notifier).select(existingConvo);
                               ref.read(dmSearchQueryProvider.notifier).state = '';
                             },
                           );

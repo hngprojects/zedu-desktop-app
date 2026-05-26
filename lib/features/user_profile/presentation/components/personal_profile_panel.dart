@@ -11,9 +11,18 @@ class PersonalProfilePanel extends ConsumerWidget {
     final account = profileState.account ?? ProfileAccount.empty();
     final menuState = ref.watch(userMenuStateProvider);
 
+    final authUser = ref.watch(authNotifierProvider).user;
+    final authFullName = authUser != null 
+        ? '${authUser.firstName} ${authUser.lastName}'.trim() 
+        : '';
+    final fallbackName = authFullName.isNotEmpty 
+        ? authFullName 
+        : (authUser?.username ?? 'User');
+
     final displayName = account.displayName.isNotEmpty
         ? account.displayName
-        : account.name;
+        : (account.name.isNotEmpty ? account.name : fallbackName);
+
     final roleTitle = account.title.isNotEmpty ? account.title : 'Member';
 
     final authEmail = ref.watch(authNotifierProvider).user?.email ?? '';

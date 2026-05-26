@@ -15,8 +15,8 @@ class UserMenuDialog extends ConsumerWidget {
     final displayName = account?.displayName.isNotEmpty == true
         ? account!.displayName
         : account?.name.isNotEmpty == true
-            ? account!.name
-            : authUser?.fullname ?? 'Zedu User';
+        ? account!.name
+        : authUser?.fullname ?? 'Zedu User';
     final email = account?.email.isNotEmpty == true
         ? account!.email
         : authUser?.email ?? '';
@@ -261,7 +261,6 @@ class UserMenuDialog extends ConsumerWidget {
               Divider(height: 0, color: colors.divider),
               const SizedBox(height: 8),
 
-              // ── Sign out ───────────────────────────────────────────────────
               _MenuItemButton(
                 icon: Icons.logout_rounded,
                 label:

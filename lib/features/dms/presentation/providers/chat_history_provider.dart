@@ -1,5 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+// import 'package:zedu/core/network/file_repository.dart';
 
 class ChatHistoryNotifier extends ChangeNotifier {
   final String channelId;
@@ -214,11 +215,12 @@ class ChatHistoryNotifier extends ChangeNotifier {
         }
         return m;
       }).toList();
-    } catch (_) {
+    } catch (e) {
       messages = messages.map((m) {
         if (m['id'] == tempId) {
           final newMsg = Map<String, dynamic>.from(m);
           newMsg['status'] = 'failed';
+          newMsg['error'] = e.toString();
           return newMsg;
         }
         return m;

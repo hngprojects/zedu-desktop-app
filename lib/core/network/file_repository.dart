@@ -1,8 +1,3 @@
-import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cross_file/cross_file.dart';
-import 'package:http_parser/http_parser.dart';
-
 import 'package:zedu/core/core.dart';
 
 final fileRepositoryProvider = Provider<FileRepository>((ref) {
@@ -25,7 +20,6 @@ class FileRepository {
         MultipartFile.fromBytes(
           bytes,
           filename: file.name,
-          contentType: file.mimeType != null ? MediaType.parse(file.mimeType!) : null,
         ),
       );
     }
