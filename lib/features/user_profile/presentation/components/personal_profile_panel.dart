@@ -16,8 +16,11 @@ class PersonalProfilePanel extends ConsumerWidget {
         : account.name;
     final roleTitle = account.title.isNotEmpty ? account.title : 'Member';
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final panelWidth = (screenWidth * 0.3).clamp(320.0, 420.0);
+
     return Container(
-      width: 360,
+      width: panelWidth,
       decoration: BoxDecoration(
         color: colors.background,
         boxShadow: [

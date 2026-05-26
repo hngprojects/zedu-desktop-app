@@ -55,9 +55,10 @@ class AccountSection extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                // Show @username handle from real server data
                 Text(
-                  '@${account.username.isNotEmpty ? account.username : account.name.replaceAll(' ', '').toLowerCase()}',
+                  account.username.isNotEmpty
+                      ? (account.username.startsWith('@') ? account.username : '@${account.username}')
+                      : '@${account.name.replaceAll(' ', '').toLowerCase()}',
                   style: context.textTheme.bodySmall?.copyWith(
                     color: const Color(0xFF6B7280),
                   ),

@@ -23,8 +23,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final showProfile = ref.watch(personalProfilePanelProvider);
-
     return Scaffold(
       backgroundColor: colors.background,
       body: Column(
@@ -35,20 +33,7 @@ class _HomeViewState extends ConsumerState<HomeView> {
               children: [
                 AppSidebarRail(activeType: ref.watch(homeSidebarProvider)),
                 const _MainSidebarSwitcher(),
-                Expanded(
-                  child: Stack(
-                    children: [
-                      const Positioned.fill(child: _ChatAreaSwitcher()),
-                      if (showProfile)
-                        const Positioned(
-                          right: 0,
-                          top: 0,
-                          bottom: 0,
-                          child: PersonalProfilePanel(),
-                        ),
-                    ],
-                  ),
-                ),
+                const Expanded(child: _ChatAreaSwitcher()),
               ],
             ),
           ),
