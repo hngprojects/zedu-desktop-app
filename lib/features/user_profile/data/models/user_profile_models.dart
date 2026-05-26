@@ -95,23 +95,29 @@ class OrganizationProfileModel extends OrganizationProfile {
     required super.name,
     required super.natureOfBusiness,
     required super.country,
+    super.logoUrl,
   });
 
   factory OrganizationProfileModel.fromJson(Map<String, dynamic> json) {
     return OrganizationProfileModel(
-      id: json['id'] as String? ?? '019700db-4e22-7f90-a20e-f9116291ef24',
-      name: json['name'] as String? ?? 'Anonymous user',
-      natureOfBusiness:
-          json['nature_of_business'] as String? ?? 'Design agency',
-      country: json['country'] as String? ?? 'Nigeria',
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      // Map both type and description to natureOfBusiness since swagger mentions both
+      natureOfBusiness: json['type'] as String? ?? 
+          json['description'] as String? ?? 
+          json['nature_of_business'] as String? ?? '',
+      country: json['country'] as String? ?? '',
+      logoUrl: json['logo_url'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
-    'nature_of_business': natureOfBusiness,
+    'description': natureOfBusiness, // swagger expects description or type
+    'type': natureOfBusiness,
     'country': country,
+    'logo_url': logoUrl,
   };
 }
 

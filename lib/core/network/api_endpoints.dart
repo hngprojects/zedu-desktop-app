@@ -18,6 +18,7 @@ class ApiEndpoints {
   static const String securityPassword = '/profile/security/password';
   static const String profileOrganization = '/profile/organization';
   static const String organisations = '/organisations';
+  static String organization(String orgId) => '/organisations/$orgId';
   static String organizationUsers(String orgId) => '/organisations/$orgId/users';
   static const String invite = '/invite';
   static String organizationMember(String memberId) => '/profile/organization/members/$memberId';

@@ -53,8 +53,8 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           account: result.value,
           isSaving: false,
           successMessage: 'Account information saved successfully.',
-          // Keep the local preview until centrifugo pushes the real URL back
         );
+        ref.read(authNotifierProvider.notifier).refreshCurrentUser();
       case Failure<ProfileAccount>():
         state = state.copyWith(
           isSaving: false,
@@ -200,7 +200,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     }
   }
 
-  Future<void> changePassword({
+  Future<bool> changePassword({
     required String currentPassword,
     required String newPassword,
   }) async {
@@ -219,11 +219,13 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           isSaving: false,
           successMessage: 'Password updated successfully.',
         );
+        return true;
       case Failure<void>():
         state = state.copyWith(
           isSaving: false,
           error: result.error.friendlyMessage,
         );
+        return false;
     }
   }
 
@@ -296,7 +298,15 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       clearError: true,
       clearSuccess: true,
     );
-    final result = await _repository.deleteOrganization();
+    final orgId = ref.read(workspaceProvider).selectedWorkspace?.id;
+    if (orgId == null) {
+      state = state.copyWith(
+        isSaving: false,
+        error: 'No organization selected.',
+      );
+      return;
+    }
+    final result = await _repository.deleteOrganization(orgId: orgId);
     switch (result) {
       case Success<void>():
         state = state.copyWith(

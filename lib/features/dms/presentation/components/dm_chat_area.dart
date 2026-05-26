@@ -585,30 +585,33 @@ class _MessageBubble extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: status == 'failed'
-                        ? GestureDetector(
-                            onTap: () {
-                              ref
-                                  .read(chatHistoryProvider(channelId))
-                                  .retryMessage(messageId);
-                            },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.error_outline,
-                                  size: 13,
-                                  color: colors.error,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Failed – Tap to retry',
-                                  style: TextStyle(
+                        ? Tooltip(
+                            message: (message['error'] as String?) ?? 'Failed to send message',
+                            child: GestureDetector(
+                              onTap: () {
+                                ref
+                                    .read(chatHistoryProvider(channelId))
+                                    .retryMessage(messageId);
+                              },
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    size: 13,
                                     color: colors.error,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Failed – Tap to retry',
+                                    style: TextStyle(
+                                      color: colors.error,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           )
                         : Text(

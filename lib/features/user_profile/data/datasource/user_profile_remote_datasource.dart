@@ -1,4 +1,4 @@
-import 'dart:convert';
+// import 'dart:convert';
 
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
@@ -27,7 +27,7 @@ abstract interface class UserProfileRemoteDataSource {
   Future<OrganizationProfileModel> updateOrganization(
     OrganizationProfile organization,
   );
-  Future<void> deleteOrganization();
+  Future<void> deleteOrganization(String orgId);
   Future<List<TeamMemberModel>> getTeamMembers({String? orgId});
   Future<TeamMemberModel> inviteMember({
     required String email,
@@ -50,7 +50,6 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
   final ApiBaseService _apiBaseService;
   final AppConfig _config;
 
-
   @override
   Future<ProfileAccountModel> getAccount() async {
     final response = await _apiBaseService.get<Map<String, dynamic>>(
@@ -63,7 +62,14 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
 
   @override
   Future<ProfileAccountModel> updateAccount(ProfileAccount account) async {
-    final data = FormData.fromMap({
+    // Split name into first and last name as backend might expect them
+    final parts = account.name.split(' ');
+    final firstName = parts.first;
+    final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+
+    final formData = FormData.fromMap({
+      'first_name': firstName,
+      'last_name': lastName,
       'full_name': account.name,
       'email': account.email,
       'username': account.username,
@@ -75,7 +81,7 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     });
     final response = await _apiBaseService.patch<Map<String, dynamic>>(
       path: ApiEndpoints.updateAccount,
-      data: data,
+      data: formData,
     );
     return ProfileAccountModel.fromJson(
       response.data['data'] as Map<String, dynamic>,
@@ -110,9 +116,6 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
 
   @override
   Future<NotificationPreferencesModel> getNotificationPreferences() async {
-    if (_config.usesMockData) {
-      return NotificationPreferencesModel.fromJson(_notifications);
-    }
     final response = await _apiBaseService.get<Map<String, dynamic>>(
       path: ApiEndpoints.profileNotifications,
     );
@@ -142,9 +145,6 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
 
   @override
   Future<List<SecuritySessionModel>> getSecuritySessions() async {
-    if (_config.usesMockData) {
-      return _sessions.map(SecuritySessionModel.fromJson).toList();
-    }
     final response = await _apiBaseService.get<Map<String, dynamic>>(
       path: ApiEndpoints.securitySessions,
     );
@@ -168,9 +168,6 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
 
   @override
   Future<OrganizationProfileModel> getOrganization() async {
-    if (_config.usesMockData) {
-      return OrganizationProfileModel.fromJson(_organization);
-    }
     final response = await _apiBaseService.get<Map<String, dynamic>>(
       path: ApiEndpoints.profileOrganization,
     );
@@ -183,13 +180,14 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
   Future<OrganizationProfileModel> updateOrganization(
     OrganizationProfile organization,
   ) async {
-    final response = await _apiBaseService.patch<Map<String, dynamic>>(
-      path: ApiEndpoints.profileOrganization,
+    final response = await _apiBaseService.put<Map<String, dynamic>>(
+      path: ApiEndpoints.organization(organization.id),
       data: OrganizationProfileModel(
         id: organization.id,
         name: organization.name,
         natureOfBusiness: organization.natureOfBusiness,
         country: organization.country,
+        logoUrl: organization.logoUrl,
       ).toJson(),
     );
     return OrganizationProfileModel.fromJson(
@@ -222,58 +220,15 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
   }
 
   @override
-  Future<void> deleteOrganization() async {
-    if (_config.usesMockData) return;
+  Future<void> deleteOrganization(String orgId) async {
     await _apiBaseService.delete<Map<String, dynamic>>(
-      path: ApiEndpoints.profileOrganization,
+      path: ApiEndpoints.organization(orgId),
     );
   }
 
   @override
   @override
   Future<List<TeamMemberModel>> getTeamMembers({String? orgId}) async {
-    if (_config.usesMockData) {
-      List<TeamMemberModel> loadedTeamMembers = [];
-
-      // Load persisted mock members if they exist
-      if (orgId != null) {
-        final storage = locator<SecureStorageService>();
-        final data = await storage.readData('mock_team_members_$orgId');
-        if (data != null) {
-          try {
-            final List<dynamic> decoded = jsonDecode(data) as List<dynamic>;
-            loadedTeamMembers = decoded
-                .map((e) => TeamMemberModel.fromJson(e as Map<String, dynamic>))
-                .toList();
-          } catch (_) {}
-        }
-      }
-
-      if (loadedTeamMembers.isNotEmpty) {
-        return loadedTeamMembers;
-      }
-
-      final list = _members.map(TeamMemberModel.fromJson).toList();
-      // Dynamically generate 1000+ mock members to demonstrate efficient search and scroll!
-      if (list.length < 100) {
-        final roles = ['User', 'Guess', 'Manager', 'Project Lead'];
-        for (int i = 1; i <= 1000; i++) {
-          list.add(
-            TeamMemberModel(
-              id: 'member-mock-$i',
-              email: 'teammate$i@zedu.app',
-              role: roles[i % roles.length],
-              dateJoined: 'May ${i % 20 + 1}, 2026',
-              status: TeamMemberStatus.active,
-              name: 'Teammate $i',
-              avatarUrl: null,
-            ),
-          );
-        }
-      }
-      return list;
-    }
-
     if (orgId == null || orgId.length < 36) {
       orgId = '019700db-4e22-7f90-a20e-f9116291ef24';
     }
@@ -311,16 +266,6 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     required String role,
     required String orgId,
   }) async {
-    if (_config.usesMockData) {
-      return TeamMemberModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        email: email,
-        role: role,
-        dateJoined: 'Pending',
-        status: TeamMemberStatus.pending,
-        name: email.split('@').first,
-      );
-    }
     final response = await _apiBaseService.post<Map<String, dynamic>>(
       path: ApiEndpoints.invite,
       data: {
@@ -356,17 +301,6 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
 
   @override
   Future<TeamMemberModel> updateMember(TeamMember member) async {
-    if (_config.usesMockData) {
-      return TeamMemberModel(
-        id: member.id,
-        email: member.email,
-        role: member.role,
-        dateJoined: member.dateJoined,
-        status: member.status,
-        name: member.name,
-        avatarUrl: member.avatarUrl,
-      );
-    }
     final response = await _apiBaseService.patch<Map<String, dynamic>>(
       path: ApiEndpoints.organizationMember(member.id),
       data: {'email': member.email, 'role': member.role},
@@ -378,7 +312,6 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
 
   @override
   Future<void> removeMember(String memberId) async {
-    if (_config.usesMockData) return;
     await _apiBaseService.delete<Map<String, dynamic>>(
       path: ApiEndpoints.organizationMember(memberId),
     );
@@ -386,9 +319,6 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
 
   @override
   Future<List<RolePermissionModel>> getRolesAndPermissions() async {
-    if (_config.usesMockData) {
-      return _roles.map(RolePermissionModel.fromJson).toList();
-    }
     final response = await _apiBaseService.get<Map<String, dynamic>>(
       path: ApiEndpoints.organizationRoles,
     );
@@ -401,9 +331,6 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
 
   @override
   Future<BillingInfoModel> getBillingInfo() async {
-    if (_config.usesMockData) {
-      return BillingInfoModel.fromJson(_billing);
-    }
     final response = await _apiBaseService.get<Map<String, dynamic>>(
       path: ApiEndpoints.organizationBilling,
     );
@@ -412,154 +339,3 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     );
   }
 }
-
-const _notifications = {
-  'mode': 'allMessages',
-  'from_time': '12:00 AM',
-  'to_time': '11:00 PM',
-  'use_desktop_settings': true,
-  'email_notifications': false,
-};
-
-const _organization = {
-  'name': 'Anonymous user',
-  'nature_of_business': 'Design agency',
-  'country': 'Nigeria',
-};
-
-const _sessions = [
-  {
-    'device': 'Chrome',
-    'location': 'Lagos',
-    'date': 'May 8, 2026 1:07 PM',
-    'last_active': 'May 8, 2026 3:07 PM',
-    'status': 'Active',
-  },
-  {
-    'device': 'Chrome',
-    'location': 'Abuja',
-    'date': 'May 8, 2026 1:07 PM',
-    'last_active': 'May 8, 2026 3:07 PM',
-    'status': 'Active',
-  },
-  {
-    'device': 'Chrome',
-    'location': 'Uyo',
-    'date': 'May 8, 2026 1:07 PM',
-    'last_active': 'May 8, 2026 3:07 PM',
-    'status': 'Active',
-  },
-];
-
-const _members = [
-  {
-    'id': 'member-1',
-    'email': 'anonymoususer@gmail.com',
-    'role': 'Administrator',
-    'date_joined': 'May 3, 2026',
-    'status': 'active',
-    'name': 'Anonymoususer',
-  },
-  {
-    'id': 'member-2',
-    'email': 'ruby@zedu.app',
-    'role': 'User',
-    'date_joined': 'May 4, 2026',
-    'status': 'active',
-    'name': 'Ruby - Social Media Handler',
-  },
-  {
-    'id': 'member-3',
-    'email': 'alice@zedu.app',
-    'role': 'User',
-    'date_joined': 'May 5, 2026',
-    'status': 'active',
-    'name': 'Alice - Product Designer',
-  },
-  {
-    'id': 'member-4',
-    'email': 'bob@zedu.app',
-    'role': 'User',
-    'date_joined': 'May 6, 2026',
-    'status': 'active',
-    'name': 'Bob - Software Engineer',
-  },
-  {
-    'id': 'member-5',
-    'email': 'charlie@zedu.app',
-    'role': 'Manager',
-    'date_joined': 'May 7, 2026',
-    'status': 'active',
-    'name': 'Charlie - Product Lead',
-  },
-];
-
-const _roles = [
-  {
-    'role': 'Administrator',
-    'description': 'Full access, control',
-    'permissions': [
-      'Remove members from organization',
-      'Invite members',
-      'Create custom roles',
-      'Create channels',
-      'Comment on threads',
-      'View billing',
-      'Create webhooks',
-      'View channels',
-      'Change user organization role',
-    ],
-  },
-  {
-    'role': 'Guess',
-    'description': 'Read-only access',
-    'permissions': ['View channels'],
-  },
-  {
-    'role': 'User',
-    'description': 'Read, write, update',
-    'permissions': [
-      'Remove members from organization',
-      'Comment on threads',
-      'Create channels',
-      'View channels',
-    ],
-  },
-  {
-    'role': 'Manager',
-    'description': 'Read, write, approve',
-    'permissions': [
-      'Remove members from organization',
-      'Invite members',
-      'Create custom roles',
-      'Create channels',
-      'Comment on threads',
-      'View billing',
-      'Create webhooks',
-      'View channels',
-      'Change user organization role',
-    ],
-  },
-  {
-    'role': 'Project Lead',
-    'description': 'Manage, coordinate, oversee',
-    'permissions': [
-      'Remove members from organization',
-      'Invite members',
-      'Create custom roles',
-      'Create channels',
-      'Comment on threads',
-      'View billing',
-      'Create webhooks',
-      'View channels',
-      'Change user organization role',
-    ],
-  },
-];
-
-const _billing = {
-  'plan': 'Zedu Free',
-  'description':
-      'You are enjoying the full Zedu experience with ability to add as many users to your organisation.',
-  'payment_history': <Map<String, dynamic>>[],
-};

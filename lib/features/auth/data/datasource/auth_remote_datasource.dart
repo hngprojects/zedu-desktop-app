@@ -57,18 +57,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String password,
   }) async {
     try {
-      if (_config.usesMockData) {
-        AppLogger.d('Using mock data for POST /auth/login', tag: _tag);
-        if (password != mockPassword) {
-          throw const ApiFailure(
-            message: 'Invalid credentials',
-            kind: ApiFailureKind.client,
-          );
-        }
-        return LoginResponseModel.fromJson(
-          LoginResponseModel.mockLoginResponse,
-        );
-      }
+
 
       AppLogger.d('POST /auth/login — $email', tag: _tag);
       final response = await _apiBaseService.post<Map<String, dynamic>>(
@@ -93,13 +82,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel> me() async {
     try {
-      if (_config.usesMockData) {
-        AppLogger.d('Using mock data for GET /auth/me', tag: _tag);
-        final loginResponse = LoginResponseModel.fromJson(
-          LoginResponseModel.mockLoginResponse,
-        );
-        return loginResponse.user;
-      }
+
 
       AppLogger.d('GET /auth/me', tag: _tag);
       final response = await _apiBaseService.get<Map<String, dynamic>>(
@@ -123,11 +106,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String password,
   }) async {
     try {
-      if (_config.usesMockData) {
-        AppLogger.d('Using mock data for POST /auth/register', tag: _tag);
-        await Future<void>.delayed(const Duration(milliseconds: 800));
-        return;
-      }
+
 
       AppLogger.d('POST auth/register — $email', tag: _tag);
       await _apiBaseService.post<dynamic>(
@@ -145,14 +124,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> forgotPassword({required String email}) async {
     try {
-      if (_config.usesMockData) {
-        AppLogger.d(
-          'Using mock data for POST /auth/forgot-password',
-          tag: _tag,
-        );
-        await Future<void>.delayed(const Duration(milliseconds: 800));
-        return;
-      }
+
 
       AppLogger.d('POST auth/password-reset — $email', tag: _tag);
       await _apiBaseService.post<dynamic>(
@@ -174,14 +146,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String newPassword,
   }) async {
     try {
-      if (_config.usesMockData) {
-        AppLogger.d(
-          'Using mock data for POST /auth/password-reset/verify',
-          tag: _tag,
-        );
-        await Future<void>.delayed(const Duration(milliseconds: 800));
-        return;
-      }
+
 
       AppLogger.d('POST /auth/password-reset/verify', tag: _tag);
       await _apiBaseService.post<dynamic>(
@@ -207,11 +172,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String newPassword,
   }) async {
     try {
-      if (_config.usesMockData) {
-        AppLogger.d('Using mock data for PUT /auth/change-password', tag: _tag);
-        await Future<void>.delayed(const Duration(milliseconds: 800));
-        return;
-      }
+
 
       AppLogger.d('PUT /auth/change-password', tag: _tag);
       await _apiBaseService.put<dynamic>(
@@ -229,10 +190,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> sendMagicLink({required String email}) async {
     try {
-      if (_config.usesMockData) {
-        AppLogger.d('Using mock data for POST /auth/magick-link', tag: _tag);
-        return;
-      }
+
 
       AppLogger.d('POST /auth/magick-link — $email', tag: _tag);
       await _apiBaseService.post<Map<String, dynamic>>(
@@ -250,15 +208,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<LoginResponseModel> verifyMagicLink({required String token}) async {
     try {
-      if (_config.usesMockData) {
-        AppLogger.d(
-          'Using mock data for POST /auth/magick-link/verify',
-          tag: _tag,
-        );
-        return LoginResponseModel.fromJson(
-          LoginResponseModel.mockLoginResponse,
-        );
-      }
+
 
       AppLogger.d('POST /auth/magick-link/verify', tag: _tag);
       final response = await _apiBaseService.post<Map<String, dynamic>>(
@@ -285,12 +235,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     String? redirectUri,
   }) async {
     try {
-      if (_config.usesMockData) {
-        AppLogger.d('Using mock data for POST /auth/google', tag: _tag);
-        return LoginResponseModel.fromJson(
-          LoginResponseModel.mockLoginResponse,
-        );
-      }
+
 
       AppLogger.d('POST /auth/google', tag: _tag);
       final data = <String, dynamic>{'grant_code': grantCode};
@@ -327,14 +272,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required bool online,
   }) async {
     try {
-      if (_config.usesMockData) {
-        AppLogger.d(
-          'Using mock data for POST /profile/change-status',
-          tag: _tag,
-        );
-        await Future<void>.delayed(const Duration(milliseconds: 400));
-        return;
-      }
+
 
       AppLogger.d('POST /profile/change-status', tag: _tag);
       await _apiBaseService.post<dynamic>(

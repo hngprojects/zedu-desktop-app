@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -130,7 +131,7 @@ Future<void> showEditAccountDialog(
 /// Dialog for changing password.
 Future<void> showChangePasswordDialog(
   BuildContext context,
-  Future<void> Function({
+  Future<bool> Function({
     required String currentPassword,
     required String newPassword,
   })
@@ -211,13 +212,15 @@ Future<void> showChangePasswordDialog(
                 : () async {
                     if (formKey.currentState?.validate() ?? false) {
                       setState(() => isLoading = true);
-                      await onSave(
+                      final success = await onSave(
                         currentPassword: currentCtrl.text,
                         newPassword: newCtrl.text,
                       );
                       if (ctx.mounted) {
                         setState(() => isLoading = false);
-                        Navigator.pop(ctx);
+                        if (success) {
+                          Navigator.pop(ctx);
+                        }
                       }
                     }
                   },
@@ -232,52 +235,217 @@ Future<void> showChangePasswordDialog(
   confirmCtrl.dispose();
 }
 
-/// Dialog for editing organization information.
 Future<void> showEditOrganizationDialog(
   BuildContext context,
   OrganizationProfile organization,
   ValueChanged<OrganizationProfile> onSave,
 ) async {
-  final nameCtrl = TextEditingController(text: organization.name);
-  final businessCtrl = TextEditingController(
-    text: organization.natureOfBusiness,
-  );
-  final countryCtrl = TextEditingController(text: organization.country);
-  final formKey = GlobalKey<FormState>();
-
   await showDialog<void>(
     context: context,
-    builder: (ctx) => AlertDialog(
+    builder: (context) => _EditOrganizationDialog(
+      organization: organization,
+      onSave: onSave,
+    ),
+  );
+}
+
+class _EditOrganizationDialog extends ConsumerStatefulWidget {
+  const _EditOrganizationDialog({
+    required this.organization,
+    required this.onSave,
+  });
+
+  final OrganizationProfile organization;
+  final ValueChanged<OrganizationProfile> onSave;
+
+  @override
+  ConsumerState<_EditOrganizationDialog> createState() => _EditOrganizationDialogState();
+}
+
+class _EditOrganizationDialogState extends ConsumerState<_EditOrganizationDialog> {
+  late final TextEditingController nameCtrl;
+  late final TextEditingController businessCtrl;
+  late final TextEditingController countryCtrl;
+  final formKey = GlobalKey<FormState>();
+
+  String? localImagePath;
+  String? remoteImageUrl;
+  bool isUploading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    nameCtrl = TextEditingController(text: widget.organization.name);
+    businessCtrl = TextEditingController(text: widget.organization.natureOfBusiness);
+    countryCtrl = TextEditingController(text: widget.organization.country);
+    remoteImageUrl = widget.organization.logoUrl;
+  }
+
+  @override
+  void dispose() {
+    nameCtrl.dispose();
+    businessCtrl.dispose();
+    countryCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickAvatar() async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
+    );
+    if (result != null && result.files.single.path != null) {
+      final path = result.files.single.path!;
+      setState(() {
+        localImagePath = path;
+        isUploading = true;
+      });
+
+      try {
+        final xfile = XFile(path);
+        final fileRepo = ref.read(fileRepositoryProvider);
+        final uploadedFiles = await fileRepo.uploadFiles([xfile]);
+        if (uploadedFiles.isNotEmpty) {
+          final fileUrl = uploadedFiles.first['file_url'] as String? ?? 
+                          uploadedFiles.first['url'] as String?;
+                          
+          if (fileUrl != null && mounted) {
+            setState(() {
+              remoteImageUrl = fileUrl;
+              isUploading = false;
+            });
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            isUploading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to upload logo: $e')),
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       title: Text(
-        'Edit Organisation',
-        style: ctx.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        'Update organisation details',
+        style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
       ),
       content: SizedBox(
-        width: 480,
+        width: 600,
         child: Form(
           key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppTextField(
-                label: 'Organisation Name',
-                controller: nameCtrl,
-                hint: 'Enter organisation name',
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+              // Left Column
+              Expanded(
+                flex: 3,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppTextField(
+                      label: 'Organisation Name',
+                      controller: nameCtrl,
+                      hint: 'Enter organisation name',
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    AppTextField(
+                      label: 'Nature of Business',
+                      controller: businessCtrl,
+                      hint: 'e.g. Design agency',
+                    ),
+                    const SizedBox(height: 16),
+                    AppTextField(
+                      label: 'Country',
+                      controller: countryCtrl,
+                      hint: 'e.g. Nigeria',
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'Nature of Business',
-                controller: businessCtrl,
-                hint: 'e.g. Design agency',
-              ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'Country',
-                controller: countryCtrl,
-                hint: 'e.g. Nigeria',
+              const SizedBox(width: 32),
+              // Right Column
+              Expanded(
+                flex: 2,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 24),
+                    Text(
+                      'Organisation Logo',
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: colors.background,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: colors.divider),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: isUploading 
+                          ? const Center(child: CircularProgressIndicator())
+                          : (localImagePath != null 
+                              ? Image.file(
+                                  File(localImagePath!),
+                                  fit: BoxFit.cover,
+                                )
+                              : (remoteImageUrl != null && remoteImageUrl!.isNotEmpty
+                                  ? Image.network(
+                                      remoteImageUrl!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => const Icon(Icons.error),
+                                    )
+                                  : Center(
+                                      child: Text(
+                                        widget.organization.initials,
+                                        style: context.textTheme.displaySmall?.copyWith(
+                                          color: colors.primary,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ))),
+                    ),
+                    const SizedBox(height: 16),
+                    AppButton.outlined(
+                      label: 'Upload photo',
+                      onPressed: _pickAvatar,
+                      expand: true,
+                    ),
+                    if (localImagePath != null || (remoteImageUrl != null && remoteImageUrl!.isNotEmpty))
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: TextButton(
+                          onPressed: () {
+                            setState(() {
+                              localImagePath = null;
+                              remoteImageUrl = '';
+                            });
+                          },
+                          child: Text(
+                            'Remove photo',
+                            style: TextStyle(color: colors.primary),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -285,33 +453,31 @@ Future<void> showEditOrganizationDialog(
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(ctx),
+          onPressed: () => Navigator.pop(context),
           child: const Text('Cancel'),
         ),
         AppButton(
-          label: 'Save changes',
+          label: 'Save Changes',
           expand: false,
           height: 40,
-          onPressed: () {
+          loading: isUploading,
+          onPressed: isUploading ? null : () {
             if (formKey.currentState?.validate() ?? false) {
-              onSave(
-                organization.copyWith(
+              widget.onSave(
+                widget.organization.copyWith(
                   name: nameCtrl.text.trim(),
                   natureOfBusiness: businessCtrl.text.trim(),
                   country: countryCtrl.text.trim(),
+                  logoUrl: remoteImageUrl,
                 ),
               );
-              Navigator.pop(ctx);
+              Navigator.pop(context);
             }
           },
         ),
       ],
-    ),
-  );
-
-  nameCtrl.dispose();
-  businessCtrl.dispose();
-  countryCtrl.dispose();
+    );
+  }
 }
 
 /// Dialog for inviting a team member.

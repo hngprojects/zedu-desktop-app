@@ -51,8 +51,24 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
     if (page == 1) {
       final user = ref.read(authNotifierProvider).user;
       if (user != null) {
+        String selfChannelId = 'dm_${user.id}_${user.id}';
+        
+        try {
+          final channelRepo = ref.read(channelRepositoryProvider);
+          final channelsResult = await channelRepo.fetchChannels(orgId);
+          if (channelsResult is Success<List<Channel>>) {
+            final selfChannel = channelsResult.value.firstWhere(
+              (c) => c.name == user.username,
+              orElse: () => Channel(id: '', name: '', description: '', organisationId: '', ownerId: ''),
+            );
+            if (selfChannel.id.isNotEmpty) {
+              selfChannelId = selfChannel.id;
+            }
+          }
+        } catch (_) {}
+
         final selfConversation = DmConversation(
-          channelId: 'dm_${user.id}_${user.id}',
+          channelId: selfChannelId,
           username: '${user.fullname} (You)',
           participantId: user.id,
           previewMessage: 'Saved messages',

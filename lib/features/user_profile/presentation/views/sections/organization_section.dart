@@ -36,7 +36,10 @@ class OrganizationSection extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _OrganizationAvatar(initials: organization.initials),
+                    _OrganizationAvatar(
+                      initials: organization.initials,
+                      logoUrl: organization.logoUrl,
+                    ),
                     const SizedBox(height: 24),
                     const ProfileFieldLabel('Name'),
                     const SizedBox(height: 4),
@@ -83,51 +86,22 @@ class OrganizationSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 48),
-        Row(
-          children: [
-            AppButton.outlined(
-              label: 'Sign out of workspace',
-              expand: false,
-              height: 44,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: context.colors.textPrimary,
-                side: BorderSide(color: context.colors.divider),
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-              ),
-              loading: isSaving,
-              onPressed: () => _confirmLeave(context, onLeave),
-            ),
-            const SizedBox(width: 16),
-            AppButton.outlined(
-              label: 'Delete organization',
-              expand: false,
-              height: 44,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFEF4444),
-                side: const BorderSide(color: Color(0xFFEF4444)),
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-              ),
-              loading: isSaving,
-              onPressed: () => _confirmDelete(context, onDelete),
-            ),
-          ],
+
+        AppButton.outlined(
+          label: 'Delete organization',
+          expand: false,
+          height: 44,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFFEF4444),
+            side: const BorderSide(color: Color(0xFFEF4444)),
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+          ),
+          loading: isSaving,
+          onPressed: () => _confirmDelete(context, onDelete),
         ),
       ],
     );
   }
-
-  Future<void> _confirmLeave(
-    BuildContext context,
-    Future<void> Function() onConfirm,
-  ) => showProfileConfirmDialog(
-    context,
-    title: 'Sign out of workspace?',
-    message:
-        'This will securely sign you out and remove your access from this workspace. You will need to be re-invited to join again.',
-    confirmLabel: 'Sign out',
-    onConfirm: onConfirm,
-    destructive: true,
-  );
 
   Future<void> _confirmDelete(
     BuildContext context,
@@ -144,9 +118,10 @@ class OrganizationSection extends StatelessWidget {
 }
 
 class _OrganizationAvatar extends StatelessWidget {
-  const _OrganizationAvatar({required this.initials});
+  const _OrganizationAvatar({required this.initials, this.logoUrl});
 
   final String initials;
+  final String? logoUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -156,17 +131,25 @@ class _OrganizationAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(8),
+        image: logoUrl != null && logoUrl!.isNotEmpty
+            ? DecorationImage(
+                image: NetworkImage(logoUrl!),
+                fit: BoxFit.cover,
+              )
+            : null,
       ),
-      child: Center(
-        child: Text(
-          initials,
-          style: TextStyle(
-            fontSize: 40,
-            fontWeight: FontWeight.w600,
-            color: context.colors.sidebar,
-          ),
-        ),
-      ),
+      child: logoUrl != null && logoUrl!.isNotEmpty
+          ? const SizedBox.shrink()
+          : Center(
+              child: Text(
+                initials,
+                style: TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.w600,
+                  color: context.colors.sidebar,
+                ),
+              ),
+            ),
     );
   }
 }

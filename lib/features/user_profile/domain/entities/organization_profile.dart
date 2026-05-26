@@ -4,19 +4,21 @@ class OrganizationProfile {
     required this.name,
     required this.natureOfBusiness,
     required this.country,
+    this.logoUrl,
   });
 
   factory OrganizationProfile.empty() => const OrganizationProfile(
-    id: '019700db-4e22-7f90-a20e-f9116291ef24',
-    name: 'Anonymous user',
-    natureOfBusiness: 'Design agency',
-    country: 'Nigeria',
+    id: '',
+    name: '',
+    natureOfBusiness: '',
+    country: '',
   );
 
   final String id;
   final String name;
   final String natureOfBusiness;
   final String country;
+  final String? logoUrl;
 
   String get initials {
     final words = name.trim().split(RegExp(r'\s+'));
@@ -30,12 +32,14 @@ class OrganizationProfile {
     String? name,
     String? natureOfBusiness,
     String? country,
+    String? logoUrl,
   }) {
     return OrganizationProfile(
       id: id ?? this.id,
       name: name ?? this.name,
       natureOfBusiness: natureOfBusiness ?? this.natureOfBusiness,
       country: country ?? this.country,
+      logoUrl: logoUrl ?? this.logoUrl,
     );
   }
 }

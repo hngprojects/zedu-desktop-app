@@ -69,12 +69,23 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
   @override
   void initState() {
     super.initState();
-    nameCtrl = TextEditingController(text: widget.account.name);
-    displayNameCtrl = TextEditingController(text: widget.account.displayName);
-    usernameCtrl = TextEditingController(text: widget.account.username);
     final authState = ref.read(authNotifierProvider);
     final fallbackEmail = authState.user?.email ?? '';
+    final authUser = authState.user;
+    final authFullName = authUser != null 
+        ? '${authUser.firstName} ${authUser.lastName}'.trim() 
+        : '';
+    final fallbackName = authFullName.isNotEmpty 
+        ? authFullName 
+        : (authUser?.username ?? '');
 
+    nameCtrl = TextEditingController(
+      text: widget.account.name.isNotEmpty 
+          ? widget.account.name 
+          : fallbackName,
+    );
+    displayNameCtrl = TextEditingController(text: widget.account.displayName);
+    usernameCtrl = TextEditingController(text: widget.account.username);
     emailCtrl = TextEditingController(
       text: widget.account.email.isNotEmpty
           ? widget.account.email
