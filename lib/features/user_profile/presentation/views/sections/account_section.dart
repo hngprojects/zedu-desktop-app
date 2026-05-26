@@ -33,7 +33,8 @@ class AccountSection extends StatelessWidget {
               children: [
                 Stack(
                   children: [
-                    _AvatarBlock(account: account),
+                    // Reactive avatar — shows local preview + server URL
+                    const UserAvatar(size: 160, borderRadius: 8),
                     Positioned(
                       top: 8,
                       right: 8,
@@ -54,8 +55,9 @@ class AccountSection extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+                // Show @username handle from real server data
                 Text(
-                  '@${account.name.replaceAll(' ', '').toLowerCase()}',
+                  '@${account.username.isNotEmpty ? account.username : account.name.replaceAll(' ', '').toLowerCase()}',
                   style: context.textTheme.bodySmall?.copyWith(
                     color: const Color(0xFF6B7280),
                   ),
@@ -112,37 +114,6 @@ class AccountSection extends StatelessWidget {
     BuildContext context,
     ProfileAccount account,
     ValueChanged<ProfileAccount> onSave,
-  ) => showEditAccountDialog(context, account, onSave);
-}
-
-class _AvatarBlock extends StatelessWidget {
-  const _AvatarBlock({required this.account});
-
-  final ProfileAccount account;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 160,
-      height: 144,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE9FBFA),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: (account.avatarUrl != null && account.avatarUrl!.isNotEmpty)
-          ? Image.network(
-              account.avatarUrl!,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Image.asset(
-                'assets/pngs/default_avatar.png',
-                fit: BoxFit.cover,
-              ),
-            )
-          : Image.asset(
-              'assets/pngs/default_avatar.png',
-              fit: BoxFit.cover,
-            ),
-    );
-  }
+  ) =>
+      showEditAccountDialog(context, account, onSave);
 }

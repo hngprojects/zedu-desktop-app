@@ -5,3 +5,5 @@ export 'profile_dialogs.dart';
 export 'profile_section_header.dart';
 export 'profile_settings_shell.dart';
 export 'profile_widgets.dart';
+export 'user_avatar.dart';
+export 'global_profile_overlay.dart';

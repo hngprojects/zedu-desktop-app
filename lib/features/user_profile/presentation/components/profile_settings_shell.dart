@@ -150,6 +150,8 @@ class _SettingsNavigation extends StatelessWidget {
           const SizedBox(height: 24),
           Row(
             children: [
+              const UserAvatar(size: 36, borderRadius: 6),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   userName,

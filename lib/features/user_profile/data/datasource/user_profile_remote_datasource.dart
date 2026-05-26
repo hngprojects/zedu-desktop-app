@@ -63,14 +63,19 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
 
   @override
   Future<ProfileAccountModel> updateAccount(ProfileAccount account) async {
+    final data = FormData.fromMap({
+      'full_name': account.name,
+      'email': account.email,
+      'username': account.username,
+      'display_name': account.displayName,
+      'phone': account.phoneNumber,
+      'title': account.title,
+      'name_pronounciation': account.namePronunciation,
+      'timezone': account.timezone,
+    });
     final response = await _apiBaseService.patch<Map<String, dynamic>>(
       path: ApiEndpoints.updateAccount,
-      data: {
-        'name': account.name,
-        'email': account.email,
-        'timezone': account.timezone,
-        'avatar_url': account.avatarUrl,
-      },
+      data: data,
     );
     return ProfileAccountModel.fromJson(
       response.data['data'] as Map<String, dynamic>,
@@ -87,12 +92,11 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
   @override
   Future<void> uploadAvatar(String filePath) async {
     final formData = FormData.fromMap({
-      'image': await MultipartFile.fromFile(filePath),
+      'avatar_file': await MultipartFile.fromFile(filePath),
     });
-    await _apiBaseService.post<Map<String, dynamic>>(
-      path: ApiEndpoints.uploadProfileImage,
+    await _apiBaseService.patch<Map<String, dynamic>>(
+      path: ApiEndpoints.updateAccount,
       data: formData,
-      headers: {'Content-Type': 'multipart/form-data'},
     );
   }
 

@@ -7,27 +7,51 @@ class ProfileAccountModel extends ProfileAccount {
     required super.timezone,
     super.avatarUrl,
     super.username,
+    super.displayName,
+    super.phoneNumber,
+    super.title,
+    super.namePronunciation,
   });
 
   factory ProfileAccountModel.fromJson(Map<String, dynamic> json) {
-    final e = json['email'] as String? ?? 'anonymoususer@email.com';
-    final u = json['username'] as String? ?? '';
+    // The API returns full_name for the user's full name
+    final name = (json['full_name'] as String?)?.trim() ??
+        (json['name'] as String?)?.trim() ??
+        '';
+    final email = (json['email'] as String?)?.trim() ?? '';
+    final rawUsername = (json['username'] as String?)?.trim() ?? '';
+    final displayName = (json['display_name'] as String?)?.trim() ?? '';
+
     return ProfileAccountModel(
-      name: json['name'] as String? ?? 'Anonymous user',
-      email: e,
-      timezone: json['timezone'] as String? ?? 'Africa/Lagos',
+      name: name,
+      email: email,
+      timezone: (json['timezone'] as String?)?.trim() ?? 'Africa/Lagos',
       avatarUrl: json['avatar_url'] as String?,
-      username: u.isNotEmpty ? u : e.split('@').first,
+      // Derive username from email prefix only if server provides none
+      username: rawUsername.isNotEmpty
+          ? rawUsername
+          : (email.isNotEmpty ? email.split('@').first : ''),
+      displayName: displayName,
+      phoneNumber: (json['phone'] as String?)?.trim() ?? '',
+      title: (json['title'] as String?)?.trim() ?? '',
+      namePronunciation:
+          (json['name_pronounciation'] as String?)?.trim() ?? '',
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'name': name,
+    'full_name': name,
     'email': email,
     'timezone': timezone,
     'avatar_url': avatarUrl,
+    'username': username,
+    'display_name': displayName,
+    'phone': phoneNumber,
+    'title': title,
+    'name_pronounciation': namePronunciation,
   };
 }
+
 
 class NotificationPreferencesModel extends NotificationPreferences {
   const NotificationPreferencesModel({

@@ -13,8 +13,8 @@ class ProfileAccount {
   });
 
   factory ProfileAccount.empty() => const ProfileAccount(
-    name: 'Anonymous user',
-    email: 'anonymoususer@email.com',
+    name: '',
+    email: '',
     timezone: 'Africa/Lagos',
   );
 

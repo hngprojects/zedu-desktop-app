@@ -24,6 +24,7 @@ class UserProfileState {
     this.isSaving = false,
     this.error,
     this.successMessage,
+    this.localAvatarPath,
   });
 
   final UserProfileSection section;
@@ -38,6 +39,10 @@ class UserProfileState {
   final bool isSaving;
   final String? error;
   final String? successMessage;
+
+  /// Local file path of a picked image — shown as an instant preview before
+  /// the PATCH upload completes and the server returns the updated URL.
+  final String? localAvatarPath;
 
   UserProfileState copyWith({
     UserProfileSection? section,
@@ -54,6 +59,8 @@ class UserProfileState {
     String? successMessage,
     bool clearError = false,
     bool clearSuccess = false,
+    String? localAvatarPath,
+    bool clearLocalAvatar = false,
   }) {
     return UserProfileState(
       section: section ?? this.section,
@@ -67,9 +74,11 @@ class UserProfileState {
       isLoading: isLoading ?? this.isLoading,
       isSaving: isSaving ?? this.isSaving,
       error: clearError ? null : (error ?? this.error),
-      successMessage: clearSuccess
+      successMessage:
+          clearSuccess ? null : (successMessage ?? this.successMessage),
+      localAvatarPath: clearLocalAvatar
           ? null
-          : (successMessage ?? this.successMessage),
+          : (localAvatarPath ?? this.localAvatarPath),
     );
   }
 }
