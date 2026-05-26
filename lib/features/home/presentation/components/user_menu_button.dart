@@ -8,6 +8,7 @@ class UserMenuButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final menuState = ref.watch<UserMenuState>(userMenuStateProvider);
+    final isAway = menuState.isAway;
 
     return GestureDetector(
       onTap: () {
@@ -18,41 +19,24 @@ class UserMenuButton extends ConsumerWidget {
         );
       },
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
+          // Avatar using the global reactive widget
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: () {
-              final avatarUrl = ref.watch(userProfileNotifierProvider).account?.avatarUrl;
-              return Container(
-                width: 32,
-                height: 32,
-                color: colors.sidebar,
-                child: (avatarUrl != null && avatarUrl.isNotEmpty)
-                    ? Image.network(
-                        avatarUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Image.asset(
-                          'assets/pngs/default_avatar.png',
-                          fit: BoxFit.cover,
-                        ),
-                      )
-                    : Image.asset(
-                        'assets/pngs/default_avatar.png',
-                        fit: BoxFit.cover,
-                      ),
-              );
-            }(),
+            child: const UserAvatar(size: 32, borderRadius: 8),
           ),
+          // Presence dot — bottom-left of the avatar, matching the design spec
           Positioned(
-            right: 0,
+            left: 0,
             bottom: 0,
             child: Container(
-              width: 12,
-              height: 12,
+              width: 10,
+              height: 10,
               decoration: BoxDecoration(
-                color: menuState.isAway ? colors.textHint : colors.success,
+                color: isAway ? colors.textHint : colors.success,
                 shape: BoxShape.circle,
-                border: Border.all(color: colors.sidebar, width: 2),
+                border: Border.all(color: colors.sidebar, width: 1.5),
               ),
             ),
           ),

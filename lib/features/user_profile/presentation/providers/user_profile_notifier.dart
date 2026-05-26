@@ -53,10 +53,45 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           account: result.value,
           isSaving: false,
           successMessage: 'Account information saved successfully.',
+          // Keep the local preview until centrifugo pushes the real URL back
         );
       case Failure<ProfileAccount>():
         state = state.copyWith(
           isSaving: false,
+          error: result.error.friendlyMessage,
+        );
+    }
+  }
+
+  /// Sets a local file path as an immediate avatar preview across the whole app,
+  /// then uploads the file to the backend and refreshes the account once done.
+  Future<void> previewAndUploadAvatar(String filePath) async {
+    // 1. Immediately show local preview — all watchers redraw instantly
+    state = state.copyWith(localAvatarPath: filePath);
+
+    // 2. Push to backend
+    state = state.copyWith(isSaving: true, clearError: true);
+    final result = await _repository.uploadAvatar(filePath);
+
+    switch (result) {
+      case Success<void>():
+        // 3. Reload account so we get the real server URL
+        final accountResult = await _repository.getAccount();
+        if (accountResult is Success<ProfileAccount>) {
+          state = state.copyWith(
+            account: accountResult.value,
+            isSaving: false,
+            // Clear local preview — server URL is now in account.avatarUrl
+            clearLocalAvatar: true,
+            successMessage: 'Avatar updated successfully.',
+          );
+        } else {
+          state = state.copyWith(isSaving: false);
+        }
+      case Failure<void>():
+        state = state.copyWith(
+          isSaving: false,
+          // Leave local preview so user still sees their pick
           error: result.error.friendlyMessage,
         );
     }
@@ -84,29 +119,8 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   }
 
   Future<void> uploadAvatar(String filePath) async {
-    state = state.copyWith(
-      isSaving: true,
-      clearError: true,
-      clearSuccess: true,
-    );
-    final result = await _repository.uploadAvatar(filePath);
-    switch (result) {
-      case Success<void>():
-        state = state.copyWith(
-          isSaving: false,
-          successMessage: 'Avatar uploaded successfully.',
-        );
-        // Reload account to get new avatar URL
-        final accountResult = await _repository.getAccount();
-        if (accountResult is Success<ProfileAccount>) {
-          state = state.copyWith(account: accountResult.value);
-        }
-      case Failure<void>():
-        state = state.copyWith(
-          isSaving: false,
-          error: result.error.friendlyMessage,
-        );
-    }
+    // Legacy: use previewAndUploadAvatar for UI, this keeps the repo contract
+    await previewAndUploadAvatar(filePath);
   }
 
   Future<void> deleteAvatar() async {

@@ -1,4 +1,3 @@
-// import 'package:file_picker/file_picker.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -35,11 +34,12 @@ const List<String> _kTimezones = [
 Future<void> showEditProfileDialog(
   BuildContext context,
   ProfileAccount account,
-  ValueChanged<ProfileAccount> onSave,
+  void Function(ProfileAccount updated, String? localAvatarPath) onSave,
 ) async {
   await showDialog<void>(
     context: context,
-    builder: (context) => _EditProfileDialog(account: account, onSave: onSave),
+    builder: (context) =>
+        _EditProfileDialog(account: account, onSave: onSave),
   );
 }
 
@@ -47,7 +47,7 @@ class _EditProfileDialog extends ConsumerStatefulWidget {
   const _EditProfileDialog({required this.account, required this.onSave});
 
   final ProfileAccount account;
-  final ValueChanged<ProfileAccount> onSave;
+  final void Function(ProfileAccount updated, String? localAvatarPath) onSave;
 
   @override
   ConsumerState<_EditProfileDialog> createState() => _EditProfileDialogState();
@@ -98,9 +98,24 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
     super.dispose();
   }
 
+  Future<void> _pickAvatar() async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
+    );
+    if (result != null && result.files.single.path != null) {
+      final path = result.files.single.path!;
+      // Immediately show local preview globally — all widgets watching
+      // userProfileNotifierProvider will redraw with the local file
+      ref.read(userProfileNotifierProvider.notifier).previewAndUploadAvatar(path);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final isSaving =
+        ref.watch(userProfileNotifierProvider.select((s) => s.isSaving));
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -155,9 +170,10 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                               label: 'Full Name',
                               controller: nameCtrl,
                               hint: 'Enter your full name',
-                              validator: (v) => (v == null || v.trim().isEmpty)
-                                  ? 'Name is required'
-                                  : null,
+                              validator: (v) =>
+                                  (v == null || v.trim().isEmpty)
+                                      ? 'Name is required'
+                                      : null,
                             ),
                             const SizedBox(height: 16),
                             AppTextField(
@@ -232,22 +248,25 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                             DropdownButtonFormField<String>(
                               initialValue:
                                   _kTimezones.contains(selectedTimezone)
-                                  ? selectedTimezone
-                                  : _kTimezones.first,
+                                      ? selectedTimezone
+                                      : _kTimezones.first,
                               isExpanded: true,
                               decoration: InputDecoration(
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(6),
-                                  borderSide: BorderSide(color: colors.divider),
+                                  borderSide:
+                                      BorderSide(color: colors.divider),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(6),
-                                  borderSide: BorderSide(color: colors.divider),
+                                  borderSide:
+                                      BorderSide(color: colors.divider),
                                 ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 14,
-                                ),
+                                contentPadding:
+                                    const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 14,
+                                    ),
                               ),
                               items: _kTimezones
                                   .map(
@@ -287,102 +306,97 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                               onSelected: (value) {
                                 setState(() => selectedCountry = value);
                               },
-                              fieldViewBuilder:
-                                  (
-                                    context,
-                                    controller,
-                                    focusNode,
-                                    onFieldSubmitted,
-                                  ) {
-                                    return TextFormField(
-                                      controller: controller,
-                                      focusNode: focusNode,
-                                      decoration: InputDecoration(
-                                        hintText: 'Search or select a country',
-                                        hintStyle: context.textTheme.bodySmall
-                                            ?.copyWith(color: colors.textHint),
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                          borderSide: BorderSide(
-                                            color: colors.divider,
-                                          ),
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                          borderSide: BorderSide(
-                                            color: colors.divider,
-                                          ),
-                                        ),
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                              vertical: 14,
-                                            ),
-                                        suffixIcon: Icon(
-                                          Icons.keyboard_arrow_down,
-                                          color: colors.textHint,
-                                        ),
+                              fieldViewBuilder: (
+                                context,
+                                controller,
+                                focusNode,
+                                onFieldSubmitted,
+                              ) {
+                                return TextFormField(
+                                  controller: controller,
+                                  focusNode: focusNode,
+                                  decoration: InputDecoration(
+                                    hintText: 'Search or select a country',
+                                    hintStyle: context.textTheme.bodySmall
+                                        ?.copyWith(color: colors.textHint),
+                                    border: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(6),
+                                      borderSide: BorderSide(
+                                        color: colors.divider,
                                       ),
-                                      style: context.textTheme.bodySmall,
-                                      onFieldSubmitted: (_) =>
-                                          onFieldSubmitted(),
-                                    );
-                                  },
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(6),
+                                      borderSide: BorderSide(
+                                        color: colors.divider,
+                                      ),
+                                    ),
+                                    contentPadding:
+                                        const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 14,
+                                        ),
+                                    suffixIcon: Icon(
+                                      Icons.keyboard_arrow_down,
+                                      color: colors.textHint,
+                                    ),
+                                  ),
+                                  style: context.textTheme.bodySmall,
+                                  onFieldSubmitted: (_) =>
+                                      onFieldSubmitted(),
+                                );
+                              },
                               optionsViewBuilder:
                                   (context, onSelected, options) {
-                                    return Align(
-                                      alignment: Alignment.topLeft,
-                                      child: Material(
-                                        elevation: 4,
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: Container(
-                                          width: 360,
-                                          constraints: const BoxConstraints(
-                                            maxHeight: 240,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: colors.background,
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                            border: Border.all(
-                                              color: colors.divider,
-                                            ),
-                                          ),
-                                          child: ListView.builder(
-                                            padding: EdgeInsets.zero,
-                                            shrinkWrap: true,
-                                            itemCount: options.length,
-                                            itemBuilder: (context, index) {
-                                              final option = options.elementAt(
-                                                index,
-                                              );
-                                              return InkWell(
-                                                onTap: () => onSelected(option),
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 10,
-                                                      ),
-                                                  child: Text(
-                                                    option,
-                                                    style: context
-                                                        .textTheme
-                                                        .bodySmall,
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          ),
+                                return Align(
+                                  alignment: Alignment.topLeft,
+                                  child: Material(
+                                    elevation: 4,
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Container(
+                                      width: 360,
+                                      constraints: const BoxConstraints(
+                                        maxHeight: 240,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: colors.background,
+                                        borderRadius:
+                                            BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: colors.divider,
                                         ),
                                       ),
-                                    );
-                                  },
+                                      child: ListView.builder(
+                                        padding: EdgeInsets.zero,
+                                        shrinkWrap: true,
+                                        itemCount: options.length,
+                                        itemBuilder: (context, index) {
+                                          final option =
+                                              options.elementAt(index);
+                                          return InkWell(
+                                            onTap: () =>
+                                                onSelected(option),
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 10,
+                                                  ),
+                                              child: Text(
+                                                option,
+                                                style: context
+                                                    .textTheme.bodySmall,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                             const SizedBox(height: 16),
                           ],
@@ -404,53 +418,30 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            Center(
-                              child: Container(
-                                width: 160,
-                                height: 160,
-                                decoration: BoxDecoration(
-                                  color: colors.accent.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                clipBehavior: Clip.antiAlias,
-                                child:
-                                    (widget.account.avatarUrl != null &&
-                                        widget.account.avatarUrl!.isNotEmpty)
-                                    ? Image.network(
-                                        widget.account.avatarUrl!,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (
-                                              context,
-                                              error,
-                                              stackTrace,
-                                            ) => Image.asset(
-                                              'assets/pngs/default_avatar.png',
-                                              fit: BoxFit.cover,
-                                            ),
-                                      )
-                                    : Image.asset(
-                                        'assets/pngs/default_avatar.png',
-                                        fit: BoxFit.cover,
-                                      ),
+                            // UserAvatar reacts immediately to the local file
+                            // preview that previewAndUploadAvatar() sets
+                            const Center(
+                              child: UserAvatar(
+                                size: 160,
+                                borderRadius: 8,
                               ),
                             ),
                             const SizedBox(height: 12),
+                            if (isSaving)
+                              const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
+                                  ),
+                                ),
+                              ),
                             Center(
                               child: TextButton.icon(
-                                onPressed: () async {
-                                  final result = await FilePicker.pickFiles(type: FileType.image);
-                                  if (result != null &&
-                                      result.files.single.path != null) {
-                                    ref
-                                        .read(
-                                          userProfileNotifierProvider.notifier,
-                                        )
-                                        .uploadAvatar(
-                                          result.files.single.path!,
-                                        );
-                                  }
-                                },
+                                onPressed: isSaving ? null : _pickAvatar,
                                 icon: Icon(
                                   Icons.upload_outlined,
                                   size: 16,
@@ -458,7 +449,8 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                                 ),
                                 label: Text(
                                   'Upload photo',
-                                  style: context.textTheme.bodySmall?.copyWith(
+                                  style:
+                                      context.textTheme.bodySmall?.copyWith(
                                     color: colors.primary,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -467,16 +459,20 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                             ),
                             Center(
                               child: TextButton(
-                                onPressed: () {
-                                  ref
-                                      .read(
-                                        userProfileNotifierProvider.notifier,
-                                      )
-                                      .deleteAvatar();
-                                },
+                                onPressed: isSaving
+                                    ? null
+                                    : () {
+                                        ref
+                                            .read(
+                                              userProfileNotifierProvider
+                                                  .notifier,
+                                            )
+                                            .deleteAvatar();
+                                      },
                                 child: Text(
                                   'Remove photo',
-                                  style: context.textTheme.bodySmall?.copyWith(
+                                  style:
+                                      context.textTheme.bodySmall?.copyWith(
                                     color: colors.error,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -495,7 +491,8 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
             // Footer
             Divider(height: 0, color: colors.divider),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -511,24 +508,29 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                     label: 'Save Changes',
                     expand: false,
                     height: 40,
-                    onPressed: () {
-                      if (formKey.currentState?.validate() ?? false) {
-                        widget.onSave(
-                          widget.account.copyWith(
-                            name: nameCtrl.text.trim(),
-                            displayName: displayNameCtrl.text.trim(),
-                            username: usernameCtrl.text.trim(),
-                            email: emailCtrl.text.trim(),
-                            phoneNumber: phoneCtrl.text.trim(),
-                            title: titleCtrl.text.trim(),
-                            namePronunciation: pronunciationCtrl.text.trim(),
-                            timezone: selectedTimezone,
-                            country: selectedCountry,
-                          ),
-                        );
-                        Navigator.pop(context);
-                      }
-                    },
+                    loading: isSaving,
+                    onPressed: isSaving
+                        ? null
+                        : () {
+                            if (formKey.currentState?.validate() ?? false) {
+                              widget.onSave(
+                                widget.account.copyWith(
+                                  name: nameCtrl.text.trim(),
+                                  displayName: displayNameCtrl.text.trim(),
+                                  username: usernameCtrl.text.trim(),
+                                  email: emailCtrl.text.trim(),
+                                  phoneNumber: phoneCtrl.text.trim(),
+                                  title: titleCtrl.text.trim(),
+                                  namePronunciation:
+                                      pronunciationCtrl.text.trim(),
+                                  timezone: selectedTimezone,
+                                  country: selectedCountry,
+                                ),
+                                null, // avatar already uploaded separately
+                              );
+                              Navigator.pop(context);
+                            }
+                          },
                   ),
                 ],
               ),

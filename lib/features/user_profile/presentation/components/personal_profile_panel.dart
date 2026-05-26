@@ -72,17 +72,15 @@ class PersonalProfilePanel extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Avatar
+                  // Avatar — reactive to local preview + server URL
                   Container(
                     width: 160,
                     height: 160,
                     decoration: BoxDecoration(
-                      color: colors.accent.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Center(
-                      child: Icon(Icons.person, size: 80, color: colors.accent),
-                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: const UserAvatar(size: 160, borderRadius: 12),
                   ),
                   const SizedBox(height: 16),
 
@@ -243,7 +241,7 @@ class PersonalProfilePanel extends ConsumerWidget {
     WidgetRef ref,
     ProfileAccount account,
   ) {
-    showEditProfileDialog(context, account, (updated) {
+    showEditProfileDialog(context, account, (updated, _) {
       ref.read(userProfileNotifierProvider.notifier).updateAccount(updated);
     });
   }
