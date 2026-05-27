@@ -10,7 +10,7 @@ class Channel {
   final int membersCount;
   final String? topic;
 
-  Channel({
+  const Channel({
     required this.id,
     required this.name,
     required this.description,

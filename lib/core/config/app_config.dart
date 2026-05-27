@@ -15,18 +15,24 @@ class AppConfig {
   /// `.env.example`, bundled as assets).
   ///
   /// Precedence: `--dart-define` wins, then dotenv keys from those files, then
-  /// defaults. See [String.fromEnvironment](https://api.flutter.dev/flutter/dart-ui/String/String.fromEnvironment.html).
   factory AppConfig.fromEnvironment() {
+    const defineBaseUrl = String.fromEnvironment('API_BASE_URL');
     const defineUsesMock = String.fromEnvironment('USE_MOCK_DATA');
     const defineClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
     const defineClientSecret = String.fromEnvironment('GOOGLE_CLIENT_SECRET');
 
+    final envBaseUrl = dotenv.maybeGet('API_BASE_URL')?.trim();
     final envUsesMock = dotenv.maybeGet('USE_MOCK_DATA')?.trim();
     final envClientId = dotenv.maybeGet('GOOGLE_CLIENT_ID')?.trim();
     final envClientSecret = dotenv.maybeGet('GOOGLE_CLIENT_SECRET')?.trim();
 
-    // Force the Zedu URL regardless of .env to bypass any local misconfiguration
-    String apiBaseUrl = 'https://api.staging.zedu.chat/api/v1/';
+    // Default to the staging Zedu URL where user accounts and Google OAuth credentials are registered.
+    // Allow overrides from --dart-define or .env if they are configured and not the default placeholder.
+    String apiBaseUrl = defineBaseUrl.isNotEmpty
+        ? defineBaseUrl
+        : (envBaseUrl != null && envBaseUrl.isNotEmpty && envBaseUrl != 'https://example.com/api')
+            ? envBaseUrl
+            : 'https://api.staging.zedu.chat/api/v1/';
 
     apiBaseUrl = apiBaseUrl.replaceAll('"', '').replaceAll("'", "");
 

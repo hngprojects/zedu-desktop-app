@@ -8,9 +8,13 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
 
   @override
   UserProfileState build() {
+    final authState = ref.watch(authNotifierProvider);
     _repository = ref.read(userProfileRepositoryProvider);
-    load();
-    return const UserProfileState(isLoading: true);
+    if (authState.status == AuthStatus.authenticated) {
+      load();
+      return const UserProfileState(isLoading: true);
+    }
+    return const UserProfileState(isLoading: false);
   }
 
   void selectSection(UserProfileSection section) {
@@ -183,6 +187,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           isSaving: false,
           successMessage: 'Organization created successfully.',
         );
+        final userId = ref.read(authNotifierProvider).user?.id;
         ref
             .read(workspaceProvider.notifier)
             .addWorkspace(
@@ -192,6 +197,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
                 avatar: '',
                 unreadCount: 0,
                 membersCount: 1,
+                ownerId: userId,
               ),
             );
       case Failure<OrganizationProfile>():
@@ -509,5 +515,40 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       Success<T>() => result.value,
       Failure<T>() => null,
     };
+  }
+
+  Future<void> acceptInvitation(String token) async {
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
+    final result = await _repository.acceptInvitation(token);
+    switch (result) {
+      case Success<void>():
+        await ref.read(workspaceProvider.notifier).fetchWorkspaces();
+        if (locator<AppConfig>().usesMockData) {
+          ref
+              .read(workspaceProvider.notifier)
+              .addWorkspace(
+                Workspace(
+                  id: 'joined-workspace-id-${token.hashCode}',
+                  name: 'Joined Workspace',
+                  avatar: '',
+                  unreadCount: 0,
+                  membersCount: 5,
+                ),
+              );
+        }
+        state = state.copyWith(
+          isSaving: false,
+          successMessage: 'Successfully joined the workspace.',
+        );
+      case Failure<void>():
+        state = state.copyWith(
+          isSaving: false,
+          error: result.error.friendlyMessage,
+        );
+    }
   }
 }

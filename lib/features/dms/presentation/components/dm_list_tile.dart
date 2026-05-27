@@ -29,13 +29,22 @@ class DmListTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    final selected = ref.watch(selectedDmProvider);
-    final isSelected = selected?.channelId == conversation.channelId;
+    final activeChat = ref.watch(activeChatProvider);
+    final isSelected = activeChat.id == conversation.channelId;
     final hasUnread = conversation.unreadCount > 0;
 
     return InkWell(
       onTap: () {
-        ref.read(selectedDmProvider.notifier).select(conversation);
+        if (conversation.channelType == 'group_dm') {
+          ref
+              .read(activeChatProvider.notifier)
+              .selectGroupDm(conversation.channelId);
+        } else {
+          ref.read(selectedDmProvider.notifier).select(conversation);
+          ref
+              .read(activeChatProvider.notifier)
+              .selectDirectMessage(conversation.channelId);
+        }
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),

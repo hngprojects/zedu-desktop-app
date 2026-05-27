@@ -1,4 +1,5 @@
 import 'package:zedu/core/core.dart';
+import 'package:zedu/features/features.dart';
 
 enum ActiveChatType {
   channel,
@@ -40,6 +41,7 @@ class ActiveChatState {
 class ActiveChatNotifier extends Notifier<ActiveChatState> {
   @override
   ActiveChatState build() {
+    ref.watch(currentOrgIdProvider);
     return ActiveChatState.generalChannel;
   }
 

@@ -83,9 +83,14 @@ class DmRepository {
   }
 
   Map<String, dynamic> _mediaPayloadFromFile(XFile file) {
+    final bool isUrl = file.path.startsWith('http://') || file.path.startsWith('https://');
+    final String serverPath = isUrl ? file.path : 'https://example.com/mock-uploads/${file.name}';
     return {
       'name': file.name,
-      'path': file.path,
+      'file_name': file.name,
+      'path': serverPath,
+      'file_link': serverPath,
+      'file_type': file.name.split('.').last,
       if (file.mimeType != null) 'mime_type': file.mimeType,
     };
   }
@@ -105,6 +110,12 @@ class DmRepository {
         ...?(media != null ? {'media': media} : null),
         ...?(mentions != null ? {'mentions': mentions} : null),
       },
+    );
+  }
+
+  Future<void> deleteMessage(String channelId, String messageId) async {
+    await _apiClient.delete<Map<String, dynamic>>(
+      path: '/channels/$channelId/messages/$messageId',
     );
   }
 }

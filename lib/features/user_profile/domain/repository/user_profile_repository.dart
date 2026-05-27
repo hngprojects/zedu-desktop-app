@@ -38,4 +38,5 @@ abstract interface class UserProfileRepository {
   Future<Result<void>> removeMember(String memberId);
   Future<Result<List<RolePermission>>> getRolesAndPermissions();
   Future<Result<BillingInfo>> getBillingInfo();
+  Future<Result<void>> acceptInvitation(String token);
 }

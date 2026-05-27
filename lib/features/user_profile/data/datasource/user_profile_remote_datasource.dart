@@ -36,6 +36,7 @@ abstract interface class UserProfileRemoteDataSource {
   Future<void> removeMember(String memberId);
   Future<List<RolePermissionModel>> getRolesAndPermissions();
   Future<BillingInfoModel> getBillingInfo();
+  Future<void> acceptInvitation(String token);
 }
 
 class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
@@ -427,6 +428,17 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     );
     return BillingInfoModel.fromJson(
       response.data['data'] as Map<String, dynamic>,
+    );
+  }
+
+  @override
+  Future<void> acceptInvitation(String token) async {
+    if (_config.usesMockData) {
+      return;
+    }
+    await _apiBaseService.post<Map<String, dynamic>>(
+      path: '/invite/accept',
+      data: {'token': token},
     );
   }
 }

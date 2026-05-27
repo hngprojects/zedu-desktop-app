@@ -20,8 +20,20 @@ class FakeMagicLinkNotifier extends MagicLinkNotifier {
   }
 }
 
+class FakeAuthNotifier extends AuthNotifier {
+  FakeAuthNotifier({
+    AuthState initial = const AuthState(status: AuthStatus.unauthenticated),
+  }) : _initial = initial;
+
+  final AuthState _initial;
+
+  @override
+  AuthState build() => _initial;
+}
+
 Widget buildMagicLinkRouterUnderTest({
   FakeMagicLinkNotifier? magicLinkNotifier,
+  FakeAuthNotifier? authNotifier,
 }) {
   final router = GoRouter(
     initialLocation: AppRouter.magicLinkRequest,
@@ -42,6 +54,9 @@ Widget buildMagicLinkRouterUnderTest({
     overrides: [
       magicLinkNotifierProvider.overrideWith(
         () => magicLinkNotifier ?? FakeMagicLinkNotifier(),
+      ),
+      authNotifierProvider.overrideWith(
+        () => authNotifier ?? FakeAuthNotifier(),
       ),
     ],
     child: MaterialApp.router(routerConfig: router),

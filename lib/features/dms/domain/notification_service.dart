@@ -40,6 +40,15 @@ class NotificationService {
     if (settings.isDndActive) return;
     if (settings.isMuted(senderId)) return;
 
+    final String content = (message['content'] ?? '').toString();
+    final bool isMuted = settings.isChannelMuted(channelId);
+    final String currentUsername = authState.user?.username ?? '';
+    final String currentFullname = authState.user?.fullname ?? '';
+    final bool isMentioned = content.contains('@$currentUsername') ||
+        (currentFullname.isNotEmpty && content.contains('@$currentFullname'));
+
+    if (isMuted && !isMentioned) return;
+
     if (!forceShow) {
       final isFocused = await windowManager.isFocused();
       final selectedChannel = _ref.read(selectedDmProvider)?.channelId;

@@ -54,6 +54,19 @@ class _LoginViewState extends ConsumerState<LoginView> {
     });
 
     final authState = ref.watch(authNotifierProvider);
+    if (authState.status == AuthStatus.authenticated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          context.go(AppRouter.home);
+        }
+      });
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
@@ -79,7 +92,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
               Image.asset('assets/pngs/zedu_logo.png', width: 83, height: 31),
               Text.rich(
                 TextSpan(
-                  text: 'Already have an account? ',
+                  text: "Don't have an account? ",
                   style: context.textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w400,
                     color: context.colors.textPrimary,
@@ -123,14 +136,14 @@ class _LoginViewState extends ConsumerState<LoginView> {
                 context.gapV(32),
                 SocialAuthButton(
                   icon: 'assets/svgs/google_logo.svg',
-                  label: 'Sign up with Google',
+                  label: 'Login with Google',
                   onPressed: () =>
                       ref.read(authNotifierProvider.notifier).loginWithGoogle(),
                 ),
                 context.gapV(12),
                 SocialAuthButton(
                   icon: 'assets/svgs/apple_logo.svg',
-                  label: 'Sign up with Apple',
+                  label: 'Login with Apple',
                   onPressed: () => AppToastService.show(
                     context,
                     type: AppToastType.info,
@@ -193,8 +206,11 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         label: 'Password',
                         hint: 'Password',
                         textInputAction: TextInputAction.done,
-                        validator: (value) =>
-                            Validators.validatePassword(context, value),
+                        validator: (value) => Validators.validateRequired(
+                          context,
+                          value,
+                          fieldName: 'Password',
+                        ),
                       ),
                       context.gapV(8),
                       Row(
