@@ -132,10 +132,15 @@ class _ChannelDirectoryViewState extends ConsumerState<ChannelDirectoryView> {
                           color: colors.textSecondary,
                         ),
                       ),
-                      onTap: () {
+                      onTap: () async {
+                        final activeChannels = ref.read(channelProvider).channels;
+                        final isMember = activeChannels.any((c) => c.id == channel.id);
+                        if (!isMember) {
+                          await ref.read(channelProvider.notifier).joinChannel(channel.id);
+                        }
                         ref
                             .read(activeChatProvider.notifier)
-                            .selectChannel(channel.name);
+                            .selectChannel(channel.id);
                       },
                     );
                   },

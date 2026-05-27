@@ -36,21 +36,52 @@ class ApiFailure implements Exception {
   final String? path;
   final ApiFailureKind kind;
 
-  String get friendlyMessage => switch (kind) {
-    ApiFailureKind.network =>
-      'No internet connection. Check your network and try again.',
-    ApiFailureKind.timeout => 'The request timed out. Please try again.',
-    ApiFailureKind.unauthorized =>
-      'Your session has expired. Please log in again.',
-    ApiFailureKind.forbidden => 'You don\'t have permission to do that.',
-    ApiFailureKind.notFound => 'The resource was not found.',
-    ApiFailureKind.server =>
-      'Something went wrong on our end. Please try again later.',
-    ApiFailureKind.parsing => 'Parsing error: $message',
-    ApiFailureKind.unknown => 'Unknown error: $message',
-    // 4xx client errors carry a structured server message safe to show (e.g. "Invalid credentials")
-    ApiFailureKind.client => message,
-  };
+  String get friendlyMessage {
+    final messageLower = message.toLowerCase();
+
+    // 1. Network / offline error
+    if (kind == ApiFailureKind.network) {
+      return 'no internet connection check your network and try again';
+    }
+
+    // 2. Duplicate registration email
+    if (statusCode == 409 ||
+        messageLower.contains('already exists') ||
+        messageLower.contains('duplicate') ||
+        messageLower.contains('already registered')) {
+      return 'email address already exists, use another email to sign in';
+    }
+
+    // 3. Unregistered email (404 / resource not found) on auth endpoints
+    if (kind == ApiFailureKind.notFound ||
+        statusCode == 404 ||
+        messageLower.contains('resource not found')) {
+      final isAuthPath =
+          path == null ||
+          path!.contains('auth') ||
+          path!.contains('login') ||
+          path!.contains('password') ||
+          path!.contains('register');
+      if (isAuthPath) {
+        return 'This email address could not be found.';
+      }
+    }
+
+    return switch (kind) {
+      ApiFailureKind.network =>
+        'no internet connection check your network and try again',
+      ApiFailureKind.timeout => 'The request timed out. Please try again.',
+      ApiFailureKind.unauthorized =>
+        'Your session has expired. Please log in again.',
+      ApiFailureKind.forbidden => 'You don\'t have permission to do that.',
+      ApiFailureKind.notFound => 'The resource was not found.',
+      ApiFailureKind.server =>
+        'Something went wrong on our end. Please try again later.',
+      ApiFailureKind.parsing => 'Parsing error: $message',
+      ApiFailureKind.unknown => 'Unknown error: $message',
+      ApiFailureKind.client => message,
+    };
+  }
 
   @override
   String toString() => message;

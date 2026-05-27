@@ -42,4 +42,46 @@ class User {
   final UserStatus status;
 
   String get fullname => '$firstName $lastName';
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'first_name': firstName,
+    'last_name': lastName,
+    'email': email,
+    'phone': phone,
+    'username': username,
+    'is_verified': isVerified,
+    'is_onboarded': isOnboarded,
+    'created_at': createdAt.toIso8601String(),
+    'current_org': currentOrg,
+    'current_organisation_slug': currentOrganisationSlug,
+    'avatar_url': avatarUrl,
+    'default_avatar_url': defaultAvatarUrl,
+    'credit_balance': creditBalance,
+    'subscription_plan_id': subscriptionPlanId,
+    'ai_credits_purchasable': aiCreditsPurchasable,
+    'status': status.toJson(),
+  };
+
+  factory User.fromJson(Map<String, dynamic> json) => User(
+    id: json['id'] as String,
+    firstName: json['first_name'] as String? ?? '',
+    lastName: json['last_name'] as String? ?? '',
+    email: json['email'] as String,
+    phone: json['phone'] as String? ?? '',
+    username: json['username'] as String? ?? '',
+    isVerified: json['is_verified'] as bool? ?? false,
+    isOnboarded: json['is_onboarded'] as bool? ?? false,
+    createdAt: DateTime.parse(json['created_at'] as String),
+    currentOrg: json['current_org'] as String? ?? '',
+    currentOrganisationSlug: json['current_organisation_slug'] as String? ?? '',
+    avatarUrl: json['avatar_url'] as String? ?? '',
+    defaultAvatarUrl: json['default_avatar_url'] as String? ?? '',
+    creditBalance: json['credit_balance'] as int? ?? 0,
+    subscriptionPlanId: json['subscription_plan_id'] as String? ?? 'free',
+    aiCreditsPurchasable: json['ai_credits_purchasable'] as bool? ?? true,
+    status: json['status'] != null
+        ? UserStatus.fromJson(json['status'] as Map<String, dynamic>)
+        : UserStatus.empty,
+  );
 }

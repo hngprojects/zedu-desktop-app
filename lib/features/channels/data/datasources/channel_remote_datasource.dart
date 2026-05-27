@@ -17,6 +17,10 @@ abstract class ChannelRemoteDataSource {
     String? description,
   });
   Future<void> archiveChannel(String channelId, bool archived);
+  Future<void> toggleChannelPrivacy(String channelId, bool isPrivate);
+  Future<void> leaveChannel(String channelId);
+  Future<void> joinChannel(String channelId);
+  Future<void> addChannelMembers(String channelId, List<String> userIds);
 }
 
 class ChannelRemoteDataSourceImpl implements ChannelRemoteDataSource {
@@ -83,6 +87,39 @@ class ChannelRemoteDataSourceImpl implements ChannelRemoteDataSource {
     await apiBaseService.put<Map<String, dynamic>>(
       path: '/channels/$channelId/archive',
       data: {'archived': archived},
+    );
+  }
+
+  @override
+  Future<void> toggleChannelPrivacy(String channelId, bool isPrivate) async {
+    await apiBaseService.put<Map<String, dynamic>>(
+      path: '/channels/$channelId/privacy',
+      data: {'is_private': isPrivate},
+    );
+  }
+
+  @override
+  Future<void> leaveChannel(String channelId) async {
+    await apiBaseService.post<Map<String, dynamic>>(
+      path: '/channels/$channelId/leave',
+    );
+  }
+
+  @override
+  Future<void> joinChannel(String channelId) async {
+    await apiBaseService.post<Map<String, dynamic>>(
+      path: '/channels/$channelId/join',
+    );
+  }
+
+  @override
+  Future<void> addChannelMembers(String channelId, List<String> userIds) async {
+    await apiBaseService.post<Map<String, dynamic>>(
+      path: '/channels/$channelId/members',
+      data: {
+        'userIds': userIds,
+        'user_ids': userIds,
+      },
     );
   }
 }

@@ -13,9 +13,9 @@ class MagicLinkSentView extends StatelessWidget {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(80),
         child: AuthHeaderStrip(
-          promptText: 'Already have an account? ',
-          actionText: 'Sign in',
-          onActionTap: () => context.go(AppRouter.login),
+          promptText: "Don't have an account? ",
+          actionText: 'Sign up',
+          onActionTap: () => context.go(AppRouter.signup),
         ),
       ),
       body: SingleChildScrollView(

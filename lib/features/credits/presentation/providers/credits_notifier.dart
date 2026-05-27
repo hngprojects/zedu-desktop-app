@@ -8,6 +8,7 @@ class CreditsNotifier extends Notifier<CreditsState> {
 
   @override
   CreditsState build() {
+    ref.watch(currentOrgIdProvider);
     _repository = ref.read(creditsRepositoryProvider);
     return const CreditsState();
   }

@@ -13,7 +13,10 @@ final dmListProvider =
 
 class SelectedDmNotifier extends Notifier<DmConversation?> {
   @override
-  DmConversation? build() => null;
+  DmConversation? build() {
+    ref.watch(currentOrgIdProvider);
+    return null;
+  }
 
   void select(DmConversation? conversation) {
     state = conversation;

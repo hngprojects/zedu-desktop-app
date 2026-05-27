@@ -154,15 +154,24 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         return;
       }
 
-      AppLogger.d('POST auth/password-reset — $email', tag: _tag);
+      AppLogger.d('POST /auth/password-reset — $email', tag: _tag);
       await _apiBaseService.post<dynamic>(
         path: '/auth/password-reset',
-        data: {'email': email},
+        data: {
+          'email': email,
+          'client_url': 'https://zedu.chat/reset-password',
+          'redirect_url': 'https://zedu.chat/reset-password',
+          'redirect_uri': 'https://zedu.chat/reset-password',
+        },
+        headers: {
+          'Origin': 'https://zedu.chat',
+          'Referer': 'https://zedu.chat/',
+        },
       );
     } on ApiFailure {
       rethrow;
     } catch (error) {
-      AppLogger.e('Failed auth/password-reset', tag: _tag, error: error);
+      AppLogger.e('Failed /auth/password-reset', tag: _tag, error: error);
       throw ApiFailure.unknown(error);
     }
   }

@@ -115,6 +115,11 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     return _guard(_remote.getBillingInfo);
   }
 
+  @override
+  Future<Result<void>> acceptInvitation(String token) {
+    return _guard(() => _remote.acceptInvitation(token));
+  }
+
   Future<Result<T>> _guard<T>(Future<T> Function() operation) async {
     try {
       return Success(await operation());

@@ -41,6 +41,22 @@ class UserStatus {
   UserStatus cleared() => UserStatus(online: online);
 
   static const empty = UserStatus();
+
+  Map<String, dynamic> toJson() => {
+    'emoji': emoji,
+    'text': text,
+    'expiresAt': expiresAt?.toIso8601String(),
+    'pauseNotifications': pauseNotifications,
+    'online': online,
+  };
+
+  factory UserStatus.fromJson(Map<String, dynamic> json) => UserStatus(
+    emoji: json['emoji'] as String?,
+    text: json['text'] as String?,
+    expiresAt: json['expiresAt'] != null ? DateTime.parse(json['expiresAt'] as String) : null,
+    pauseNotifications: json['pauseNotifications'] as bool? ?? false,
+    online: json['online'] as bool? ?? true,
+  );
 }
 
 /// Duration options for status expiry, matching the Zedu API strings.

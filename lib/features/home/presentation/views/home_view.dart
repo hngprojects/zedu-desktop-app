@@ -133,39 +133,214 @@ class _MainSidebarSwitcher extends ConsumerWidget {
   }
 }
 
+void _showCreateChannelDialog(BuildContext context, WidgetRef ref) {
+  final nameController = TextEditingController();
+  final descController = TextEditingController();
+  bool isPrivate = false;
+
+  showDialog<void>(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Create a Channel'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Channel Name',
+                    hintText: 'e.g. team-marketing',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descController,
+                  decoration: const InputDecoration(
+                    labelText: 'Description (optional)',
+                    hintText: 'What is this channel about?',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Make Private'),
+                    Switch(
+                      value: isPrivate,
+                      onChanged: (val) {
+                        setState(() => isPrivate = val);
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final name = nameController.text.trim();
+                  if (name.isEmpty) {
+                    AppToastService.show(
+                      context,
+                      type: AppToastType.error,
+                      message: 'Channel name cannot be empty',
+                    );
+                    return;
+                  }
+
+                  final channelState = ref.read(channelProvider);
+                  final isDuplicate = channelState.channels.any(
+                    (c) => c.name.toLowerCase() == name.toLowerCase(),
+                  );
+
+                  if (isDuplicate) {
+                    AppToastService.show(
+                      context,
+                      type: AppToastType.error,
+                      message: 'A channel with this name already exists',
+                    );
+                    return;
+                  }
+
+                  final success = await ref
+                      .read(channelProvider.notifier)
+                      .createChannel(
+                        name: name,
+                        description: descController.text.trim(),
+                        isPrivate: isPrivate,
+                      );
+
+                  if (success && context.mounted) {
+                    Navigator.of(context).pop();
+                    AppToastService.show(
+                      context,
+                      type: AppToastType.success,
+                      message: 'Channel #$name created successfully!',
+                    );
+                  } else if (context.mounted) {
+                    AppToastService.show(
+                      context,
+                      type: AppToastType.error,
+                      message: 'Failed to create channel.',
+                    );
+                  }
+                },
+                child: const Text('Create'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
 class _ChatAreaSwitcher extends ConsumerWidget {
   const _ChatAreaSwitcher();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(homeSidebarProvider);
-    final selectedDm = ref.watch(selectedDmProvider);
+    final activeChat = ref.watch(activeChatProvider);
 
-    if (state == HomeSidebarType.dms) {
-      if (selectedDm != null) {
-        return DmChatArea(conversation: selectedDm);
-      } else {
-        return Container(
-          color: context.colors.background,
-          child: Center(
-            child: Text(
-              'Select a conversation to start messaging',
-              style: TextStyle(color: context.colors.textHint, fontSize: 16),
-            ),
+    switch (activeChat.type) {
+      case ActiveChatType.directMessage:
+        final selectedDm = ref.watch(selectedDmProvider);
+        if (selectedDm != null && selectedDm.channelId == activeChat.id) {
+          return DmChatArea(
+            key: ValueKey('dm_${selectedDm.channelId}'),
+            conversation: selectedDm,
+          );
+        }
+        final conversations = ref.watch(dmListProvider).value ?? [];
+        final conv = conversations.firstWhere(
+          (c) => c.channelId == activeChat.id,
+          orElse: () => DmConversation(
+            channelId: activeChat.id ?? '',
+            username: 'Direct Message',
+            participantId: activeChat.id ?? '',
+            previewMessage: '',
+            unreadCount: 0,
           ),
         );
-      }
+        return DmChatArea(
+          key: ValueKey('dm_${conv.channelId}'),
+          conversation: conv,
+        );
+
+      case ActiveChatType.channel:
+        final channelState = ref.watch(channelProvider);
+        final channelId = activeChat.id;
+        final channel = channelState.channels.firstWhere(
+          (c) => c.id == channelId || c.name == channelId,
+          orElse: () => Channel(
+            id: channelId ?? '',
+            name: channelId ?? 'general',
+            description: '',
+            organisationId: '',
+            ownerId: '',
+          ),
+        );
+        final conversation = DmConversation(
+          channelId: channel.id,
+          username: '#${channel.name}',
+          participantId: channel.ownerId,
+          previewMessage: channel.description,
+          unreadCount: channel.unreadCount,
+          channelType: 'channel',
+        );
+        return DmChatArea(
+          key: ValueKey('channel_${conversation.channelId}'),
+          conversation: conversation,
+        );
+
+      case ActiveChatType.groupDm:
+        final groups = ref.watch(groupDmProvider);
+        final group = groups.firstWhere(
+          (g) => g.id == activeChat.id,
+          orElse: () =>
+              GroupDM(id: activeChat.id ?? '', name: 'Group DM', members: []),
+        );
+        final conversation = DmConversation(
+          channelId: group.id,
+          username: group.name,
+          participantId: 'group-dm',
+          previewMessage: group.messages.isEmpty ? '' : group.messages.last,
+          unreadCount: group.unreadCount,
+          channelType: 'group_dm',
+        );
+        return DmChatArea(
+          key: ValueKey('group_${conversation.channelId}'),
+          conversation: conversation,
+        );
+
+      case ActiveChatType.channelDirectory:
+        return const ChannelDirectoryView();
+
+      case ActiveChatType.newGroupChat:
+        return const NewGroupChatView();
     }
-    return const _ChatArea();
   }
 }
 
-class _MainSidebar extends StatelessWidget {
+class _MainSidebar extends ConsumerWidget {
   const _MainSidebar();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
+    final channelState = ref.watch(channelProvider);
+    final channels = channelState.channels;
+    final activeChat = ref.watch(activeChatProvider);
+    final notificationSettings = ref.watch(notificationSettingsProvider);
+    final activeChannels = channels.where((c) => !c.archived).toList();
 
     return Container(
       width: 320,
@@ -174,72 +349,152 @@ class _MainSidebar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const WorkspaceSwitcherHeader(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-            child: Row(
-              children: [
-                Icon(Icons.arrow_drop_down, color: colors.onPrimary, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'Channels',
-                  style: TextStyle(
-                    color: colors.onPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const _ChannelItem(label: 'general'),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: colors.onPrimary.withValues(alpha: 0.24),
-                ),
-                borderRadius: BorderRadius.circular(6),
-                color: colors.onPrimary.withValues(alpha: 0.05),
-              ),
-              child: Row(
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      'View all channels',
-                      style: TextStyle(
-                        color: colors.onPrimary.withValues(alpha: 0.7),
-                        fontSize: 13,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.arrow_drop_down,
+                          color: colors.onPrimary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Channels',
+                          style: TextStyle(
+                            color: colors.onPrimary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (channelState.isLoading)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: CircularProgressIndicator(color: Colors.white),
+                      ),
+                    )
+                  else if (activeChannels.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      child: Text(
+                        'No active channels',
+                        style: TextStyle(
+                          color: colors.onPrimary.withValues(alpha: 0.6),
+                          fontSize: 13,
+                        ),
+                      ),
+                    )
+                  else
+                    ListView.builder(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: activeChannels.length,
+                      itemBuilder: (context, index) {
+                        final channel = activeChannels[index];
+                        final isSelected =
+                            activeChat.type == ActiveChatType.channel &&
+                            (activeChat.id == channel.id ||
+                                activeChat.id == channel.name);
+                        final isMuted = notificationSettings.isChannelMuted(channel.id);
+                        return _ChannelItem(
+                          key: ValueKey(channel.id),
+                          label: channel.name,
+                          isPrivate: channel.isPrivate,
+                          isSelected: isSelected,
+                          isMuted: isMuted,
+                          onTap: () {
+                            ref
+                                .read(activeChatProvider.notifier)
+                                .selectChannel(channel.id);
+                          },
+                        );
+                      },
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: InkWell(
+                      onTap: () {
+                        ref
+                            .read(activeChatProvider.notifier)
+                            .selectChannelDirectory();
+                      },
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: colors.onPrimary.withValues(alpha: 0.24),
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                          color: colors.onPrimary.withValues(alpha: 0.05),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'View all channels',
+                                style: TextStyle(
+                                  color: colors.onPrimary.withValues(
+                                    alpha: 0.7,
+                                  ),
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: colors.onPrimary.withValues(alpha: 0.7),
+                              size: 16,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                  Icon(
-                    Icons.chevron_right,
-                    color: colors.onPrimary.withValues(alpha: 0.7),
-                    size: 16,
+                  const _AddChannelButton(),
+                  const SizedBox(height: 10),
+                  const _GroupDmsSection(),
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.arrow_right,
+                          color: colors.onPrimary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'People',
+                          style: TextStyle(
+                            color: colors.onPrimary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  const SizedBox(height: 20),
                 ],
               ),
-            ),
-          ),
-          const _AddChannelButton(),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Icon(Icons.arrow_right, color: colors.onPrimary, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'People',
-                  style: TextStyle(
-                    color: colors.onPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-              ],
             ),
           ),
         ],
@@ -250,292 +505,245 @@ class _MainSidebar extends StatelessWidget {
 
 class _ChannelItem extends StatelessWidget {
   final String label;
+  final bool isPrivate;
+  final bool isSelected;
+  final bool isMuted;
+  final VoidCallback onTap;
 
-  const _ChannelItem({required this.label});
+  const _ChannelItem({
+    super.key,
+    required this.label,
+    this.isPrivate = false,
+    this.isSelected = false,
+    this.isMuted = false,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final textOpacity = isMuted ? 0.4 : (isSelected ? 0.95 : 0.8);
+    final iconOpacity = isMuted ? 0.4 : (isSelected ? 0.95 : 0.6);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Row(
-        children: [
-          Text(
-            '#',
-            style: TextStyle(
-              color: colors.onPrimary.withValues(alpha: 0.54),
-              fontSize: 18,
-            ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? colors.onPrimary.withValues(alpha: 0.12)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
           ),
-          const SizedBox(width: 12),
-          Text(label, style: TextStyle(color: colors.onPrimary, fontSize: 15)),
-        ],
+          child: Row(
+            children: [
+              Icon(
+                isPrivate ? Icons.lock_outline : Icons.tag,
+                color: colors.onPrimary.withValues(
+                  alpha: iconOpacity,
+                ),
+                size: 16,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: colors.onPrimary.withValues(
+                      alpha: textOpacity,
+                    ),
+                    fontSize: 14,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (isMuted) ...[
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.volume_off_rounded,
+                  color: colors.onPrimary.withValues(alpha: 0.4),
+                  size: 14,
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-class _AddChannelButton extends StatelessWidget {
+class _AddChannelButton extends ConsumerWidget {
   const _AddChannelButton();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: colors.onPrimary.withValues(alpha: 0.38),
+      child: InkWell(
+        onTap: () => _showCreateChannelDialog(context, ref),
+        borderRadius: BorderRadius.circular(6),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: colors.onPrimary.withValues(alpha: 0.38),
+                  ),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Icon(Icons.add, color: colors.onPrimary, size: 14),
               ),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Icon(Icons.add, color: colors.onPrimary, size: 14),
+              const SizedBox(width: 12),
+              Text(
+                'Add channel',
+                style: TextStyle(color: colors.onPrimary, fontSize: 14),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Text(
-            'Add channel',
-            style: TextStyle(color: colors.onPrimary, fontSize: 14),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _ChatArea extends StatelessWidget {
-  const _ChatArea();
+class _GroupDmsSection extends ConsumerWidget {
+  const _GroupDmsSection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final groupDms = ref.watch(groupDmProvider);
+    final activeChat = ref.watch(activeChatProvider);
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildChatHeader(context),
-        Expanded(child: _buildWelcomeScreen(context)),
-        _buildMessageInput(context),
-      ],
-    );
-  }
-
-  Widget _buildChatHeader(BuildContext context) {
-    final colors = context.colors;
-
-    return Container(
-      height: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: colors.divider)),
-      ),
-      child: Row(
-        children: [
-          Text(
-            '# general',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: colors.textPrimary,
-            ),
-          ),
-          const Spacer(),
-          _HeaderAction(icon: Icons.headphones_outlined, label: 'Start Buzz'),
-          const SizedBox(width: 12),
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: colors.accent,
-            child: Icon(Icons.person, size: 18, color: colors.onPrimary),
-          ),
-          const SizedBox(width: 8),
-          Icon(Icons.more_vert, color: colors.textHint),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWelcomeScreen(BuildContext context) {
-    final colors = context.colors;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 80),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.celebration, size: 60, color: colors.primary),
-          const SizedBox(height: 24),
-          Text(
-            'Welcome to #general',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: colors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Share all information relating to general here. All team members await you! 😉',
-            style: TextStyle(fontSize: 16, color: colors.textPrimary),
-          ),
-          const SizedBox(height: 32),
-          const _InviteCard(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessageInput(BuildContext context) {
-    final colors = context.colors;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(color: colors.divider),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Icon(Icons.format_bold, size: 20, color: colors.textHint),
-                const SizedBox(width: 16),
-                Icon(Icons.format_italic, size: 20, color: colors.textHint),
-                const SizedBox(width: 16),
-                Icon(Icons.link, size: 20, color: colors.textHint),
-                const SizedBox(width: 16),
-                Icon(Icons.list, size: 20, color: colors.textHint),
-                const SizedBox(width: 16),
-                Icon(Icons.code, size: 20, color: colors.textHint),
-              ],
-            ),
-            Divider(height: 24, color: colors.divider),
-            const TextField(
-              decoration: InputDecoration(
-                hintText: 'Message Ruby - Social Media Handler',
-                border: InputBorder.none,
-                isDense: true,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Row(
+            children: [
+              Icon(
+                Icons.arrow_drop_down,
+                color: colors.onPrimary,
+                size: 20,
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Icons.add, color: colors.textHint.withValues(alpha: 0.75)),
-                const SizedBox(width: 12),
-                Icon(
-                  Icons.emoji_emotions_outlined,
-                  color: colors.textHint.withValues(alpha: 0.75),
-                ),
-                const SizedBox(width: 12),
-                Icon(
-                  Icons.alternate_email,
-                  color: colors.textHint.withValues(alpha: 0.75),
-                ),
-                const SizedBox(width: 12),
-                Icon(
-                  Icons.videocam_outlined,
-                  color: colors.textHint.withValues(alpha: 0.75),
-                ),
-                const SizedBox(width: 12),
-                Icon(
-                  Icons.mic_none_outlined,
-                  color: colors.textHint.withValues(alpha: 0.75),
-                ),
-                const Spacer(),
-                Icon(
-                  Icons.send_rounded,
-                  color: colors.textHint.withValues(alpha: 0.5),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _HeaderAction extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _HeaderAction({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        border: Border.all(color: colors.divider),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: colors.textPrimary),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(color: colors.textPrimary, fontSize: 13),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InviteCard extends StatelessWidget {
-  const _InviteCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: colors.divider),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: colors.primaryBg,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(Icons.person_add_outlined, color: colors.primary),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Invite teammates',
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Group DMs',
                   style: TextStyle(
-                    color: colors.textPrimary,
+                    color: colors.onPrimary,
                     fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                    fontSize: 15,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Add more team members to collaborate',
-                  style: TextStyle(color: colors.textHint, fontSize: 12),
+              ),
+              InkWell(
+                onTap: () {
+                  ref.read(activeChatProvider.notifier).selectNewGroupChat();
+                },
+                borderRadius: BorderRadius.circular(4),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: colors.onPrimary.withValues(alpha: 0.38),
+                    ),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Icon(
+                    Icons.add,
+                    color: colors.onPrimary,
+                    size: 14,
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          Icon(Icons.chevron_right, color: colors.textHint),
-        ],
-      ),
+        ),
+        if (groupDms.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Text(
+              'No group DMs',
+              style: TextStyle(
+                color: colors.onPrimary.withValues(alpha: 0.5),
+                fontSize: 13,
+              ),
+            ),
+          )
+        else
+          ListView.builder(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: groupDms.length,
+            itemBuilder: (context, index) {
+              final group = groupDms[index];
+              final isSelected = activeChat.type == ActiveChatType.groupDm &&
+                  activeChat.id == group.id;
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    ref.read(activeChatProvider.notifier).selectGroupDm(group.id);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? colors.onPrimary.withValues(alpha: 0.12)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.chat_bubble_outline_rounded,
+                          color: colors.onPrimary.withValues(
+                            alpha: isSelected ? 0.95 : 0.6,
+                          ),
+                          size: 16,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            group.name,
+                            style: TextStyle(
+                              color: colors.onPrimary.withValues(
+                                alpha: isSelected ? 0.95 : 0.8,
+                              ),
+                              fontSize: 14,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+      ],
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:zedu/core/core.dart';
 
 class AttachmentPreviewBar extends StatelessWidget {
@@ -23,6 +24,13 @@ class AttachmentPreviewBar extends StatelessWidget {
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final file = files[index];
+          final lowerName = file.name.toLowerCase();
+          final isImage = lowerName.endsWith('.png') ||
+              lowerName.endsWith('.jpg') ||
+              lowerName.endsWith('.jpeg') ||
+              lowerName.endsWith('.gif') ||
+              lowerName.endsWith('.webp');
+
           return Stack(
             clipBehavior: Clip.none,
             children: [
@@ -34,30 +42,41 @@ class AttachmentPreviewBar extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: colors.divider),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.insert_drive_file_rounded,
-                      color: colors.primary,
-                      size: 24,
-                    ),
-                    const SizedBox(height: 4),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Text(
-                        file.name,
-                        style: TextStyle(
-                          color: colors.textPrimary,
-                          fontSize: 9,
+                child: isImage
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          File(file.path),
+                          fit: BoxFit.cover,
+                          width: 72,
+                          height: 72,
+                          errorBuilder: (context, err, stack) => const Icon(Icons.image),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
+                      )
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.insert_drive_file_rounded,
+                            color: colors.primary,
+                            size: 24,
+                          ),
+                          const SizedBox(height: 4),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Text(
+                              file.name,
+                              style: TextStyle(
+                                color: colors.textPrimary,
+                                fontSize: 9,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
               ),
               Positioned(
                 top: -6,
