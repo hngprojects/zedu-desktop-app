@@ -40,6 +40,7 @@ class AuthNotifier extends Notifier<AuthState> {
       case Failure<User>():
         AppLogger.w('Session restore failed — clearing token', tag: _tag);
         await _storage.deleteAccessToken();
+        await _storage.deleteNotificationToken();
         state = const AuthState(status: AuthStatus.unauthenticated);
     }
   }
@@ -53,10 +54,13 @@ class AuthNotifier extends Notifier<AuthState> {
       case Success<AuthSession>():
         AppLogger.i('Login succeeded — token persisted', tag: _tag);
         await _storage.saveAccessToken(result.value.accessToken);
+        await _storage.saveNotificationToken(result.value.notificationToken);
         state = AuthState(
           status: AuthStatus.authenticated,
           user: result.value.user,
         );
+        ref.invalidate(workspaceProvider);
+        await _verifyPendingInvite();
       case Failure<AuthSession>():
         AppLogger.w('Login rejected — ${result.error.message}', tag: _tag);
         state = state.copyWith(
@@ -78,10 +82,13 @@ class AuthNotifier extends Notifier<AuthState> {
           tag: _tag,
         );
         await _storage.saveAccessToken(result.value.accessToken);
+        await _storage.saveNotificationToken(result.value.notificationToken);
         state = AuthState(
           status: AuthStatus.authenticated,
           user: result.value.user,
         );
+        ref.invalidate(workspaceProvider);
+        await _verifyPendingInvite();
       case Failure<AuthSession>():
         AppLogger.w(
           'Magic link verification failed — ${result.error.message}',
@@ -97,6 +104,7 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> logout() async {
     AppLogger.i('Logout — clearing session', tag: _tag);
     await _storage.deleteAccessToken();
+    await _storage.deleteNotificationToken();
     state = const AuthState(status: AuthStatus.unauthenticated);
     ref.invalidate(userProfileNotifierProvider);
     ref.invalidate(workspaceProvider);
@@ -118,14 +126,72 @@ class AuthNotifier extends Notifier<AuthState> {
     switch (result) {
       case Success<void>():
         AppLogger.i('Sign up succeeded', tag: _tag);
-        // Usually we login automatically after sign up or wait for verification
         await login(email: email, password: password);
+        // Auto-create organization for new users
+        await _autoCreateOrganizationForNewUser();
       case Failure<void>():
         AppLogger.w('Sign up failed — ${result.error.message}', tag: _tag);
         state = state.copyWith(
           isLoading: false,
           error: result.error.friendlyMessage,
         );
+    }
+  }
+
+  /// Automatically creates an organization for new users if they don't have one.
+  Future<void> _autoCreateOrganizationForNewUser() async {
+    try {
+      final user = state.user;
+      if (user == null) return;
+
+      // Try to get current organization
+      final orgResult = await ref
+          .read(userProfileRepositoryProvider)
+          .getOrganization();
+
+      // If user already has org, no need to create
+      if (orgResult is Success<OrganizationProfile>) {
+        AppLogger.i('User already has organization', tag: _tag);
+        return;
+      }
+
+      // Create default organization for new user
+      AppLogger.d('Creating default organization for new user', tag: _tag);
+      final createResult = await ref
+          .read(userProfileRepositoryProvider)
+          .createOrganization(
+            name: '${user.username}\'s Workspace',
+            type: 'Business',
+            country: 'United States',
+          );
+
+      switch (createResult) {
+        case Success<OrganizationProfile>():
+          AppLogger.i('Default organization created successfully', tag: _tag);
+          // Add workspace to the workspace provider
+          ref
+              .read(workspaceProvider.notifier)
+              .addWorkspace(
+                Workspace(
+                  id: createResult.value.id,
+                  name: createResult.value.name,
+                  avatar: '',
+                  unreadCount: 0,
+                  membersCount: 1,
+                ),
+              );
+          // Connect to centrifugo for real-time updates
+          ref
+              .read(realtimeServiceProvider)
+              .subscribeToOrg(createResult.value.id);
+        case Failure<OrganizationProfile>():
+          AppLogger.w(
+            'Failed to create default organization: ${createResult.error.message}',
+            tag: _tag,
+          );
+      }
+    } catch (e) {
+      AppLogger.e('Error in auto-creating organization', tag: _tag, error: e);
     }
   }
 
@@ -215,6 +281,23 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<String?> get accessToken => _storage.getAccessToken();
+
+  Future<void> _verifyPendingInvite() async {
+    final token = await _storage.readData('pending_invitation_token');
+    if (token == null || token.isEmpty) return;
+
+    try {
+      final api = locator<ApiBaseService>();
+      await api.post<Map<String, dynamic>>(
+        path: '/invite/general/verify',
+        data: {'token': token},
+      );
+      await _storage.writeData('pending_invitation_token', '');
+      ref.invalidate(workspaceProvider);
+    } catch (error) {
+      AppLogger.w('Pending invite verification failed: $error', tag: _tag);
+    }
+  }
 
   Future<void> refreshCurrentUser() async {
     final result = await _repository.getCurrentUser();
@@ -311,10 +394,13 @@ class AuthNotifier extends Notifier<AuthState> {
         case Success<AuthSession>():
           AppLogger.i('Google Sign-In succeeded — token persisted', tag: _tag);
           await _storage.saveAccessToken(result.value.accessToken);
+          await _storage.saveNotificationToken(result.value.notificationToken);
           state = AuthState(
             status: AuthStatus.authenticated,
             user: result.value.user,
           );
+          ref.invalidate(workspaceProvider);
+          await _verifyPendingInvite();
         case Failure<AuthSession>():
           AppLogger.w(
             'Google Sign-In rejected — ${result.error.message}',

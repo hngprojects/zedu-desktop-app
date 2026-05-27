@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+// import 'package:flutter/material.dart';
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/features.dart';
+// import 'package:zedu/features/features.dart';
 
 Future<void> showDeleteAccountDialog(
   BuildContext context,
@@ -9,18 +9,13 @@ Future<void> showDeleteAccountDialog(
 ) async {
   await showDialog<void>(
     context: context,
-    builder: (context) => _DeleteAccountDialog(
-      email: email,
-      onConfirm: onConfirm,
-    ),
+    builder: (context) =>
+        _DeleteAccountDialog(email: email, onConfirm: onConfirm),
   );
 }
 
 class _DeleteAccountDialog extends StatefulWidget {
-  const _DeleteAccountDialog({
-    required this.email,
-    required this.onConfirm,
-  });
+  const _DeleteAccountDialog({required this.email, required this.onConfirm});
 
   final String email;
   final Future<void> Function(String password) onConfirm;
@@ -120,7 +115,9 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                     expand: false,
                     height: 40,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6B46C1), // Purple from screenshot
+                      backgroundColor: const Color(
+                        0xFF6B46C1,
+                      ), // Purple from screenshot
                       foregroundColor: Colors.white,
                     ),
                     onPressed: () {
@@ -181,13 +178,17 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                     height: 40,
                     loading: _isLoading,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEF4444), // Red from screenshot
+                      backgroundColor: const Color(
+                        0xFFEF4444,
+                      ), // Red from screenshot
                       foregroundColor: Colors.white,
                     ),
                     onPressed:
-                        (_passwordCtrl.text.isNotEmpty && _consentChecked && !_isLoading)
-                            ? _handleConfirm
-                            : null,
+                        (_passwordCtrl.text.isNotEmpty &&
+                            _consentChecked &&
+                            !_isLoading)
+                        ? _handleConfirm
+                        : null,
                   ),
                 ],
               ),

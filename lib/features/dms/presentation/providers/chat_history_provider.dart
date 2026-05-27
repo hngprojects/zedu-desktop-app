@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 // import 'package:zedu/core/network/file_repository.dart';
@@ -70,78 +72,97 @@ class ChatHistoryNotifier extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
     }
-    // Start polling for new messages now that the initial load is done.
-    _startPolling();
+    _subscribeToRealtimeMessages();
   }
 
-  // ── Realtime notification polling ────────────────────────────────────────────
-
-  /// Set of message IDs we have already seen. Used to detect truly-new messages
-  /// so we don't re-fire a notification on every poll cycle.
   final Set<String> _seenIds = {};
+  StreamSubscription<Map<String, dynamic>>? _realtimeSubscription;
 
-  /// Keep track of the polling timer so we can cancel it on dispose.
-  // ignore: cancel_subscriptions
-  dynamic _pollingTimer;
-
-  void _startPolling() {
-    // Record all initially-loaded IDs as "already seen" so we only notify
-    // about messages that arrive AFTER the initial load.
+  /// Subscribe to real-time messages via Centrifugo instead of polling.
+  void _subscribeToRealtimeMessages() {
+    // Mark all existing messages as seen
     for (final m in messages) {
       final id = m['id']?.toString();
       if (id != null) _seenIds.add(id);
     }
 
-    // Poll every 10 seconds for new messages.
-    _pollingTimer = Stream<int>.periodic(const Duration(seconds: 10)).listen((
-      _,
-    ) {
-      _pollForNewMessages();
-    });
+    try {
+      final realtimeService = ref.read(realtimeServiceProvider);
+      // Subscribe to DM channel for real-time messages
+      realtimeService.subscribeToDmChannel(channelId);
+      _realtimeSubscription = realtimeService.dmMessageStream.listen((event) {
+        if (event['channelId'] != channelId) return;
+        final rawMessage = event['message'];
+        if (rawMessage is! Map<String, dynamic>) return;
+
+        if (_handleCallEvent(rawMessage)) return;
+
+        final message = _extractRealtimeMessage(rawMessage);
+        final id =
+            message['id']?.toString() ?? message['message_id']?.toString();
+        if (id != null && id.isNotEmpty && !_seenIds.add(id)) return;
+
+        messages = [message, ...messages];
+        notifyListeners();
+
+        final senderName =
+            message['username']?.toString() ??
+            message['sender_name']?.toString() ??
+            'Someone';
+        ref
+            .read(notificationServiceProvider)
+            .handleIncomingMessage(message, channelId, senderName);
+      });
+      AppLogger.i(
+        'Subscribed to real-time DM channel: $channelId',
+        tag: 'ChatHistoryNotifier',
+      );
+    } catch (e) {
+      AppLogger.e(
+        'Failed to subscribe to real-time DM channel',
+        tag: 'ChatHistoryNotifier',
+        error: e,
+      );
+    }
   }
 
-  Future<void> _pollForNewMessages() async {
-    try {
-      final repository = ref.read(dmRepositoryProvider);
-      final fresh = await repository.getMessages(channelId, page: 1);
-
-      bool hadNew = false;
-      for (final msg in fresh) {
-        final id = msg['id']?.toString();
-        if (id == null || _seenIds.contains(id)) continue;
-
-        _seenIds.add(id);
-        hadNew = true;
-
-        // Only notify for messages from other users.
-        if (!isMyMessage(msg)) {
-          final senderName =
-              (msg['sender_name'] ?? msg['username'] ?? 'Someone').toString();
-          ref
-              .read(notificationServiceProvider)
-              .handleIncomingMessage(msg, channelId, senderName);
-        }
-      }
-
-      if (hadNew) {
-        // Prepend only the genuinely new messages at the top.
-        final existingIds = messages.map((m) => m['id']?.toString()).toSet();
-        final newOnly = fresh
-            .where((m) => !existingIds.contains(m['id']?.toString()))
-            .toList();
-        if (newOnly.isNotEmpty) {
-          messages = [...newOnly, ...messages];
-          notifyListeners();
-        }
-      }
-    } catch (_) {
-      // Silent — polling failures should not surface to the UI.
+  Map<String, dynamic> _extractRealtimeMessage(Map<String, dynamic> event) {
+    final payload = event['payload'];
+    if (payload is Map<String, dynamic>) {
+      final message = payload['message'];
+      if (message is Map<String, dynamic>) return message;
+      return payload;
     }
+    final message = event['message'];
+    if (message is Map<String, dynamic>) return message;
+    return event;
+  }
+
+  bool _handleCallEvent(Map<String, dynamic> event) {
+    final eventName = event['event']?.toString();
+    final payload = event['payload'];
+    if (eventName != 'direct_call_initiated' ||
+        payload is! Map<String, dynamic>) {
+      return false;
+    }
+
+    final callerId = payload['caller_id']?.toString() ?? '';
+    if (callerId == _currentUserId) return true;
+
+    ref
+        .read(activeCallProvider)
+        .receiveIncomingCall(
+          buzzId: payload['buzz_id']?.toString() ?? '',
+          remoteUserId: callerId,
+          remoteUserName: payload['caller_name']?.toString() ?? 'Incoming call',
+          channelId: payload['channel_id']?.toString() ?? channelId,
+        );
+    return true;
   }
 
   @override
   void dispose() {
-    (_pollingTimer as dynamic)?.cancel();
+    _realtimeSubscription?.cancel();
     super.dispose();
   }
 

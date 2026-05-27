@@ -16,21 +16,36 @@ class RealtimeService {
 
   centrifuge.Client? _client;
   centrifuge.Subscription? _orgSubscription;
-  final _profileUpdateController = StreamController<Map<String, dynamic>>.broadcast();
+  final Map<String, centrifuge.Subscription?> _dmSubscriptions = {};
 
-  Stream<Map<String, dynamic>> get profileUpdateStream => _profileUpdateController.stream;
+  final _profileUpdateController =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _dmMessageController =
+      StreamController<Map<String, dynamic>>.broadcast();
+
+  Stream<Map<String, dynamic>> get profileUpdateStream =>
+      _profileUpdateController.stream;
+
+  /// Stream of incoming DM messages {channelId, message}
+  Stream<Map<String, dynamic>> get dmMessageStream =>
+      _dmMessageController.stream;
 
   Future<void> connect() async {
     if (_client != null) return; // already connected or connecting
-    
-    final token = await locator<SecureStorageService>().getAccessToken();
-    if (token == null) return;
-    
-    // Adjusting to standard wss url for Centrifugo
+
+    final api = locator<ApiBaseService>();
+    final response = await api.get<Map<String, dynamic>>(
+      path: '/token/connection',
+    );
+    final token = response.data['data'] is Map<String, dynamic>
+        ? (response.data['data'] as Map<String, dynamic>)['token'] as String?
+        : response.data['token'] as String?;
+    if (token == null || token.isEmpty) return;
+
     final url = 'wss://api.zedu.chat/centrifugo/connection/websocket';
-    
+
     _client = centrifuge.createClient(url);
-    _client?.setToken(token); // Set token
+    _client?.setToken(token);
 
     _client?.connected.listen((event) {
       AppLogger.i('Centrifugo connected', tag: 'RealtimeService');
@@ -43,27 +58,160 @@ class RealtimeService {
     await _client?.connect();
   }
 
+  /// Subscribe to a DM channel for real-time message updates.
+  /// Messages are streamed via [dmMessageStream].
+  Future<void> subscribeToDmChannel(String channelId) async {
+    if (_client == null) await connect();
+
+    // Don't re-subscribe if already subscribed
+    if (_dmSubscriptions.containsKey(channelId)) {
+      final existing = _dmSubscriptions[channelId];
+      if (existing != null) {
+        AppLogger.d(
+          'Already subscribed to DM channel: $channelId',
+          tag: 'RealtimeService',
+        );
+        return;
+      }
+    }
+
+    final api = locator<ApiBaseService>();
+    try {
+      // Get subscription token from backend
+      final response = await api.post<Map<String, dynamic>>(
+        path: '/token/subscription',
+        data: {'channel': channelId},
+      );
+
+      final subToken = response.data['data'] is Map<String, dynamic>
+          ? (response.data['data'] as Map<String, dynamic>)['token'] as String?
+          : response.data['token'] as String?;
+      if (subToken == null) {
+        throw Exception('No subscription token received');
+      }
+
+      final sub =
+          _client?.getSubscription(channelId) ??
+          _client?.newSubscription(
+            channelId,
+            centrifuge.SubscriptionConfig(token: subToken),
+          );
+
+      // Listen for incoming messages
+      sub?.publication.listen((event) {
+        try {
+          final message =
+              jsonDecode(utf8.decode(event.data)) as Map<String, dynamic>;
+          AppLogger.i('New DM received on $channelId', tag: 'RealtimeService');
+          // Emit message with channel context
+          _dmMessageController.add({
+            'channelId': channelId,
+            'message': message,
+          });
+        } catch (e) {
+          AppLogger.e(
+            'Error parsing DM message',
+            tag: 'RealtimeService',
+            error: e,
+          );
+        }
+      });
+
+      sub?.error.listen((event) {
+        AppLogger.w(
+          'DM subscription error: ${event.error}',
+          tag: 'RealtimeService',
+        );
+      });
+
+      // Subscribe to channel
+      await sub?.subscribe();
+      _dmSubscriptions[channelId] = sub;
+      AppLogger.i(
+        'Subscribed to DM channel: $channelId',
+        tag: 'RealtimeService',
+      );
+    } catch (e) {
+      AppLogger.e(
+        'Failed to subscribe to DM channel: $channelId',
+        tag: 'RealtimeService',
+        error: e,
+      );
+    }
+  }
+
+  /// Unsubscribe from a DM channel.
+  Future<void> unsubscribeFromDmChannel(String channelId) async {
+    try {
+      final sub = _dmSubscriptions[channelId];
+      if (sub != null) {
+        await sub.unsubscribe();
+        _dmSubscriptions.remove(channelId);
+        AppLogger.i(
+          'Unsubscribed from DM channel: $channelId',
+          tag: 'RealtimeService',
+        );
+      }
+    } catch (e) {
+      AppLogger.e(
+        'Error unsubscribing from DM channel',
+        tag: 'RealtimeService',
+        error: e,
+      );
+    }
+  }
+
   Future<void> subscribeToOrg(String orgId) async {
     if (_client == null) await connect();
-    
+
     final channelName = 'org-$orgId';
-    
+
     if (_orgSubscription != null) {
       if (_orgSubscription!.channel == channelName) return;
       await _orgSubscription!.unsubscribe();
     }
-    
-    _orgSubscription = _client?.getSubscription(channelName);
-    
+
+    try {
+      final api = locator<ApiBaseService>();
+      final response = await api.post<Map<String, dynamic>>(
+        path: '/token/subscription',
+        data: {'channel': channelName},
+      );
+      final subToken = response.data['data'] is Map<String, dynamic>
+          ? (response.data['data'] as Map<String, dynamic>)['token'] as String?
+          : response.data['token'] as String?;
+      if (subToken == null || subToken.isEmpty) {
+        throw Exception('No org subscription token received');
+      }
+
+      _orgSubscription =
+          _client?.getSubscription(channelName) ??
+          _client?.newSubscription(
+            channelName,
+            centrifuge.SubscriptionConfig(token: subToken),
+          );
+    } catch (e) {
+      AppLogger.e(
+        'Failed to create org subscription',
+        tag: 'RealtimeService',
+        error: e,
+      );
+      return;
+    }
+
     _orgSubscription?.publication.listen((event) {
       try {
         final data = jsonDecode(utf8.decode(event.data));
         final eventName = data['event'];
         if (eventName == 'USER_PROFILE_UPDATED') {
-           _profileUpdateController.add(data['payload'] as Map<String, dynamic>);
+          _profileUpdateController.add(data['payload'] as Map<String, dynamic>);
         }
       } catch (e) {
-        AppLogger.e('Error parsing realtime event', tag: 'RealtimeService', error: e);
+        AppLogger.e(
+          'Error parsing realtime event',
+          tag: 'RealtimeService',
+          error: e,
+        );
       }
     });
 
@@ -73,10 +221,14 @@ class RealtimeService {
 
     await _orgSubscription?.subscribe();
   }
-  
+
   void dispose() {
     _orgSubscription?.unsubscribe();
+    for (final subscription in _dmSubscriptions.values) {
+      subscription?.unsubscribe();
+    }
     _client?.disconnect();
     _profileUpdateController.close();
+    _dmMessageController.close();
   }
 }

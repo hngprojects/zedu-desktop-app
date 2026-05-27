@@ -44,19 +44,18 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
   const UserProfileRemoteDataSourceImpl({
     required AppConfig config,
     required ApiBaseService apiBaseService,
-  }) : _config = config,
-       _apiBaseService = apiBaseService;
+  }) : _apiBaseService = apiBaseService;
 
   final ApiBaseService _apiBaseService;
-  final AppConfig _config;
 
   @override
   Future<ProfileAccountModel> getAccount() async {
     final response = await _apiBaseService.get<Map<String, dynamic>>(
       path: ApiEndpoints.getAccount,
     );
+    final data = response.data['data'];
     return ProfileAccountModel.fromJson(
-      response.data['data'] as Map<String, dynamic>,
+      data is Map<String, dynamic> ? data : const <String, dynamic>{},
     );
   }
 
@@ -83,15 +82,28 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
       path: ApiEndpoints.updateAccount,
       data: formData,
     );
+    final data = response.data['data'];
     return ProfileAccountModel.fromJson(
-      response.data['data'] as Map<String, dynamic>,
+      data is Map<String, dynamic>
+          ? data
+          : ProfileAccountModel(
+              name: account.name,
+              email: account.email,
+              timezone: account.timezone,
+              avatarUrl: account.avatarUrl,
+              username: account.username,
+              displayName: account.displayName,
+              phoneNumber: account.phoneNumber,
+              title: account.title,
+              namePronunciation: account.namePronunciation,
+            ).toJson(),
     );
   }
 
   @override
   Future<void> deleteAccount({required String password}) async {
-    await _apiBaseService.delete<Map<String, dynamic>>(
-      path: ApiEndpoints.deleteAccount,
+    await _apiBaseService.post<Map<String, dynamic>>(
+      path: '/account/delete-account',
       data: {'password': password},
     );
   }
@@ -128,29 +140,33 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
   Future<NotificationPreferencesModel> updateNotificationPreferences(
     NotificationPreferences preferences,
   ) async {
-    final response = await _apiBaseService.patch<Map<String, dynamic>>(
+    final response = await _apiBaseService.put<Map<String, dynamic>>(
       path: ApiEndpoints.profileNotifications,
-      data: NotificationPreferencesModel(
-        mode: preferences.mode,
-        fromTime: preferences.fromTime,
-        toTime: preferences.toTime,
-        useDesktopSettings: preferences.useDesktopSettings,
-        emailNotifications: preferences.emailNotifications,
-      ).toJson(),
+      data: NotificationPreferencesModel.fromEntity(preferences).toJson(),
     );
+    final data = response.data['data'];
     return NotificationPreferencesModel.fromJson(
-      response.data['data'] as Map<String, dynamic>,
+      data is Map<String, dynamic> ? data : const <String, dynamic>{},
     );
   }
 
   @override
   Future<List<SecuritySessionModel>> getSecuritySessions() async {
-    final response = await _apiBaseService.get<Map<String, dynamic>>(
-      path: ApiEndpoints.securitySessions,
+    final userResponse = await _apiBaseService.get<Map<String, dynamic>>(
+      path: '/users/me',
     );
-    final data = response.data['data'] as List<dynamic>;
+    final userId =
+        (userResponse.data['data'] as Map<String, dynamic>)['id'] as String;
+    final response = await _apiBaseService.get<Map<String, dynamic>>(
+      path: ApiEndpoints.securitySessions(userId),
+    );
+    final raw = response.data['data'];
+    final data = raw is Map<String, dynamic>
+        ? raw['logs'] ?? raw['items'] ?? raw['data'] ?? const <dynamic>[]
+        : raw;
+    if (data is! List) return const [];
     return data
-        .cast<Map<String, dynamic>>()
+        .whereType<Map<String, dynamic>>()
         .map(SecuritySessionModel.fromJson)
         .toList();
   }
@@ -160,9 +176,9 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     required String currentPassword,
     required String newPassword,
   }) async {
-    await _apiBaseService.post<Map<String, dynamic>>(
+    await _apiBaseService.put<Map<String, dynamic>>(
       path: ApiEndpoints.securityPassword,
-      data: {'current_password': currentPassword, 'new_password': newPassword},
+      data: {'old_password': currentPassword, 'new_password': newPassword},
     );
   }
 
@@ -171,8 +187,15 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     final response = await _apiBaseService.get<Map<String, dynamic>>(
       path: ApiEndpoints.profileOrganization,
     );
-    return OrganizationProfileModel.fromJson(
-      response.data['data'] as Map<String, dynamic>,
+    final data = response.data['data'];
+    if (data is List && data.isNotEmpty && data.first is Map<String, dynamic>) {
+      return OrganizationProfileModel.fromJson(
+        data.first as Map<String, dynamic>,
+      );
+    }
+    throw ApiFailure(
+      message: 'user not a member of organisation',
+      kind: ApiFailureKind.client,
     );
   }
 
@@ -190,8 +213,31 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
         logoUrl: organization.logoUrl,
       ).toJson(),
     );
-    return OrganizationProfileModel.fromJson(
-      response.data['data'] as Map<String, dynamic>,
+
+    final data = response.data['data'];
+    if (data is Map<String, dynamic>) {
+      // Merge backend response with our known data just in case backend drops fields
+      final backendOrg = OrganizationProfileModel.fromJson(data);
+      return OrganizationProfileModel(
+        id: backendOrg.id.isNotEmpty ? backendOrg.id : organization.id,
+        name: backendOrg.name.isNotEmpty ? backendOrg.name : organization.name,
+        natureOfBusiness: backendOrg.natureOfBusiness.isNotEmpty
+            ? backendOrg.natureOfBusiness
+            : organization.natureOfBusiness,
+        country: backendOrg.country.isNotEmpty
+            ? backendOrg.country
+            : organization.country,
+        logoUrl: backendOrg.logoUrl ?? organization.logoUrl,
+      );
+    }
+
+    // If backend doesn't return the organization, return the one we sent
+    return OrganizationProfileModel(
+      id: organization.id,
+      name: organization.name,
+      natureOfBusiness: organization.natureOfBusiness,
+      country: organization.country,
+      logoUrl: organization.logoUrl,
     );
   }
 
@@ -227,13 +273,9 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
   }
 
   @override
-  @override
   Future<List<TeamMemberModel>> getTeamMembers({String? orgId}) async {
-    if (orgId == null || orgId.length < 36) {
-      orgId = '019700db-4e22-7f90-a20e-f9116291ef24';
-    }
-
     try {
+      if (orgId == null || orgId.isEmpty) return const [];
       final response = await _apiBaseService.get<Map<String, dynamic>>(
         path: ApiEndpoints.organizationUsers(orgId),
       );
@@ -319,23 +361,30 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
 
   @override
   Future<List<RolePermissionModel>> getRolesAndPermissions() async {
-    final response = await _apiBaseService.get<Map<String, dynamic>>(
-      path: ApiEndpoints.organizationRoles,
+    final orgResponse = await _apiBaseService.get<Map<String, dynamic>>(
+      path: ApiEndpoints.profileOrganization,
     );
-    final data = response.data['data'] as List<dynamic>;
+    final orgs = orgResponse.data['data'];
+    final orgId = orgs is List && orgs.isNotEmpty && orgs.first is Map
+        ? (orgs.first as Map)['id'] as String?
+        : null;
+    if (orgId == null || orgId.isEmpty) return const [];
+    final response = await _apiBaseService.get<Map<String, dynamic>>(
+      path: ApiEndpoints.organizationRoles(orgId),
+    );
+    final raw = response.data['data'];
+    final data = raw is Map<String, dynamic>
+        ? raw['roles'] ?? raw['data'] ?? const <dynamic>[]
+        : raw;
+    if (data is! List) return const [];
     return data
-        .cast<Map<String, dynamic>>()
+        .whereType<Map<String, dynamic>>()
         .map(RolePermissionModel.fromJson)
         .toList();
   }
 
   @override
   Future<BillingInfoModel> getBillingInfo() async {
-    final response = await _apiBaseService.get<Map<String, dynamic>>(
-      path: ApiEndpoints.organizationBilling,
-    );
-    return BillingInfoModel.fromJson(
-      response.data['data'] as Map<String, dynamic>,
-    );
+    return BillingInfoModel.fromJson(const <String, dynamic>{});
   }
 }

@@ -151,7 +151,9 @@ Future<void> showChangePasswordDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Text(
           'Change Password',
-          style: ctx.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          style: ctx.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
         ),
         content: SizedBox(
           width: 480,
@@ -166,7 +168,8 @@ Future<void> showChangePasswordDialog(
                   hint: 'Enter current password',
                   isPassword: true,
                   readOnly: isLoading,
-                  validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+                  validator: (v) =>
+                      (v == null || v.isEmpty) ? 'Required' : null,
                 ),
                 const SizedBox(height: 16),
                 AppTextField(
@@ -242,10 +245,8 @@ Future<void> showEditOrganizationDialog(
 ) async {
   await showDialog<void>(
     context: context,
-    builder: (context) => _EditOrganizationDialog(
-      organization: organization,
-      onSave: onSave,
-    ),
+    builder: (context) =>
+        _EditOrganizationDialog(organization: organization, onSave: onSave),
   );
 }
 
@@ -259,13 +260,16 @@ class _EditOrganizationDialog extends ConsumerStatefulWidget {
   final ValueChanged<OrganizationProfile> onSave;
 
   @override
-  ConsumerState<_EditOrganizationDialog> createState() => _EditOrganizationDialogState();
+  ConsumerState<_EditOrganizationDialog> createState() =>
+      _EditOrganizationDialogState();
 }
 
-class _EditOrganizationDialogState extends ConsumerState<_EditOrganizationDialog> {
+class _EditOrganizationDialogState
+    extends ConsumerState<_EditOrganizationDialog> {
   late final TextEditingController nameCtrl;
   late final TextEditingController businessCtrl;
   late final TextEditingController countryCtrl;
+  late final FocusNode countryFocusNode;
   final formKey = GlobalKey<FormState>();
 
   String? localImagePath;
@@ -276,8 +280,11 @@ class _EditOrganizationDialogState extends ConsumerState<_EditOrganizationDialog
   void initState() {
     super.initState();
     nameCtrl = TextEditingController(text: widget.organization.name);
-    businessCtrl = TextEditingController(text: widget.organization.natureOfBusiness);
+    businessCtrl = TextEditingController(
+      text: widget.organization.natureOfBusiness,
+    );
     countryCtrl = TextEditingController(text: widget.organization.country);
+    countryFocusNode = FocusNode();
     remoteImageUrl = widget.organization.logoUrl;
   }
 
@@ -286,6 +293,7 @@ class _EditOrganizationDialogState extends ConsumerState<_EditOrganizationDialog
     nameCtrl.dispose();
     businessCtrl.dispose();
     countryCtrl.dispose();
+    countryFocusNode.dispose();
     super.dispose();
   }
 
@@ -306,9 +314,11 @@ class _EditOrganizationDialogState extends ConsumerState<_EditOrganizationDialog
         final fileRepo = ref.read(fileRepositoryProvider);
         final uploadedFiles = await fileRepo.uploadFiles([xfile]);
         if (uploadedFiles.isNotEmpty) {
-          final fileUrl = uploadedFiles.first['file_url'] as String? ?? 
-                          uploadedFiles.first['url'] as String?;
-                          
+          final fileUrl =
+              uploadedFiles.first['file_url'] as String? ??
+              uploadedFiles.first['url'] as String? ??
+              uploadedFiles.first['file_link'] as String?;
+
           if (fileUrl != null && mounted) {
             setState(() {
               remoteImageUrl = fileUrl;
@@ -321,9 +331,9 @@ class _EditOrganizationDialogState extends ConsumerState<_EditOrganizationDialog
           setState(() {
             isUploading = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to upload logo: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to upload logo: $e')));
         }
       }
     }
@@ -337,7 +347,9 @@ class _EditOrganizationDialogState extends ConsumerState<_EditOrganizationDialog
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       title: Text(
         'Update organisation details',
-        style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        style: context.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+        ),
       ),
       content: SizedBox(
         width: 600,
@@ -357,8 +369,9 @@ class _EditOrganizationDialogState extends ConsumerState<_EditOrganizationDialog
                       label: 'Organisation Name',
                       controller: nameCtrl,
                       hint: 'Enter organisation name',
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Name is required'
+                          : null,
                     ),
                     const SizedBox(height: 16),
                     AppTextField(
@@ -367,10 +380,73 @@ class _EditOrganizationDialogState extends ConsumerState<_EditOrganizationDialog
                       hint: 'e.g. Design agency',
                     ),
                     const SizedBox(height: 16),
-                    AppTextField(
-                      label: 'Country',
-                      controller: countryCtrl,
-                      hint: 'e.g. Nigeria',
+                    ProfileFieldLabel('Country'),
+                    const SizedBox(height: 6),
+                    RawAutocomplete<String>(
+                      textEditingController: countryCtrl,
+                      focusNode: countryFocusNode,
+                      optionsBuilder: (value) {
+                        final query = value.text.trim().toLowerCase();
+                        if (query.isEmpty) return kCountries;
+                        return kCountries.where(
+                          (country) => country.toLowerCase().contains(query),
+                        );
+                      },
+                      fieldViewBuilder:
+                          (context, controller, focusNode, onFieldSubmitted) {
+                            return TextFormField(
+                              controller: controller,
+                              focusNode: focusNode,
+                              decoration: InputDecoration(
+                                hintText: 'Search country',
+                                suffixIcon: const Icon(Icons.expand_more),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 14,
+                                ),
+                              ),
+                              validator: (value) {
+                                final country = value?.trim() ?? '';
+                                if (country.isEmpty) {
+                                  return 'Country is required';
+                                }
+                                if (!kCountries.contains(country)) {
+                                  return 'Select a country from the list';
+                                }
+                                return null;
+                              },
+                            );
+                          },
+                      optionsViewBuilder: (context, onSelected, options) {
+                        return Align(
+                          alignment: Alignment.topLeft,
+                          child: Material(
+                            elevation: 4,
+                            borderRadius: BorderRadius.circular(8),
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxHeight: 240,
+                                maxWidth: 340,
+                              ),
+                              child: ListView.builder(
+                                padding: EdgeInsets.zero,
+                                itemCount: options.length,
+                                itemBuilder: (context, index) {
+                                  final option = options.elementAt(index);
+                                  return ListTile(
+                                    dense: true,
+                                    title: Text(option),
+                                    onTap: () => onSelected(option),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -399,28 +475,33 @@ class _EditOrganizationDialogState extends ConsumerState<_EditOrganizationDialog
                         border: Border.all(color: colors.divider),
                       ),
                       clipBehavior: Clip.antiAlias,
-                      child: isUploading 
+                      child: isUploading
                           ? const Center(child: CircularProgressIndicator())
-                          : (localImagePath != null 
-                              ? Image.file(
-                                  File(localImagePath!),
-                                  fit: BoxFit.cover,
-                                )
-                              : (remoteImageUrl != null && remoteImageUrl!.isNotEmpty
-                                  ? Image.network(
-                                      remoteImageUrl!,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => const Icon(Icons.error),
-                                    )
-                                  : Center(
-                                      child: Text(
-                                        widget.organization.initials,
-                                        style: context.textTheme.displaySmall?.copyWith(
-                                          color: colors.primary,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ))),
+                          : (localImagePath != null
+                                ? Image.file(
+                                    File(localImagePath!),
+                                    fit: BoxFit.cover,
+                                  )
+                                : (remoteImageUrl != null &&
+                                          remoteImageUrl!.isNotEmpty
+                                      ? Image.network(
+                                          remoteImageUrl!,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, _, _) =>
+                                              const Icon(Icons.error),
+                                        )
+                                      : Center(
+                                          child: Text(
+                                            widget.organization.initials,
+                                            style: context
+                                                .textTheme
+                                                .displaySmall
+                                                ?.copyWith(
+                                                  color: colors.primary,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                          ),
+                                        ))),
                     ),
                     const SizedBox(height: 16),
                     AppButton.outlined(
@@ -428,7 +509,8 @@ class _EditOrganizationDialogState extends ConsumerState<_EditOrganizationDialog
                       onPressed: _pickAvatar,
                       expand: true,
                     ),
-                    if (localImagePath != null || (remoteImageUrl != null && remoteImageUrl!.isNotEmpty))
+                    if (localImagePath != null ||
+                        (remoteImageUrl != null && remoteImageUrl!.isNotEmpty))
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: TextButton(
@@ -461,19 +543,21 @@ class _EditOrganizationDialogState extends ConsumerState<_EditOrganizationDialog
           expand: false,
           height: 40,
           loading: isUploading,
-          onPressed: isUploading ? null : () {
-            if (formKey.currentState?.validate() ?? false) {
-              widget.onSave(
-                widget.organization.copyWith(
-                  name: nameCtrl.text.trim(),
-                  natureOfBusiness: businessCtrl.text.trim(),
-                  country: countryCtrl.text.trim(),
-                  logoUrl: remoteImageUrl,
-                ),
-              );
-              Navigator.pop(context);
-            }
-          },
+          onPressed: isUploading
+              ? null
+              : () {
+                  if (formKey.currentState?.validate() ?? false) {
+                    widget.onSave(
+                      widget.organization.copyWith(
+                        name: nameCtrl.text.trim(),
+                        natureOfBusiness: businessCtrl.text.trim(),
+                        country: countryCtrl.text.trim(),
+                        logoUrl: remoteImageUrl,
+                      ),
+                    );
+                    Navigator.pop(context);
+                  }
+                },
         ),
       ],
     );
