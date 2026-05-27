@@ -82,19 +82,17 @@ class ActiveCallNotifier extends ChangeNotifier {
 
     try {
       final repo = _ref.read(buzzRepositoryProvider);
-      final res = await repo.initiateDirectCall(remoteUserId);
+      final res = await repo.initiateDirectCall(channelId);
       final buzzId = res['buzzId'] as String?;
       final token = res['token'] as String?;
 
       _state = _state.copyWith(buzzId: buzzId, token: token);
       notifyListeners();
 
-      Future<void>.delayed(const Duration(seconds: 3), () {
-        if (_state.status == CallStatus.calling && _state.buzzId == buzzId) {
-          _state = _state.copyWith(status: CallStatus.active);
-          notifyListeners();
-        }
-      });
+      if (buzzId != null && token != null) {
+        _state = _state.copyWith(status: CallStatus.active);
+        notifyListeners();
+      }
     } catch (e) {
       endCall();
     }
@@ -132,10 +130,7 @@ class ActiveCallNotifier extends ChangeNotifier {
       await _ref
           .read(buzzRepositoryProvider)
           .respondToInvitation(_state.buzzId!, true);
-      _state = _state.copyWith(
-        status: CallStatus.active,
-        token: 'mock-agora-token',
-      );
+      _state = _state.copyWith(status: CallStatus.active);
       notifyListeners();
     }
   }

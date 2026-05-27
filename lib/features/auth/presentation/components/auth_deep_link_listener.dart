@@ -48,6 +48,12 @@ class _AuthDeepLinkListenerState extends ConsumerState<AuthDeepLinkListener> {
   }
 
   Future<void> _handleUri(Uri uri) async {
+    final invitationToken = _extractInvitationToken(uri);
+    if (invitationToken != null) {
+      await _handleInvitationToken(invitationToken);
+      return;
+    }
+
     final token = MagicLinkDeepLinkParser.extractToken(uri);
     if (token == null || token == _lastProcessedToken) return;
     _lastProcessedToken = token;
@@ -74,6 +80,65 @@ class _AuthDeepLinkListenerState extends ConsumerState<AuthDeepLinkListener> {
         type: AppToastType.error,
         message: authState.error!,
       );
+    }
+  }
+
+  String? _extractInvitationToken(Uri uri) {
+    final token =
+        uri.queryParameters['invitation_token'] ?? uri.queryParameters['token'];
+    if (token == null || token.trim().isEmpty) return null;
+
+    final path = uri.path.toLowerCase();
+    final host = uri.host.toLowerCase();
+    final looksLikeInvite =
+        path.contains('accept_org_invitation') ||
+        path.contains('/invite/general/verify') ||
+        host.contains('invite');
+    return looksLikeInvite ? token.trim() : null;
+  }
+
+  Future<void> _handleInvitationToken(String token) async {
+    final authState = ref.read(authNotifierProvider);
+    if (authState.status != AuthStatus.authenticated) {
+      await locator<SecureStorageService>().writeData(
+        'pending_invitation_token',
+        token,
+      );
+      if (mounted) {
+        AppToastService.show(
+          context,
+          type: AppToastType.info,
+          message: 'Sign in to join the workspace.',
+        );
+        context.go(AppRouter.login);
+      }
+      return;
+    }
+
+    try {
+      final api = locator<ApiBaseService>();
+      await api.post<Map<String, dynamic>>(
+        path: '/invite/general/verify',
+        data: {'token': token},
+      );
+      ref.invalidate(workspaceProvider);
+      if (mounted) {
+        AppToastService.show(
+          context,
+          type: AppToastType.success,
+          message: 'Workspace joined successfully.',
+        );
+        context.go(AppRouter.home);
+      }
+    } catch (error) {
+      AppLogger.w('Invite verification failed: $error', tag: _tag);
+      if (mounted) {
+        AppToastService.show(
+          context,
+          type: AppToastType.error,
+          message: 'Could not join workspace from this invite.',
+        );
+      }
     }
   }
 

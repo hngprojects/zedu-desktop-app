@@ -49,36 +49,55 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'] as String,
-      firstName: json['first_name'] as String,
-      lastName: json['last_name'] as String,
-      fullname: json['fullname'] as String,
-      email: json['email'] as String,
-      phone: json['phone'] as String,
-      username: json['username'] as String,
-      isVerified: json['is_verified'] as bool,
-      isOnboarded: json['is_onboarded'] as bool,
+      id: json['id'] as String? ?? json['user_id'] as String? ?? '',
+      firstName: json['first_name'] as String? ?? '',
+      lastName: json['last_name'] as String? ?? '',
+      fullname:
+          json['fullname'] as String? ??
+          json['full_name'] as String? ??
+          '${json['first_name'] ?? ''} ${json['last_name'] ?? ''}'.trim(),
+      email: json['email'] as String? ?? '',
+      phone: json['phone'] as String? ?? '',
+      username: json['username'] as String? ?? '',
+      isVerified: json['is_verified'] as bool? ?? false,
+      isOnboarded: json['is_onboarded'] as bool? ?? false,
       createdAt: DateTime.fromMillisecondsSinceEpoch(
-        int.parse(json['created_at'] as String) * 1000,
+        _secondsFromJson(json['created_at']) * 1000,
       ),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(
-        int.parse(json['updated_at'] as String) * 1000,
+        _secondsFromJson(json['updated_at']) * 1000,
       ),
-      avatarUrl: json['avatar_url'] as String,
-      currentOrg: json['current_org'] as String,
-      currentOrganisationSlug: json['current_organisation_slug'] as String,
-      defaultAvatarUrl: json['default_avatar_url'] as String,
+      avatarUrl: json['avatar_url'] as String? ?? '',
+      currentOrg: json['current_org'] as String? ?? '',
+      currentOrganisationSlug:
+          json['current_organisation_slug'] as String? ?? '',
+      defaultAvatarUrl: json['default_avatar_url'] as String? ?? '',
       expiresIn: DateTime.fromMillisecondsSinceEpoch(
-        int.parse(json['expires_in'] as String) * 1000,
+        _secondsFromJson(json['expires_in']) * 1000,
       ),
-      isActive: json['is_active'] as bool,
-      online: json['online'] as bool,
+      isActive: json['is_active'] as bool? ?? true,
+      online: json['online'] as bool? ?? false,
       organisation: OrganisationModel.fromJson(
-        json['organisation'] as Map<String, dynamic>,
+        json['organisation'] as Map<String, dynamic>? ??
+            const <String, dynamic>{},
       ),
-      profileUpdated: json['profile_updated'] as bool,
-      userId: json['user_id'] as String,
+      profileUpdated: json['profile_updated'] as bool? ?? false,
+      userId: json['user_id'] as String? ?? json['id'] as String? ?? '',
     );
+  }
+
+  static int _secondsFromJson(Object? value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) {
+      final parsedInt = int.tryParse(value);
+      if (parsedInt != null) return parsedInt;
+      final parsedDate = DateTime.tryParse(value);
+      if (parsedDate != null) {
+        return parsedDate.millisecondsSinceEpoch ~/ 1000;
+      }
+    }
+    return DateTime.now().millisecondsSinceEpoch ~/ 1000;
   }
 
   Map<String, dynamic> toJson() => {

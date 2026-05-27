@@ -2,19 +2,8 @@ import 'dart:io';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
-/// A globally reactive avatar widget used across every surface that shows the
-/// user's photo (sidebar button, popup menu, profile panel, settings).
-///
-/// Priority:
-///   1. [localAvatarPath]  — local file picked but not yet confirmed by server
-///   2. [account.avatarUrl] — server-provided URL (via centrifugo or refresh)
-///   3. default_avatar.png  — fallback asset
 class UserAvatar extends ConsumerWidget {
-  const UserAvatar({
-    super.key,
-    this.size = 40,
-    this.borderRadius = 8,
-  });
+  const UserAvatar({super.key, this.size = 40, this.borderRadius = 8});
 
   final double size;
   final double borderRadius;
@@ -61,9 +50,6 @@ class UserAvatar extends ConsumerWidget {
   }
 
   Widget _defaultAvatar() {
-    return Image.asset(
-      'assets/pngs/default_avatar.png',
-      fit: BoxFit.cover,
-    );
+    return Image.asset('assets/pngs/default_avatar.png', fit: BoxFit.cover);
   }
 }

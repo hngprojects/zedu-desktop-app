@@ -11,13 +11,18 @@ class ProfileAccountModel extends ProfileAccount {
     super.phoneNumber,
     super.title,
     super.namePronunciation,
+    super.country,
   });
 
   factory ProfileAccountModel.fromJson(Map<String, dynamic> json) {
     // The API returns full_name for the user's full name
-    final name = (json['full_name'] as String?)?.trim() ??
+    final firstName = (json['first_name'] as String?)?.trim() ?? '';
+    final lastName = (json['last_name'] as String?)?.trim() ?? '';
+    final name =
+        (json['full_name'] as String?)?.trim() ??
+        (json['fullname'] as String?)?.trim() ??
         (json['name'] as String?)?.trim() ??
-        '';
+        '$firstName $lastName'.trim();
     final email = (json['email'] as String?)?.trim() ?? '';
     final rawUsername = (json['username'] as String?)?.trim() ?? '';
     final displayName = (json['display_name'] as String?)?.trim() ?? '';
@@ -34,8 +39,8 @@ class ProfileAccountModel extends ProfileAccount {
       displayName: displayName,
       phoneNumber: (json['phone'] as String?)?.trim() ?? '',
       title: (json['title'] as String?)?.trim() ?? '',
-      namePronunciation:
-          (json['name_pronounciation'] as String?)?.trim() ?? '',
+      namePronunciation: (json['name_pronounciation'] as String?)?.trim() ?? '',
+      country: (json['country'] as String?)?.trim() ?? '',
     );
   }
 
@@ -52,7 +57,6 @@ class ProfileAccountModel extends ProfileAccount {
   };
 }
 
-
 class NotificationPreferencesModel extends NotificationPreferences {
   const NotificationPreferencesModel({
     required super.mode,
@@ -62,29 +66,65 @@ class NotificationPreferencesModel extends NotificationPreferences {
     required super.emailNotifications,
   });
 
-  factory NotificationPreferencesModel.fromJson(Map<String, dynamic> json) {
+  factory NotificationPreferencesModel.fromEntity(
+    NotificationPreferences preferences,
+  ) {
     return NotificationPreferencesModel(
-      mode: _modeFromJson(json['mode'] as String?),
-      fromTime: json['from_time'] as String? ?? '12:00 AM',
-      toTime: json['to_time'] as String? ?? '11:00 PM',
+      mode: preferences.mode,
+      fromTime: preferences.fromTime,
+      toTime: preferences.toTime,
+      useDesktopSettings: preferences.useDesktopSettings,
+      emailNotifications: preferences.emailNotifications,
+    );
+  }
+
+  factory NotificationPreferencesModel.fromJson(Map<String, dynamic> json) {
+    final notifyAbout = json['notify_about'];
+    final notifyMode = notifyAbout is Map<String, dynamic>
+        ? notifyAbout['option'] as String?
+        : json['mode'] as String?;
+    return NotificationPreferencesModel(
+      mode: _modeFromJson(notifyMode),
+      fromTime:
+          json['from_time'] as String? ??
+          json['from_hour'] as String? ??
+          '12:00 AM',
+      toTime:
+          json['to_time'] as String? ??
+          json['to_hour'] as String? ??
+          '11:00 PM',
       useDesktopSettings: json['use_desktop_settings'] as bool? ?? true,
-      emailNotifications: json['email_notifications'] as bool? ?? false,
+      emailNotifications:
+          json['email_notifications'] as bool? ??
+          json['notification_method_email'] as bool? ??
+          false,
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'mode': mode.name,
-    'from_time': fromTime,
-    'to_time': toTime,
-    'use_desktop_settings': useDesktopSettings,
-    'email_notifications': emailNotifications,
+    'notify_about': {'option': _modeToApi(mode)},
+    'notification_schedule': true,
+    'from_hour': fromTime,
+    'to_hour': toTime,
+    'appearance': useDesktopSettings ? 'desktop' : 'all',
+    'notification_method_email': emailNotifications,
   };
 
   static NotificationMode _modeFromJson(String? value) {
     return switch (value) {
-      'mentionsOnly' || 'mentions_only' => NotificationMode.mentionsOnly,
-      'none' => NotificationMode.none,
+      'mentionsOnly' ||
+      'mentions_only' ||
+      'direct_messages_mentions' => NotificationMode.mentionsOnly,
+      'none' || 'nothing' => NotificationMode.none,
       _ => NotificationMode.allMessages,
+    };
+  }
+
+  static String _modeToApi(NotificationMode mode) {
+    return switch (mode) {
+      NotificationMode.mentionsOnly => 'direct_messages_mentions',
+      NotificationMode.none => 'nothing',
+      NotificationMode.allMessages => 'all_new_messages',
     };
   }
 }
@@ -100,14 +140,20 @@ class OrganizationProfileModel extends OrganizationProfile {
 
   factory OrganizationProfileModel.fromJson(Map<String, dynamic> json) {
     return OrganizationProfileModel(
-      id: json['id'] as String? ?? '',
+      id:
+          json['id'] as String? ??
+          json['org_id'] as String? ??
+          json['organization_id'] as String? ??
+          '',
       name: json['name'] as String? ?? '',
       // Map both type and description to natureOfBusiness since swagger mentions both
-      natureOfBusiness: json['type'] as String? ?? 
-          json['description'] as String? ?? 
-          json['nature_of_business'] as String? ?? '',
-      country: json['country'] as String? ?? '',
-      logoUrl: json['logo_url'] as String?,
+      natureOfBusiness:
+          json['type'] as String? ??
+          json['description'] as String? ??
+          json['nature_of_business'] as String? ??
+          '',
+      country: json['country'] as String? ?? json['location'] as String? ?? '',
+      logoUrl: json['logo_url'] as String? ?? json['file_url'] as String?,
     );
   }
 
@@ -132,10 +178,25 @@ class SecuritySessionModel extends SecuritySession {
 
   factory SecuritySessionModel.fromJson(Map<String, dynamic> json) {
     return SecuritySessionModel(
-      device: json['device'] as String? ?? 'Chrome',
-      location: json['location'] as String? ?? 'Lagos',
-      date: json['date'] as String? ?? 'May 8, 2026 1:07 PM',
-      lastActive: json['last_active'] as String? ?? 'May 8, 2026 3:07 PM',
+      device:
+          json['device'] as String? ??
+          json['user_agent'] as String? ??
+          json['platform'] as String? ??
+          'Unknown device',
+      location:
+          json['location'] as String? ??
+          json['ip_address'] as String? ??
+          'Unknown location',
+      date:
+          json['date'] as String? ??
+          json['created_at']?.toString() ??
+          json['logged_in_at']?.toString() ??
+          '',
+      lastActive:
+          json['last_active'] as String? ??
+          json['last_seen_at']?.toString() ??
+          json['updated_at']?.toString() ??
+          '',
       status: json['status'] as String? ?? 'Active',
     );
   }

@@ -7,7 +7,7 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
   @override
   WorkspaceState build() {
     Future.microtask(_fetchWorkspaces);
-    return _getInitialState();
+    return const WorkspaceState(workspaces: [], isLoading: true);
   }
 
   Future<void> _fetchWorkspaces() async {
@@ -36,60 +36,69 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
           state = state.copyWith(
             workspaces: workspaces,
             selectedWorkspace: workspaces.first,
+            isLoading: false,
           );
         }
+      } else {
+        final createResponse = await api.post<Map<String, dynamic>>(
+          path: '/organisations',
+          data: {
+            'name': 'Personal Workspace',
+            'type': 'Personal',
+            'country': 'Nigeria',
+          },
+        );
+        final newOrgData = createResponse.data['data'] as Map<String, dynamic>;
+
+        final newWorkspace = Workspace(
+          id: newOrgData['id'] as String? ?? '',
+          name: newOrgData['name'] as String? ?? 'Personal Workspace',
+          avatar: newOrgData['logo_url'] as String? ?? '',
+          membersCount: 1,
+        );
+        state = state.copyWith(
+          workspaces: [newWorkspace],
+          selectedWorkspace: newWorkspace,
+          isLoading: false,
+        );
       }
     } catch (e) {
-      // Ignore API errors and fallback to mock data implicitly
+      AppLogger.e(
+        '_fetchWorkspaces failed',
+        error: e,
+        tag: 'WorkspaceNotifier',
+      );
+      if (e is ApiFailure && e.message.toLowerCase().contains('not a member')) {
+        await _createPersonalWorkspace();
+        return;
+      }
+      state = state.copyWith(isLoading: false);
     }
   }
 
-  WorkspaceState _getInitialState() {
-    final workspaces = [
-      const Workspace(
-        id: '1',
-        name: 'HNG Workspace',
-        avatar: '',
-        unreadCount: 1351,
-        membersCount: 1351,
-      ),
-      const Workspace(
-        id: '2',
-        name: 'TeamFlow Collective',
-        avatar: '',
-        unreadCount: 15,
-        membersCount: 42,
-      ),
-      const Workspace(
-        id: '3',
-        name: 'Coffee & Code House',
-        avatar: '',
-        unreadCount: 0,
-        membersCount: 12,
-      ),
-      const Workspace(
-        id: '4',
-        name: 'ConnectHub',
-        avatar: '',
-        unreadCount: 3,
-        membersCount: 89,
-      ),
-    ];
+  Future<void> _createPersonalWorkspace() async {
+    final api = locator<ApiBaseService>();
+    final createResponse = await api.post<Map<String, dynamic>>(
+      path: '/organisations',
+      data: {
+        'name': 'Personal Workspace',
+        'type': 'Personal',
+        'country': 'Nigeria',
+      },
+    );
+    final newOrgData = createResponse.data['data'] as Map<String, dynamic>;
 
-    // We use the mock workspaces defined above for initial state
-    String? previousId;
-    try {
-      previousId = state.selectedWorkspace?.id;
-    } catch (_) {}
-
-    final selected = previousId != null
-        ? workspaces.firstWhere(
-            (ws) => ws.id == previousId,
-            orElse: () => workspaces.first,
-          )
-        : workspaces.first;
-
-    return WorkspaceState(workspaces: workspaces, selectedWorkspace: selected);
+    final newWorkspace = Workspace(
+      id: newOrgData['id'] as String? ?? '',
+      name: newOrgData['name'] as String? ?? 'Personal Workspace',
+      avatar: newOrgData['logo_url'] as String? ?? '',
+      membersCount: 1,
+    );
+    state = state.copyWith(
+      workspaces: [newWorkspace],
+      selectedWorkspace: newWorkspace,
+      isLoading: false,
+    );
   }
 
   void addWorkspace(Workspace workspace, {bool switchTo = true}) {

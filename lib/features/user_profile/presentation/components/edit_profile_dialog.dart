@@ -72,17 +72,15 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
     final authState = ref.read(authNotifierProvider);
     final fallbackEmail = authState.user?.email ?? '';
     final authUser = authState.user;
-    final authFullName = authUser != null 
-        ? '${authUser.firstName} ${authUser.lastName}'.trim() 
+    final authFullName = authUser != null
+        ? '${authUser.firstName} ${authUser.lastName}'.trim()
         : '';
-    final fallbackName = authFullName.isNotEmpty 
-        ? authFullName 
+    final fallbackName = authFullName.isNotEmpty
+        ? authFullName
         : (authUser?.username ?? '');
 
     nameCtrl = TextEditingController(
-      text: widget.account.name.isNotEmpty 
-          ? widget.account.name 
-          : fallbackName,
+      text: widget.account.name.isNotEmpty ? widget.account.name : fallbackName,
     );
     displayNameCtrl = TextEditingController(text: widget.account.displayName);
     usernameCtrl = TextEditingController(text: widget.account.username);
@@ -122,8 +120,7 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
     );
     if (result != null && result.files.single.path != null) {
       final path = result.files.single.path!;
-      // Immediately show local preview globally — all widgets watching
-      // userProfileNotifierProvider will redraw with the local file
+
       ref
           .read(userProfileNotifierProvider.notifier)
           .previewAndUploadAvatar(path);

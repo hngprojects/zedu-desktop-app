@@ -1,16 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
-/// Full-featured "Set a status" dialog that matches the Figma design.
-///
-/// Flow:
-///   1. User types status text (emoji icon prefix is separate).
-///   2. User picks a timeout from the [StatusTimeout] dropdown.
-///   3. User optionally checks "Pause notifications".
-///   4. On Save → [AuthNotifier.changeStatus] is called; dialog pops on success.
-///
-/// Quick-pick presets (matching the second Figma screen) are shown below the
-/// text field and auto-populate the form when tapped.
 class SetStatusDialog extends ConsumerStatefulWidget {
   const SetStatusDialog({super.key});
 

@@ -9,16 +9,19 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   @override
   UserProfileState build() {
     _repository = ref.read(userProfileRepositoryProvider);
-    load();
+    // load();
 
     final orgId = ref.watch(workspaceProvider).selectedWorkspace?.id;
     final realtimeService = ref.read(realtimeServiceProvider);
 
-    if (orgId != null) {
+    if (orgId != null && orgId.isNotEmpty) {
+      Future.microtask(() => load());
       realtimeService.subscribeToOrg(orgId);
     }
 
-    final subscription = realtimeService.profileUpdateStream.listen((payload) async {
+    final subscription = realtimeService.profileUpdateStream.listen((
+      payload,
+    ) async {
       final accountResult = await _repository.getAccount();
       if (accountResult is Success<ProfileAccount>) {
         state = state.copyWith(account: accountResult.value);
@@ -63,25 +66,19 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     }
   }
 
-  /// Sets a local file path as an immediate avatar preview across the whole app,
-  /// then uploads the file to the backend and refreshes the account once done.
   Future<void> previewAndUploadAvatar(String filePath) async {
-    // 1. Immediately show local preview — all watchers redraw instantly
     state = state.copyWith(localAvatarPath: filePath);
 
-    // 2. Push to backend
     state = state.copyWith(isSaving: true, clearError: true);
     final result = await _repository.uploadAvatar(filePath);
 
     switch (result) {
       case Success<void>():
-        // 3. Reload account so we get the real server URL
         final accountResult = await _repository.getAccount();
         if (accountResult is Success<ProfileAccount>) {
           state = state.copyWith(
             account: accountResult.value,
             isSaving: false,
-            // Clear local preview — server URL is now in account.avatarUrl
             clearLocalAvatar: true,
             successMessage: 'Avatar updated successfully.',
           );
@@ -91,7 +88,6 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       case Failure<void>():
         state = state.copyWith(
           isSaving: false,
-          // Leave local preview so user still sees their pick
           error: result.error.friendlyMessage,
         );
     }
@@ -119,7 +115,6 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   }
 
   Future<void> uploadAvatar(String filePath) async {
-    // Legacy: use previewAndUploadAvatar for UI, this keeps the repo contract
     await previewAndUploadAvatar(filePath);
   }
 
