@@ -278,22 +278,39 @@ class _DmChatHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: colors.primary,
-            backgroundImage: conversation.effectiveAvatarUrl != null
-                ? NetworkImage(conversation.effectiveAvatarUrl!)
-                : null,
-            child: conversation.effectiveAvatarUrl == null
-                ? Text(
-                    participantInitial,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: colors.primary,
+              shape: BoxShape.circle,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: conversation.effectiveAvatarUrl != null
+                ? Image.network(
+                    conversation.effectiveAvatarUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Center(
+                      child: Text(
+                        participantInitial,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
                   )
-                : null,
+                : Center(
+                    child: Text(
+                      participantInitial,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
           ),
           const SizedBox(width: 12),
           Text(
@@ -506,27 +523,41 @@ class _MessageBubble extends ConsumerWidget {
             ? MainAxisAlignment.end
             : MainAxisAlignment.start,
         children: [
-          if (!isMe) ...[
-            CircleAvatar(
-              radius: 15,
-              backgroundColor: colors.primary,
-              backgroundImage:
-                  senderAvatarUrl != null && senderAvatarUrl.isNotEmpty
-                  ? NetworkImage(senderAvatarUrl)
-                  : null,
-              child: senderAvatarUrl == null || senderAvatarUrl.isEmpty
-                  ? Text(
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: colors.primary,
+              shape: BoxShape.circle,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: senderAvatarUrl != null && senderAvatarUrl.isNotEmpty
+                ? Image.network(
+                    senderAvatarUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Center(
+                      child: Text(
+                        senderInitial,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  )
+                : Center(
+                    child: Text(
                       senderInitial,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
                         fontSize: 12,
                       ),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 12),
-          ],
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 12),
           Flexible(
             child: Column(
               crossAxisAlignment: isMe

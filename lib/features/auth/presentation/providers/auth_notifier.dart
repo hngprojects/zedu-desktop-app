@@ -108,6 +108,9 @@ class AuthNotifier extends Notifier<AuthState> {
     state = const AuthState(status: AuthStatus.unauthenticated);
     ref.invalidate(userProfileNotifierProvider);
     ref.invalidate(workspaceProvider);
+    ref.invalidate(dmListProvider);
+    ref.invalidate(channelProvider);
+    ref.invalidate(chatHistoryProvider);
   }
 
   Future<void> signUp({
@@ -180,7 +183,6 @@ class AuthNotifier extends Notifier<AuthState> {
                   membersCount: 1,
                 ),
               );
-          // Connect to centrifugo for real-time updates
           ref
               .read(realtimeServiceProvider)
               .subscribeToOrg(createResult.value.id);

@@ -98,14 +98,25 @@ class DmSidebarList extends ConsumerWidget {
                         itemBuilder: (context, index) {
                           final member = members[index];
                           return ListTile(
-                            leading: CircleAvatar(
-                              radius: 14,
-                              backgroundImage: member.avatarUrl != null
-                                  ? NetworkImage(member.avatarUrl!)
-                                  : null,
-                              child: member.avatarUrl == null
-                                  ? const Icon(Icons.person, size: 16)
-                                  : null,
+                            leading: Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: colors.primary,
+                                shape: BoxShape.circle,
+                              ),
+                              clipBehavior: Clip.antiAlias,
+                              child: member.avatarUrl != null
+                                  ? Image.network(
+                                      member.avatarUrl!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) => const Center(
+                                        child: Icon(Icons.person, size: 16, color: Colors.white),
+                                      ),
+                                    )
+                                  : const Center(
+                                      child: Icon(Icons.person, size: 16, color: Colors.white),
+                                    ),
                             ),
                             title: Text(
                               member.name ?? 'Unknown',
@@ -141,6 +152,7 @@ class DmSidebarList extends ConsumerWidget {
                                 ),
                               );
                               
+                              ref.read(dmListProvider.notifier).addConversation(existingConvo);
                               ref.read(selectedDmProvider.notifier).select(existingConvo);
                               ref.read(dmSearchQueryProvider.notifier).state = '';
                             },

@@ -38,6 +38,11 @@ abstract interface class UserProfileRemoteDataSource {
   Future<void> removeMember(String memberId);
   Future<List<RolePermissionModel>> getRolesAndPermissions();
   Future<BillingInfoModel> getBillingInfo();
+  Future<void> addUserDirectly({
+    required String orgId,
+    required String userId,
+    required String roleId,
+  });
 }
 
 class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
@@ -56,6 +61,19 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     final data = response.data['data'];
     return ProfileAccountModel.fromJson(
       data is Map<String, dynamic> ? data : const <String, dynamic>{},
+    );
+  }
+
+  @override
+  Future<void> addUserDirectly({
+    required String orgId,
+    required String userId,
+    required String roleId,
+  }) async {
+    // Note: The backend expects "role_Id" with a capital 'I' according to the Swagger schema
+    await _apiBaseService.post<Map<String, dynamic>>(
+      path: '/organisations/$orgId/users',
+      data: {'user_id': userId, 'role_Id': roleId},
     );
   }
 
@@ -155,8 +173,11 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     final userResponse = await _apiBaseService.get<Map<String, dynamic>>(
       path: '/users/me',
     );
-    final userId =
-        (userResponse.data['data'] as Map<String, dynamic>)['id'] as String;
+    final rawUserData = userResponse.data['data'];
+    if (rawUserData is! Map<String, dynamic>) return const [];
+    final userId = rawUserData['id']?.toString();
+    if (userId == null || userId.isEmpty) return const [];
+
     final response = await _apiBaseService.get<Map<String, dynamic>>(
       path: ApiEndpoints.securitySessions(userId),
     );
@@ -279,10 +300,19 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
       final response = await _apiBaseService.get<Map<String, dynamic>>(
         path: ApiEndpoints.organizationUsers(orgId),
       );
-      final data = response.data['data'] as List<dynamic>?;
-      if (data == null) return [];
 
-      return data.cast<Map<String, dynamic>>().map((user) {
+      final rawData = response.data['data'];
+      List<dynamic> data = [];
+      if (rawData is List) {
+        data = rawData;
+      } else if (rawData is Map) {
+        data =
+            (rawData['users'] ?? rawData['members'] ?? rawData['data'] ?? [])
+                as List<dynamic>;
+      }
+      if (data.isEmpty) return [];
+
+      return data.whereType<Map<String, dynamic>>().map((user) {
         // Map backend user to TeamMemberModel
         return TeamMemberModel(
           id: user['id'] as String? ?? '',
@@ -317,7 +347,8 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
       },
     );
     final data = response.data['data'] as Map<String, dynamic>;
-    final invites = data['invitations'] as List<dynamic>? ?? [];
+    final raw = data['invitations'];
+    final invites = raw is List ? raw : (raw is Map ? [raw] : []);
     if (invites.isNotEmpty) {
       final invite = invites.first as Map<String, dynamic>;
       return TeamMemberModel(

@@ -117,6 +117,13 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
     state = AsyncValue.data([...current, ...next]);
   }
 
+  void addConversation(DmConversation conversation) {
+    final current = state.value ?? [];
+    if (!current.any((c) => c.channelId == conversation.channelId || c.participantId == conversation.participantId)) {
+      state = AsyncValue.data([conversation, ...current]);
+    }
+  }
+
   Future<void> refresh() async {
     final orgId = ref.read(currentOrgIdProvider);
     if (orgId.isEmpty) return;

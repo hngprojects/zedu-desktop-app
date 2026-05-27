@@ -12,7 +12,11 @@ abstract interface class UserProfileRepository {
   Future<Result<NotificationPreferences>> updateNotificationPreferences(
     NotificationPreferences preferences,
   );
-
+  Future<Result<void>> addUserDirectly({
+    required String orgId,
+    required String userId,
+    required String roleId,
+  });
   Future<Result<List<SecuritySession>>> getSecuritySessions();
   Future<Result<void>> changePassword({
     required String currentPassword,

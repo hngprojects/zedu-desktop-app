@@ -83,6 +83,12 @@ class ActiveCallNotifier extends ChangeNotifier {
     try {
       final repo = _ref.read(buzzRepositoryProvider);
       final res = await repo.initiateDirectCall(channelId);
+      
+      if (res['success'] == false) {
+        endCall();
+        return;
+      }
+
       final buzzId = res['buzzId'] as String?;
       final token = res['token'] as String?;
 
@@ -92,6 +98,8 @@ class ActiveCallNotifier extends ChangeNotifier {
       if (buzzId != null && token != null) {
         _state = _state.copyWith(status: CallStatus.active);
         notifyListeners();
+      } else {
+        endCall();
       }
     } catch (e) {
       endCall();

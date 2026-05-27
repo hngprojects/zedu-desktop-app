@@ -87,6 +87,8 @@ class _ProfileContent extends StatelessWidget {
               onInvite: notifier.inviteMember,
               onUpdate: notifier.updateMember,
               onRemove: notifier.removeMember,
+              onAddUser: notifier.addUserDirectly,
+              onFetchUsers: notifier.fetchRegisteredUsers,
             ),
             UserProfileSection.rolesAndPermissions =>
               RolesAndPermissionsSection(roles: state.rolesAndPermissions),

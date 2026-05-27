@@ -65,10 +65,10 @@ class DmRepository {
         .toList();
   }
 
-  // Forcing flutter recompile
   Future<void> sendMessage(
     String channelId,
     String content, {
+    String? threadId,
     List<Map<String, dynamic>>? media,
     List<dynamic>? mentions,
   }) async {
@@ -76,7 +76,8 @@ class DmRepository {
       path: ApiEndpoints.dmsMessages(channelId),
       data: {
         "content": content,
-        if (media != null && media.isNotEmpty) "media": media,
+        "thread_id": threadId ?? "",
+        if (media != null && media.isNotEmpty) "files": media,
         ...?(mentions != null ? {'mentions': mentions} : null),
       },
     );
@@ -94,7 +95,7 @@ class DmRepository {
       data: {
         'content': content,
         ...?(threadId != null ? {'thread_id': threadId} : null),
-        ...?(media != null ? {'media': media} : null),
+        ...?(media != null ? {'files': media} : null),
         ...?(mentions != null ? {'mentions': mentions} : null),
       },
     );

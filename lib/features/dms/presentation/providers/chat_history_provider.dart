@@ -78,7 +78,6 @@ class ChatHistoryNotifier extends ChangeNotifier {
   final Set<String> _seenIds = {};
   StreamSubscription<Map<String, dynamic>>? _realtimeSubscription;
 
-  /// Subscribe to real-time messages via Centrifugo instead of polling.
   void _subscribeToRealtimeMessages() {
     // Mark all existing messages as seen
     for (final m in messages) {
@@ -87,6 +86,13 @@ class ChatHistoryNotifier extends ChangeNotifier {
     }
 
     try {
+      // Do not attempt to subscribe to local/mock/temporary channel IDs
+      if (channelId.isEmpty ||
+          channelId.startsWith('dm_') ||
+          channelId == 'mock-channel-id-123') {
+        return;
+      }
+
       final realtimeService = ref.read(realtimeServiceProvider);
       // Subscribe to DM channel for real-time messages
       realtimeService.subscribeToDmChannel(channelId);
@@ -192,6 +198,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
 
   Future<void> sendMessage(
     String content, {
+    String? threadId,
     List<XFile>? media,
     List<dynamic>? mentions,
   }) async {
@@ -221,6 +228,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
       await repository.sendMessage(
         channelId,
         content,
+        threadId: threadId,
         media: uploadedMedia,
         mentions: mentions,
       );
@@ -236,7 +244,9 @@ class ChatHistoryNotifier extends ChangeNotifier {
         }
         return m;
       }).toList();
-    } catch (e) {
+    } catch (e, stacktrace) {
+      debugPrint('Message Send Error: $e\n$stacktrace');
+      AppLogger.e('Message Send Error', tag: 'ChatHistoryNotifier', error: e, stackTrace: stacktrace);
       messages = messages.map((m) {
         if (m['id'] == tempId) {
           final newMsg = Map<String, dynamic>.from(m);
@@ -275,7 +285,9 @@ class ChatHistoryNotifier extends ChangeNotifier {
         }
         return m;
       }).toList();
-    } catch (_) {
+    } catch (e, stacktrace) {
+      debugPrint('Message Retry Error: $e\n$stacktrace');
+      AppLogger.e('Message Retry Error', tag: 'ChatHistoryNotifier', error: e, stackTrace: stacktrace);
       messages = messages.map((m) {
         if (m['id'] == messageId) {
           final newMsg = Map<String, dynamic>.from(m);

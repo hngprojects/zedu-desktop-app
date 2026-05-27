@@ -42,7 +42,9 @@ class RealtimeService {
         : response.data['token'] as String?;
     if (token == null || token.isEmpty) return;
 
-    final url = 'wss://api.zedu.chat/centrifugo/connection/websocket';
+    final url =
+        dotenv.env['CENTRIFUGO_WEBSOCKET_URL'] ??
+        'wss://api.zedu.chat/centrifugo/connection/websocket';
 
     _client = centrifuge.createClient(url);
     _client?.setToken(token);
@@ -164,7 +166,7 @@ class RealtimeService {
   Future<void> subscribeToOrg(String orgId) async {
     if (_client == null) await connect();
 
-    final channelName = 'org-$orgId';
+    final channelName = orgId;
 
     if (_orgSubscription != null) {
       if (_orgSubscription!.channel == channelName) return;

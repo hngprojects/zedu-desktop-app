@@ -220,9 +220,10 @@ Future<void> showChangePasswordDialog(
                         newPassword: newCtrl.text,
                       );
                       if (ctx.mounted) {
-                        setState(() => isLoading = false);
                         if (success) {
                           Navigator.pop(ctx);
+                        } else {
+                          setState(() => isLoading = false);
                         }
                       }
                     }

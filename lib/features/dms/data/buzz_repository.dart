@@ -38,7 +38,6 @@ class BuzzRepository {
         throw Exception('Missing required fields in buzz response');
       }
 
-      // Subscribe to buzz updates via Centrifugo
       await _realtimeService.subscribeToDmChannel('buzz_$buzzId');
 
       return {
@@ -49,6 +48,7 @@ class BuzzRepository {
         'appId': agoraTokenData?['app_id'] as String?,
       };
     } catch (e) {
+      debugPrint('Buzz Direct Call Error: $e');
       AppLogger.e(
         'Failed to initiate direct call',
         tag: 'BuzzRepository',

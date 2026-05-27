@@ -9,6 +9,8 @@ class UserManagementSection extends StatefulWidget {
     required this.onInvite,
     required this.onUpdate,
     required this.onRemove,
+    required this.onAddUser,
+    required this.onFetchUsers,
   });
 
   final List<TeamMember> members;
@@ -17,6 +19,8 @@ class UserManagementSection extends StatefulWidget {
   onInvite;
   final ValueChanged<TeamMember> onUpdate;
   final ValueChanged<String> onRemove;
+  final Future<void> Function({required String userId, required String email}) onAddUser;
+  final Future<List<Map<String, dynamic>>> Function() onFetchUsers;
 
   @override
   State<UserManagementSection> createState() => _UserManagementSectionState();
@@ -49,12 +53,24 @@ class _UserManagementSectionState extends State<UserManagementSection> {
         ProfileSectionHeader(
           title: 'Your Team',
           subtitle: 'Manage all members of your team.',
-          trailing: AppButton(
-            label: 'Invite People',
-            expand: false,
-            height: 44,
-            loading: widget.isSaving,
-            onPressed: () => _showInviteDialog(context, widget.onInvite),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppButton.outlined(
+                label: 'Add User',
+                expand: false,
+                height: 44,
+                onPressed: () => _showAddUserDialog(context),
+              ),
+              const SizedBox(width: 12),
+              AppButton(
+                label: 'Invite People',
+                expand: false,
+                height: 44,
+                loading: widget.isSaving,
+                onPressed: () => _showInviteDialog(context, widget.onInvite),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 34),
@@ -213,6 +229,20 @@ class _UserManagementSectionState extends State<UserManagementSection> {
     onInvite,
   ) => showInviteMemberDialog(context, onInvite);
 
+  void _showAddUserDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => _AddUserDialog(
+        onFetchUsers: widget.onFetchUsers,
+        existingEmails: widget.members.map((m) => m.email).toSet(),
+        onAddUser: (userId, email) async {
+          Navigator.pop(ctx);
+          await widget.onAddUser(userId: userId, email: email);
+        },
+      ),
+    );
+  }
+
   void _showMemberDialog(
     BuildContext context,
     TeamMember member,
@@ -309,6 +339,191 @@ class _MemberIdentity extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Text(email, style: context.textTheme.bodyMedium),
+      ],
+    );
+  }
+}
+
+class _AddUserDialog extends StatefulWidget {
+  const _AddUserDialog({
+    required this.onFetchUsers,
+    required this.existingEmails,
+    required this.onAddUser,
+  });
+
+  final Future<List<Map<String, dynamic>>> Function() onFetchUsers;
+  final Set<String> existingEmails;
+  final Future<void> Function(String userId, String email) onAddUser;
+
+  @override
+  State<_AddUserDialog> createState() => _AddUserDialogState();
+}
+
+class _AddUserDialogState extends State<_AddUserDialog> {
+  final _searchController = TextEditingController();
+  List<Map<String, dynamic>> _allUsers = [];
+  List<Map<String, dynamic>> _filteredUsers = [];
+  bool _isLoadingUsers = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsers();
+  }
+
+  Future<void> _loadUsers() async {
+    final users = await widget.onFetchUsers();
+    if (mounted) {
+      setState(() {
+        _allUsers = users;
+        _isLoadingUsers = false;
+      });
+    }
+  }
+
+  void _onSearchChanged(String query) {
+    if (query.isEmpty) {
+      setState(() => _filteredUsers = []);
+      return;
+    }
+    final q = query.toLowerCase();
+    setState(() {
+      _filteredUsers = _allUsers.where((u) {
+        final email = (u['email'] as String?)?.toLowerCase() ?? '';
+        final name = (u['full_name'] as String?)?.toLowerCase() ??
+            (u['username'] as String?)?.toLowerCase() ??
+            '';
+        // Exclude users already in the org
+        if (widget.existingEmails.contains(u['email'] as String? ?? '')) {
+          return false;
+        }
+        return email.contains(q) || name.contains(q);
+      }).toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      title: Text(
+        'Add Existing User',
+        style: context.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      content: SizedBox(
+        width: 480,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Search for users already on Zedu and add them directly.',
+              style: context.textTheme.bodySmall?.copyWith(
+                color: colors.textHint,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: 'Search by name or email...',
+                prefixIcon: const Icon(Icons.search, size: 18),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (_isLoadingUsers)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_searchController.text.isNotEmpty &&
+                _filteredUsers.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Text(
+                    'No users found.',
+                    style: TextStyle(color: colors.textHint),
+                  ),
+                ),
+              )
+            else if (_filteredUsers.isNotEmpty)
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 240),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _filteredUsers.length,
+                  itemBuilder: (context, index) {
+                    final user = _filteredUsers[index];
+                    final email = user['email'] as String? ?? '';
+                    final name = user['full_name'] as String? ??
+                        user['username'] as String? ??
+                        email.split('@').first;
+                    final userId = user['id'] as String? ?? '';
+                    return ListTile(
+                      leading: CircleAvatar(
+                        radius: 16,
+                        backgroundColor: colors.primary.withValues(alpha: 0.1),
+                        child: Text(
+                          name.isNotEmpty
+                              ? name[0].toUpperCase()
+                              : '?',
+                          style: TextStyle(
+                            color: colors.primary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        name,
+                        style: TextStyle(
+                          color: colors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      subtitle: Text(
+                        email,
+                        style: TextStyle(
+                          color: colors.textHint,
+                          fontSize: 12,
+                        ),
+                      ),
+                      trailing: TextButton(
+                        onPressed: () =>
+                            widget.onAddUser(userId, email),
+                        child: const Text('Add'),
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
       ],
     );
   }

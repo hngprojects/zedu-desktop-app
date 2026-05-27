@@ -473,6 +473,54 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     }
   }
 
+  Future<void> addUserDirectly({
+    required String userId,
+    required String email,
+  }) async {
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
+    final orgId = ref.read(workspaceProvider).selectedWorkspace?.id;
+    if (orgId == null) {
+      state = state.copyWith(
+        isSaving: false,
+        error: 'No active workspace selected.',
+      );
+      return;
+    }
+
+    final roleId = await _getRoleId(orgId);
+    final result = await _repository.addUserDirectly(
+      orgId: orgId,
+      userId: userId,
+      roleId: roleId,
+    );
+    switch (result) {
+      case Success<void>():
+        // Add the user to the local team members list immediately
+        final newMember = TeamMember(
+          id: userId,
+          email: email,
+          role: 'User',
+          dateJoined: DateTime.now().toIso8601String(),
+          status: TeamMemberStatus.active,
+          name: email.split('@').first,
+        );
+        state = state.copyWith(
+          teamMembers: [...state.teamMembers, newMember],
+          isSaving: false,
+          successMessage: 'User added to organization successfully.',
+        );
+      case Failure<void>():
+        state = state.copyWith(
+          isSaving: false,
+          error: result.error.friendlyMessage,
+        );
+    }
+  }
+
   Future<void> updateMember(TeamMember member) async {
     state = state.copyWith(
       isSaving: true,

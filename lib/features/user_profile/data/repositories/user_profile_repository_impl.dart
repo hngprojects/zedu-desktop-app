@@ -122,6 +122,21 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     return _guard(_remote.getBillingInfo);
   }
 
+  @override
+  Future<Result<void>> addUserDirectly({
+    required String orgId,
+    required String userId,
+    required String roleId,
+  }) {
+    return _guard(
+      () => _remote.addUserDirectly(
+        orgId: orgId,
+        userId: userId,
+        roleId: roleId,
+      ),
+    );
+  }
+
   Future<Result<T>> _guard<T>(Future<T> Function() operation) async {
     try {
       return Success(await operation());

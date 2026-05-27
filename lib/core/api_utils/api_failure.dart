@@ -79,12 +79,37 @@ class ApiFailure implements Exception {
         if (details.isNotEmpty) {
           return details.join('\n');
         }
+      } else if (data['errors'] is Map) {
+        final errorsMap = data['errors'] as Map;
+        final details = <String>[];
+        for (final entry in errorsMap.entries) {
+          final field = entry.key;
+          final msgs = entry.value;
+          if (msgs is List && msgs.isNotEmpty) {
+            details.add('$field: ${msgs.first}');
+          } else {
+            details.add('$field: $msgs');
+          }
+        }
+        if (details.isNotEmpty) {
+          return details.join('\n');
+        }
       }
-      if (data['message'] is String) return data['message'] as String;
+      if (data['message'] is String) {
+        final msg = data['message'] as String;
+        if (msg == 'Validation failed' || msg == 'error') {
+          return '$msg. Raw data: $data';
+        }
+        return msg;
+      }
       if (data['error'] is String) return data['error'] as String;
     }
     if (data is String) {
       return data;
+    }
+    if (error.response?.statusCode == 307) {
+      final redirectUrl = error.response?.headers.value('location');
+      return '307 Redirect! Server wants us to use this exact URL: $redirectUrl';
     }
     if (error.message case final message?) return message;
     return 'Request failed. Raw data: $data';
