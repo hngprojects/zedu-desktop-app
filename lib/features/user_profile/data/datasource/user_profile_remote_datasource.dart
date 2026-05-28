@@ -31,6 +31,7 @@ abstract interface class UserProfileRemoteDataSource {
     required String email,
     required String role,
     required String orgId,
+    String? userId,
   });
   Future<TeamMemberModel> updateMember(TeamMember member);
   Future<void> removeMember(String memberId);
@@ -329,17 +330,37 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     required String email,
     required String role,
     required String orgId,
+    String? userId,
   }) async {
     if (_config.usesMockData) {
       return TeamMemberModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        id: userId ?? DateTime.now().millisecondsSinceEpoch.toString(),
         email: email,
         role: role,
-        dateJoined: 'Pending',
-        status: TeamMemberStatus.pending,
+        dateJoined: userId != null ? 'Active' : 'Pending',
+        status: userId != null ? TeamMemberStatus.active : TeamMemberStatus.pending,
         name: email.split('@').first,
       );
     }
+
+    if (userId != null && userId.isNotEmpty) {
+      await _apiBaseService.post<Map<String, dynamic>>(
+        path: '/organisations/$orgId/users',
+        data: {
+          'user_id': userId,
+          'role_Id': role,
+        },
+      );
+      return TeamMemberModel(
+        id: userId,
+        email: email,
+        role: role,
+        dateJoined: DateTime.now().toString(),
+        status: TeamMemberStatus.active,
+        name: email.split('@').first,
+      );
+    }
+
     final response = await _apiBaseService.post<Map<String, dynamic>>(
       path: '/invite',
       data: {

@@ -89,9 +89,15 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     required String email,
     required String role,
     required String orgId,
+    String? userId,
   }) {
     return _guard(
-      () => _remote.inviteMember(email: email, role: role, orgId: orgId),
+      () => _remote.inviteMember(
+        email: email,
+        role: role,
+        orgId: orgId,
+        userId: userId,
+      ),
     );
   }
 

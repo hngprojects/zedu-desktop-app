@@ -345,6 +345,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       email: email,
       role: roleId,
       orgId: orgId,
+      userId: userId,
     );
     switch (result) {
       case Success<TeamMember>():
