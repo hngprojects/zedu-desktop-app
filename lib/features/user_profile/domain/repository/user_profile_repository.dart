@@ -33,6 +33,7 @@ abstract interface class UserProfileRepository {
     required String email,
     required String role,
     required String orgId,
+    String? userId,
   });
   Future<Result<TeamMember>> updateMember(TeamMember member);
   Future<Result<void>> removeMember(String memberId);
