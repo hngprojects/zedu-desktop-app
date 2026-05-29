@@ -51,7 +51,7 @@ void main() {
       return container;
     }
 
-    test('fetchWorkspaces filters workspaces created by other users', () async {
+    test('fetchWorkspaces returns all workspaces including those created by other users', () async {
       final apiResponse = ApiResponseModel<Map<String, dynamic>>(
         statusCode: 200,
         data: {
@@ -97,16 +97,15 @@ void main() {
 
       final state = container.read(workspaceProvider);
 
-      // Should filter out the organisation created by user-999 (Other Org)
-      // but keep My Organization, My Created Org, and No Owner Org.
+      // Should keep My Organization, My Created Org, Other Org, and No Owner Org.
       final workspaceIds = state.workspaces.map((w) => w.id).toList();
       
       expect(workspaceIds, contains('org-owner-123'));
       expect(workspaceIds, contains('org-creator-123'));
       expect(workspaceIds, contains('org-no-owner'));
-      expect(workspaceIds, isNot(contains('org-other-user')));
+      expect(workspaceIds, contains('org-other-user'));
       
-      expect(state.workspaces.length, equals(3));
+      expect(state.workspaces.length, equals(4));
     });
   });
 }

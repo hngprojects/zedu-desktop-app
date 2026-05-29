@@ -115,9 +115,9 @@ class ChannelRemoteDataSourceImpl implements ChannelRemoteDataSource {
   @override
   Future<void> addChannelMembers(String channelId, List<String> userIds) async {
     await apiBaseService.post<Map<String, dynamic>>(
-      path: '/channels/$channelId/members',
+      path: '/channels/add-multiple',
       data: {
-        'userIds': userIds,
+        'channel_id': channelId,
         'user_ids': userIds,
       },
     );

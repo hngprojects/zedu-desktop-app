@@ -19,6 +19,7 @@ export 'presentation/components/buzz_meeting_view.dart';
 export 'presentation/components/dm_profile_card.dart';
 export 'presentation/components/composer/rich_text_controller.dart';
 export 'presentation/components/composer/mention_suggestion_list.dart';
+export 'presentation/components/composer/channel_suggestion_list.dart';
 export 'presentation/components/composer/attachment_preview_bar.dart';
 export 'presentation/components/composer/toolbar_button.dart';
 

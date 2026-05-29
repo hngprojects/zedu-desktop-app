@@ -31,7 +31,7 @@ class WorkspaceSwitcherList extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildCurrentWorkspaceHeader(context, selectedWorkspace),
+            _buildCurrentWorkspaceHeader(context, ref, selectedWorkspace),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
@@ -103,9 +103,12 @@ class WorkspaceSwitcherList extends ConsumerWidget {
 
   Widget _buildCurrentWorkspaceHeader(
     BuildContext context,
+    WidgetRef ref,
     Workspace workspace,
   ) {
     final colors = context.colors;
+    final teamMembers = ref.watch(userProfileNotifierProvider).teamMembers;
+    final displayMembersCount = teamMembers.isNotEmpty ? teamMembers.length : workspace.membersCount;
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -138,7 +141,7 @@ class WorkspaceSwitcherList extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  '${workspace.membersCount} members',
+                  '$displayMembersCount members',
                   style: TextStyle(color: colors.textHint, fontSize: 13),
                 ),
               ],

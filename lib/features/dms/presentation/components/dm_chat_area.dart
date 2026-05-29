@@ -19,6 +19,8 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
   final _composerKey = GlobalKey<DmMessageComposerState>();
   final Map<String, GlobalKey> _messageKeys = {};
   String? _highlightedMessageId;
+  String? _activeThreadId;
+  Map<String, dynamic>? _activeThreadMessage;
 
   String get _recipientHandle {
     final parts = widget.conversation.displayName
@@ -59,7 +61,9 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(channelProvider);
     final colors = context.colors;
+    final isThreadActive = _activeThreadId != null;
 
     return DropTarget(
       onDragDone: (detail) {
@@ -79,100 +83,118 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
             Expanded(
               child: Stack(
                 children: [
-                  Column(
-                    children: [
-                      _DmChatHeader(
-                        conversation: widget.conversation,
-                        onToggleRightPanel: () {
-                          setState(() {
-                            _showRightPanel = !_showRightPanel;
-                          });
-                        },
-                        showRightPanel: _showRightPanel,
-                      ),
-                      Expanded(
-                        child: Consumer(
-                          builder: (context, ref, child) {
-                            final historyState = ref.watch(
-                              chatHistoryProvider(widget.conversation.channelId),
-                            );
-                            final messages = historyState.messages;
-
-                            return NotificationListener<ScrollNotification>(
-                              onNotification: (ScrollNotification scrollInfo) {
-                                if (!historyState.isLoading &&
-                                    historyState.hasMore &&
-                                    scrollInfo.metrics.pixels >=
-                                        scrollInfo.metrics.maxScrollExtent * 0.8) {
-                                  ref
-                                      .read(
-                                        chatHistoryProvider(
-                                          widget.conversation.channelId,
-                                        ),
-                                      )
-                                      .loadMore();
-                                }
-                                return false;
-                              },
-                              child: CustomScrollView(
-                                reverse: true,
-                                slivers: [
-                                  SliverPadding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 24,
-                                      vertical: 16,
-                                    ),
-                                    sliver: SliverList(
-                                      delegate: SliverChildBuilderDelegate((
-                                        context,
-                                        index,
-                                      ) {
-                                        final msg = messages[index];
-                                        final messageId = msg['id'] as String? ?? '';
-                                        final key = _messageKeys.putIfAbsent(
-                                          messageId,
-                                          () => GlobalKey(),
-                                        );
-
-                                        return _MessageBubble(
-                                          key: key,
-                                          message: msg,
-                                          conversation: widget.conversation,
-                                          channelId: widget.conversation.channelId,
-                                          isHighlighted: _highlightedMessageId == messageId,
-                                        );
-                                      }, childCount: messages.length),
-                                    ),
-                                  ),
-                                  if (historyState.isLoading)
-                                    const SliverToBoxAdapter(
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 16),
-                                        child: Center(
-                                          child: CircularProgressIndicator(),
-                                        ),
-                                      ),
-                                    ),
-                                  if (!historyState.hasMore)
-                                    SliverToBoxAdapter(
-                                      child: DmProfileCard(
-                                        conversation: widget.conversation,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            );
+                  if (isThreadActive)
+                    _ThreadRepliesPanel(
+                      channelId: widget.conversation.channelId,
+                      threadId: _activeThreadId!,
+                      originalMessage: _activeThreadMessage!,
+                      conversation: widget.conversation,
+                      onClose: () => setState(() {
+                        _activeThreadId = null;
+                        _activeThreadMessage = null;
+                      }),
+                    )
+                  else
+                    Column(
+                      children: [
+                        _DmChatHeader(
+                          conversation: widget.conversation,
+                          onToggleRightPanel: () {
+                            setState(() {
+                              _showRightPanel = !_showRightPanel;
+                            });
                           },
+                          showRightPanel: _showRightPanel,
                         ),
-                      ),
-                      DmMessageComposer(
-                        key: _composerKey,
-                        recipientName: _recipientHandle,
-                        channelId: widget.conversation.channelId,
-                        participants: widget.conversation.participants,
-                      ),
-                    ],
-                  ),
+                        Expanded(
+                          child: Consumer(
+                            builder: (context, ref, child) {
+                              final historyState = ref.watch(
+                                chatHistoryProvider(widget.conversation.channelId),
+                              );
+                              final messages = historyState.messages;
+
+                              return NotificationListener<ScrollNotification>(
+                                onNotification: (ScrollNotification scrollInfo) {
+                                  if (!historyState.isLoading &&
+                                      historyState.hasMore &&
+                                      scrollInfo.metrics.pixels >=
+                                          scrollInfo.metrics.maxScrollExtent * 0.8) {
+                                    ref
+                                        .read(
+                                          chatHistoryProvider(
+                                            widget.conversation.channelId,
+                                          ),
+                                        )
+                                        .loadMore();
+                                  }
+                                  return false;
+                                },
+                                child: CustomScrollView(
+                                  reverse: true,
+                                  slivers: [
+                                    SliverPadding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 24,
+                                        vertical: 16,
+                                      ),
+                                      sliver: SliverList(
+                                        delegate: SliverChildBuilderDelegate((
+                                          context,
+                                          index,
+                                        ) {
+                                          final msg = messages[index];
+                                          final messageId = msg['id'] as String? ?? '';
+                                          final key = _messageKeys.putIfAbsent(
+                                            messageId,
+                                            () => GlobalKey(),
+                                          );
+
+                                          return _MessageBubble(
+                                            key: key,
+                                            message: msg,
+                                            conversation: widget.conversation,
+                                            channelId: widget.conversation.channelId,
+                                            isHighlighted: _highlightedMessageId == messageId,
+                                            onReplyInThread: (message) {
+                                              setState(() {
+                                                _activeThreadId = message['id'] as String?;
+                                                _activeThreadMessage = message;
+                                              });
+                                            },
+                                          );
+                                        }, childCount: messages.length),
+                                      ),
+                                    ),
+                                    if (historyState.isLoading)
+                                      const SliverToBoxAdapter(
+                                        child: Padding(
+                                          padding: EdgeInsets.symmetric(vertical: 16),
+                                          child: Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                        ),
+                                      ),
+                                    if (!historyState.hasMore)
+                                      SliverToBoxAdapter(
+                                        child: DmProfileCard(
+                                          conversation: widget.conversation,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        DmMessageComposer(
+                          key: _composerKey,
+                          recipientName: _recipientHandle,
+                          channelId: widget.conversation.channelId,
+                          participants: widget.conversation.participants,
+                        ),
+                      ],
+                    ),
 
                   // FULL PAGE MODE INJECTION
                   Consumer(
@@ -303,9 +325,9 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                 ],
               ),
             ),
-            if (_showRightPanel)
+            if (_showRightPanel && !isThreadActive)
               Container(
-                width: 320,
+                width: 360,
                 decoration: BoxDecoration(
                   color: colors.background,
                   border: Border(left: BorderSide(color: colors.divider)),
@@ -446,14 +468,14 @@ class _DmChatHeader extends StatelessWidget {
             onPressed: onToggleRightPanel,
           ),
           const SizedBox(width: 8),
-          if (conversation.channelType == 'channel') ...[
+          if (conversation.channelType == 'channel' || conversation.channelType == 'group_dm') ...[
             Consumer(
               builder: (context, ref, child) {
                 return IconButton(
                   icon: Icon(Icons.person_add_alt_1_outlined, color: colors.textHint),
                   tooltip: 'Add Members',
                   onPressed: () {
-                    _showAddMembersDialog(context, ref, conversation.channelId);
+                    _showAddMembersDialog(context, ref, conversation.channelId, conversation.channelType);
                   },
                 );
               },
@@ -604,6 +626,7 @@ class _MessageBubble extends ConsumerStatefulWidget {
   final DmConversation conversation;
   final String channelId;
   final bool isHighlighted;
+  final void Function(Map<String, dynamic> message)? onReplyInThread;
 
   const _MessageBubble({
     super.key,
@@ -611,6 +634,7 @@ class _MessageBubble extends ConsumerStatefulWidget {
     required this.conversation,
     required this.channelId,
     required this.isHighlighted,
+    this.onReplyInThread,
   });
 
   @override
@@ -620,21 +644,93 @@ class _MessageBubble extends ConsumerStatefulWidget {
 class _MessageBubbleState extends ConsumerState<_MessageBubble> {
   bool _isHovering = false;
 
+  bool _isAudioMessage(Map<String, dynamic> msg) {
+    final content = (msg['content'] ?? '').toString();
+    if (content == '[Voice Note Attached]') return true;
+
+    final media = msg['media'] as List<dynamic>? ?? const [];
+    for (var m in media) {
+      if (m is Map) {
+        final name = (m['file_name'] ?? m['name'] ?? '').toString().toLowerCase();
+        final ext = name.split('.').last.toLowerCase();
+        if (['m4a', 'mp3', 'wav', 'aac', 'ogg', 'caf', 'opus', 'mp4', 'webm'].contains(ext) || name.contains('voice_note')) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  String _getAudioSource(Map<String, dynamic> msg) {
+    if (msg['audio_source'] != null) return msg['audio_source'].toString();
+    if (msg['file_link'] != null && msg['file_link'].toString().endsWith('.m4a')) return msg['file_link'].toString();
+
+    final media = msg['media'] as List<dynamic>? ?? const [];
+    for (var m in media) {
+      if (m is Map) {
+        final name = (m['file_name'] ?? m['name'] ?? '').toString().toLowerCase();
+        final ext = name.split('.').last.toLowerCase();
+        if (['m4a', 'mp3', 'wav', 'aac', 'ogg', 'caf', 'opus', 'mp4', 'webm'].contains(ext) || name.contains('voice_note')) {
+          return (m['file_link'] ?? m['path'] ?? '').toString();
+        }
+      }
+    }
+    return '';
+  }
+
+  void _handleChannelTap(String channelName) {
+    final channels = ref.read(channelProvider).channels;
+    final found = channels.firstWhere(
+      (c) => c.name.toLowerCase() == channelName.toLowerCase(),
+      orElse: () => const Channel(id: '', name: '', description: '', organisationId: '', ownerId: ''),
+    );
+    if (found.id.isNotEmpty) {
+      ref.read(homeSidebarProvider.notifier).setType(HomeSidebarType.home);
+      ref.read(activeChatProvider.notifier).selectChannel(found.id);
+    }
+  }
+
+  void _handleMentionTap(String username) {
+    final teamMembers = ref.read(userProfileNotifierProvider).teamMembers;
+    final found = teamMembers.firstWhere(
+      (m) => (m.name ?? '').toLowerCase() == username.toLowerCase(),
+      orElse: () => const TeamMember(id: '', email: '', role: '', dateJoined: '', status: TeamMemberStatus.inactive),
+    );
+    if (found.id.isNotEmpty) {
+      final conversations = ref.read(dmListProvider).value ?? [];
+      final existing = conversations.firstWhere(
+        (c) => c.participantId == found.id,
+        orElse: () => DmConversation(
+          channelId: found.id,
+          username: found.name ?? username,
+          participantId: found.id,
+          previewMessage: '',
+          unreadCount: 0,
+        ),
+      );
+      ref.read(homeSidebarProvider.notifier).setType(HomeSidebarType.dms);
+      ref.read(selectedDmProvider.notifier).select(existing);
+      ref.read(activeChatProvider.notifier).selectDirectMessage(existing.channelId);
+    }
+  }
+
   TextSpan _parseRichText(String text, TextStyle defaultStyle) {
     if (text.isEmpty) return TextSpan(style: defaultStyle, text: '');
 
+    final colors = context.colors;
     final boldRegex = RegExp(r'\*\*(.*?)\*\*', dotAll: true);
     final italicRegex = RegExp(r'\*(?!\*)(.*?)\*', dotAll: true);
     final strikeRegex = RegExp(r'~~(.*?)~~', dotAll: true);
     final codeRegex = RegExp(r'`(.*?)`', dotAll: true);
+    final mentionRegex = RegExp(r'@\w+');
+    final channelRegex = RegExp(r'#[\w-]+');
 
-    final allPatterns = [boldRegex, italicRegex, strikeRegex, codeRegex];
     final combined = RegExp(
-      allPatterns.map((r) => r.pattern).join('|'),
+      r'(\*\*.*?\*\*)|(\*(?!\*).*?\*)|(~~.*?~~)|(`.*?`)|(@\w+)|(#[\w-]+)',
       dotAll: true,
     );
 
-    final spans = <TextSpan>[];
+    final spans = <InlineSpan>[];
     int lastEnd = 0;
 
     for (final match in combined.allMatches(text)) {
@@ -685,6 +781,46 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
           TextSpan(
             text: inner,
             style: defaultStyle.copyWith(fontStyle: FontStyle.italic),
+          ),
+        );
+      } else if (mentionRegex.hasMatch(raw)) {
+        final username = raw.substring(1);
+        spans.add(
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: GestureDetector(
+              onTap: () => _handleMentionTap(username),
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Text(
+                  raw,
+                  style: defaultStyle.copyWith(
+                    color: colors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      } else if (channelRegex.hasMatch(raw)) {
+        final channelName = raw.substring(1);
+        spans.add(
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: GestureDetector(
+              onTap: () => _handleChannelTap(channelName),
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Text(
+                  raw,
+                  style: defaultStyle.copyWith(
+                    color: colors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
           ),
         );
       } else {
@@ -907,16 +1043,9 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                         ),
                         if (history.editingMessageId == messageId)
                           _buildInlineEditor(context, history, messageId, content, colors)
-                        else if (content == '[Voice Note Attached]')
+                        else if (_isAudioMessage(widget.message))
                           VoiceNotePlayer(
-                            audioSource: (widget.message['audio_source'] ??
-                                    widget.message['file_link'] ??
-                                    ((widget.message['media'] as List<dynamic>?)?.isNotEmpty == true
-                                        ? (widget.message['media'] as List<dynamic>).first['file_link'] ??
-                                            (widget.message['media'] as List<dynamic>).first['path']
-                                        : null) ??
-                                    '')
-                                .toString(),
+                            audioSource: _getAudioSource(widget.message),
                           )
                         else if (content.isNotEmpty)
                           Container(
@@ -942,13 +1071,10 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                         if (media.isNotEmpty)
                           (() {
                             final filteredMedia = media.where((m) {
-                              if (content == '[Voice Note Attached]') {
-                                final name = (m['file_name'] ?? m['name'] ?? '').toString().toLowerCase();
-                                final ext = name.split('.').last.toLowerCase();
-                                final isAudio = ['m4a', 'mp3', 'wav', 'aac', 'ogg', 'caf', 'opus', 'mp4', 'webm'].contains(ext) || name.contains('voice_note');
-                                return !isAudio;
-                              }
-                              return true;
+                              final name = (m['file_name'] ?? m['name'] ?? '').toString().toLowerCase();
+                              final ext = name.split('.').last.toLowerCase();
+                              final isAudio = ['m4a', 'mp3', 'wav', 'aac', 'ogg', 'caf', 'opus', 'mp4', 'webm'].contains(ext) || name.contains('voice_note');
+                              return !isAudio;
                             }).toList();
                             if (filteredMedia.isEmpty) return const SizedBox.shrink();
                             return Padding(
@@ -1048,6 +1174,38 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                                     ),
                                   ),
                           ),
+                        if ((widget.message['thread_count'] as int? ?? widget.message['reply_count'] as int? ?? 0) > 0)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: InkWell(
+                              onTap: () => widget.onReplyInThread?.call(widget.message),
+                              borderRadius: BorderRadius.circular(4),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: colors.primary.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: colors.primary.withValues(alpha: 0.1)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.forum_outlined, size: 14, color: colors.primary),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '${widget.message['thread_count'] ?? widget.message['reply_count']} ${widget.message['thread_count'] == 1 || widget.message['reply_count'] == 1 ? "reply" : "replies"}',
+                                      style: context.textTheme.labelSmall?.copyWith(
+                                        color: colors.primary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Icon(Icons.chevron_right, size: 14, color: colors.primary),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -1092,6 +1250,14 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                           PopupMenuItem(value: '👎', child: Text('👎')),
                         ],
                       ),
+                      if (widget.onReplyInThread != null)
+                        IconButton(
+                          icon: Icon(Icons.chat_bubble_outline, size: 16, color: colors.textHint),
+                          tooltip: 'Reply in thread',
+                          onPressed: () => widget.onReplyInThread?.call(widget.message),
+                          constraints: const BoxConstraints(),
+                          padding: const EdgeInsets.all(6),
+                        ),
                       IconButton(
                         icon: Icon(
                           ref.watch(pinnedMessagesProvider)[widget.channelId]?.any((m) => m.id == messageId) == true
@@ -1601,29 +1767,33 @@ void _showNotificationSettingsDialog(
   );
 }
 
-void _showAddMembersDialog(BuildContext context, WidgetRef ref, String channelId) {
+void _showAddMembersDialog(BuildContext context, WidgetRef ref, String channelId, String channelType) {
   showDialog<void>(
     context: context,
     builder: (context) {
       return Consumer(
         builder: (context, ref, child) {
           final teamMembers = ref.watch(userProfileNotifierProvider).teamMembers;
-          final channelState = ref.watch(channelProvider);
-          final channel = channelState.channels.firstWhere(
-            (c) => c.id == channelId,
-            orElse: () => const Channel(
-              id: '',
-              name: '',
-              description: '',
-              organisationId: '',
-              ownerId: '',
-            ),
-          );
+          Channel? channel;
+          if (channelType == 'channel') {
+            final channelState = ref.watch(channelProvider);
+            channel = channelState.channels.firstWhere(
+              (c) => c.id == channelId,
+              orElse: () => const Channel(
+                id: '',
+                name: '',
+                description: '',
+                organisationId: '',
+                ownerId: '',
+              ),
+            );
+          }
 
           return _AddMembersDialogContent(
             channel: channel,
             teamMembers: teamMembers,
             channelId: channelId,
+            channelType: channelType,
           );
         },
       );
@@ -1632,14 +1802,16 @@ void _showAddMembersDialog(BuildContext context, WidgetRef ref, String channelId
 }
 
 class _AddMembersDialogContent extends ConsumerStatefulWidget {
-  final Channel channel;
+  final Channel? channel;
   final List<TeamMember> teamMembers;
   final String channelId;
+  final String channelType;
 
   const _AddMembersDialogContent({
-    required this.channel,
+    this.channel,
     required this.teamMembers,
     required this.channelId,
+    required this.channelType,
   });
 
   @override
@@ -1649,6 +1821,7 @@ class _AddMembersDialogContent extends ConsumerStatefulWidget {
 class _AddMembersDialogContentState extends ConsumerState<_AddMembersDialogContent> {
   final List<String> _selectedIds = [];
   String _searchQuery = '';
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -1661,13 +1834,16 @@ class _AddMembersDialogContentState extends ConsumerState<_AddMembersDialogConte
     }).toList();
 
     return AlertDialog(
-      title: const Text('Add members to channel'),
+      title: Text(widget.channelType == 'group_dm'
+          ? 'Add participants to Group DM'
+          : 'Add members to channel'),
       content: SizedBox(
         width: 400,
         height: 350,
         child: Column(
           children: [
             TextField(
+              enabled: !_isLoading,
               onChanged: (val) => setState(() => _searchQuery = val),
               decoration: InputDecoration(
                 hintText: 'Search by name or email',
@@ -1685,6 +1861,7 @@ class _AddMembersDialogContentState extends ConsumerState<_AddMembersDialogConte
                         final isSelected = _selectedIds.contains(member.id);
 
                         return CheckboxListTile(
+                          enabled: !_isLoading,
                           value: isSelected,
                           title: Text(member.name ?? member.email),
                           subtitle: Text(member.email),
@@ -1706,37 +1883,82 @@ class _AddMembersDialogContentState extends ConsumerState<_AddMembersDialogConte
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
         ElevatedButton(
-          onPressed: _selectedIds.isEmpty
+          onPressed: (_selectedIds.isEmpty || _isLoading)
               ? null
               : () async {
-                  final success = await ref
-                      .read(channelProvider.notifier)
-                      .addChannelMembers(widget.channelId, _selectedIds);
-                  if (success && context.mounted) {
-                    Navigator.of(context).pop();
-
-                    for (final _ in _selectedIds) {
-                      final notification = LocalNotification(
-                        title: 'Added to Channel',
-                        body: 'You have been added to channel #${widget.channel.name}',
-                      );
-                      await notification.show();
+                  setState(() => _isLoading = true);
+                  try {
+                    bool success = false;
+                    if (widget.channelType == 'group_dm') {
+                      success = await ref
+                          .read(groupDmProvider.notifier)
+                          .addGroupDmParticipants(widget.channelId, _selectedIds);
+                    } else {
+                      success = await ref
+                          .read(channelProvider.notifier)
+                          .addChannelMembers(widget.channelId, _selectedIds);
                     }
+                    if (success && context.mounted) {
+                      Navigator.of(context).pop();
 
+                      if (widget.channelType == 'group_dm') {
+                        AppToastService.show(
+                          context,
+                          type: AppToastType.success,
+                          message: 'Participants added successfully.',
+                        );
+                      } else {
+                        for (final _ in _selectedIds) {
+                          final notification = LocalNotification(
+                            title: 'Added to Channel',
+                            body: 'You have been added to channel #${widget.channel?.name ?? ''}',
+                          );
+                          await notification.show();
+                        }
+
+                        if (context.mounted) {
+                          AppToastService.show(
+                            context,
+                            type: AppToastType.success,
+                            message: 'Members added successfully.',
+                          );
+                        }
+                      }
+                    } else if (context.mounted) {
+                      AppToastService.show(
+                        context,
+                        type: AppToastType.error,
+                        message: 'Failed to add members.',
+                      );
+                    }
+                  } catch (e) {
                     if (context.mounted) {
                       AppToastService.show(
                         context,
-                        type: AppToastType.success,
-                        message: 'Members added successfully.',
+                        type: AppToastType.error,
+                        message: 'An error occurred: $e',
                       );
+                    }
+                  } finally {
+                    if (mounted) {
+                      setState(() => _isLoading = false);
                     }
                   }
                 },
-          child: const Text('Add'),
+          child: _isLoading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : const Text('Add'),
         ),
       ],
     );
@@ -1802,5 +2024,185 @@ void _showLeaveChannelConfirmDialog(
         message: 'You left #$channelName.',
       );
     }
+  }
+}
+
+class _ThreadRepliesPanel extends ConsumerWidget {
+  final String channelId;
+  final String threadId;
+  final Map<String, dynamic> originalMessage;
+  final DmConversation conversation;
+  final VoidCallback onClose;
+
+  const _ThreadRepliesPanel({
+    required this.channelId,
+    required this.threadId,
+    required this.originalMessage,
+    required this.conversation,
+    required this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final textTheme = context.textTheme;
+    final threadHistory = ref.watch(chatHistoryProvider('$channelId:$threadId'));
+    final replies = threadHistory.messages;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Container(
+          height: 58,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: colors.divider)),
+          ),
+          child: Row(
+            children: [
+              IconButton(
+                icon: Icon(Icons.arrow_back, color: colors.textPrimary),
+                onPressed: onClose,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Thread',
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      conversation.displayName,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colors.textHint,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Scrollable Replies List
+        Expanded(
+          child: CustomScrollView(
+            reverse: true,
+            slivers: [
+              // Replies List
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final msg = replies[index];
+                      return _MessageBubble(
+                        message: msg,
+                        conversation: conversation,
+                        channelId: '$channelId:$threadId',
+                        isHighlighted: false,
+                        onReplyInThread: null,
+                      );
+                    },
+                    childCount: replies.length,
+                  ),
+                ),
+              ),
+
+              // Separator / Reply count
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      Text(
+                        '${replies.length} ${replies.length == 1 ? "reply" : "replies"}',
+                        style: textTheme.labelSmall?.copyWith(
+                          color: colors.textHint,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Divider(color: colors.divider),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Original Message
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                sliver: SliverToBoxAdapter(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: colors.onPrimary.withValues(alpha: 0.02),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: colors.divider.withValues(alpha: 0.5)),
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6, left: 4),
+                          child: Text(
+                            'Original Message',
+                            style: textTheme.labelSmall?.copyWith(
+                              color: colors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        _MessageBubble(
+                          message: originalMessage,
+                          conversation: conversation,
+                          channelId: channelId,
+                          isHighlighted: false,
+                          onReplyInThread: null,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              if (threadHistory.isLoading)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+
+        // Composer at the bottom
+        Container(
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: colors.divider)),
+            color: colors.background,
+          ),
+          child: DmMessageComposer(
+            recipientName: 'Reply...',
+            channelId: '$channelId:$threadId',
+            participants: conversation.participants,
+          ),
+        ),
+      ],
+    );
   }
 }

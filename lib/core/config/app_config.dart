@@ -4,10 +4,8 @@ class AppConfig {
   const AppConfig({
     required this.apiBaseUrl,
     required this.usesMockData,
-    // Web Client ID: '764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com'
-    // Desktop Client ID:
     this.googleClientId =
-        '764182056638-qtmk2mattvq035th78hjgpe5docu0oh1.apps.googleusercontent.com',
+        '764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com',
     this.googleClientSecret = '',
   });
 
@@ -46,13 +44,22 @@ class AppConfig {
         ? _parseBool(envUsesMock, defaultValue: false)
         : false; // Changed to false so real backend is used by default
 
-    final googleClientId = defineClientId.isNotEmpty
+    var googleClientId = defineClientId.isNotEmpty
         ? defineClientId
         : (envClientId?.isNotEmpty ?? false)
         ? envClientId!
-        // Web Client ID: '764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com'
-        // Desktop Client ID:
-        : '764182056638-08g88e196e643mhpa2tuv5dpr7iumd1j.apps.googleusercontent.com';
+        : '764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com';
+
+    // Sanitize in case it's passed with http/https prefix or trailing slash
+    googleClientId = googleClientId.trim();
+    if (googleClientId.startsWith('http://')) {
+      googleClientId = googleClientId.substring(7);
+    } else if (googleClientId.startsWith('https://')) {
+      googleClientId = googleClientId.substring(8);
+    }
+    if (googleClientId.endsWith('/')) {
+      googleClientId = googleClientId.substring(0, googleClientId.length - 1);
+    }
 
     final googleClientSecret = defineClientSecret.isNotEmpty
         ? defineClientSecret
@@ -72,7 +79,17 @@ class AppConfig {
   final bool usesMockData;
   final String googleClientId;
   final String googleClientSecret;
+
+  String get websocketUrl {
+    final uri = Uri.parse(apiBaseUrl);
+    final scheme = uri.scheme == 'https' ? 'wss' : 'ws';
+    if (uri.host.contains('zedu.chat')) {
+      return '$scheme://${uri.host}/centrifugo/connection/websocket';
+    }
+    return '$scheme://${uri.host}/connection/websocket';
+  }
 }
+
 
 bool _parseBool(String raw, {required bool defaultValue}) {
   final normalized = raw.trim().toLowerCase();

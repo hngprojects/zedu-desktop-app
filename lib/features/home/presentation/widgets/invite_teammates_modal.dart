@@ -102,11 +102,24 @@ class _InviteTeammatesModalState extends ConsumerState<InviteTeammatesModal> {
 
     // Loop through and invite all
     for (final invite in _invites) {
+      final email = invite['email']!;
+      String? userId = invite['userId'];
+
+      if (userId == null) {
+        final match = _registeredUsers.firstWhere(
+          (u) => (u['email'] as String?)?.toLowerCase() == email.toLowerCase(),
+          orElse: () => <String, dynamic>{},
+        );
+        if (match.isNotEmpty) {
+          userId = match['id'] as String?;
+        }
+      }
+
       // Assuming 'User' role by default since there's no dropdown in UI
       await notifier.inviteMember(
-        email: invite['email']!,
+        email: email,
         role: 'User',
-        userId: invite['userId'],
+        userId: userId,
       );
       final state = ref.read(userProfileNotifierProvider);
       if (state.error != null) {

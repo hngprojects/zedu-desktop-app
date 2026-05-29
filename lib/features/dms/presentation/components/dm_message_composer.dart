@@ -40,6 +40,9 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
   List<DmParticipant> _mentionSuggestions = [];
   String _mentionQuery = '';
 
+  List<Channel> _channelSuggestions = [];
+  String _channelQuery = '';
+
   bool _isRecording = false;
   final AudioRecorder _audioRecorder = AudioRecorder();
   Timer? _recordingTimer;
@@ -51,6 +54,7 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
     super.initState();
     _controller = RichTextController();
     _controller.addListener(_onTextChanged);
+    _focusNode.onKeyEvent = _handleKeyEvent;
   }
 
   @override
@@ -67,6 +71,7 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
   void _onTextChanged() {
     _updateFormattingState();
     _updateMentionSuggestions();
+    _updateChannelSuggestions();
   }
 
   Future<void> _startRecording() async {
@@ -173,7 +178,26 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
     }
     final query = atMatch.group(1)!.toLowerCase();
     _mentionQuery = query;
-    final suggestions = widget.participants.where((p) {
+
+    // Fetch team members and convert them to DmParticipants
+    final teamMembers = ref.read(userProfileNotifierProvider).teamMembers;
+    final allParticipants = teamMembers.map((m) => DmParticipant(
+      userId: m.id,
+      username: m.name ?? m.email.split('@').first,
+      email: m.email,
+      avatarUrl: m.avatarUrl,
+    )).toList();
+
+    // Deduplicate between widget.participants and organization members
+    final uniqueParticipants = <String, DmParticipant>{};
+    for (final p in widget.participants) {
+      uniqueParticipants[p.userId] = p;
+    }
+    for (final p in allParticipants) {
+      uniqueParticipants[p.userId] = p;
+    }
+
+    final suggestions = uniqueParticipants.values.where((p) {
       return p.username.toLowerCase().contains(query) ||
           p.email.toLowerCase().contains(query);
     }).toList();
@@ -195,6 +219,49 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
       selection: TextSelection.collapsed(offset: atIndex + replacement.length),
     );
     setState(() => _mentionSuggestions = []);
+    _focusNode.requestFocus();
+  }
+
+  void _updateChannelSuggestions() {
+    final text = _controller.text;
+    final sel = _controller.selection;
+    if (!sel.isValid || !sel.isCollapsed) {
+      setState(() => _channelSuggestions = []);
+      return;
+    }
+    final before = text.substring(0, sel.baseOffset);
+    final hashMatch = RegExp(r'#(\w*)$').firstMatch(before);
+    if (hashMatch == null) {
+      setState(() {
+        _channelSuggestions = [];
+        _channelQuery = '';
+      });
+      return;
+    }
+    final query = hashMatch.group(1)!.toLowerCase();
+    _channelQuery = query;
+    final channelState = ref.read(channelProvider);
+    final suggestions = channelState.channels.where((c) {
+      return !c.archived && c.name.toLowerCase().contains(query);
+    }).toList();
+    setState(() => _channelSuggestions = suggestions);
+  }
+
+  void _insertChannel(Channel channel) {
+    final text = _controller.text;
+    final sel = _controller.selection;
+    final before = text.substring(0, sel.baseOffset);
+    final hashIndex = before.lastIndexOf('#');
+    if (hashIndex == -1) return;
+
+    final after = text.substring(sel.baseOffset);
+    final replacement = '#${channel.name} ';
+    final newText = text.substring(0, hashIndex) + replacement + after;
+    _controller.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: hashIndex + replacement.length),
+    );
+    setState(() => _channelSuggestions = []);
     _focusNode.requestFocus();
   }
 
@@ -243,11 +310,24 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
 
     final key = event.logicalKey;
 
-    if (key == LogicalKeyboardKey.enter &&
-        (HardwareKeyboard.instance.isControlPressed ||
-            HardwareKeyboard.instance.isMetaPressed)) {
-      _handleSend();
-      return KeyEventResult.handled;
+    if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter) {
+      if (HardwareKeyboard.instance.isShiftPressed ||
+          HardwareKeyboard.instance.isControlPressed ||
+          HardwareKeyboard.instance.isMetaPressed) {
+        // Insert a newline at the current cursor position
+        final text = _controller.text;
+        final sel = _controller.selection;
+        final offset = sel.isValid ? sel.baseOffset : text.length;
+        final newText = '${text.substring(0, offset)}\n${text.substring(offset)}';
+        _controller.value = TextEditingValue(
+          text: newText,
+          selection: TextSelection.collapsed(offset: offset + 1),
+        );
+        return KeyEventResult.handled;
+      } else {
+        _handleSend();
+        return KeyEventResult.handled;
+      }
     }
 
     if (key == LogicalKeyboardKey.escape) {
@@ -430,19 +510,30 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
   }
 
   Future<void> _pickFiles() async {
-    final result = await FilePicker.pickFiles(
-      allowMultiple: true,
-      type: FileType.any,
-    );
-    if (result == null) return;
-    final picked = result.files
-        .where((PlatformFile f) => f.path != null)
-        .map(
-          (PlatformFile f) =>
-              XFile(f.path!, name: f.name, mimeType: f.extension),
-        )
-        .toList();
-    await addFiles(picked);
+    try {
+      final result = await FilePicker.pickFiles(
+        allowMultiple: true,
+        type: FileType.any,
+      );
+      if (result == null) return;
+      final picked = result.files
+          .where((PlatformFile f) => f.path != null)
+          .map(
+            (PlatformFile f) =>
+                XFile(f.path!, name: f.name, mimeType: f.extension),
+          )
+          .toList();
+      await addFiles(picked);
+    } catch (e, stack) {
+      debugPrint('Error picking files: $e\n$stack');
+      if (mounted) {
+        AppToastService.show(
+          context,
+          type: AppToastType.error,
+          message: 'Could not open file picker: $e',
+        );
+      }
+    }
   }
 
   void _removeFile(int index) {
@@ -512,6 +603,14 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
             query: _mentionQuery,
             colors: colors,
             onSelect: _insertMention,
+          ),
+
+        if (_channelSuggestions.isNotEmpty)
+          ChannelSuggestionList(
+            suggestions: _channelSuggestions,
+            query: _channelQuery,
+            colors: colors,
+            onSelect: _insertChannel,
           ),
 
         if (_showEmojiPicker)

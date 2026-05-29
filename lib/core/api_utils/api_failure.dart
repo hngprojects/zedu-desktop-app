@@ -49,6 +49,12 @@ class ApiFailure implements Exception {
         messageLower.contains('already exists') ||
         messageLower.contains('duplicate') ||
         messageLower.contains('already registered')) {
+      if (path != null && (path!.contains('organisations') || path!.contains('invite'))) {
+        if (messageLower.contains('member') || messageLower.contains('already') || messageLower.contains('exist')) {
+          return 'This user is already a member of the organization.';
+        }
+        return 'The user has already been invited or is already a member.';
+      }
       return 'email address already exists, use another email to sign in';
     }
 

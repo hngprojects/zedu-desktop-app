@@ -77,6 +77,12 @@ class DmSidebarList extends ConsumerWidget {
                             : g.messages.last,
                         unreadCount: g.unreadCount,
                         channelType: 'group_dm',
+                        participants: g.members.map((m) => DmParticipant(
+                          userId: m.id,
+                          username: m.name ?? m.email.split('@').first,
+                          email: m.email,
+                          avatarUrl: m.avatarUrl,
+                        )).toList(),
                       );
                     }).toList();
 

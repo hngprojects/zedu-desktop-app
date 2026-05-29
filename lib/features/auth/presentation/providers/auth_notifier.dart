@@ -296,7 +296,7 @@ class AuthNotifier extends Notifier<AuthState> {
       server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
       AppLogger.d('Local loopback server listening on port $port', tag: _tag);
 
-      final redirectUri = 'http://localhost:$port'; // Desktop Loopback URI
+      final redirectUri = 'http://localhost:$port/'; // Desktop Loopback URI
       final authUrl = Uri.https('accounts.google.com', '/o/oauth2/v2/auth', {
         'client_id': config.googleClientId,
         'response_type': 'code',

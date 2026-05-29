@@ -4,15 +4,20 @@ import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
 class UserProfileNotifier extends Notifier<UserProfileState> {
-  late final UserProfileRepository _repository;
+  late UserProfileRepository _repository;
 
   @override
   UserProfileState build() {
-    final authState = ref.watch(authNotifierProvider);
+    final authStatus = ref.watch(authNotifierProvider.select((s) => s.status));
+    final orgId = ref.watch(currentOrgIdProvider);
     _repository = ref.read(userProfileRepositoryProvider);
-    if (authState.status == AuthStatus.authenticated) {
-      load();
-      return const UserProfileState(isLoading: true);
+    if (authStatus == AuthStatus.authenticated) {
+      Future.microtask(() => load(orgId: orgId.isNotEmpty ? orgId : null));
+      try {
+        return state.copyWith(isLoading: true);
+      } catch (_) {
+        return const UserProfileState(isLoading: true);
+      }
     }
     return const UserProfileState(isLoading: false);
   }
@@ -380,6 +385,37 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
         }
 
       case Failure<TeamMember>():
+        if (userId == null) {
+          final errStr = result.error.friendlyMessage.toLowerCase();
+          if (errStr.contains('exists') ||
+              errStr.contains('already') ||
+              errStr.contains('conflict') ||
+              errStr.contains('registered')) {
+            final users = await fetchRegisteredUsers();
+            final match = users.firstWhere(
+              (u) => (u['email'] as String?)?.toLowerCase() == email.toLowerCase(),
+              orElse: () => <String, dynamic>{},
+            );
+            final resolvedId = match['id'] as String?;
+            if (resolvedId != null && resolvedId.isNotEmpty) {
+              final retryResult = await _repository.inviteMember(
+                email: email,
+                role: roleId,
+                orgId: orgId,
+                userId: resolvedId,
+              );
+              if (retryResult is Success<TeamMember>) {
+                final newTeamMembers = [...state.teamMembers, retryResult.value];
+                state = state.copyWith(
+                  teamMembers: newTeamMembers,
+                  isSaving: false,
+                  successMessage: 'User added to organization successfully.',
+                );
+                return;
+              }
+            }
+          }
+        }
         state = state.copyWith(
           isSaving: false,
           error: result.error.friendlyMessage,
@@ -437,18 +473,20 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     }
   }
 
-  Future<void> load() async {
+  Future<void> load({String? orgId}) async {
     state = state.copyWith(isLoading: true, clearError: true);
-    final orgId = ref.read(workspaceProvider).selectedWorkspace?.id;
+    final activeOrgId = orgId ?? ref.read(workspaceProvider).selectedWorkspace?.id;
     final results = await Future.wait([
       _repository.getAccount(),
       _repository.getNotificationPreferences(),
       _repository.getSecuritySessions(),
       _repository.getOrganization(),
-      _repository.getTeamMembers(orgId: orgId),
+      _repository.getTeamMembers(orgId: activeOrgId),
       _repository.getRolesAndPermissions(),
       _repository.getBillingInfo(),
     ]);
+
+    if (!ref.mounted) return;
 
     final accountResult = results[0] as Result<ProfileAccount>;
     final notificationResult = results[1] as Result<NotificationPreferences>;
@@ -463,9 +501,10 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     var loadedTeamMembers = _valueOrNull(teamResult) ?? const [];
 
     // Load persisted mock members if they exist
-    if (orgId != null) {
+    if (activeOrgId != null) {
       final storage = locator<SecureStorageService>();
-      final data = await storage.readData('mock_team_members_$orgId');
+      final data = await storage.readData('mock_team_members_$activeOrgId');
+      if (!ref.mounted) return;
       if (data != null) {
         try {
           final List<dynamic> decoded = jsonDecode(data) as List<dynamic>;

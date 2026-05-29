@@ -1,46 +1,37 @@
-import 'package:test/test.dart';
-
-sealed class Result<T> {
-  const Result();
-}
-
-class Success<T> extends Result<T> {
-  const Success(this.value);
-  final T value;
-}
-
-class Failure<T> extends Result<T> {
-  const Failure(this.error);
-  final String error;
-}
-
-class ProfileAccount {}
-
-class ProfileAccountModel extends ProfileAccount {}
-
-T? valueOrNull<T>(Result<T> result) {
-  return switch (result) {
-    Success<T>() => result.value,
-    Failure<T>() => null,
-  };
-}
+import 'package:flutter_test/flutter_test.dart';
+import 'package:dio/dio.dart';
 
 void main() {
-  test('valueOrNull test with model type', () {
-    try {
-      Result<dynamic> result = Failure<ProfileAccountModel>('error');
-      final castedResult = result as Result<ProfileAccount>;
-      final val = valueOrNull(castedResult);
-      expect(val, null);
+  test('API Diagnostics Test', () async {
 
-      Result<dynamic> successResult = Success<ProfileAccountModel>(
-        ProfileAccountModel(),
-      );
-      final castedSuccess = successResult as Result<ProfileAccount>;
-      final val2 = valueOrNull(castedSuccess);
-      expect(val2, isNotNull);
-    } catch (e) {
-      fail('Failed: $e');
-    }
+    final dioStaging = Dio(BaseOptions(
+      baseUrl: 'https://api.staging.zedu.chat/api/v1/',
+      validateStatus: (status) => true,
+    ));
+
+    final dioProd = Dio(BaseOptions(
+      baseUrl: 'https://api.zedu.chat/api/v1/',
+      validateStatus: (status) => true,
+    ));
+
+    // ignore: avoid_print
+    print('----------------------------------------');
+    // ignore: avoid_print
+    print('Testing STAGING GET /auth/google/callback');
+    final responseStaging = await dioStaging.get<dynamic>('auth/google/callback');
+    // ignore: avoid_print
+    print('Staging Status: ${responseStaging.statusCode}');
+    // ignore: avoid_print
+    print('Staging Headers: ${responseStaging.headers}');
+
+    // ignore: avoid_print
+    print('----------------------------------------');
+    // ignore: avoid_print
+    print('Testing PRODUCTION GET /auth/google/callback');
+    final responseProd = await dioProd.get<dynamic>('auth/google/callback');
+    // ignore: avoid_print
+    print('Production Status: ${responseProd.statusCode}');
+    // ignore: avoid_print
+    print('Production Headers: ${responseProd.headers}');
   });
 }

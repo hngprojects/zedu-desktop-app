@@ -279,7 +279,7 @@ class _ChatAreaSwitcher extends ConsumerWidget {
         final channelState = ref.watch(channelProvider);
         final channelId = activeChat.id;
         final channel = channelState.channels.firstWhere(
-          (c) => c.id == channelId || c.name == channelId,
+          (c) => c.id == channelId || (channelId != null && c.name.toLowerCase() == channelId.toLowerCase()),
           orElse: () => Channel(
             id: channelId ?? '',
             name: channelId ?? 'general',
@@ -288,6 +288,14 @@ class _ChatAreaSwitcher extends ConsumerWidget {
             ownerId: '',
           ),
         );
+        final teamMembers = ref.watch(userProfileNotifierProvider).teamMembers;
+        final participants = teamMembers.map((m) => DmParticipant(
+          userId: m.id,
+          username: m.name ?? m.email.split('@').first,
+          email: m.email,
+          avatarUrl: m.avatarUrl,
+        )).toList();
+
         final conversation = DmConversation(
           channelId: channel.id,
           username: '#${channel.name}',
@@ -295,6 +303,7 @@ class _ChatAreaSwitcher extends ConsumerWidget {
           previewMessage: channel.description,
           unreadCount: channel.unreadCount,
           channelType: 'channel',
+          participants: participants,
         );
         return DmChatArea(
           key: ValueKey('channel_${conversation.channelId}'),
@@ -315,6 +324,12 @@ class _ChatAreaSwitcher extends ConsumerWidget {
           previewMessage: group.messages.isEmpty ? '' : group.messages.last,
           unreadCount: group.unreadCount,
           channelType: 'group_dm',
+          participants: group.members.map((m) => DmParticipant(
+            userId: m.id,
+            username: m.name ?? m.email.split('@').first,
+            email: m.email,
+            avatarUrl: m.avatarUrl,
+          )).toList(),
         );
         return DmChatArea(
           key: ValueKey('group_${conversation.channelId}'),
@@ -404,7 +419,7 @@ class _MainSidebar extends ConsumerWidget {
                         final isSelected =
                             activeChat.type == ActiveChatType.channel &&
                             (activeChat.id == channel.id ||
-                                activeChat.id == channel.name);
+                                (activeChat.id != null && activeChat.id!.toLowerCase() == channel.name.toLowerCase()));
                         final isMuted = notificationSettings.isChannelMuted(channel.id);
                         return _ChannelItem(
                           key: ValueKey(channel.id),
@@ -476,7 +491,7 @@ class _MainSidebar extends ConsumerWidget {
                     child: Row(
                       children: [
                         Icon(
-                          Icons.arrow_right,
+                          Icons.arrow_drop_down,
                           color: colors.onPrimary,
                           size: 20,
                         ),
@@ -491,6 +506,113 @@ class _MainSidebar extends ConsumerWidget {
                         ),
                       ],
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final teamMembers = ref.watch(userProfileNotifierProvider).teamMembers;
+                      if (teamMembers.isEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                          child: Text(
+                            'No members found',
+                            style: TextStyle(
+                              color: colors.onPrimary.withValues(alpha: 0.5),
+                              fontSize: 13,
+                            ),
+                          ),
+                        );
+                      }
+                      return ListView.builder(
+                        padding: EdgeInsets.zero,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: teamMembers.length,
+                        itemBuilder: (context, index) {
+                          final member = teamMembers[index];
+                          final name = member.name ?? member.email.split('@').first;
+                          
+                          // Find DM conversation for this member if exists
+                          final conversations = ref.watch(dmListProvider).value ?? [];
+                          final existing = conversations.firstWhere(
+                            (c) => c.participantId == member.id,
+                            orElse: () => DmConversation(
+                              channelId: member.id,
+                              username: name,
+                              participantId: member.id,
+                              previewMessage: '',
+                              unreadCount: 0,
+                            ),
+                          );
+
+                          final isSelected = activeChat.type == ActiveChatType.directMessage &&
+                              (activeChat.id == existing.channelId || activeChat.id == member.id);
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () {
+                                  ref.read(selectedDmProvider.notifier).select(existing);
+                                  ref.read(activeChatProvider.notifier).selectDirectMessage(existing.channelId);
+                                },
+                                borderRadius: BorderRadius.circular(6),
+                                hoverColor: colors.onPrimary.withValues(alpha: 0.08),
+                                splashColor: colors.onPrimary.withValues(alpha: 0.12),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? colors.onPrimary.withValues(alpha: 0.12)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 10,
+                                        backgroundColor: colors.primary,
+                                        backgroundImage: member.avatarUrl != null && member.avatarUrl!.isNotEmpty
+                                            ? NetworkImage(member.avatarUrl!)
+                                            : null,
+                                        child: member.avatarUrl == null || member.avatarUrl!.isEmpty
+                                            ? Text(
+                                                name.substring(0, 1).toUpperCase(),
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 8,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              )
+                                            : null,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          name,
+                                          style: TextStyle(
+                                            color: colors.onPrimary.withValues(
+                                              alpha: isSelected ? 0.95 : 0.8,
+                                            ),
+                                            fontSize: 14,
+                                            fontWeight: isSelected
+                                                ? FontWeight.w600
+                                                : FontWeight.normal,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
                   const SizedBox(height: 20),
                 ],
@@ -527,52 +649,57 @@ class _ChannelItem extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? colors.onPrimary.withValues(alpha: 0.12)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                isPrivate ? Icons.lock_outline : Icons.tag,
-                color: colors.onPrimary.withValues(
-                  alpha: iconOpacity,
-                ),
-                size: 16,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    color: colors.onPrimary.withValues(
-                      alpha: textOpacity,
-                    ),
-                    fontSize: 14,
-                    fontWeight: isSelected
-                        ? FontWeight.w600
-                        : FontWeight.normal,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (isMuted) ...[
-                const SizedBox(width: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(6),
+          hoverColor: colors.onPrimary.withValues(alpha: 0.08),
+          splashColor: colors.onPrimary.withValues(alpha: 0.12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? colors.onPrimary.withValues(alpha: 0.12)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              children: [
                 Icon(
-                  Icons.volume_off_rounded,
-                  color: colors.onPrimary.withValues(alpha: 0.4),
-                  size: 14,
+                  isPrivate ? Icons.lock_outline : Icons.tag,
+                  color: colors.onPrimary.withValues(
+                    alpha: iconOpacity,
+                  ),
+                  size: 16,
                 ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: colors.onPrimary.withValues(
+                        alpha: textOpacity,
+                      ),
+                      fontSize: 14,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (isMuted) ...[
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.volume_off_rounded,
+                    color: colors.onPrimary.withValues(alpha: 0.4),
+                    size: 14,
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -697,46 +824,51 @@ class _GroupDmsSection extends ConsumerWidget {
                   activeChat.id == group.id;
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    ref.read(activeChatProvider.notifier).selectGroupDm(group.id);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? colors.onPrimary.withValues(alpha: 0.12)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.chat_bubble_outline_rounded,
-                          color: colors.onPrimary.withValues(
-                            alpha: isSelected ? 0.95 : 0.6,
-                          ),
-                          size: 16,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            group.name,
-                            style: TextStyle(
-                              color: colors.onPrimary.withValues(
-                                alpha: isSelected ? 0.95 : 0.8,
-                              ),
-                              fontSize: 14,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      ref.read(activeChatProvider.notifier).selectGroupDm(group.id);
+                    },
+                    borderRadius: BorderRadius.circular(6),
+                    hoverColor: colors.onPrimary.withValues(alpha: 0.08),
+                    splashColor: colors.onPrimary.withValues(alpha: 0.12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? colors.onPrimary.withValues(alpha: 0.12)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            color: colors.onPrimary.withValues(
+                              alpha: isSelected ? 0.95 : 0.6,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            size: 16,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              group.name,
+                              style: TextStyle(
+                                color: colors.onPrimary.withValues(
+                                  alpha: isSelected ? 0.95 : 0.8,
+                                ),
+                                fontSize: 14,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

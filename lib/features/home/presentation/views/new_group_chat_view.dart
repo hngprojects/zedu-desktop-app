@@ -271,14 +271,17 @@ class _NewGroupChatViewState extends ConsumerState<NewGroupChatView> {
                                     final name =
                                         member.name ??
                                         member.email.split('@').first;
-                                    return InkWell(
-                                      onTap: () =>
+                                    return Listener(
+                                      behavior: HitTestBehavior.opaque,
+                                      onPointerDown: (_) =>
                                           _toggleMemberSelection(member),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 12,
-                                        ),
+                                      child: InkWell(
+                                        onTap: () {},
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 12,
+                                          ),
                                         decoration: BoxDecoration(
                                           border: Border(
                                             bottom: BorderSide(
@@ -346,8 +349,9 @@ class _NewGroupChatViewState extends ConsumerState<NewGroupChatView> {
                                           ],
                                         ),
                                       ),
-                                    );
-                                  },
+                                    ),
+                                  );
+                                },
                                 ),
                               ),
                             ),
