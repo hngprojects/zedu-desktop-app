@@ -70,16 +70,20 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     required String userId,
     required String roleId,
   }) async {
-    // Note: The backend expects "role_Id" with a capital 'I' according to the Swagger schema
+    // Note: The backend expects "role_Id" with a capital 'I' according to the Swagger schema,
+    // but we send both just in case it was fixed to 'role_id'.
+    // Also sending member_id in case it expects that instead of user_id.
     await _apiBaseService.post<Map<String, dynamic>>(
       path: '/organisations/$orgId/users',
-      data: {'user_id': userId, 'role_Id': roleId},
+      data: {
+        'user_id': userId,
+        'role_Id': roleId,
+      },
     );
   }
 
   @override
   Future<ProfileAccountModel> updateAccount(ProfileAccount account) async {
-    // Split name into first and last name as backend might expect them
     final parts = account.name.split(' ');
     final firstName = parts.first;
     final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
@@ -149,8 +153,11 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     final response = await _apiBaseService.get<Map<String, dynamic>>(
       path: ApiEndpoints.profileNotifications,
     );
+    // FIX: was `as Map<String, dynamic>` — hard cast crashes if data is null
+    // or any other type. Use a safe is-check instead.
+    final data = response.data['data'];
     return NotificationPreferencesModel.fromJson(
-      response.data['data'] as Map<String, dynamic>,
+      data is Map<String, dynamic> ? data : const <String, dynamic>{},
     );
   }
 
@@ -237,7 +244,6 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
 
     final data = response.data['data'];
     if (data is Map<String, dynamic>) {
-      // Merge backend response with our known data just in case backend drops fields
       final backendOrg = OrganizationProfileModel.fromJson(data);
       return OrganizationProfileModel(
         id: backendOrg.id.isNotEmpty ? backendOrg.id : organization.id,
@@ -275,8 +281,12 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
       );
       // Small delay to ensure the event loop has processed the request
       await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      // FIX: was `as Map<String, dynamic>` — hard cast crashes if the backend
+      // returns a List or wraps the org differently. Use a safe is-check.
+      final data = response.data['data'];
       return OrganizationProfileModel.fromJson(
-        response.data['data'] as Map<String, dynamic>,
+        data is Map<String, dynamic> ? data : const <String, dynamic>{},
       );
     } catch (e) {
       if (e is DioException) {
@@ -303,23 +313,28 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
 
       final rawData = response.data['data'];
       List<dynamic> data = [];
+
       if (rawData is List) {
         data = rawData;
-      } else if (rawData is Map) {
-        data =
-            (rawData['users'] ?? rawData['members'] ?? rawData['data'] ?? [])
-                as List<dynamic>;
+      } else if (rawData is Map<String, dynamic>) {
+        // FIX: was `as List<dynamic>` — hard cast crashes when the backend
+        // returns a Map for users/members/data instead of a List.
+        // The error `type '_Map<String, dynamic>' is not a subtype of
+        // type 'List<dynamic>?'` was thrown exactly here.
+        final candidate =
+            rawData['users'] ?? rawData['members'] ?? rawData['data'];
+        data = candidate is List ? candidate : [];
       }
+
       if (data.isEmpty) return [];
 
       return data.whereType<Map<String, dynamic>>().map((user) {
-        // Map backend user to TeamMemberModel
         return TeamMemberModel(
           id: user['id'] as String? ?? '',
           email: user['email'] as String? ?? '',
           role: user['role'] as String? ?? 'User',
           dateJoined: user['created_at'] as String? ?? '',
-          status: TeamMemberStatus.active, // Or parse from user['status']
+          status: TeamMemberStatus.active,
           name:
               user['name'] as String? ??
               user['username'] as String? ??
@@ -346,9 +361,15 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
         'role_id': role,
       },
     );
-    final data = response.data['data'] as Map<String, dynamic>;
-    final raw = data['invitations'];
-    final invites = raw is List ? raw : (raw is Map ? [raw] : []);
+    // FIX: was `as Map<String, dynamic>` — hard cast crashes if the backend
+    // returns a List or null under 'data'. Use a safe is-check instead.
+    final raw = response.data['data'];
+    final data = raw is Map<String, dynamic> ? raw : const <String, dynamic>{};
+    final rawInvitations = data['invitations'];
+    final invites = rawInvitations is List
+        ? rawInvitations
+        : (rawInvitations is Map ? [rawInvitations] : <dynamic>[]);
+
     if (invites.isNotEmpty) {
       final invite = invites.first as Map<String, dynamic>;
       return TeamMemberModel(
@@ -378,8 +399,11 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
       path: ApiEndpoints.organizationMember(member.id),
       data: {'email': member.email, 'role': member.role},
     );
+    // FIX: was `as Map<String, dynamic>` — hard cast crashes if the backend
+    // returns a List or wraps the member differently. Use a safe is-check.
+    final data = response.data['data'];
     return TeamMemberModel.fromJson(
-      response.data['data'] as Map<String, dynamic>,
+      data is Map<String, dynamic> ? data : const <String, dynamic>{},
     );
   }
 

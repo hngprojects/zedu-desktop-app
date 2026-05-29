@@ -88,7 +88,7 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
                   ),
                   children: [
                     TextSpan(
-                      text: 'Sign in',
+                      text: 'Login',
                       style: context.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w400,
                         color: context.colors.primary,
@@ -234,13 +234,37 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
                     message: 'Apple sign up is not available yet.',
                   ),
                 ),
-                context.gapV(32),
+                context.gapV(54),
+                Text.rich(
+                  TextSpan(
+                    text: 'Already have an account? ',
+                    style: context.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w400,
+                      color: context.colors.textPrimary,
+                      fontFamily: FontFamily.roboto,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: 'Login',
+                        style: context.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w400,
+                          color: context.colors.primary,
+                          fontFamily: FontFamily.roboto,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () => context.go(AppRouter.login),
+                      ),
+                    ],
+                  ),
+                ),
+                context.gapV(20),
                 Text.rich(
                   TextSpan(
                     text: 'By Signing up, you agree to our ',
                     style: context.textTheme.bodySmall?.copyWith(
                       color: context.colors.textSecondary,
                     ),
+
                     children: [
                       TextSpan(
                         text: 'terms of service',

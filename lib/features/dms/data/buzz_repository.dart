@@ -94,13 +94,46 @@ class BuzzRepository {
     }
   }
 
-  /// Ends an active buzz/call.
-  Future<bool> endBuzz(String buzzId) async {
+  /// Leaves an active buzz/call.
+  Future<bool> leaveBuzz({
+    required String buzzId,
+    required String participantId,
+    bool buzzEnded = false,
+  }) async {
     try {
-      await _apiClient.post<Map<String, dynamic>>(path: '/buzz/$buzzId/end');
+      await _apiClient.post<Map<String, dynamic>>(
+        path: '/buzz/$buzzId/leave',
+        data: {
+          'buzz_id': buzzId,
+          'participant_id': participantId,
+          'left_at': DateTime.now().toUtc().toIso8601String(),
+          'buzz_ended': buzzEnded,
+        },
+      );
       return true;
     } catch (e) {
-      AppLogger.e('Failed to end buzz', tag: 'BuzzRepository', error: e);
+      AppLogger.e('Failed to leave buzz', tag: 'BuzzRepository', error: e);
+      return false;
+    }
+  }
+
+  /// Toggles camera status during an active buzz.
+  Future<bool> toggleCamera({
+    required String buzzId,
+    required String userId,
+    required bool status,
+  }) async {
+    try {
+      await _apiClient.patch<Map<String, dynamic>>(
+        path: '/buzz/$buzzId/camera',
+        data: {
+          'user_id': userId,
+          'status': status,
+        },
+      );
+      return true;
+    } catch (e) {
+      AppLogger.e('Failed to toggle camera', tag: 'BuzzRepository', error: e);
       return false;
     }
   }

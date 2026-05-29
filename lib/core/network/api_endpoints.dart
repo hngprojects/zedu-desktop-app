@@ -29,5 +29,6 @@ class ApiEndpoints {
   static String organizationDms(String orgId) => '/organisations/$orgId/dms';
   static String channelMessages(String channelId) =>
       '/channels/$channelId/messages';
-  static String dmsMessages(String channelId) => 'dms/messages/$channelId';
+  static String dmsMessages(String channelId) =>
+      '/dms/channels/$channelId/threads';
 }

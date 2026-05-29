@@ -114,6 +114,9 @@ class _MainSidebarSwitcher extends ConsumerWidget {
     if (state == HomeSidebarType.dms) {
       return const DmSidebarList();
     }
+    if (state == HomeSidebarType.buzz) {
+      return const BuzzSidebarList();
+    }
     return const _MainSidebar();
   }
 }

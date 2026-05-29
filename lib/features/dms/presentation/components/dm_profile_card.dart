@@ -11,9 +11,11 @@ class DmProfileCard extends StatelessWidget {
     final colors = context.colors;
     final name = conversation.displayName;
     final nameParts = name.trim().split(RegExp(r'\s+'));
-    final handle = nameParts.length > 1
-        ? '@${nameParts.first}_${nameParts.last}'
-        : '@${nameParts.first}';
+    String handle = nameParts.length > 1
+        ? '${nameParts.first}_${nameParts.last}'
+        : nameParts.first;
+    handle = handle.replaceAll('@', '');
+    final finalHandle = '@$handle';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 76, 40, 0),
@@ -72,7 +74,7 @@ class DmProfileCard extends StatelessWidget {
                   text: 'This conversation is just between you and ',
                 ),
                 TextSpan(
-                  text: handle,
+                  text: finalHandle,
                   style: TextStyle(
                     color: colors.primary,
                     fontWeight: FontWeight.w500,

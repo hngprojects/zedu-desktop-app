@@ -11,6 +11,8 @@ class ActiveCallState {
   final String? remoteUserId;
   final String? remoteAvatarUrl;
   final String? token;
+  final String? appId;
+  final String? channelName;
   final bool isFullPage;
   final DateTime? lastCallAt;
 
@@ -22,6 +24,8 @@ class ActiveCallState {
     this.remoteUserId,
     this.remoteAvatarUrl,
     this.token,
+    this.appId,
+    this.channelName,
     this.isFullPage = false,
     this.lastCallAt,
   });
@@ -34,6 +38,8 @@ class ActiveCallState {
     String? remoteUserId,
     String? remoteAvatarUrl,
     String? token,
+    String? appId,
+    String? channelName,
     bool? isFullPage,
     DateTime? lastCallAt,
   }) {
@@ -45,6 +51,8 @@ class ActiveCallState {
       remoteUserId: remoteUserId ?? this.remoteUserId,
       remoteAvatarUrl: remoteAvatarUrl ?? this.remoteAvatarUrl,
       token: token ?? this.token,
+      appId: appId ?? this.appId,
+      channelName: channelName ?? this.channelName,
       isFullPage: isFullPage ?? this.isFullPage,
       lastCallAt: lastCallAt ?? this.lastCallAt,
     );
@@ -85,24 +93,31 @@ class ActiveCallNotifier extends ChangeNotifier {
       final res = await repo.initiateDirectCall(channelId);
       
       if (res['success'] == false) {
-        endCall();
+        await leaveCall();
         return;
       }
 
       final buzzId = res['buzzId'] as String?;
       final token = res['token'] as String?;
+      final appId = res['appId'] as String?;
+      final channelName = res['channelName'] as String?;
 
-      _state = _state.copyWith(buzzId: buzzId, token: token);
+      _state = _state.copyWith(
+        buzzId: buzzId,
+        token: token,
+        appId: appId,
+        channelName: channelName,
+      );
       notifyListeners();
 
       if (buzzId != null && token != null) {
         _state = _state.copyWith(status: CallStatus.active);
         notifyListeners();
       } else {
-        endCall();
+        await leaveCall();
       }
     } catch (e) {
-      endCall();
+      await leaveCall();
     }
   }
 
@@ -151,7 +166,7 @@ class ActiveCallNotifier extends ChangeNotifier {
           .read(buzzRepositoryProvider)
           .respondToInvitation(_state.buzzId!, false);
     }
-    endCall();
+    await leaveCall();
   }
 
   Future<void> cancelCall() async {
@@ -162,10 +177,21 @@ class ActiveCallNotifier extends ChangeNotifier {
           .read(buzzRepositoryProvider)
           .respondToDirectCall(_state.buzzId!, false);
     }
-    endCall();
+    await leaveCall();
   }
 
-  void endCall() {
+  Future<void> leaveCall() async {
+    final buzzId = _state.buzzId;
+    if (buzzId != null && _state.status == CallStatus.active) {
+      final user = _ref.read(authNotifierProvider).user;
+      if (user != null) {
+        await _ref.read(buzzRepositoryProvider).leaveBuzz(
+              buzzId: buzzId,
+              participantId: user.id.toString(),
+              buzzEnded: false,
+            );
+      }
+    }
     _state = ActiveCallState(lastCallAt: _state.lastCallAt);
     notifyListeners();
   }

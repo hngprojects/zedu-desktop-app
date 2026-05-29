@@ -51,7 +51,7 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
     if (page == 1) {
       final user = ref.read(authNotifierProvider).user;
       if (user != null) {
-        String selfChannelId = 'dm_${user.id}_${user.id}';
+        String selfChannelId = '';
         
         try {
           final channelRepo = ref.read(channelRepositoryProvider);
@@ -65,7 +65,15 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
               selfChannelId = selfChannel.id;
             }
           }
+          // If channel lookup didn't find a valid ID, try creating one
+          if (selfChannelId.isEmpty || !DmRepository.isValidChannelId(selfChannelId)) {
+            final dmRepo = ref.read(dmRepositoryProvider);
+            final created = await dmRepo.createDmChannel(orgId: orgId, userId: user.id);
+            selfChannelId = created.channelId;
+          }
         } catch (_) {}
+        // Last resort: use placeholder (but at least we tried)
+        if (selfChannelId.isEmpty) selfChannelId = 'dm_${user.id}_${user.id}';
 
         final selfConversation = DmConversation(
           channelId: selfChannelId,
@@ -103,6 +111,7 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
       }
     }
 
+    results.sort((a, b) => a.lastActivityAt.compareTo(b.lastActivityAt));
     return results;
   }
 
@@ -122,6 +131,19 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
     if (!current.any((c) => c.channelId == conversation.channelId || c.participantId == conversation.participantId)) {
       state = AsyncValue.data([conversation, ...current]);
     }
+  }
+
+  /// Clears the unread badge for a conversation when it is opened.
+  void markConversationRead(String channelId) {
+    final current = state.value;
+    if (current == null) return;
+
+    final idx = current.indexWhere((c) => c.channelId == channelId);
+    if (idx == -1 || current[idx].unreadCount == 0) return;
+
+    final updated = List<DmConversation>.from(current);
+    updated[idx] = updated[idx].copyWith(unreadCount: 0);
+    state = AsyncValue.data(updated);
   }
 
   Future<void> refresh() async {

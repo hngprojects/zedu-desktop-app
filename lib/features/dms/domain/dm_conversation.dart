@@ -97,7 +97,7 @@ class DmConversation {
             .toList();
 
     return DmConversation(
-      channelId: json['channel_id'] as String? ?? '',
+      channelId: json['channel_id'] as String? ?? json['id'] as String? ?? '',
       username: json['username'] as String? ?? '',
       participantId: json['participant_id'] as String? ?? '',
       participantEmail: json['participant_email'] as String?,

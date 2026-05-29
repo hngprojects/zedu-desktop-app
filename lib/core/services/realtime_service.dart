@@ -42,9 +42,15 @@ class RealtimeService {
         : response.data['token'] as String?;
     if (token == null || token.isEmpty) return;
 
+    final config = locator<AppConfig>();
+    final baseUri = Uri.tryParse(config.apiBaseUrl);
+    final host = baseUri?.host ?? 'api.staging.zedu.chat';
+    final websocketScheme = baseUri?.scheme == 'https' ? 'wss' : 'ws';
+    final defaultUrl = '$websocketScheme://$host/centrifugo/connection/websocket';
+
     final url =
         dotenv.env['CENTRIFUGO_WEBSOCKET_URL'] ??
-        'wss://api.zedu.chat/centrifugo/connection/websocket';
+        defaultUrl;
 
     _client = centrifuge.createClient(url);
     _client?.setToken(token);
@@ -81,7 +87,7 @@ class RealtimeService {
     try {
       // Get subscription token from backend
       final response = await api.post<Map<String, dynamic>>(
-        path: '/token/subscription',
+        path: '/centrifugo/subscription',
         data: {'channel': channelId},
       );
 
@@ -176,7 +182,7 @@ class RealtimeService {
     try {
       final api = locator<ApiBaseService>();
       final response = await api.post<Map<String, dynamic>>(
-        path: '/token/subscription',
+        path: '/centrifugo/subscription',
         data: {'channel': channelName},
       );
       final subToken = response.data['data'] is Map<String, dynamic>

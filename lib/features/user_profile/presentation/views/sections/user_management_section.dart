@@ -29,6 +29,7 @@ class UserManagementSection extends StatefulWidget {
 class _UserManagementSectionState extends State<UserManagementSection> {
   final _searchController = TextEditingController();
   String _roleFilter = 'All Roles';
+  String _activeTab = 'Members';
 
   @override
   void dispose() {
@@ -38,8 +39,16 @@ class _UserManagementSectionState extends State<UserManagementSection> {
 
   @override
   Widget build(BuildContext context) {
+    final baseList = widget.members.where((member) {
+      if (_activeTab == 'Members') {
+        return member.status != TeamMemberStatus.pending;
+      } else {
+        return member.status == TeamMemberStatus.pending;
+      }
+    }).toList();
+
     final query = _searchController.text.trim().toLowerCase();
-    final filtered = widget.members.where((member) {
+    final filtered = baseList.where((member) {
       final matchesQuery =
           query.isEmpty || member.email.toLowerCase().contains(query);
       final matchesRole =
@@ -76,13 +85,25 @@ class _UserManagementSectionState extends State<UserManagementSection> {
         const SizedBox(height: 34),
         Row(
           children: [
-            _TabLabel(
-              label: 'Members',
-              count: widget.members.length,
-              active: true,
+            GestureDetector(
+              onTap: () => setState(() => _activeTab = 'Members'),
+              behavior: HitTestBehavior.opaque,
+              child: _TabLabel(
+                label: 'Members',
+                count: widget.members.where((m) => m.status != TeamMemberStatus.pending).length,
+                active: _activeTab == 'Members',
+              ),
             ),
             const SizedBox(width: 32),
-            const _TabLabel(label: 'Invites', count: 1, active: false),
+            GestureDetector(
+              onTap: () => setState(() => _activeTab = 'Invites'),
+              behavior: HitTestBehavior.opaque,
+              child: _TabLabel(
+                label: 'Invites',
+                count: widget.members.where((m) => m.status == TeamMemberStatus.pending).length,
+                active: _activeTab == 'Invites',
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 24),
@@ -146,12 +167,16 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                     headingRowColor: WidgetStateProperty.all(
                       const Color(0xFFFAFAFA),
                     ),
-                    columns: const [
-                      DataColumn(label: Text('Email Address')),
-                      DataColumn(label: Text('Role')),
-                      DataColumn(label: Text('Date Joined')),
-                      DataColumn(label: Text('Status')),
-                      DataColumn(label: Text('Actions')),
+                    columns: [
+                      const DataColumn(label: Text('Email Address')),
+                      const DataColumn(label: Text('Role')),
+                      DataColumn(
+                        label: Text(
+                          _activeTab == 'Members' ? 'Date Joined' : 'Sent At',
+                        ),
+                      ),
+                      const DataColumn(label: Text('Status')),
+                      const DataColumn(label: Text('Actions')),
                     ],
                     rows: filtered.map((member) {
                       return DataRow(
@@ -476,7 +501,7 @@ class _AddUserDialogState extends State<_AddUserDialog> {
                     final name = user['full_name'] as String? ??
                         user['username'] as String? ??
                         email.split('@').first;
-                    final userId = user['id'] as String? ?? '';
+                    final userId = user['id'] as String? ?? user['user_id'] as String? ?? user['uuid'] as String? ?? '';
                     return ListTile(
                       leading: CircleAvatar(
                         radius: 16,

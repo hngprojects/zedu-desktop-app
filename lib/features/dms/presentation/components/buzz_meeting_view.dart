@@ -1,5 +1,7 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+// import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class BuzzMeetingView extends ConsumerStatefulWidget {
   const BuzzMeetingView({super.key});
@@ -12,6 +14,117 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
   bool _isMuted = false;
   bool _isVideoOff = false;
   bool _isHandRaised = false;
+
+  late RtcEngine _engine;
+  bool _localUserJoined = false;
+  int? _remoteUid;
+  bool _isEngineInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initAgora();
+  }
+
+  Future<void> _initAgora() async {
+    // Request permissions
+    await [Permission.microphone, Permission.camera].request();
+
+    final activeCall = ref.read(activeCallProvider);
+    final appId = activeCall.state.appId;
+    final token = activeCall.state.token;
+    final channelName = activeCall.state.channelName;
+
+    if (appId == null || appId.isEmpty) {
+      debugPrint('No Agora App ID provided');
+      return;
+    }
+
+    _engine = createAgoraRtcEngine();
+    await _engine.initialize(
+      RtcEngineContext(
+        appId: appId,
+        channelProfile: ChannelProfileType.channelProfileCommunication,
+      ),
+    );
+
+    _engine.registerEventHandler(
+      RtcEngineEventHandler(
+        onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
+          debugPrint('local user \${connection.localUid} joined');
+          setState(() {
+            _localUserJoined = true;
+          });
+        },
+        onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
+          debugPrint('remote user \$remoteUid joined');
+          setState(() {
+            _remoteUid = remoteUid;
+          });
+        },
+        onUserOffline:
+            (
+              RtcConnection connection,
+              int remoteUid,
+              UserOfflineReasonType reason,
+            ) {
+              debugPrint('remote user \$remoteUid left channel');
+              setState(() {
+                _remoteUid = null;
+              });
+            },
+      ),
+    );
+
+    await _engine.enableVideo();
+    await _engine.startPreview();
+
+    if (token != null && channelName != null) {
+      await _engine.joinChannel(
+        token: token,
+        channelId: channelName,
+        uid: 0,
+        options: const ChannelMediaOptions(
+          autoSubscribeVideo: true,
+          autoSubscribeAudio: true,
+          publishCameraTrack: true,
+          publishMicrophoneTrack: true,
+          clientRoleType: ClientRoleType.clientRoleBroadcaster,
+        ),
+      );
+    }
+
+    setState(() {
+      _isEngineInitialized = true;
+    });
+  }
+
+  @override
+  void dispose() {
+    if (_isEngineInitialized) {
+      _engine.leaveChannel();
+      _engine.release();
+    }
+    super.dispose();
+  }
+
+  void _toggleMute() {
+    setState(() {
+      _isMuted = !_isMuted;
+    });
+    if (_isEngineInitialized) {
+      _engine.muteLocalAudioStream(_isMuted);
+    }
+  }
+
+  void _toggleVideo() {
+    setState(() {
+      _isVideoOff = !_isVideoOff;
+    });
+    if (_isEngineInitialized) {
+      _engine.muteLocalVideoStream(_isVideoOff);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,6 +214,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                           'You',
                           null,
                           80,
+                          isLocal: true,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -110,6 +224,9 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                           remoteName,
                           activeCall.state.remoteAvatarUrl,
                           80,
+                          isLocal: false,
+                          remoteUid: _remoteUid,
+                          channelName: activeCall.state.channelName,
                         ),
                       ),
                     ],
@@ -124,14 +241,14 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                       _buildControlButton(
                         icon: _isMuted ? Icons.mic_off : Icons.mic,
                         color: _isMuted ? Colors.red : Colors.white24,
-                        onTap: () => setState(() => _isMuted = !_isMuted),
+                        onTap: _toggleMute,
                         small: true,
                       ),
                       const SizedBox(width: 8),
                       _buildControlButton(
                         icon: _isVideoOff ? Icons.videocam_off : Icons.videocam,
                         color: _isVideoOff ? Colors.red : Colors.white24,
-                        onTap: () => setState(() => _isVideoOff = !_isVideoOff),
+                        onTap: _toggleVideo,
                         small: true,
                       ),
                       const SizedBox(width: 8),
@@ -154,7 +271,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                         icon: Icons.call_end,
                         color: Colors.red,
                         onTap: () {
-                          ref.read(activeCallProvider.notifier).endCall();
+                          ref.read(activeCallProvider.notifier).leaveCall();
                         },
                         small: true,
                       ),
@@ -223,6 +340,9 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                       remoteName,
                       activeCall.state.remoteAvatarUrl,
                       double.infinity,
+                      isLocal: false,
+                      remoteUid: _remoteUid,
+                      channelName: activeCall.state.channelName,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -232,6 +352,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                       'You',
                       null,
                       double.infinity,
+                      isLocal: true,
                     ),
                   ),
                 ],
@@ -249,7 +370,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                   color: _isMuted
                       ? Colors.red
                       : colors.primary.withValues(alpha: 0.2),
-                  onTap: () => setState(() => _isMuted = !_isMuted),
+                  onTap: _toggleMute,
                   small: false,
                 ),
                 const SizedBox(width: 16),
@@ -265,7 +386,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                   color: _isVideoOff
                       ? Colors.red
                       : colors.primary.withValues(alpha: 0.2),
-                  onTap: () => setState(() => _isVideoOff = !_isVideoOff),
+                  onTap: _toggleVideo,
                   small: false,
                 ),
                 const SizedBox(width: 16),
@@ -296,7 +417,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                   icon: Icons.call_end,
                   color: Colors.red,
                   onTap: () {
-                    ref.read(activeCallProvider.notifier).endCall();
+                    ref.read(activeCallProvider.notifier).leaveCall();
                   },
                   small: false,
                 ),
@@ -312,29 +433,56 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
     Color bgColor,
     String name,
     String? avatarUrl,
-    double height,
-  ) {
+    double height, {
+    bool isLocal = false,
+    int? remoteUid,
+    String? channelName,
+  }) {
+    Widget? videoView;
+    if (_isEngineInitialized) {
+      if (isLocal && !_isVideoOff) {
+        videoView = AgoraVideoView(
+          controller: VideoViewController(
+            rtcEngine: _engine,
+            canvas: const VideoCanvas(uid: 0),
+          ),
+        );
+      } else if (!isLocal && remoteUid != null && channelName != null) {
+        videoView = AgoraVideoView(
+          controller: VideoViewController.remote(
+            rtcEngine: _engine,
+            canvas: VideoCanvas(uid: remoteUid),
+            connection: RtcConnection(channelId: channelName),
+          ),
+        );
+      }
+    }
+
     return Container(
       height: height,
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(12),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Center(
-            child: CircleAvatar(
-              radius: 24,
-              backgroundColor: const Color(0xFF6458F5),
-              backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                  ? NetworkImage(avatarUrl)
-                  : null,
-              child: avatarUrl == null || avatarUrl.isEmpty
-                  ? Icon(Icons.person, size: 24, color: Colors.white)
-                  : null,
+          if (videoView != null)
+            videoView
+          else
+            Center(
+              child: CircleAvatar(
+                radius: 24,
+                backgroundColor: const Color(0xFF6458F5),
+                backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                    ? NetworkImage(avatarUrl)
+                    : null,
+                child: avatarUrl == null || avatarUrl.isEmpty
+                    ? Icon(Icons.person, size: 24, color: Colors.white)
+                    : null,
+              ),
             ),
-          ),
           Positioned(
             top: 12,
             left: 12,

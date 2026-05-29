@@ -111,6 +111,7 @@ class AuthNotifier extends Notifier<AuthState> {
     ref.invalidate(dmListProvider);
     ref.invalidate(channelProvider);
     ref.invalidate(chatHistoryProvider);
+    ref.invalidate(selectedDmProvider);
   }
 
   Future<void> signUp({

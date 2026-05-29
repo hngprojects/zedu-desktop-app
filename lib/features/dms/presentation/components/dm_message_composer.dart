@@ -351,6 +351,7 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final canSend = _controller.text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
 
     final mainColumn = Column(
       mainAxisSize: MainAxisSize.min,
@@ -572,10 +573,12 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
                       ),
                       const Spacer(),
                       GestureDetector(
-                        onTap: _handleSend,
+                        onTap: canSend ? _handleSend : null,
                         child: Icon(
                           Icons.send_rounded,
-                          color: colors.textHint.withValues(alpha: 0.55),
+                          color: canSend
+                              ? colors.primary
+                              : colors.textHint.withValues(alpha: 0.55),
                           size: 22,
                         ),
                       ),

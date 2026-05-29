@@ -308,6 +308,8 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           isSaving: false,
           successMessage: 'Organization deleted successfully.',
         );
+        // Log out the user because the organization they were tied to is gone.
+        await ref.read(authNotifierProvider.notifier).logout();
       case Failure<void>():
         state = state.copyWith(
           isSaving: false,
@@ -356,10 +358,30 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       final response = await api.get<Map<String, dynamic>>(
         path: '/organisations/$orgId/roles',
       );
-      final data = response.data['data'] as List<dynamic>?;
+      final rawData = response.data['data'];
+      final List<dynamic>? data;
+      if (rawData is List<dynamic>) {
+        data = rawData;
+      } else if (rawData is Map<String, dynamic>) {
+        // Backend may wrap roles in a paginated response
+        final candidate = rawData['roles'] ?? rawData['data'];
+        data = candidate is List<dynamic> ? candidate : null;
+      } else {
+        data = null;
+      }
       if (data != null && data.isNotEmpty) {
-        return data.last['id']
-            as String; // Just pick a valid role ID to avoid 404
+        final last = data.last;
+        if (last is Map) {
+          final id = last['id'] ?? last['role_id'] ?? last['roleId'] ?? last['_id'];
+          if (id != null) return id.toString();
+          // Fallback: search values for any UUID
+          for (final value in last.values) {
+            final str = value.toString();
+            if (str.length == 36 && str.contains('-')) {
+              return str;
+            }
+          }
+        }
       }
     } catch (e) {
       // ignore
@@ -391,7 +413,17 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     try {
       final api = locator<ApiBaseService>();
       final response = await api.get<Map<String, dynamic>>(path: '/users');
-      final data = response.data['data'] as List<dynamic>?;
+      final rawData = response.data['data'];
+      final List<dynamic>? data;
+      if (rawData is List<dynamic>) {
+        data = rawData;
+      } else if (rawData is Map<String, dynamic>) {
+        // Backend may wrap users in a paginated response
+        final candidate = rawData['users'] ?? rawData['data'];
+        data = candidate is List<dynamic> ? candidate : null;
+      } else {
+        data = null;
+      }
       if (data != null) {
         return data.cast<Map<String, dynamic>>();
       }
@@ -482,8 +514,13 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       clearError: true,
       clearSuccess: true,
     );
-    final orgId = ref.read(workspaceProvider).selectedWorkspace?.id;
-    if (orgId == null) {
+    var orgId = ref.read(workspaceProvider).selectedWorkspace?.id;
+    if (locator<AppConfig>().usesMockData &&
+        (orgId == null || orgId.length < 36)) {
+      orgId = '019700db-4e22-7f90-a20e-f9116291ef24';
+    }
+
+    if (orgId == null || orgId.isEmpty) {
       state = state.copyWith(
         isSaving: false,
         error: 'No active workspace selected.',
