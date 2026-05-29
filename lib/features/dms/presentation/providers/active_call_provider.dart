@@ -13,6 +13,7 @@ class ActiveCallState {
   final String? token;
   final String? appId;
   final String? channelName;
+  final String? buzzCode;
   final bool isFullPage;
   final DateTime? lastCallAt;
 
@@ -26,6 +27,7 @@ class ActiveCallState {
     this.token,
     this.appId,
     this.channelName,
+    this.buzzCode,
     this.isFullPage = false,
     this.lastCallAt,
   });
@@ -40,6 +42,7 @@ class ActiveCallState {
     String? token,
     String? appId,
     String? channelName,
+    String? buzzCode,
     bool? isFullPage,
     DateTime? lastCallAt,
   }) {
@@ -53,6 +56,7 @@ class ActiveCallState {
       token: token ?? this.token,
       appId: appId ?? this.appId,
       channelName: channelName ?? this.channelName,
+      buzzCode: buzzCode ?? this.buzzCode,
       isFullPage: isFullPage ?? this.isFullPage,
       lastCallAt: lastCallAt ?? this.lastCallAt,
     );
@@ -104,6 +108,7 @@ class ActiveCallNotifier extends ChangeNotifier {
 
       _state = _state.copyWith(
         buzzId: buzzId,
+        buzzCode: res['buzzCode'] as String?,
         token: token,
         appId: appId,
         channelName: channelName,
@@ -153,8 +158,19 @@ class ActiveCallNotifier extends ChangeNotifier {
       await _ref
           .read(buzzRepositoryProvider)
           .respondToInvitation(_state.buzzId!, true);
-      _state = _state.copyWith(status: CallStatus.active);
-      notifyListeners();
+      
+      final res = await _ref.read(buzzRepositoryProvider).joinBuzz(_state.buzzId!);
+      if (res['success'] == true) {
+        _state = _state.copyWith(
+          status: CallStatus.active,
+          token: res['token'] as String?,
+          appId: res['appId'] as String?,
+          channelName: res['channelName'] as String?,
+        );
+        notifyListeners();
+      } else {
+        await leaveCall();
+      }
     }
   }
 
@@ -187,6 +203,7 @@ class ActiveCallNotifier extends ChangeNotifier {
       if (user != null) {
         await _ref.read(buzzRepositoryProvider).leaveBuzz(
               buzzId: buzzId,
+              buzzCode: _state.buzzCode ?? '',
               participantId: user.id.toString(),
               buzzEnded: false,
             );

@@ -43,6 +43,7 @@ class BuzzRepository {
       return {
         'success': true,
         'buzzId': buzzId,
+        'buzzCode': data['buzz_code'] as String?,
         'token': agoraToken,
         'channelName': channelName,
         'appId': agoraTokenData?['app_id'] as String?,
@@ -97,7 +98,9 @@ class BuzzRepository {
   /// Leaves an active buzz/call.
   Future<bool> leaveBuzz({
     required String buzzId,
+    required String buzzCode,
     required String participantId,
+    String? newHostId,
     bool buzzEnded = false,
   }) async {
     try {
@@ -105,7 +108,9 @@ class BuzzRepository {
         path: '/buzz/$buzzId/leave',
         data: {
           'buzz_id': buzzId,
+          'buzz_code': buzzCode,
           'participant_id': participantId,
+          'new_host_id': ?newHostId,
           'left_at': DateTime.now().toUtc().toIso8601String(),
           'buzz_ended': buzzEnded,
         },
@@ -126,15 +131,48 @@ class BuzzRepository {
     try {
       await _apiClient.patch<Map<String, dynamic>>(
         path: '/buzz/$buzzId/camera',
-        data: {
-          'user_id': userId,
-          'status': status,
-        },
+        data: {'user_id': userId, 'is_camera_on': status},
       );
       return true;
     } catch (e) {
       AppLogger.e('Failed to toggle camera', tag: 'BuzzRepository', error: e);
       return false;
+    }
+  }
+
+  /// Joins an existing buzz/call.
+  /// Returns call token and channel info for Agora integration.
+  Future<Map<String, dynamic>> joinBuzz(String buzzId) async {
+    try {
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        path: '/buzz/$buzzId/join',
+      );
+
+      final data = response.data;
+
+      final agoraTokenData = data['agora_token'] as Map<String, dynamic>?;
+      final channelName =
+          agoraTokenData?['channel_name'] as String? ??
+          data['channel_id'] as String?;
+      final agoraToken = agoraTokenData?['token'] as String?;
+
+      if (channelName == null || agoraToken == null) {
+        throw Exception('Missing required fields in buzz join response');
+      }
+
+      await _realtimeService.subscribeToDmChannel('buzz_$buzzId');
+
+      return {
+        'success': true,
+        'buzzId': buzzId,
+        'token': agoraToken,
+        'channelName': channelName,
+        'appId': agoraTokenData?['app_id'] as String?,
+      };
+    } catch (e) {
+      debugPrint('Buzz Join Error: $e');
+      AppLogger.e('Failed to join buzz', tag: 'BuzzRepository', error: e);
+      return {'success': false, 'error': e.toString()};
     }
   }
 }

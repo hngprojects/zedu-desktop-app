@@ -87,7 +87,7 @@ class RealtimeService {
     try {
       // Get subscription token from backend
       final response = await api.post<Map<String, dynamic>>(
-        path: '/centrifugo/subscription',
+        path: '/token/subscription',
         data: {'channel': channelId},
       );
 
@@ -182,7 +182,7 @@ class RealtimeService {
     try {
       final api = locator<ApiBaseService>();
       final response = await api.post<Map<String, dynamic>>(
-        path: '/centrifugo/subscription',
+        path: '/token/subscription',
         data: {'channel': channelName},
       );
       final subToken = response.data['data'] is Map<String, dynamic>

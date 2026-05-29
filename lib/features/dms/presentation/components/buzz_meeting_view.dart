@@ -1,7 +1,13 @@
-import 'package:zedu/core/core.dart';
-import 'package:zedu/features/features.dart';
+import 'dart:convert';
+import 'dart:async';
+// import 'dart:typed_data';
+
+// import 'package:flutter/material.dart';
+// import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:zedu/core/core.dart';
+import 'package:zedu/features/features.dart';
 
 class BuzzMeetingView extends ConsumerStatefulWidget {
   const BuzzMeetingView({super.key});
@@ -19,6 +25,22 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
   bool _localUserJoined = false;
   int? _remoteUid;
   bool _isEngineInitialized = false;
+
+  // New State variables
+  VideoViewController? _localVideoController;
+  VideoViewController? _remoteVideoController;
+
+  bool? _lastIsFullPage;
+  bool _showEmojis = false;
+
+  final Set<int> _mutedUsers = {};
+  final Set<int> _activeSpeakers = {};
+  final Set<int> _raisedHands = {};
+
+  final Map<int, String> _activeEmojis = {};
+  final Map<int, Timer> _emojiTimers = {};
+
+  int? _dataStreamId;
 
   @override
   void initState() {
@@ -48,18 +70,29 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
       ),
     );
 
+    // Setup Video Controllers immediately
+    _localVideoController = VideoViewController(
+      rtcEngine: _engine,
+      canvas: const VideoCanvas(uid: 0),
+    );
+
     _engine.registerEventHandler(
       RtcEngineEventHandler(
         onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-          debugPrint('local user \${connection.localUid} joined');
+          debugPrint('local user ${connection.localUid} joined');
           setState(() {
             _localUserJoined = true;
           });
         },
         onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
-          debugPrint('remote user \$remoteUid joined');
+          debugPrint('remote user $remoteUid joined');
           setState(() {
             _remoteUid = remoteUid;
+            _remoteVideoController = VideoViewController.remote(
+              rtcEngine: _engine,
+              canvas: VideoCanvas(uid: remoteUid),
+              connection: RtcConnection(channelId: channelName),
+            );
           });
         },
         onUserOffline:
@@ -68,16 +101,92 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
               int remoteUid,
               UserOfflineReasonType reason,
             ) {
-              debugPrint('remote user \$remoteUid left channel');
+              debugPrint('remote user $remoteUid left channel');
               setState(() {
-                _remoteUid = null;
+                if (_remoteUid == remoteUid) {
+                  _remoteUid = null;
+                  _remoteVideoController = null;
+                }
+                _mutedUsers.remove(remoteUid);
+                _activeSpeakers.remove(remoteUid);
+                _raisedHands.remove(remoteUid);
+                _clearEmoji(remoteUid);
               });
+            },
+        onUserMuteAudio: (RtcConnection connection, int remoteUid, bool muted) {
+          setState(() {
+            if (muted) {
+              _mutedUsers.add(remoteUid);
+              _activeSpeakers.remove(remoteUid);
+            } else {
+              _mutedUsers.remove(remoteUid);
+            }
+          });
+        },
+        onAudioVolumeIndication:
+            (
+              RtcConnection connection,
+              List<AudioVolumeInfo> speakers,
+              int speakerNumber,
+              int totalVolume,
+            ) {
+              setState(() {
+                _activeSpeakers.clear();
+                for (var speaker in speakers) {
+                  // uid 0 means local user
+                  if (speaker.volume != null && speaker.volume! > 5) {
+                    _activeSpeakers.add(speaker.uid ?? 0);
+                  }
+                }
+              });
+            },
+        onStreamMessage:
+            (
+              RtcConnection connection,
+              int remoteUid,
+              int streamId,
+              Uint8List data,
+              int length,
+              int sentTs,
+            ) {
+              try {
+                final payload = utf8.decode(data);
+                final json = jsonDecode(payload);
+                if (json['type'] == 'hand_raise') {
+                  setState(() {
+                    if (json['value'] == true) {
+                      _raisedHands.add(remoteUid);
+                    } else {
+                      _raisedHands.remove(remoteUid);
+                    }
+                  });
+                } else if (json['type'] == 'emoji') {
+                  _showEmoji(remoteUid, json['value'] as String);
+                }
+              } catch (e) {
+                debugPrint('Data stream error: $e');
+              }
             },
       ),
     );
 
+    // Enable Audio and Video
+    await _engine.enableAudio();
     await _engine.enableVideo();
+
+    // Enable Audio Volume Indication
+    await _engine.enableAudioVolumeIndication(
+      interval: 200,
+      smooth: 3,
+      reportVad: true,
+    );
+
     await _engine.startPreview();
+
+    // Create Data Stream for realtime features
+    _dataStreamId = await _engine.createDataStream(
+      const DataStreamConfig(syncWithAudio: false, ordered: true),
+    );
 
     if (token != null && channelName != null) {
       await _engine.joinChannel(
@@ -101,6 +210,9 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
 
   @override
   void dispose() {
+    for (var timer in _emojiTimers.values) {
+      timer.cancel();
+    }
     if (_isEngineInitialized) {
       _engine.leaveChannel();
       _engine.release();
@@ -122,8 +234,93 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
       _isVideoOff = !_isVideoOff;
     });
     if (_isEngineInitialized) {
-      _engine.muteLocalVideoStream(_isVideoOff);
+      _engine.enableLocalVideo(!_isVideoOff);
+      if (!_isVideoOff) {
+        _engine.startPreview();
+      }
     }
+  }
+
+  void _toggleHandRaise() {
+    setState(() {
+      _isHandRaised = !_isHandRaised;
+      if (_isHandRaised) {
+        _raisedHands.add(0);
+      } else {
+        _raisedHands.remove(0);
+      }
+    });
+    _sendDataStream({'type': 'hand_raise', 'value': _isHandRaised});
+  }
+
+  void _toggleEmojiMenu() {
+    setState(() {
+      _showEmojis = !_showEmojis;
+    });
+  }
+
+  void _sendEmoji(String emoji) {
+    setState(() {
+      _showEmojis = false;
+    });
+    _showEmoji(0, emoji);
+    _sendDataStream({'type': 'emoji', 'value': emoji});
+  }
+
+  void _sendDataStream(Map<String, dynamic> data) {
+    if (_isEngineInitialized && _dataStreamId != null) {
+      final jsonStr = jsonEncode(data);
+      _engine.sendStreamMessage(
+        streamId: _dataStreamId!,
+        data: Uint8List.fromList(utf8.encode(jsonStr)),
+        length: jsonStr.length,
+      );
+    }
+  }
+
+  void _showEmoji(int uid, String emoji) {
+    setState(() {
+      _activeEmojis[uid] = emoji;
+    });
+    _emojiTimers[uid]?.cancel();
+    _emojiTimers[uid] = Timer(const Duration(seconds: 5), () {
+      _clearEmoji(uid);
+    });
+  }
+
+  void _clearEmoji(int uid) {
+    setState(() {
+      _activeEmojis.remove(uid);
+    });
+    _emojiTimers[uid]?.cancel();
+    _emojiTimers.remove(uid);
+  }
+
+  Widget _buildInlineEmojiPicker() {
+    if (!_showEmojis) return const SizedBox.shrink();
+    final emojis = ['👍', '❤️', '😂', '🎉', '👏', '😮', '👎', '😢'];
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade900,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: emojis
+            .map(
+              (e) => InkWell(
+                onTap: () => _sendEmoji(e),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Text(e, style: const TextStyle(fontSize: 20)),
+                ),
+              ),
+            )
+            .toList(),
+      ),
+    );
   }
 
   @override
@@ -136,6 +333,30 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
     }
 
     final bool isFullPage = activeCall.state.isFullPage;
+
+    if (_lastIsFullPage != null && _lastIsFullPage != isFullPage) {
+      // Recreate controllers to rebind native views after UI restructure
+      _localVideoController = VideoViewController(
+        rtcEngine: _engine,
+        canvas: const VideoCanvas(uid: 0),
+      );
+      if (_remoteUid != null && activeCall.state.channelName != null) {
+        _remoteVideoController = VideoViewController.remote(
+          rtcEngine: _engine,
+          canvas: VideoCanvas(uid: _remoteUid!),
+          connection: RtcConnection(channelId: activeCall.state.channelName!),
+        );
+      }
+      if (!_isVideoOff && _isEngineInitialized) {
+        Future.microtask(() async {
+          await _engine.enableLocalVideo(false);
+          await _engine.enableLocalVideo(true);
+          await _engine.startPreview();
+        });
+      }
+    }
+    _lastIsFullPage = isFullPage;
+
     final remoteName = activeCall.state.remoteUserName ?? 'Unknown';
 
     if (!isFullPage) {
@@ -215,6 +436,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                           null,
                           80,
                           isLocal: true,
+                          uid: 0,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -225,14 +447,14 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                           activeCall.state.remoteAvatarUrl,
                           80,
                           isLocal: false,
-                          remoteUid: _remoteUid,
-                          channelName: activeCall.state.channelName,
+                          uid: _remoteUid,
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 16),
+                _buildInlineEmojiPicker(),
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
@@ -240,30 +462,31 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                     children: [
                       _buildControlButton(
                         icon: _isMuted ? Icons.mic_off : Icons.mic,
-                        color: _isMuted ? Colors.red : Colors.white24,
+                        color: _isMuted ? Colors.red : Colors.grey.shade800,
                         onTap: _toggleMute,
                         small: true,
                       ),
                       const SizedBox(width: 8),
                       _buildControlButton(
                         icon: _isVideoOff ? Icons.videocam_off : Icons.videocam,
-                        color: _isVideoOff ? Colors.red : Colors.white24,
+                        color: _isVideoOff ? Colors.red : Colors.grey.shade800,
                         onTap: _toggleVideo,
                         small: true,
                       ),
                       const SizedBox(width: 8),
                       _buildControlButton(
                         icon: Icons.emoji_emotions_outlined,
-                        color: Colors.white24,
-                        onTap: () {},
+                        color: Colors.grey.shade800,
+                        onTap: _toggleEmojiMenu,
                         small: true,
                       ),
                       const SizedBox(width: 8),
                       _buildControlButton(
                         icon: Icons.back_hand,
-                        color: _isHandRaised ? Colors.amber : Colors.white24,
-                        onTap: () =>
-                            setState(() => _isHandRaised = !_isHandRaised),
+                        color: _isHandRaised
+                            ? Colors.amber
+                            : Colors.grey.shade800,
+                        onTap: _toggleHandRaise,
                         small: true,
                       ),
                       const SizedBox(width: 8),
@@ -341,8 +564,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                       activeCall.state.remoteAvatarUrl,
                       double.infinity,
                       isLocal: false,
-                      remoteUid: _remoteUid,
-                      channelName: activeCall.state.channelName,
+                      uid: _remoteUid,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -353,6 +575,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                       null,
                       double.infinity,
                       isLocal: true,
+                      uid: 0,
                     ),
                   ),
                 ],
@@ -360,6 +583,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
             ),
           ),
           // Bottom Controls
+          _buildInlineEmojiPicker(),
           Container(
             padding: const EdgeInsets.only(bottom: 24),
             child: Row(
@@ -367,48 +591,42 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
               children: [
                 _buildControlButton(
                   icon: _isMuted ? Icons.mic_off : Icons.mic,
-                  color: _isMuted
-                      ? Colors.red
-                      : colors.primary.withValues(alpha: 0.2),
+                  color: _isMuted ? Colors.red : Colors.grey.shade800,
                   onTap: _toggleMute,
                   small: false,
                 ),
                 const SizedBox(width: 16),
                 _buildControlButton(
                   icon: Icons.screen_share_outlined,
-                  color: colors.primary.withValues(alpha: 0.2),
+                  color: Colors.grey.shade800,
                   onTap: () {},
                   small: false,
                 ),
                 const SizedBox(width: 16),
                 _buildControlButton(
                   icon: _isVideoOff ? Icons.videocam_off : Icons.videocam,
-                  color: _isVideoOff
-                      ? Colors.red
-                      : colors.primary.withValues(alpha: 0.2),
+                  color: _isVideoOff ? Colors.red : Colors.grey.shade800,
                   onTap: _toggleVideo,
                   small: false,
                 ),
                 const SizedBox(width: 16),
                 _buildControlButton(
                   icon: Icons.emoji_emotions_outlined,
-                  color: colors.primary.withValues(alpha: 0.2),
-                  onTap: () {},
+                  color: Colors.grey.shade800,
+                  onTap: _toggleEmojiMenu,
                   small: false,
                 ),
                 const SizedBox(width: 16),
                 _buildControlButton(
                   icon: Icons.back_hand,
-                  color: _isHandRaised
-                      ? Colors.amber
-                      : colors.primary.withValues(alpha: 0.2),
-                  onTap: () => setState(() => _isHandRaised = !_isHandRaised),
+                  color: _isHandRaised ? Colors.amber : Colors.grey.shade800,
+                  onTap: _toggleHandRaise,
                   small: false,
                 ),
                 const SizedBox(width: 16),
                 _buildControlButton(
                   icon: Icons.more_vert,
-                  color: colors.primary.withValues(alpha: 0.2),
+                  color: Colors.grey.shade800,
                   onTap: () {},
                   small: false,
                 ),
@@ -434,27 +652,22 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
     String name,
     String? avatarUrl,
     double height, {
-    bool isLocal = false,
-    int? remoteUid,
-    String? channelName,
+    required bool isLocal,
+    int? uid,
   }) {
+    final isSpeaker = uid != null && _activeSpeakers.contains(uid);
+    final isUserMuted =
+        (isLocal && _isMuted) ||
+        (!isLocal && uid != null && _mutedUsers.contains(uid));
+    final hasHandRaised = uid != null && _raisedHands.contains(uid);
+    final activeEmoji = uid != null ? _activeEmojis[uid] : null;
+
     Widget? videoView;
     if (_isEngineInitialized) {
-      if (isLocal && !_isVideoOff) {
-        videoView = AgoraVideoView(
-          controller: VideoViewController(
-            rtcEngine: _engine,
-            canvas: const VideoCanvas(uid: 0),
-          ),
-        );
-      } else if (!isLocal && remoteUid != null && channelName != null) {
-        videoView = AgoraVideoView(
-          controller: VideoViewController.remote(
-            rtcEngine: _engine,
-            canvas: VideoCanvas(uid: remoteUid),
-            connection: RtcConnection(channelId: channelName),
-          ),
-        );
+      if (isLocal && !_isVideoOff && _localVideoController != null) {
+        videoView = AgoraVideoView(controller: _localVideoController!);
+      } else if (!isLocal && uid != null && _remoteVideoController != null) {
+        videoView = AgoraVideoView(controller: _remoteVideoController!);
       }
     }
 
@@ -463,6 +676,9 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(12),
+        border: isSpeaker && !isUserMuted
+            ? Border.all(color: Colors.green, width: 3)
+            : Border.all(color: Colors.transparent, width: 3),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -479,29 +695,70 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                     ? NetworkImage(avatarUrl)
                     : null,
                 child: avatarUrl == null || avatarUrl.isEmpty
-                    ? Icon(Icons.person, size: 24, color: Colors.white)
+                    ? const Icon(Icons.person, size: 24, color: Colors.white)
                     : null,
               ),
             ),
           Positioned(
             top: 12,
             left: 12,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
-              ),
+                if (hasHandRaised) ...[
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.8),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.back_hand,
+                      size: 10,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
+          if (isUserMuted)
+            Positioned(
+              top: 12,
+              right: 12,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.mic_off, size: 14, color: Colors.red),
+              ),
+            ),
+          if (activeEmoji != null)
+            Positioned(
+              top: 40,
+              left: 12,
+              child: Text(activeEmoji, style: const TextStyle(fontSize: 32)),
+            ),
         ],
       ),
     );

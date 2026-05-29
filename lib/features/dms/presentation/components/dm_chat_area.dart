@@ -696,6 +696,43 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
 
     final List<dynamic> media =
         (widget.message['media'] as List<dynamic>?) ?? [];
+        
+    final type = widget.message['type'] as String?;
+
+    if (type == 'call' || type == 'call_log') {
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colors.primary.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.divider),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colors.background,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.call, color: colors.primary),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Buzz Call', style: TextStyle(fontWeight: FontWeight.bold, color: colors.textPrimary)),
+                  Text(content.isNotEmpty ? content : 'Call ended', style: TextStyle(color: colors.textHint, fontSize: 13)),
+                ],
+              ),
+            ),
+            Text(timeString, style: TextStyle(color: colors.textHint, fontSize: 12)),
+          ],
+        ),
+      );
+    }
 
     // ── Content widgets (shared between header and grouped layout) ─────────
     final contentStyle = TextStyle(color: colors.textPrimary, fontSize: 14);
