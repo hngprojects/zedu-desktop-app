@@ -15,3 +15,5 @@ final authRepositoryProvider = Provider<AuthRepository>(
 final authNotifierProvider = NotifierProvider<AuthNotifier, AuthState>(
   AuthNotifier.new,
 );
+
+final pendingInviteTokenProvider = StateProvider<String?>((ref) => null);

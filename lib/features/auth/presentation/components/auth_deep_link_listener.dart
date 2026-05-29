@@ -48,16 +48,26 @@ class _AuthDeepLinkListenerState extends ConsumerState<AuthDeepLinkListener> {
   }
 
   Future<void> _handleUri(Uri uri) async {
-    final invitationToken = _extractInvitationToken(uri);
-    if (invitationToken != null) {
-      await _handleInvitationToken(invitationToken);
+    // 1. Process Magic Link
+    final magicToken = MagicLinkDeepLinkParser.extractToken(uri);
+    if (magicToken != null) {
+      if (magicToken == _lastProcessedToken) return;
+      _lastProcessedToken = magicToken;
+      await _handleMagicLink(magicToken);
       return;
     }
 
-    final token = MagicLinkDeepLinkParser.extractToken(uri);
-    if (token == null || token == _lastProcessedToken) return;
-    _lastProcessedToken = token;
+    // 2. Process Invitation Link
+    final inviteToken = InvitationDeepLinkParser.extractToken(uri);
+    if (inviteToken != null) {
+      if (inviteToken == _lastProcessedToken) return;
+      _lastProcessedToken = inviteToken;
+      await _handleInvitationLink(inviteToken);
+      return;
+    }
+  }
 
+  Future<void> _handleMagicLink(String token) async {
     AppLogger.i('Processing magic link deep link', tag: _tag);
     await ref.read(authNotifierProvider.notifier).verifyMagicLink(token: token);
 
@@ -83,62 +93,45 @@ class _AuthDeepLinkListenerState extends ConsumerState<AuthDeepLinkListener> {
     }
   }
 
-  String? _extractInvitationToken(Uri uri) {
-    final token =
-        uri.queryParameters['invitation_token'] ?? uri.queryParameters['token'];
-    if (token == null || token.trim().isEmpty) return null;
-
-    final path = uri.path.toLowerCase();
-    final host = uri.host.toLowerCase();
-    final looksLikeInvite =
-        path.contains('accept_org_invitation') ||
-        path.contains('/invite/general/verify') ||
-        host.contains('invite');
-    return looksLikeInvite ? token.trim() : null;
+  Future<void> _handleInvitationLink(String token) async {
+    final authState = ref.read(authNotifierProvider);
+    if (authState.status == AuthStatus.authenticated) {
+      await _acceptInvite(token);
+    } else {
+      ref.read(pendingInviteTokenProvider.notifier).state = token;
+      AppToastService.show(
+        context,
+        type: AppToastType.info,
+        message: 'Please log in or sign up to accept the invitation.',
+      );
+      context.go(AppRouter.login);
+    }
   }
 
-  Future<void> _handleInvitationToken(String token) async {
-    final authState = ref.read(authNotifierProvider);
-    if (authState.status != AuthStatus.authenticated) {
-      await locator<SecureStorageService>().writeData(
-        'pending_invitation_token',
-        token,
-      );
-      if (mounted) {
-        AppToastService.show(
-          context,
-          type: AppToastType.info,
-          message: 'Sign in to join the workspace.',
-        );
-        context.go(AppRouter.login);
-      }
-      return;
-    }
+  Future<void> _acceptInvite(String token) async {
+    AppLogger.i('Accepting invitation link', tag: _tag);
+    ref.read(pendingInviteTokenProvider.notifier).state = null;
 
-    try {
-      final api = locator<ApiBaseService>();
-      await api.post<Map<String, dynamic>>(
-        path: '/invite/general/verify',
-        data: {'token': token},
+    await ref
+        .read(userProfileNotifierProvider.notifier)
+        .acceptInvitation(token);
+
+    if (!mounted) return;
+
+    final profileState = ref.read(userProfileNotifierProvider);
+    if (profileState.error != null) {
+      AppToastService.show(
+        context,
+        type: AppToastType.error,
+        message: profileState.error!,
       );
-      ref.invalidate(workspaceProvider);
-      if (mounted) {
-        AppToastService.show(
-          context,
-          type: AppToastType.success,
-          message: 'Workspace joined successfully.',
-        );
-        context.go(AppRouter.home);
-      }
-    } catch (error) {
-      AppLogger.w('Invite verification failed: $error', tag: _tag);
-      if (mounted) {
-        AppToastService.show(
-          context,
-          type: AppToastType.error,
-          message: 'Could not join workspace from this invite.',
-        );
-      }
+    } else if (profileState.successMessage != null) {
+      AppToastService.show(
+        context,
+        type: AppToastType.success,
+        message: profileState.successMessage!,
+      );
+      context.go(AppRouter.home);
     }
   }
 
@@ -150,6 +143,16 @@ class _AuthDeepLinkListenerState extends ConsumerState<AuthDeepLinkListener> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AuthState>(authNotifierProvider, (previous, next) {
+      if (next.status == AuthStatus.authenticated &&
+          previous?.status != AuthStatus.authenticated) {
+        final inviteToken = ref.read(pendingInviteTokenProvider);
+        if (inviteToken != null) {
+          unawaited(_acceptInvite(inviteToken));
+        }
+      }
+    });
+
     return widget.child;
   }
 }

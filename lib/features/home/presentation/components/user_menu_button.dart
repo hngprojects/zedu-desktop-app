@@ -12,11 +12,7 @@ class UserMenuButton extends ConsumerWidget {
 
     return GestureDetector(
       onTap: () {
-        showDialog<void>(
-          context: context,
-          barrierColor: Colors.black.withValues(alpha: 0.3),
-          builder: (context) => const UserMenuDialog(),
-        );
+        context.go(AppRouter.profile);
       },
       child: Stack(
         clipBehavior: Clip.none,

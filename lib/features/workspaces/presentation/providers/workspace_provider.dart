@@ -1,4 +1,5 @@
 import 'package:zedu/core/core.dart';
+import 'package:zedu/features/auth/auth.dart';
 
 import '../../data/models/workspace.dart';
 import 'workspace_state.dart';
@@ -6,11 +7,12 @@ import 'workspace_state.dart';
 class WorkspaceNotifier extends Notifier<WorkspaceState> {
   @override
   WorkspaceState build() {
-    Future.microtask(_fetchWorkspaces);
+    ref.watch(authNotifierProvider);
+    Future.microtask(fetchWorkspaces);
     return const WorkspaceState(workspaces: [], isLoading: true);
   }
 
-  Future<void> _fetchWorkspaces() async {
+  Future<void> fetchWorkspaces() async {
     try {
       final api = locator<ApiBaseService>();
       final response = await api.get<Map<String, dynamic>>(
@@ -20,14 +22,20 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
 
       if (data.isNotEmpty) {
         final List<Workspace> workspaces = [];
+        final currentUserId = ref.read(authNotifierProvider).user?.id;
         for (var item in data) {
           if (item is Map<String, dynamic>) {
+            final ownerId = item['owner_id'] as String? ?? item['creator_id'] as String?;
+            if (ownerId != null && currentUserId != null && ownerId != currentUserId) {
+              continue;
+            }
             workspaces.add(
               Workspace(
                 id: item['id'] as String? ?? '1',
                 name: item['name'] as String? ?? 'Workspace',
                 avatar: item['logo_url'] as String? ?? '',
                 membersCount: (item['channels_count'] as num?)?.toInt() ?? 0,
+                ownerId: ownerId,
               ),
             );
           }

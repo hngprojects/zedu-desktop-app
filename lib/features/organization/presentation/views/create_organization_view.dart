@@ -101,11 +101,17 @@ class _CreateOrganizationViewState
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: colors.textPrimary),
           onPressed: () {
-            Navigator.pop(context);
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(AppRouter.home);
+            }
           },
-          icon: Icon(Icons.arrow_back),
         ),
       ),
       body: Center(

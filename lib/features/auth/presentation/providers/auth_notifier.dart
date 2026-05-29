@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
@@ -36,25 +37,61 @@ class AuthNotifier extends Notifier<AuthState> {
     switch (result) {
       case Success<User>():
         AppLogger.i('Session restored — ${result.value.email}', tag: _tag);
+        try {
+          await _storage.writeData('cached_user_profile', jsonEncode(result.value.toJson()));
+        } catch (_) {}
         state = AuthState(status: AuthStatus.authenticated, user: result.value);
       case Failure<User>():
-        AppLogger.w('Session restore failed — clearing token', tag: _tag);
-        await _storage.deleteAccessToken();
-        await _storage.deleteNotificationToken();
-        state = const AuthState(status: AuthStatus.unauthenticated);
+        final error = result.error;
+        final isExplicitlyInvalid = error.statusCode == 401 ||
+            error.statusCode == 403 ||
+            error.kind == ApiFailureKind.unauthorized ||
+            error.kind == ApiFailureKind.forbidden;
+
+        if (isExplicitlyInvalid) {
+          AppLogger.w('Session restore failed (invalid token) — clearing token', tag: _tag);
+          await _storage.deleteAccessToken();
+          await _storage.deleteNotificationToken();
+          try {
+            await _storage.writeData('cached_user_profile', '');
+          } catch (_) {}
+          state = const AuthState(status: AuthStatus.unauthenticated);
+        } else {
+          AppLogger.w('Session restore failed (network/server error) — checking cache', tag: _tag);
+          try {
+            final cachedUserJson = await _storage.readData('cached_user_profile');
+            if (cachedUserJson != null && cachedUserJson.isNotEmpty) {
+              final userMap = jsonDecode(cachedUserJson) as Map<String, dynamic>;
+              final cachedUser = User.fromJson(userMap);
+              AppLogger.i('Offline session restored from cache — ${cachedUser.email}', tag: _tag);
+              state = AuthState(status: AuthStatus.authenticated, user: cachedUser);
+              return;
+            }
+          } catch (e) {
+            AppLogger.e('Error loading cached user profile', tag: _tag, error: e);
+          }
+          state = const AuthState(status: AuthStatus.unauthenticated);
+        }
     }
   }
 
   Future<void> login({required String email, required String password}) async {
-    AppLogger.d('Login attempt — $email', tag: _tag);
+    final normalizedEmail = email.trim().toLowerCase();
+    AppLogger.d('Login attempt — $normalizedEmail', tag: _tag);
     state = state.copyWith(isLoading: true, clearError: true);
 
-    final result = await _repository.login(email: email, password: password);
+    final result = await _repository.login(
+      email: normalizedEmail,
+      password: password,
+    );
     switch (result) {
       case Success<AuthSession>():
         AppLogger.i('Login succeeded — token persisted', tag: _tag);
         await _storage.saveAccessToken(result.value.accessToken);
         await _storage.saveNotificationToken(result.value.notificationToken);
+        try {
+          await _storage.writeData('cached_user_profile', jsonEncode(result.value.user.toJson()));
+        } catch (_) {}
         state = AuthState(
           status: AuthStatus.authenticated,
           user: result.value.user,
@@ -83,6 +120,9 @@ class AuthNotifier extends Notifier<AuthState> {
         );
         await _storage.saveAccessToken(result.value.accessToken);
         await _storage.saveNotificationToken(result.value.notificationToken);
+        try {
+          await _storage.writeData('cached_user_profile', jsonEncode(result.value.user.toJson()));
+        } catch (_) {}
         state = AuthState(
           status: AuthStatus.authenticated,
           user: result.value.user,
@@ -105,6 +145,9 @@ class AuthNotifier extends Notifier<AuthState> {
     AppLogger.i('Logout — clearing session', tag: _tag);
     await _storage.deleteAccessToken();
     await _storage.deleteNotificationToken();
+    try {
+      await _storage.writeData('cached_user_profile', '');
+    } catch (_) {}
     state = const AuthState(status: AuthStatus.unauthenticated);
     ref.invalidate(userProfileNotifierProvider);
     ref.invalidate(workspaceProvider);
@@ -119,19 +162,24 @@ class AuthNotifier extends Notifier<AuthState> {
     required String email,
     required String password,
   }) async {
-    AppLogger.d('Sign up attempt — $email', tag: _tag);
+    if (state.isLoading) return;
+    // ignore: avoid_print
+    print('started rolling');
+    AppLogger.i('started rolling', tag: _tag);
+
+    final normalizedEmail = email.trim().toLowerCase();
+    AppLogger.d('Sign up attempt — $normalizedEmail', tag: _tag);
     state = state.copyWith(isLoading: true, clearError: true);
 
     final result = await _repository.signUp(
       username: username,
-      email: email,
+      email: normalizedEmail,
       password: password,
     );
     switch (result) {
       case Success<void>():
         AppLogger.i('Sign up succeeded', tag: _tag);
-        await login(email: email, password: password);
-        // Auto-create organization for new users
+        await login(email: normalizedEmail, password: password);
         await _autoCreateOrganizationForNewUser();
       case Failure<void>():
         AppLogger.w('Sign up failed — ${result.error.message}', tag: _tag);
@@ -199,10 +247,11 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<bool> forgotPassword({required String email}) async {
-    AppLogger.d('Forgot password attempt — $email', tag: _tag);
+    final normalizedEmail = email.trim().toLowerCase();
+    AppLogger.d('Forgot password attempt — $normalizedEmail', tag: _tag);
     state = state.copyWith(isLoading: true, clearError: true);
 
-    final result = await _repository.forgotPassword(email: email);
+    final result = await _repository.forgotPassword(email: normalizedEmail);
     switch (result) {
       case Success<void>():
         AppLogger.i('Forgot password email sent', tag: _tag);
@@ -226,11 +275,12 @@ class AuthNotifier extends Notifier<AuthState> {
     required String token,
     required String newPassword,
   }) async {
+    final normalizedEmail = email.trim().toLowerCase();
     AppLogger.d('Reset password attempt', tag: _tag);
     state = state.copyWith(isLoading: true, clearError: true);
 
     final result = await _repository.resetPassword(
-      email: email,
+      email: normalizedEmail,
       token: token,
       newPassword: newPassword,
     );
@@ -257,11 +307,12 @@ class AuthNotifier extends Notifier<AuthState> {
     required String oldPassword,
     required String newPassword,
   }) async {
+    final normalizedEmail = email.trim().toLowerCase();
     AppLogger.d('Change password attempt', tag: _tag);
     state = state.copyWith(isLoading: true, clearError: true);
 
     final result = await _repository.changePassword(
-      email: email,
+      email: normalizedEmail,
       oldPassword: oldPassword,
       newPassword: newPassword,
     );
@@ -306,6 +357,9 @@ class AuthNotifier extends Notifier<AuthState> {
     final result = await _repository.getCurrentUser();
     switch (result) {
       case Success<User>():
+        try {
+          await _storage.writeData('cached_user_profile', jsonEncode(result.value.toJson()));
+        } catch (_) {}
         state = state.copyWith(user: result.value);
       case Failure<User>():
         AppLogger.w(
@@ -328,7 +382,7 @@ class AuthNotifier extends Notifier<AuthState> {
       server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
       AppLogger.d('Local loopback server listening on port $port', tag: _tag);
 
-      final redirectUri = 'http://127.0.0.1:$port'; // Desktop Loopback URI
+      final redirectUri = 'http://localhost:$port'; // Desktop Loopback URI
       final authUrl = Uri.https('accounts.google.com', '/o/oauth2/v2/auth', {
         'client_id': config.googleClientId,
         'response_type': 'code',
@@ -345,34 +399,41 @@ class AuthNotifier extends Notifier<AuthState> {
       // 3. Wait for Google's redirect containing the authorization code
       String? grantCode;
       await for (final request in server) {
-        grantCode = request.uri.queryParameters['code'];
+        final code = request.uri.queryParameters['code'];
+        if (code != null) {
+          grantCode = code;
 
-        // Return a clean success page to the user in their browser
-        request.response
-          ..statusCode = HttpStatus.ok
-          ..headers.contentType = ContentType.html
-          ..write('''
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <title>Authentication Successful</title>
-              <style>
-                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; text-align: center; padding: 50px; background-color: #f9f9f9; }
-                .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: inline-block; max-width: 400px; }
-                h1 { color: #4CAF50; margin-top: 0; }
-                p { color: #666; font-size: 16px; }
-              </style>
-            </head>
-            <body>
-              <div class="card">
-                <h1>Sign In Successful!</h1>
-                <p>You have successfully authenticated with Zedu. You can now close this tab and return to the application.</p>
-              </div>
-            </body>
-            </html>
-          ''');
-        await request.response.close();
-        break;
+          // Return a clean success page to the user in their browser
+          request.response
+            ..statusCode = HttpStatus.ok
+            ..headers.contentType = ContentType.html
+            ..write('''
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <title>Authentication Successful</title>
+                <style>
+                  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; text-align: center; padding: 50px; background-color: #f9f9f9; }
+                  .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: inline-block; max-width: 400px; }
+                  h1 { color: #4CAF50; margin-top: 0; }
+                  p { color: #666; font-size: 16px; }
+                </style>
+              </head>
+              <body>
+                <div class="card">
+                  <h1>Sign In Successful!</h1>
+                  <p>You have successfully authenticated with Zedu. You can now close this tab and return to the application.</p>
+                </div>
+              </body>
+              </html>
+            ''');
+          await request.response.close();
+          break;
+        } else {
+          // Ignore preflight / favicon.ico requests or requests without the grant code
+          request.response.statusCode = HttpStatus.notFound;
+          await request.response.close();
+        }
       }
 
       await server.close();
@@ -398,6 +459,9 @@ class AuthNotifier extends Notifier<AuthState> {
           AppLogger.i('Google Sign-In succeeded — token persisted', tag: _tag);
           await _storage.saveAccessToken(result.value.accessToken);
           await _storage.saveNotificationToken(result.value.notificationToken);
+          try {
+            await _storage.writeData('cached_user_profile', jsonEncode(result.value.user.toJson()));
+          } catch (_) {}
           state = AuthState(
             status: AuthStatus.authenticated,
             user: result.value.user,

@@ -23,6 +23,7 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
   }
 
   Future<void> _onCreateAccountPressed() async {
+    if (ref.read(authNotifierProvider).isLoading) return;
     if (!_formKey.currentState!.validate()) return;
 
     ref
@@ -44,6 +45,7 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
           type: AppToastType.success,
           message: 'Account created successfully!',
         );
+        context.go(AppRouter.home);
       }
       if (next.error != null && previous?.error != next.error) {
         AppToastService.show(
@@ -55,6 +57,19 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
     });
 
     final authState = ref.watch(authNotifierProvider);
+    if (authState.status == AuthStatus.authenticated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          context.go(AppRouter.home);
+        }
+      });
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
@@ -167,12 +182,8 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
                         label: 'Password',
                         hint: 'Password',
                         textInputAction: TextInputAction.done,
-                        validator: (value) {
-                          if (value == null || value.length < 8) {
-                            return 'Password must be at least 8 characters long';
-                          }
-                          return null;
-                        },
+                        validator: (value) =>
+                            Validators.validatePassword(context, value),
                       ),
                     ],
                   ),
@@ -218,11 +229,8 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
                 SocialAuthButton(
                   icon: 'assets/svgs/google_logo.svg',
                   label: 'Sign up with Google',
-                  onPressed: () => AppToastService.show(
-                    context,
-                    type: AppToastType.info,
-                    message: 'Google sign up is not available yet.',
-                  ),
+                  onPressed: () =>
+                      ref.read(authNotifierProvider.notifier).loginWithGoogle(),
                 ),
                 context.gapV(12),
                 SocialAuthButton(
