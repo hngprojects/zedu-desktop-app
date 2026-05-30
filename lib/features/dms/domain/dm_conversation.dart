@@ -1,3 +1,6 @@
+import 'package:zedu/core/core.dart';
+import 'package:zedu/features/features.dart';
+
 class DmConversation {
   final String channelId;
   final String username;

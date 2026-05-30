@@ -333,10 +333,7 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
 
     try {
       final repository = ref.read(dmRepositoryProvider);
-      await repository.sendMessage(
-        groupDmId,
-        messageText,
-      );
+      await repository.sendMessage(groupDmId, messageText);
     } catch (e, stack) {
       AppLogger.e(
         'Error sending Group DM message to server',

@@ -179,8 +179,14 @@ class ChatWebsocketService {
               final channel = push['channel'] as String? ?? '';
               final data = pub?['data'] as Map<String, dynamic>?;
               if (data != null) {
-                final id = data['id'] as String? ?? 'ws-${DateTime.now().millisecondsSinceEpoch}';
-                final userId = data['sender_id'] as String? ?? data['user_id'] as String? ?? data['userId'] as String? ?? '';
+                final id =
+                    data['id'] as String? ??
+                    'ws-${DateTime.now().millisecondsSinceEpoch}';
+                final userId =
+                    data['sender_id'] as String? ??
+                    data['user_id'] as String? ??
+                    data['userId'] as String? ??
+                    '';
                 final text =
                     data['content'] as String? ?? data['text'] as String? ?? '';
                 final authorName =
@@ -192,7 +198,8 @@ class ChatWebsocketService {
                     data['timestamp'] as String? ??
                     '';
                 final timestamp =
-                    (DateTime.tryParse(createdAtStr) ?? DateTime.now()).toLocal();
+                    (DateTime.tryParse(createdAtStr) ?? DateTime.now())
+                        .toLocal();
 
                 _messageController.add(
                   ChatWebsocketMessage(

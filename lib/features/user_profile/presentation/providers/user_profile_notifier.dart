@@ -295,13 +295,16 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       final data = response.data['data'] as Map<String, dynamic>?;
       if (data == null) return null;
 
-      String? token = data['invitation_token']?.toString() ?? data['token']?.toString();
+      String? token =
+          data['invitation_token']?.toString() ?? data['token']?.toString();
       final link = data['invitation_link']?.toString();
 
       if (token == null && link != null) {
         final uri = Uri.tryParse(link);
         if (uri != null) {
-          token = uri.queryParameters['token'] ?? uri.queryParameters['invitation_token'];
+          token =
+              uri.queryParameters['token'] ??
+              uri.queryParameters['invitation_token'];
           if (token == null && uri.pathSegments.isNotEmpty) {
             token = uri.pathSegments.last;
           }

@@ -96,10 +96,11 @@ class DmRepository {
       path: path,
       data: data,
     );
-    
+
     final responseData = response.data['data'];
     if (responseData is List && responseData.isNotEmpty) {
-      return (responseData.first as Map<dynamic, dynamic>).cast<String, dynamic>();
+      return (responseData.first as Map<dynamic, dynamic>)
+          .cast<String, dynamic>();
     } else if (responseData is Map) {
       return responseData.cast<String, dynamic>();
     }

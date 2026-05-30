@@ -962,13 +962,15 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
     final history = ref.watch(chatHistoryProvider(widget.channelId));
     final isMe = history.isMyMessage(widget.message);
     final content = widget.message['content'] as String? ?? '';
-    final createdAt = DateFormatter.parseUtcString(widget.message['created_at']?.toString() ?? '');
+    final createdAt = DateFormatter.parseUtcString(
+      widget.message['created_at']?.toString() ?? '',
+    );
     final status = widget.message['status'] as String?;
     final messageId = widget.message['id'] as String? ?? '';
 
     final isEditable =
         isMe && DateTime.now().difference(createdAt).inMinutes < 10;
-        
+
     final timeString = DateFormatter.formatTime12h(createdAt);
 
     final String senderName = isMe

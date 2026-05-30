@@ -42,7 +42,9 @@ class _CreateChannelModalState extends ConsumerState<CreateChannelModal> {
     final colors = context.colors;
     final textTheme = context.textTheme;
     final isLoading = ref.watch(channelProvider).isLoading;
-    final workspaceName = ref.watch(workspaceProvider).selectedWorkspace?.name ?? 'your workspace';
+    final workspaceName =
+        ref.watch(workspaceProvider).selectedWorkspace?.name ??
+        'your workspace';
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -119,7 +121,13 @@ class _CreateChannelModalState extends ConsumerState<CreateChannelModal> {
                             controller: _nameController,
                             onChanged: (v) => setState(() {}),
                             maxLength: 40,
-                            buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
+                            buildCounter:
+                                (
+                                  context, {
+                                  required currentLength,
+                                  required isFocused,
+                                  maxLength,
+                                }) => null,
                             decoration: const InputDecoration(
                               hintText: 'e.g. project-x',
                               border: InputBorder.none,

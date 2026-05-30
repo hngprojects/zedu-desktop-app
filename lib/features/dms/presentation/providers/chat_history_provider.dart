@@ -53,7 +53,10 @@ class ChatHistoryNotifier extends ChangeNotifier {
                 return m;
               }
               // Match optimistic messages
-              if (!foundMatch && m['content'] == msg.text && (m['sender_name'] == msg.authorName || m['username'] == msg.authorName)) {
+              if (!foundMatch &&
+                  m['content'] == msg.text &&
+                  (m['sender_name'] == msg.authorName ||
+                      m['username'] == msg.authorName)) {
                 // Update optimistic message with real ID
                 final updated = Map<String, dynamic>.from(m);
                 updated['id'] = msg.id;
@@ -72,8 +75,12 @@ class ChatHistoryNotifier extends ChangeNotifier {
                 "id": msg.id,
                 "content": msg.text,
                 "channel_id": channelId,
-                "user_id": msg.userId.isNotEmpty ? msg.userId : (isMe ? _currentUserId : 'other'),
-                "userId": msg.userId.isNotEmpty ? msg.userId : (isMe ? _currentUserId : 'other'),
+                "user_id": msg.userId.isNotEmpty
+                    ? msg.userId
+                    : (isMe ? _currentUserId : 'other'),
+                "userId": msg.userId.isNotEmpty
+                    ? msg.userId
+                    : (isMe ? _currentUserId : 'other'),
                 "sender_name": msg.authorName,
                 "username": msg.authorName,
                 "type": "user",
@@ -153,7 +160,10 @@ class ChatHistoryNotifier extends ChangeNotifier {
   }
 
   bool isMyMessage(Map<String, dynamic> message) {
-    final senderId = (message['user_id'] ?? message['userId'] ?? message['sender_id'])?.toString() ?? '';
+    final senderId =
+        (message['user_id'] ?? message['userId'] ?? message['sender_id'])
+            ?.toString() ??
+        '';
     final currentId = _currentUserId;
     if (currentId.isEmpty) return false;
     return senderId == currentId || senderId == 'me';
@@ -427,7 +437,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
       final selectedDm = ref.read(selectedDmProvider);
       final activeChat = ref.read(activeChatProvider);
       final isDirectMessage = activeChat.type == ActiveChatType.directMessage;
-      
+
       if (isDirectMessage &&
           selectedDm != null &&
           selectedDm.channelId == selectedDm.participantId) {

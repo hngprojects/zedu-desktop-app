@@ -122,7 +122,8 @@ class ApiFailure implements Exception {
           return details.join('\n');
         }
       }
-      if (data['message'] is String) return '${data['message']}\nRaw data: $data';
+      if (data['message'] is String)
+        return '${data['message']}\nRaw data: $data';
       if (data['error'] is String) return '${data['error']}\nRaw data: $data';
     }
     if (data is String) {

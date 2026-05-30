@@ -1,4 +1,3 @@
-
 export 'api_utils/api_client.dart';
 export 'api_utils/api_failure.dart';
 export 'api_utils/api_response_model.dart';
@@ -58,4 +57,5 @@ export 'dart:io';
 export 'dart:math' hide log, Rectangle;
 export 'dart:developer' show log;
 export 'package:web_socket_channel/web_socket_channel.dart';
-export 'package:audioplayers/audioplayers.dart';export 'utils/date_formatter.dart';
+export 'package:audioplayers/audioplayers.dart';
+export 'utils/date_formatter.dart';
