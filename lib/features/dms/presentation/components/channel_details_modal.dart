@@ -101,7 +101,7 @@ class _ChannelDetailsModalState extends ConsumerState<ChannelDetailsModal>
               Container(
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: colors.borderOutline.withOpacity(0.2),
+                    color: colors.borderOutline.withValues(alpha: 0.2),
                   ),
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -114,7 +114,7 @@ class _ChannelDetailsModalState extends ConsumerState<ChannelDetailsModal>
               Container(
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: colors.borderOutline.withOpacity(0.2),
+                    color: colors.borderOutline.withValues(alpha: 0.2),
                   ),
                   borderRadius: BorderRadius.circular(6),
                 ),
@@ -142,13 +142,15 @@ class _ChannelDetailsModalState extends ConsumerState<ChannelDetailsModal>
     return Container(
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: colors.borderOutline.withOpacity(0.2)),
+          bottom: BorderSide(
+            color: colors.borderOutline.withValues(alpha: 0.2),
+          ),
         ),
       ),
       child: TabBar(
         controller: _tabController,
         labelColor: colors.primary,
-        unselectedLabelColor: colors.textPrimary.withOpacity(0.6),
+        unselectedLabelColor: colors.textPrimary.withValues(alpha: 0.6),
         indicatorColor: colors.primary,
         indicatorSize: TabBarIndicatorSize.tab,
         tabs: [
@@ -165,7 +167,7 @@ class _ChannelDetailsModalState extends ConsumerState<ChannelDetailsModal>
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: colors.primary.withOpacity(0.1),
+                    color: colors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -198,7 +200,7 @@ class _AboutTab extends ConsumerWidget {
     final controller = TextEditingController(
       text: isTopic ? channel.topic : channel.description,
     );
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -233,7 +235,9 @@ class _AboutTab extends ConsumerWidget {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(
-                      color: context.colors.borderOutline.withOpacity(0.2),
+                      color: context.colors.borderOutline.withValues(
+                        alpha: 0.2,
+                      ),
                     ),
                   ),
                 ),
@@ -243,7 +247,7 @@ class _AboutTab extends ConsumerWidget {
                 'Let people know what #${channel.name} is focused on right now (ex. a project milestone).\nTopics are always visible in the header',
                 style: TextStyle(
                   fontSize: 11,
-                  color: context.colors.textPrimary.withOpacity(0.6),
+                  color: context.colors.textPrimary.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(height: 24),
@@ -254,7 +258,9 @@ class _AboutTab extends ConsumerWidget {
                     onPressed: () => Navigator.of(ctx).pop(),
                     style: TextButton.styleFrom(
                       side: BorderSide(
-                        color: context.colors.borderOutline.withOpacity(0.2),
+                        color: context.colors.borderOutline.withValues(
+                          alpha: 0.2,
+                        ),
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -304,7 +310,7 @@ class _AboutTab extends ConsumerWidget {
   }
 
   void _showArchiveDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -369,7 +375,9 @@ class _AboutTab extends ConsumerWidget {
                     onPressed: () => Navigator.of(ctx).pop(),
                     style: TextButton.styleFrom(
                       side: BorderSide(
-                        color: context.colors.borderOutline.withOpacity(0.2),
+                        color: context.colors.borderOutline.withValues(
+                          alpha: 0.2,
+                        ),
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -451,7 +459,9 @@ class _AboutTab extends ConsumerWidget {
                   (p) => p.userId == channel.ownerId,
                   orElse: () => conversation.participants.isNotEmpty ? conversation.participants.first : DmParticipant(userId: '', username: 'Unknown', email: ''),
                 ).username} on May 3, 2026',
-                style: TextStyle(color: colors.textPrimary.withOpacity(0.6)),
+                style: TextStyle(
+                  color: colors.textPrimary.withValues(alpha: 0.6),
+                ),
               ),
             ],
           ),
@@ -504,7 +514,7 @@ class _AboutTab extends ConsumerWidget {
           ),
           Text(
             content,
-            style: TextStyle(color: colors.textPrimary.withOpacity(0.7)),
+            style: TextStyle(color: colors.textPrimary.withValues(alpha: 0.7)),
           ),
         ],
       ),
@@ -550,7 +560,7 @@ class _PeopleTab extends ConsumerWidget {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: CircleAvatar(
-              backgroundColor: colors.primary.withOpacity(0.1),
+              backgroundColor: colors.primary.withValues(alpha: 0.1),
               child: Icon(Icons.person_add_alt_1, color: colors.primary),
             ),
             title: const Text('Add people'),
@@ -601,7 +611,7 @@ class _PeopleTab extends ConsumerWidget {
                       Text(
                         participant.username,
                         style: TextStyle(
-                          color: colors.textPrimary.withOpacity(0.5),
+                          color: colors.textPrimary.withValues(alpha: 0.5),
                           fontSize: 12,
                         ),
                       ),
@@ -653,7 +663,7 @@ class _AgentsTab extends StatelessWidget {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: CircleAvatar(
-              backgroundColor: colors.primary.withOpacity(0.1),
+              backgroundColor: colors.primary.withValues(alpha: 0.1),
               child: Icon(Icons.smart_toy_outlined, color: colors.primary),
             ),
             title: const Text('Add agents'),
@@ -663,7 +673,9 @@ class _AgentsTab extends StatelessWidget {
             child: Center(
               child: Text(
                 'No available agent',
-                style: TextStyle(color: colors.textPrimary.withOpacity(0.5)),
+                style: TextStyle(
+                  color: colors.textPrimary.withValues(alpha: 0.5),
+                ),
               ),
             ),
           ),

@@ -596,10 +596,6 @@ class ChatHistoryNotifier extends ChangeNotifier {
 
       var responseData = <String, dynamic>{};
       try {
-        final activeChat = ref.read(activeChatProvider);
-        final channelType = activeChat.type == ActiveChatType.directMessage
-            ? 'dm'
-            : 'channel';
         responseData = await repository.sendMessage(
           channelId,
           content,
@@ -616,10 +612,6 @@ class ChatHistoryNotifier extends ChangeNotifier {
               .read(channelProvider.notifier)
               .joinChannel(channelId);
           if (joined) {
-            final activeChat = ref.read(activeChatProvider);
-            final channelType = activeChat.type == ActiveChatType.directMessage
-                ? 'dm'
-                : 'channel';
             responseData = await repository.sendMessage(
               channelId,
               content,

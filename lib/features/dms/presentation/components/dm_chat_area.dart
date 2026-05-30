@@ -466,7 +466,7 @@ class _DmChatHeader extends StatelessWidget {
             IconButton(
               icon: Icon(Icons.person_outline, color: colors.primary),
               onPressed: () {
-                showDialog(
+                showDialog<void>(
                   context: context,
                   builder: (_) =>
                       ChannelDetailsModal(conversation: conversation),
@@ -479,7 +479,7 @@ class _DmChatHeader extends StatelessWidget {
                   icon: Icon(Icons.more_vert, color: colors.textHint),
                   onSelected: (value) async {
                     if (value == 'details') {
-                      showDialog(
+                      showDialog<void>(
                         context: context,
                         builder: (_) =>
                             ChannelDetailsModal(conversation: conversation),
@@ -1373,7 +1373,7 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                     border: Border.all(color: colors.divider),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -2011,66 +2011,6 @@ class _PinnedMessagesPanel extends ConsumerWidget {
   }
 }
 
-void _showEditChannelDialog(
-  BuildContext context,
-  WidgetRef ref,
-  String channelId,
-) {
-  final channels = ref.read(channelProvider).channels;
-  final channel = channels.firstWhere((c) => c.id == channelId);
-  final topicController = TextEditingController(text: channel.topic);
-  final descController = TextEditingController(text: channel.description);
-
-  showDialog<void>(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: const Text('Edit Channel Details'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: topicController,
-              decoration: const InputDecoration(labelText: 'Topic'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: descController,
-              decoration: const InputDecoration(labelText: 'Description'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final success = await ref
-                  .read(channelProvider.notifier)
-                  .updateChannelTopicOrDescription(
-                    channelId: channelId,
-                    topic: topicController.text.trim(),
-                    description: descController.text.trim(),
-                  );
-              if (success && context.mounted) {
-                Navigator.of(context).pop();
-                AppToastService.show(
-                  context,
-                  type: AppToastType.success,
-                  message: 'Channel updated successfully.',
-                );
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      );
-    },
-  );
-}
-
 void _showNotificationSettingsDialog(
   BuildContext context,
   WidgetRef ref,
@@ -2116,7 +2056,9 @@ void _showNotificationSettingsDialog(
                     contentPadding: EdgeInsets.zero,
                     leading: Radio<int>(
                       value: 0,
+                      // ignore: deprecated_member_use
                       groupValue: notifyFor,
+                      // ignore: deprecated_member_use
                       onChanged: (val) => setState(() => notifyFor = val!),
                       activeColor: colors.primary,
                     ),
@@ -2127,7 +2069,9 @@ void _showNotificationSettingsDialog(
                     contentPadding: EdgeInsets.zero,
                     leading: Radio<int>(
                       value: 1,
+                      // ignore: deprecated_member_use
                       groupValue: notifyFor,
+                      // ignore: deprecated_member_use
                       onChanged: (val) => setState(() => notifyFor = val!),
                       activeColor: colors.primary,
                     ),
@@ -2138,7 +2082,9 @@ void _showNotificationSettingsDialog(
                     contentPadding: EdgeInsets.zero,
                     leading: Radio<int>(
                       value: 2,
+                      // ignore: deprecated_member_use
                       groupValue: notifyFor,
+                      // ignore: deprecated_member_use
                       onChanged: (val) => setState(() => notifyFor = val!),
                       activeColor: colors.primary,
                     ),
@@ -2150,6 +2096,7 @@ void _showNotificationSettingsDialog(
                     contentPadding: EdgeInsets.zero,
                     leading: Checkbox(
                       value: notifyReplies,
+                      // ignore: deprecated_member_use
                       onChanged: (val) =>
                           setState(() => notifyReplies = val ?? true),
                       activeColor: colors.primary,
@@ -2163,6 +2110,7 @@ void _showNotificationSettingsDialog(
                     contentPadding: EdgeInsets.zero,
                     leading: Checkbox(
                       value: isMuted,
+                      // ignore: deprecated_member_use
                       onChanged: (val) =>
                           setState(() => isMuted = val ?? false),
                       activeColor: colors.primary,
@@ -2174,7 +2122,7 @@ void _showNotificationSettingsDialog(
                   RichText(
                     text: TextSpan(
                       style: TextStyle(
-                        color: colors.textPrimary.withOpacity(0.6),
+                        color: colors.textPrimary.withValues(alpha: 0.6),
                         fontSize: 11,
                       ),
                       children: [
@@ -2236,224 +2184,6 @@ void _showNotificationSettingsDialog(
       );
     },
   );
-}
-
-void _showAddMembersDialog(
-  BuildContext context,
-  WidgetRef ref,
-  String channelId,
-  String channelType,
-) {
-  showDialog<void>(
-    context: context,
-    builder: (context) {
-      return Consumer(
-        builder: (context, ref, child) {
-          final teamMembers = ref
-              .watch(userProfileNotifierProvider)
-              .teamMembers;
-          Channel? channel;
-          if (channelType == 'channel') {
-            final channelState = ref.watch(channelProvider);
-            channel = channelState.channels.firstWhere(
-              (c) => c.id == channelId,
-              orElse: () => const Channel(
-                id: '',
-                name: '',
-                description: '',
-                organisationId: '',
-                ownerId: '',
-              ),
-            );
-          }
-
-          return _AddMembersDialogContent(
-            channel: channel,
-            teamMembers: teamMembers,
-            channelId: channelId,
-            channelType: channelType,
-          );
-        },
-      );
-    },
-  );
-}
-
-class _AddMembersDialogContent extends ConsumerStatefulWidget {
-  final Channel? channel;
-  final List<TeamMember> teamMembers;
-  final String channelId;
-  final String channelType;
-
-  const _AddMembersDialogContent({
-    this.channel,
-    required this.teamMembers,
-    required this.channelId,
-    required this.channelType,
-  });
-
-  @override
-  ConsumerState<_AddMembersDialogContent> createState() =>
-      _AddMembersDialogContentState();
-}
-
-class _AddMembersDialogContentState
-    extends ConsumerState<_AddMembersDialogContent> {
-  final List<String> _selectedIds = [];
-  String _searchQuery = '';
-  bool _isLoading = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final filtered = widget.teamMembers.where((m) {
-      final name = (m.name ?? '').toLowerCase();
-      final email = m.email.toLowerCase();
-      final query = _searchQuery.toLowerCase();
-      return name.contains(query) || email.contains(query);
-    }).toList();
-
-    return AlertDialog(
-      title: Text(
-        widget.channelType == 'group_dm'
-            ? 'Add participants to Group DM'
-            : 'Add members to channel',
-      ),
-      content: SizedBox(
-        width: 400,
-        height: 350,
-        child: Column(
-          children: [
-            TextField(
-              enabled: !_isLoading,
-              onChanged: (val) => setState(() => _searchQuery = val),
-              decoration: InputDecoration(
-                hintText: 'Search by name or email',
-                prefixIcon: Icon(Icons.search, color: colors.textHint),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: filtered.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No members found',
-                        style: TextStyle(color: colors.textHint),
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: filtered.length,
-                      itemBuilder: (context, index) {
-                        final member = filtered[index];
-                        final isSelected = _selectedIds.contains(member.id);
-
-                        return CheckboxListTile(
-                          enabled: !_isLoading,
-                          value: isSelected,
-                          title: Text(member.name ?? member.email),
-                          subtitle: Text(member.email),
-                          onChanged: (val) {
-                            setState(() {
-                              if (val == true) {
-                                _selectedIds.add(member.id);
-                              } else {
-                                _selectedIds.remove(member.id);
-                              }
-                            });
-                          },
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: (_selectedIds.isEmpty || _isLoading)
-              ? null
-              : () async {
-                  setState(() => _isLoading = true);
-                  try {
-                    bool success = false;
-                    if (widget.channelType == 'group_dm') {
-                      success = await ref
-                          .read(groupDmProvider.notifier)
-                          .addGroupDmParticipants(
-                            widget.channelId,
-                            _selectedIds,
-                          );
-                    } else {
-                      success = await ref
-                          .read(channelProvider.notifier)
-                          .addChannelMembers(widget.channelId, _selectedIds);
-                    }
-                    if (success && context.mounted) {
-                      Navigator.of(context).pop();
-
-                      if (widget.channelType == 'group_dm') {
-                        AppToastService.show(
-                          context,
-                          type: AppToastType.success,
-                          message: 'Participants added successfully.',
-                        );
-                      } else {
-                        for (final _ in _selectedIds) {
-                          final notification = LocalNotification(
-                            title: 'Added to Channel',
-                            body:
-                                'You have been added to channel #${widget.channel?.name ?? ''}',
-                          );
-                          await notification.show();
-                        }
-
-                        if (context.mounted) {
-                          AppToastService.show(
-                            context,
-                            type: AppToastType.success,
-                            message: 'Members added successfully.',
-                          );
-                        }
-                      }
-                    } else if (context.mounted) {
-                      AppToastService.show(
-                        context,
-                        type: AppToastType.error,
-                        message: 'Failed to add members.',
-                      );
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      AppToastService.show(
-                        context,
-                        type: AppToastType.error,
-                        message: 'An error occurred: $e',
-                      );
-                    }
-                  } finally {
-                    if (mounted) {
-                      setState(() => _isLoading = false);
-                    }
-                  }
-                },
-          child: _isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : const Text('Add'),
-        ),
-      ],
-    );
-  }
 }
 
 void _showLeaveChannelConfirmDialog(

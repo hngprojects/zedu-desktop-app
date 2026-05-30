@@ -178,7 +178,7 @@ class AuthNotifier extends Notifier<AuthState> {
   }) async {
     if (state.isLoading) return;
 
-    print('started rolling');
+    AppLogger.i("debug");
     AppLogger.i('started rolling', tag: _tag);
 
     final normalizedEmail = email.trim().toLowerCase();

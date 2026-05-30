@@ -619,7 +619,7 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
     if (!widget.isMember) {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 24),
-        color: colors.primary.withOpacity(0.02),
+        color: colors.primary.withValues(alpha: 0.02),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -632,7 +632,9 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
             const SizedBox(height: 4),
             Text(
               'You are not a member of this channel',
-              style: TextStyle(color: colors.textPrimary.withOpacity(0.7)),
+              style: TextStyle(
+                color: colors.textPrimary.withValues(alpha: 0.7),
+              ),
             ),
             const SizedBox(height: 16),
             ElevatedButton(

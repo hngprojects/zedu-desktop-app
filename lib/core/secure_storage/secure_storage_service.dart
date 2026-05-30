@@ -43,7 +43,9 @@ class SecureStorageService {
         _memToken = token;
         return token;
       }
-    } catch (e) {}
+    } catch (e) {
+      /* ignore */
+    }
 
     try {
       if (await _fallbackFile.exists()) {
@@ -92,7 +94,9 @@ class SecureStorageService {
         mOptions: const MacOsOptions(usesDataProtectionKeychain: false),
       );
       if (val != null) return val;
-    } catch (e) {}
+    } catch (e) {
+      /* ignore */
+    }
     try {
       final file = File('${_fallbackFile.parent.path}/.zedu_$key');
       if (await file.exists()) {

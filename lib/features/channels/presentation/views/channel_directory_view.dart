@@ -29,7 +29,7 @@ class _ChannelDirectoryViewState extends ConsumerState<ChannelDirectoryView>
   }
 
   void _showCreateChannelModal() {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => const CreateChannelModal(),
     );
@@ -160,7 +160,7 @@ class _ChannelDirectoryViewState extends ConsumerState<ChannelDirectoryView>
                       ),
                       leading: CircleAvatar(
                         radius: 20,
-                        backgroundColor: colors.primary.withOpacity(0.1),
+                        backgroundColor: colors.primary.withValues(alpha: 0.1),
                         backgroundImage: person.avatarUrl != null
                             ? NetworkImage(person.avatarUrl!)
                             : null,
@@ -208,9 +208,9 @@ class _ChannelDirectoryViewState extends ConsumerState<ChannelDirectoryView>
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             decoration: BoxDecoration(
-              color: colors.primary.withOpacity(0.05),
+              color: colors.primary.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colors.primary.withOpacity(0.1)),
+              border: Border.all(color: colors.primary.withValues(alpha: 0.1)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -353,7 +353,7 @@ class _ChannelDirectoryViewState extends ConsumerState<ChannelDirectoryView>
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: colors.primary.withOpacity(0.05),
+                                color: colors.primary.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Center(

@@ -87,7 +87,7 @@ class ChannelNotifier extends Notifier<ChannelState> {
 
       final activeChat = ref.read(activeChatProvider);
 
-      print(
+      AppLogger.i(
         'ChannelNotifier.fetchChannels: activeChat.type=${activeChat.type.name}, activeChat.id=${activeChat.id}',
       );
       if (activeChat.type == ActiveChatType.channel &&
@@ -105,7 +105,7 @@ class ChannelNotifier extends Notifier<ChannelState> {
                 ),
         );
         if (realGeneral.id != 'general') {
-          print(
+          AppLogger.i(
             'ChannelNotifier.fetchChannels: Updating general selection from "general" to ${realGeneral.id}',
           );
           ref.read(activeChatProvider.notifier).selectChannel(realGeneral.id);

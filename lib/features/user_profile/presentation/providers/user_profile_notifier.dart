@@ -275,7 +275,9 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       if (data != null && data.isNotEmpty) {
         return data.last['id'] as String;
       }
-    } catch (e) {}
+    } catch (e) {
+      // ignore
+    }
     return '019700d8-9085-7f7b-839a-fcbd08b9e26d';
   }
 
@@ -328,7 +330,9 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       if (data != null) {
         return data.cast<Map<String, dynamic>>();
       }
-    } catch (e) {}
+    } catch (e) {
+      // ignore empty
+    }
     return [];
   }
 

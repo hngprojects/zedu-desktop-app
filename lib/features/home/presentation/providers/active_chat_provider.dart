@@ -46,7 +46,7 @@ class ActiveChatNotifier extends Notifier<ActiveChatState> {
   ActiveChatState build() {
     final orgId = ref.watch(currentOrgIdProvider);
 
-    print(
+    AppLogger.i(
       'ActiveChatNotifier.build: orgId=$orgId, _lastOrgId=$_lastOrgId, _currentState=${_currentState?.id}',
     );
 
@@ -54,7 +54,7 @@ class ActiveChatNotifier extends Notifier<ActiveChatState> {
         _lastOrgId!.isNotEmpty &&
         orgId.isNotEmpty &&
         _lastOrgId != orgId) {
-      print(
+      AppLogger.i(
         'ActiveChatNotifier.build: Organization changed from $_lastOrgId to $orgId. Resetting active chat to general.',
       );
       _lastOrgId = orgId;
@@ -67,12 +67,14 @@ class ActiveChatNotifier extends Notifier<ActiveChatState> {
     }
     final result = _currentState ?? ActiveChatState.generalChannel;
 
-    print('ActiveChatNotifier.build: returning active chat ${result.id}');
+    AppLogger.i('ActiveChatNotifier.build: returning active chat ${result.id}');
     return result;
   }
 
   void selectChannel(String channelId) {
-    print('ActiveChatNotifier.selectChannel: selecting channel $channelId');
+    AppLogger.i(
+      'ActiveChatNotifier.selectChannel: selecting channel $channelId',
+    );
     state = ActiveChatState(type: ActiveChatType.channel, id: channelId);
     _currentState = state;
   }

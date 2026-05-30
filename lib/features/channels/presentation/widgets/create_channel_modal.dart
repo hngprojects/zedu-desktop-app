@@ -56,7 +56,7 @@ class _CreateChannelModalState extends ConsumerState<CreateChannelModal> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 24,
               offset: const Offset(0, 8),
             ),
@@ -119,6 +119,7 @@ class _CreateChannelModalState extends ConsumerState<CreateChannelModal> {
                         Expanded(
                           child: TextField(
                             controller: _nameController,
+                            // ignore: deprecated_member_use
                             onChanged: (v) => setState(() {}),
                             maxLength: 40,
                             buildCounter:
@@ -173,8 +174,10 @@ class _CreateChannelModalState extends ConsumerState<CreateChannelModal> {
                         children: [
                           Radio<bool>(
                             value: false,
+                            // ignore: deprecated_member_use
                             groupValue: _isPrivate,
                             activeColor: colors.primary,
+                            // ignore: deprecated_member_use
                             onChanged: (val) =>
                                 setState(() => _isPrivate = val ?? false),
                           ),
@@ -217,8 +220,10 @@ class _CreateChannelModalState extends ConsumerState<CreateChannelModal> {
                         children: [
                           Radio<bool>(
                             value: true,
+                            // ignore: deprecated_member_use
                             groupValue: _isPrivate,
                             activeColor: colors.primary,
+                            // ignore: deprecated_member_use
                             onChanged: (val) =>
                                 setState(() => _isPrivate = val ?? true),
                           ),

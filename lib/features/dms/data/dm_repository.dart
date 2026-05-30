@@ -86,6 +86,7 @@ class DmRepository {
       "content": content,
       if (!isThreadReply) "channel_id": channelId,
       if (isThreadReply) "thread_id": threadId,
+      // ignore: use_null_aware_elements
       if (orgId != null) "organisation_id": orgId,
       if (media != null && media.isNotEmpty)
         "media": media.map(_mediaPayloadFromFile).toList(),
