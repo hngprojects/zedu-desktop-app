@@ -1,5 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+import '../providers/org_people_provider.dart';
 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
@@ -58,14 +59,9 @@ class _HomeAppBar extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
         children: [
-          Text(
-            'Zedu',
-            style: TextStyle(
-              color: colors.onPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Poetsen One',
-            ),
+          Image.asset(
+            'assets/pngs/zedu_logo.png',
+            height: 24,
           ),
           const SizedBox(width: 12),
           TopUserMenu(userName: userName),
@@ -111,124 +107,18 @@ class _MainSidebarSwitcher extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(homeSidebarProvider);
-    if (state == HomeSidebarType.dms) {
+    if (state == HomeSidebarType.dms || state == HomeSidebarType.people) {
       return const DmSidebarList();
     }
     if (state == HomeSidebarType.buzz) {
       return const BuzzSidebarList();
     }
+    if (state == HomeSidebarType.files) {
+      // FilesView provides its own internal left panel
+      return const SizedBox.shrink();
+    }
     return const _MainSidebar();
   }
-}
-
-void _showCreateChannelDialog(BuildContext context, WidgetRef ref) {
-  final nameController = TextEditingController();
-  final descController = TextEditingController();
-  bool isPrivate = false;
-
-  showDialog<void>(
-    context: context,
-    builder: (context) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('Create a Channel'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Channel Name',
-                    hintText: 'e.g. team-marketing',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: descController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description (optional)',
-                    hintText: 'What is this channel about?',
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Make Private'),
-                    Switch(
-                      value: isPrivate,
-                      onChanged: (val) {
-                        setState(() => isPrivate = val);
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  final name = nameController.text.trim();
-                  if (name.isEmpty) {
-                    AppToastService.show(
-                      context,
-                      type: AppToastType.error,
-                      message: 'Channel name cannot be empty',
-                    );
-                    return;
-                  }
-
-                  final channelState = ref.read(channelProvider);
-                  final isDuplicate = channelState.channels.any(
-                    (c) => c.name.toLowerCase() == name.toLowerCase(),
-                  );
-
-                  if (isDuplicate) {
-                    AppToastService.show(
-                      context,
-                      type: AppToastType.error,
-                      message: 'A channel with this name already exists',
-                    );
-                    return;
-                  }
-
-                  final success = await ref
-                      .read(channelProvider.notifier)
-                      .createChannel(
-                        name: name,
-                        description: descController.text.trim(),
-                        isPrivate: isPrivate,
-                      );
-
-                  if (success && context.mounted) {
-                    Navigator.of(context).pop();
-                    AppToastService.show(
-                      context,
-                      type: AppToastType.success,
-                      message: 'Channel #$name created successfully!',
-                    );
-                  } else if (context.mounted) {
-                    AppToastService.show(
-                      context,
-                      type: AppToastType.error,
-                      message: 'Failed to create channel.',
-                    );
-                  }
-                },
-                child: const Text('Create'),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
 }
 
 class _ChatAreaSwitcher extends ConsumerWidget {
@@ -237,6 +127,20 @@ class _ChatAreaSwitcher extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activeChat = ref.watch(activeChatProvider);
+    final sidebar = ref.watch(homeSidebarProvider);
+
+    // ── Files tab: always show the Files UI ───────────────────────────────
+    if (sidebar == HomeSidebarType.files) {
+      return const _FilesView();
+    }
+
+    // ── DMs / People: if no DM or Group chat is active, show empty state ──
+    if (sidebar == HomeSidebarType.dms || sidebar == HomeSidebarType.people) {
+      if (activeChat.type != ActiveChatType.directMessage &&
+          activeChat.type != ActiveChatType.groupDm) {
+        return const _EmptyChatArea();
+      }
+    }
 
     switch (activeChat.type) {
       case ActiveChatType.directMessage:
@@ -284,6 +188,11 @@ class _ChatAreaSwitcher extends ConsumerWidget {
           unreadCount: channel.unreadCount,
           channelType: 'channel',
         );
+
+        if (channel.name == 'general') {
+          return const _WelcomeChatArea();
+        }
+
         return DmChatArea(
           key: ValueKey('channel_${conversation.channelId}'),
           conversation: conversation,
@@ -296,7 +205,7 @@ class _ChatAreaSwitcher extends ConsumerWidget {
           orElse: () =>
               GroupDM(id: activeChat.id ?? '', name: 'Group DM', members: []),
         );
-        final conversation = DmConversation(
+        final groupConv = DmConversation(
           channelId: group.id,
           username: group.name,
           participantId: 'group-dm',
@@ -305,8 +214,8 @@ class _ChatAreaSwitcher extends ConsumerWidget {
           channelType: 'group_dm',
         );
         return DmChatArea(
-          key: ValueKey('group_${conversation.channelId}'),
-          conversation: conversation,
+          key: ValueKey('group_${groupConv.channelId}'),
+          conversation: groupConv,
         );
 
       case ActiveChatType.channelDirectory:
@@ -314,21 +223,29 @@ class _ChatAreaSwitcher extends ConsumerWidget {
 
       case ActiveChatType.newGroupChat:
         return const NewGroupChatView();
+
+      case ActiveChatType.none:
+      default:
+        return const _EmptyChatArea();
     }
   }
 }
 
-class _MainSidebar extends ConsumerWidget {
+class _MainSidebar extends ConsumerStatefulWidget {
   const _MainSidebar();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_MainSidebar> createState() => _MainSidebarState();
+}
+
+class _MainSidebarState extends ConsumerState<_MainSidebar> {
+  bool _channelsExpanded = true;
+  bool _peopleExpanded = true;
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.colors;
-    final channelState = ref.watch(channelProvider);
-    final channels = channelState.channels;
-    final activeChat = ref.watch(activeChatProvider);
-    final notificationSettings = ref.watch(notificationSettingsProvider);
-    final activeChannels = channels.where((c) => !c.archived).toList();
+    final peopleAsyncValue = ref.watch(orgPeopleProvider);
 
     return Container(
       width: 320,
@@ -337,152 +254,253 @@ class _MainSidebar extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const WorkspaceSwitcherHeader(),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          
+          // Channels
+          InkWell(
+            onTap: () {
+              setState(() {
+                _channelsExpanded = !_channelsExpanded;
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+              child: Row(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.arrow_drop_down,
-                          color: colors.onPrimary,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Channels',
-                          style: TextStyle(
-                            color: colors.onPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ],
+                  Icon(_channelsExpanded ? Icons.arrow_drop_down : Icons.arrow_right, color: colors.onPrimary, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Channels',
+                    style: TextStyle(
+                      color: colors.onPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
                     ),
                   ),
-                  if (channelState.isLoading)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 20),
-                        child: CircularProgressIndicator(color: Colors.white),
-                      ),
-                    )
-                  else if (activeChannels.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ],
+              ),
+            ),
+          ),
+          
+          if (_channelsExpanded) ...[
+            const _ChannelItem(label: 'general'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: colors.onPrimary.withValues(alpha: 0.24),
+                  ),
+                  borderRadius: BorderRadius.circular(6),
+                  color: colors.onPrimary.withValues(alpha: 0.05),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
                       child: Text(
-                        'No active channels',
+                        'View all channels',
                         style: TextStyle(
-                          color: colors.onPrimary.withValues(alpha: 0.6),
+                          color: colors.onPrimary.withValues(alpha: 0.7),
                           fontSize: 13,
                         ),
                       ),
-                    )
-                  else
-                    ListView.builder(
-                      padding: EdgeInsets.zero,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: activeChannels.length,
-                      itemBuilder: (context, index) {
-                        final channel = activeChannels[index];
-                        final isSelected =
-                            activeChat.type == ActiveChatType.channel &&
-                            (activeChat.id == channel.id ||
-                                activeChat.id == channel.name);
-                        final isMuted = notificationSettings.isChannelMuted(channel.id);
-                        return _ChannelItem(
-                          key: ValueKey(channel.id),
-                          label: channel.name,
-                          isPrivate: channel.isPrivate,
-                          isSelected: isSelected,
-                          isMuted: isMuted,
-                          onTap: () {
-                            ref
-                                .read(activeChatProvider.notifier)
-                                .selectChannel(channel.id);
-                          },
+                    ),
+                    Icon(
+                      Icons.chevron_right,
+                      color: colors.onPrimary.withValues(alpha: 0.7),
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const _AddChannelButton(),
+          ],
+          
+          const SizedBox(height: 20),
+          
+          // People
+          InkWell(
+            onTap: () {
+              setState(() {
+                _peopleExpanded = !_peopleExpanded;
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Icon(_peopleExpanded ? Icons.arrow_drop_down : Icons.arrow_right, color: colors.onPrimary, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    'People',
+                    style: TextStyle(
+                      color: colors.onPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          if (_peopleExpanded) ...[
+            const SizedBox(height: 8),
+            peopleAsyncValue.when(
+              data: (people) {
+                if (people.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: Text(
+                      'No team members yet.',
+                      style: TextStyle(color: colors.onPrimary.withValues(alpha: 0.7), fontSize: 13),
+                    ),
+                  );
+                }
+                return Column(
+                  children: people.map((person) {
+                    final name = person.name ?? person.email.split('@').first;
+                    final List<Color> avatarColors = [
+                      Colors.purple, Colors.blue, Colors.green, Colors.orange, Colors.red, Colors.teal
+                    ];
+                    final colorIndex = person.id.hashCode % avatarColors.length;
+                    final avatarColor = avatarColors[colorIndex];
+                    
+                    return InkWell(
+                      onTap: () async {
+                        final orgId = ref.read(currentOrgIdProvider);
+                        if (orgId == null) return;
+                        
+                        final dmRepo = ref.read(dmRepositoryProvider);
+                        final conv = await dmRepo.createDmChannel(
+                          orgId: orgId,
+                          userId: person.id,
                         );
+                        
+                        ref.read(homeSidebarProvider.notifier).state = HomeSidebarType.dms;
+                        ref.read(selectedDmProvider.notifier).state = conv;
+                        ref.read(activeChatProvider.notifier).selectDirectMessage(conv.channelId);
                       },
-                    ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: InkWell(
-                      onTap: () {
-                        ref
-                            .read(activeChatProvider.notifier)
-                            .selectChannelDirectory();
-                      },
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: colors.onPrimary.withValues(alpha: 0.24),
-                          ),
-                          borderRadius: BorderRadius.circular(6),
-                          color: colors.onPrimary.withValues(alpha: 0.05),
-                        ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
                         child: Row(
                           children: [
-                            Expanded(
+                            Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                color: avatarColor,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              alignment: Alignment.center,
                               child: Text(
-                                'View all channels',
-                                style: TextStyle(
-                                  color: colors.onPrimary.withValues(
-                                    alpha: 0.7,
-                                  ),
-                                  fontSize: 13,
+                                name.substring(0, 1).toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
-                            Icon(
-                              Icons.chevron_right,
-                              color: colors.onPrimary.withValues(alpha: 0.7),
-                              size: 16,
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                name,
+                                style: TextStyle(
+                                  color: colors.onPrimary,
+                                  fontSize: 14,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ),
-                  const _AddChannelButton(),
-                  const SizedBox(height: 10),
-                  const _GroupDmsSection(),
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.arrow_right,
-                          color: colors.onPrimary,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'People',
-                          style: TextStyle(
-                            color: colors.onPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
+                    );
+                  }).toList(),
+                );
+              },
+              loading: () => Center(
+                child: SizedBox(
+                  height: 20, width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: colors.primary),
+                ),
               ),
+              error: (error, _) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                child: Text('Error loading people.', style: TextStyle(color: colors.error)),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ChannelItem extends ConsumerWidget {
+  final String label;
+
+  const _ChannelItem({required this.label});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+
+    return InkWell(
+      onTap: () {
+        ref.read(activeChatProvider.notifier).selectChannel(label);
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Row(
+        children: [
+          Text(
+            '#',
+            style: TextStyle(
+              color: colors.onPrimary.withValues(alpha: 0.54),
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(label, style: TextStyle(color: colors.onPrimary, fontSize: 15)),
+        ],
+      ),
+      ),
+    );
+  }
+}
+
+class _AddChannelButton extends StatelessWidget {
+  const _AddChannelButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: colors.onPrimary.withValues(alpha: 0.38),
+              ),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Icon(Icons.add, color: colors.onPrimary, size: 14),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'Add channel',
+            style: TextStyle(
+              color: colors.onPrimary,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -491,247 +509,672 @@ class _MainSidebar extends ConsumerWidget {
   }
 }
 
-class _ChannelItem extends StatelessWidget {
-  final String label;
-  final bool isPrivate;
-  final bool isSelected;
-  final bool isMuted;
-  final VoidCallback onTap;
+class _WelcomeChatArea extends StatelessWidget {
+  const _WelcomeChatArea();
 
-  const _ChannelItem({
-    super.key,
-    required this.label,
-    this.isPrivate = false,
-    this.isSelected = false,
-    this.isMuted = false,
-    required this.onTap,
-  });
+  @override
+  Widget build(BuildContext context) {
+    return const _ChatArea();
+  }
+}
+
+class _EmptyChatArea extends StatelessWidget {
+  const _EmptyChatArea();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: context.colors.onPrimary,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/pngs/recent_message.png',
+              width: 150,
+              height: 150,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Recent Messages',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChatArea extends StatelessWidget {
+  const _ChatArea();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _buildChatHeader(context),
+        Expanded(child: _buildWelcomeScreen(context)),
+        _buildMessageInput(context),
+      ],
+    );
+  }
+
+  Widget _buildChatHeader(BuildContext context) {
+    final colors = context.colors;
+
+    return Container(
+      height: 60,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: colors.divider)),
+      ),
+      child: Row(
+        children: [
+          Text(
+            '# general',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: colors.textPrimary,
+            ),
+          ),
+          const Spacer(),
+          const _HeaderAction(icon: Icons.headphones_outlined, label: 'Start Buzz'),
+          const SizedBox(width: 12),
+          CircleAvatar(
+            radius: 14,
+            backgroundColor: colors.accent,
+            child: Icon(Icons.person, size: 18, color: colors.onPrimary),
+          ),
+          const SizedBox(width: 8),
+          Icon(Icons.more_vert, color: colors.textHint),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWelcomeScreen(BuildContext context) {
+    final colors = context.colors;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 80),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.celebration, size: 60, color: colors.primary),
+          const SizedBox(height: 24),
+          Text(
+            'Welcome to #general',
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Share all information relating to general here. All team members await you! 😉',
+            style: TextStyle(fontSize: 16, color: colors.textPrimary),
+          ),
+          const SizedBox(height: 32),
+          const _InviteCard(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessageInput(BuildContext context) {
+    final colors = context.colors;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(color: colors.divider),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Icon(Icons.format_bold, size: 20, color: colors.textHint),
+                const SizedBox(width: 16),
+                Icon(Icons.format_italic, size: 20, color: colors.textHint),
+                const SizedBox(width: 16),
+                Icon(Icons.link, size: 20, color: colors.textHint),
+                const SizedBox(width: 16),
+                Icon(Icons.list, size: 20, color: colors.textHint),
+                const SizedBox(width: 16),
+                Icon(Icons.code, size: 20, color: colors.textHint),
+              ],
+            ),
+            Divider(height: 24, color: colors.divider),
+            const TextField(
+              decoration: InputDecoration(
+                hintText: 'Message #general',
+                border: InputBorder.none,
+                isDense: true,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Icons.add, color: colors.textHint.withValues(alpha: 0.75)),
+                const SizedBox(width: 12),
+                Icon(
+                  Icons.emoji_emotions_outlined,
+                  color: colors.textHint.withValues(alpha: 0.75),
+                ),
+                const SizedBox(width: 12),
+                Icon(
+                  Icons.alternate_email,
+                  color: colors.textHint.withValues(alpha: 0.75),
+                ),
+                const SizedBox(width: 12),
+                Icon(
+                  Icons.videocam_outlined,
+                  color: colors.textHint.withValues(alpha: 0.75),
+                ),
+                const SizedBox(width: 12),
+                Icon(
+                  Icons.mic_none_outlined,
+                  color: colors.textHint.withValues(alpha: 0.75),
+                ),
+                const Spacer(),
+                Icon(
+                  Icons.send_rounded,
+                  color: colors.textHint.withValues(alpha: 0.5),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HeaderAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _HeaderAction({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final textOpacity = isMuted ? 0.4 : (isSelected ? 0.95 : 0.8);
-    final iconOpacity = isMuted ? 0.4 : (isSelected ? 0.95 : 0.6);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? colors.onPrimary.withValues(alpha: 0.12)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        border: Border.all(color: colors.divider),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: colors.textPrimary),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(color: colors.textPrimary, fontSize: 13),
           ),
-          child: Row(
-            children: [
-              Icon(
-                isPrivate ? Icons.lock_outline : Icons.tag,
-                color: colors.onPrimary.withValues(
-                  alpha: iconOpacity,
-                ),
-                size: 16,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    color: colors.onPrimary.withValues(
-                      alpha: textOpacity,
-                    ),
-                    fontSize: 14,
-                    fontWeight: isSelected
-                        ? FontWeight.w600
-                        : FontWeight.normal,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (isMuted) ...[
-                const SizedBox(width: 8),
-                Icon(
-                  Icons.volume_off_rounded,
-                  color: colors.onPrimary.withValues(alpha: 0.4),
-                  size: 14,
-                ),
-              ],
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
 }
 
-class _AddChannelButton extends ConsumerWidget {
-  const _AddChannelButton();
+class _InviteCard extends StatelessWidget {
+  const _InviteCard();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final colors = context.colors;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: InkWell(
-        onTap: () => _showCreateChannelDialog(context, ref),
-        borderRadius: BorderRadius.circular(6),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: colors.onPrimary.withValues(alpha: 0.38),
-                  ),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Icon(Icons.add, color: colors.onPrimary, size: 14),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Add channel',
-                style: TextStyle(color: colors.onPrimary, fontSize: 14),
-              ),
-            ],
-          ),
+    return InkWell(
+      onTap: () {
+        showDialog<void>(
+          context: context,
+          barrierColor: Colors.black.withValues(alpha: 0.3),
+          builder: (context) => const InviteTeammatesModal(),
+        );
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: colors.divider),
+          borderRadius: BorderRadius.circular(8),
         ),
-      ),
-    );
-  }
-}
-
-class _GroupDmsSection extends ConsumerWidget {
-  const _GroupDmsSection();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.colors;
-    final groupDms = ref.watch(groupDmProvider);
-    final activeChat = ref.watch(activeChatProvider);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: Row(
-            children: [
-              Icon(
-                Icons.arrow_drop_down,
-                color: colors.onPrimary,
-                size: 20,
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: colors.primaryBg,
+                borderRadius: BorderRadius.circular(8),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Group DMs',
-                  style: TextStyle(
-                    color: colors.onPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-              ),
-              InkWell(
-                onTap: () {
-                  ref.read(activeChatProvider.notifier).selectNewGroupChat();
-                },
-                borderRadius: BorderRadius.circular(4),
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: colors.onPrimary.withValues(alpha: 0.38),
+              child: Icon(Icons.person_add_outlined, color: colors.primary),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Invite teammates',
+                    style: TextStyle(
+                      color: colors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
-                    borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Icon(
-                    Icons.add,
-                    color: colors.onPrimary,
-                    size: 14,
+                  const SizedBox(height: 4),
+                  Text(
+                    'Add more team members to collaborate',
+                    style: TextStyle(color: colors.textHint, fontSize: 12),
                   ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (groupDms.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-            child: Text(
-              'No group DMs',
-              style: TextStyle(
-                color: colors.onPrimary.withValues(alpha: 0.5),
-                fontSize: 13,
+                ],
               ),
             ),
-          )
-        else
-          ListView.builder(
-            padding: EdgeInsets.zero,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: groupDms.length,
-            itemBuilder: (context, index) {
-              final group = groupDms[index];
-              final isSelected = activeChat.type == ActiveChatType.groupDm &&
-                  activeChat.id == group.id;
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    ref.read(activeChatProvider.notifier).selectGroupDm(group.id);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? colors.onPrimary.withValues(alpha: 0.12)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.chat_bubble_outline_rounded,
-                          color: colors.onPrimary.withValues(
-                            alpha: isSelected ? 0.95 : 0.6,
-                          ),
-                          size: 16,
+            Icon(Icons.chevron_right, color: colors.textHint),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Files View
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum _FilesNav { allFiles, myFiles, sharedWithMe, deleted }
+
+class _FilesView extends StatefulWidget {
+  const _FilesView();
+
+  @override
+  State<_FilesView> createState() => _FilesViewState();
+}
+
+class _FilesViewState extends State<_FilesView> {
+  _FilesNav _selected = _FilesNav.allFiles;
+  int _selectedTab = 0; // 0 = Folders, 1 = Files
+
+  String get _title {
+    switch (_selected) {
+      case _FilesNav.allFiles:
+        return 'All files';
+      case _FilesNav.myFiles:
+        return 'My files';
+      case _FilesNav.sharedWithMe:
+        return 'Shared with me';
+      case _FilesNav.deleted:
+        return 'Deleted files';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Row(
+      children: [
+        // ── Left sidebar ──────────────────────────────────────────────────
+        Container(
+          width: 220,
+          decoration: BoxDecoration(
+            color: colors.sidebar,
+            border: Border(
+              right: BorderSide(color: colors.onPrimary.withValues(alpha: 0.1)),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Files',
+                        style: TextStyle(
+                          color: colors.onPrimary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            group.name,
-                            style: TextStyle(
-                              color: colors.onPrimary.withValues(
-                                alpha: isSelected ? 0.95 : 0.8,
-                              ),
-                              fontSize: 14,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Icon(
+                      Icons.edit_outlined,
+                      color: colors.onPrimary.withValues(alpha: 0.7),
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ),
+              // Search bar
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+                child: Container(
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: colors.onPrimary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 10),
+                      Icon(
+                        Icons.search,
+                        color: colors.onPrimary.withValues(alpha: 0.5),
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Find a file',
+                        style: TextStyle(
+                          color: colors.onPrimary.withValues(alpha: 0.5),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Nav items
+              _FilesNavItem(
+                icon: Icons.folder_outlined,
+                label: 'All files',
+                isSelected: _selected == _FilesNav.allFiles,
+                onTap: () => setState(() => _selected = _FilesNav.allFiles),
+                colors: colors,
+              ),
+              _FilesNavItem(
+                icon: Icons.person_outline,
+                label: 'My files',
+                isSelected: _selected == _FilesNav.myFiles,
+                onTap: () => setState(() => _selected = _FilesNav.myFiles),
+                colors: colors,
+              ),
+              _FilesNavItem(
+                icon: Icons.group_outlined,
+                label: 'Shared with me',
+                isSelected: _selected == _FilesNav.sharedWithMe,
+                onTap: () => setState(() => _selected = _FilesNav.sharedWithMe),
+                colors: colors,
+              ),
+              _FilesNavItem(
+                icon: Icons.delete_outline,
+                label: 'Deleted files',
+                isSelected: _selected == _FilesNav.deleted,
+                onTap: () => setState(() => _selected = _FilesNav.deleted),
+                colors: colors,
+              ),
+            ],
+          ),
+        ),
+
+        // ── Main content ──────────────────────────────────────────────────
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top bar
+              Container(
+                height: 56,
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                decoration: BoxDecoration(
+                  color: colors.onPrimary,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: colors.onPrimary == Colors.white
+                          ? const Color(0xFFE5E7EB)
+                          : colors.onPrimary.withValues(alpha: 0.1),
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      _title,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    const Spacer(),
+                    // Upload file button
+                    OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.upload_outlined, size: 16),
+                      label: const Text('Upload file'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: colors.primary,
+                        side: BorderSide(color: colors.primary),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // New folder button
+                    OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.create_new_folder_outlined, size: 16),
+                      label: const Text('New folder'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: colors.primary,
+                        side: BorderSide(color: colors.primary),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Tabs: Folders | Files
+              Container(
+                color: colors.onPrimary,
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    _FilesTab(
+                      label: 'Folders',
+                      isSelected: _selectedTab == 0,
+                      onTap: () => setState(() => _selectedTab = 0),
+                      colors: colors,
+                    ),
+                    _FilesTab(
+                      label: 'Files',
+                      isSelected: _selectedTab == 1,
+                      onTap: () => setState(() => _selectedTab = 1),
+                      colors: colors,
+                    ),
+                  ],
+                ),
+              ),
+
+              // Divider
+              Container(
+                height: 1,
+                color: const Color(0xFFE5E7EB),
+              ),
+
+              // Empty state (shared by all nav items)
+              Expanded(
+                child: Container(
+                  color: colors.onPrimary,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF3F4F6),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.folder_open_outlined,
+                            size: 40,
+                            color: colors.textHint,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No files yet',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Upload or drag & drop to get started',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: colors.textHint,
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
-              );
-            },
+              ),
+            ],
           ),
+        ),
       ],
+    );
+  }
+}
+
+class _FilesNavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final AppPalette colors;
+
+  const _FilesNavItem({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    required this.colors,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? colors.onPrimary.withValues(alpha: 0.15)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: isSelected
+                  ? colors.onPrimary
+                  : colors.onPrimary.withValues(alpha: 0.6),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                color: isSelected
+                    ? colors.onPrimary
+                    : colors.onPrimary.withValues(alpha: 0.6),
+                fontWeight:
+                    isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FilesTab extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final AppPalette colors;
+
+  const _FilesTab({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    required this.colors,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+        margin: const EdgeInsets.only(right: 24),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: isSelected ? colors.primary : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            color: isSelected ? colors.primary : colors.textHint,
+          ),
+        ),
+      ),
     );
   }
 }

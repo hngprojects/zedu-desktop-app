@@ -8,7 +8,6 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
 
   @override
   UserProfileState build() {
-    final authState = ref.watch(authNotifierProvider);
     _repository = ref.read(userProfileRepositoryProvider);
     // load();
 
@@ -77,6 +76,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       case Success<void>():
         final accountResult = await _repository.getAccount();
         if (accountResult is Success<ProfileAccount>) {
+          ref.read(authNotifierProvider.notifier).refreshCurrentUser();
           state = state.copyWith(
             account: accountResult.value,
             isSaving: false,
@@ -138,6 +138,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
         // Reload account
         final accountResult = await _repository.getAccount();
         if (accountResult is Success<ProfileAccount>) {
+          ref.read(authNotifierProvider.notifier).refreshCurrentUser();
           state = state.copyWith(account: accountResult.value);
         }
       case Failure<void>():

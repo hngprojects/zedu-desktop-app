@@ -530,7 +530,7 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
         if (_pendingFiles.where((f) => f.name != 'voice_note.m4a').isNotEmpty)
           AttachmentPreviewBar(
             files: _pendingFiles.where((f) => f.name != 'voice_note.m4a').toList(),
-            onRemove: (index) {
+            onRemove: (int index) {
               final nonVoiceFiles = _pendingFiles.where((f) => f.name != 'voice_note.m4a').toList();
               final fileToRemove = nonVoiceFiles[index];
               _removeFile(_pendingFiles.indexOf(fileToRemove));

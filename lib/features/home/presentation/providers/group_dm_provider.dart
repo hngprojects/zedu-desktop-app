@@ -116,6 +116,9 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
     // Tell websocket we are in this group now
     final activeIds = state.map((g) => g.id).toList();
     ref.read(chatWebsocketProvider).connect(activeIds);
+    
+    // Global Notification Subscription
+    ref.read(realtimeServiceProvider).subscribeToDmChannel(newGroup.id);
 
     return Success(newGroup);
   }

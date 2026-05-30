@@ -22,7 +22,6 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
   bool _isHandRaised = false;
 
   late RtcEngine _engine;
-  bool _localUserJoined = false;
   int? _remoteUid;
   bool _isEngineInitialized = false;
 
@@ -80,9 +79,6 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
       RtcEngineEventHandler(
         onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
           debugPrint('local user ${connection.localUid} joined');
-          setState(() {
-            _localUserJoined = true;
-          });
         },
         onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
           debugPrint('remote user $remoteUid joined');

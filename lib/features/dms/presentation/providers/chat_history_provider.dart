@@ -84,7 +84,14 @@ class ChatHistoryNotifier extends ChangeNotifier {
           (g) => g.id == channelId,
           orElse: () => GroupDM(id: channelId, name: '', members: []),
         );
-        messages = group.messages.reversed.map(_mapGroupDmMessageToHistoryMap).toList();
+        messages = group.messages.reversed.map<Map<String, dynamic>>((m) {
+          return {
+            'id': DateTime.now().millisecondsSinceEpoch.toString(),
+            'content': m,
+            'user_id': 'system',
+            'created_at': DateTime.now().toIso8601String(),
+          };
+        }).toList();
       } catch (e, stack) {
         AppLogger.e('Error loading initial Group DM messages', error: e, stackTrace: stack);
       } finally {
@@ -186,23 +193,33 @@ class ChatHistoryNotifier extends ChangeNotifier {
         final rawMessage = event['message'];
         if (rawMessage is! Map<String, dynamic>) return;
 
-        if (_handleCallEvent(rawMessage)) return;
-
         final message = _extractRealtimeMessage(rawMessage);
         final id =
             message['id']?.toString() ?? message['message_id']?.toString();
         if (id != null && id.isNotEmpty && !_seenIds.add(id)) return;
 
+        // Check if this is an echo of an optimistic message we just sent
+        if (isMyMessage(message)) {
+          final optIdx = messages.indexWhere((m) =>
+              m['status'] == 'sending' &&
+              m['content'] == message['content']);
+          if (optIdx != -1) {
+            // Replace the optimistic message with the real one
+            final updated = Map<String, dynamic>.from(messages[optIdx]);
+            updated.addAll(message.map((k, v) => MapEntry(k.toString(), v)));
+            if (id != null) updated['id'] = id;
+            updated.remove('status');
+            
+            final newList = List<Map<String, dynamic>>.from(messages);
+            newList[optIdx] = updated;
+            messages = newList;
+            notifyListeners();
+            return;
+          }
+        }
+
         messages = [message, ...messages];
         notifyListeners();
-
-        final senderName =
-            message['username']?.toString() ??
-            message['sender_name']?.toString() ??
-            'Someone';
-        ref
-            .read(notificationServiceProvider)
-            .handleIncomingMessage(message, _resolvedChannelId, senderName);
       });
 
       AppLogger.i(
@@ -257,28 +274,6 @@ class ChatHistoryNotifier extends ChangeNotifier {
     }
 
     return msg;
-  }
-
-  bool _handleCallEvent(Map<String, dynamic> event) {
-    final eventName = event['event']?.toString();
-    final payload = event['payload'];
-    if (eventName != 'direct_call_initiated' ||
-        payload is! Map<String, dynamic>) {
-      return false;
-    }
-
-    final callerId = payload['caller_id']?.toString() ?? '';
-    if (callerId == _currentUserId) return true;
-
-    ref
-        .read(activeCallProvider)
-        .receiveIncomingCall(
-          buzzId: payload['buzz_id']?.toString() ?? '',
-          remoteUserId: callerId,
-          remoteUserName: payload['caller_name']?.toString() ?? 'Incoming call',
-          channelId: payload['channel_id']?.toString() ?? _resolvedChannelId,
-        );
-    return true;
   }
 
   // ---------------------------------------------------------------------------

@@ -115,6 +115,16 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
     }
 
     results.sort((a, b) => a.lastActivityAt.compareTo(b.lastActivityAt));
+
+    // Global Notification Subscriptions:
+    // Ensure we are listening to real-time events for every active DM.
+    final realtimeService = ref.read(realtimeServiceProvider);
+    for (final c in results) {
+      if (c.channelId.isNotEmpty && !c.channelId.startsWith('mock-')) {
+        realtimeService.subscribeToDmChannel(c.channelId);
+      }
+    }
+
     return results;
   }
 

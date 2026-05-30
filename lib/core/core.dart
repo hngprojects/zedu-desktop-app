@@ -52,3 +52,6 @@ export 'package:super_clipboard/super_clipboard.dart';
 export 'package:local_notifier/local_notifier.dart';
 export 'package:window_manager/window_manager.dart';
 export 'package:tray_manager/tray_manager.dart';
+
+export 'network/api_endpoints.dart';
+export 'network/file_repository.dart';

@@ -96,6 +96,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     required String email,
     required String role,
     required String orgId,
+    String? userId,
   }) {
     return _guard(
       () => _remote.inviteMember(email: email, role: role, orgId: orgId),
@@ -135,6 +136,12 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
         roleId: roleId,
       ),
     );
+  }
+
+  @override
+  Future<Result<void>> acceptInvitation(String token) {
+    // Requires implementation in remote datasource
+    throw UnimplementedError();
   }
 
   Future<Result<T>> _guard<T>(Future<T> Function() operation) async {

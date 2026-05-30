@@ -37,10 +37,13 @@ class UserAvatar extends ConsumerWidget {
   }
 
   Widget _networkOrDefault(String? avatarUrl) {
-    // 2. Server URL if available
     if (avatarUrl != null && avatarUrl.isNotEmpty) {
+      final cacheBuster = DateTime.now().millisecondsSinceEpoch;
+      final separator = avatarUrl.contains('?') ? '&' : '?';
+      final urlWithCacheBuster = '$avatarUrl${separator}v=$cacheBuster';
+
       return Image.network(
-        avatarUrl,
+        urlWithCacheBuster,
         fit: BoxFit.cover,
         errorBuilder: (ctx, err, stack) => _defaultAvatar(),
       );

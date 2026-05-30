@@ -26,8 +26,8 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
         for (var item in data) {
           if (item is Map<String, dynamic>) {
             final ownerId = item['owner_id'] as String? ?? item['creator_id'] as String?;
-            if (ownerId != null && currentUserId != null && ownerId != currentUserId) {
-              continue;
+            if (ownerId != null && currentUserId != null) {
+              // Removed owner filter to allow users to see all orgs they are part of
             }
             workspaces.add(
               Workspace(

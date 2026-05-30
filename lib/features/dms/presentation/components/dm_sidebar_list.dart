@@ -193,27 +193,34 @@ class DmSidebarList extends ConsumerWidget {
                             ),
                           );
                         }
-                        return NotificationListener<ScrollNotification>(
-                          onNotification: (scrollInfo) {
-                            if (scrollInfo is ScrollEndNotification &&
-                                scrollInfo.metrics.pixels >=
-                                    scrollInfo.metrics.maxScrollExtent * 0.85) {
-                              final notifier = ref.read(
-                                dmListProvider.notifier,
-                              );
-                              if (notifier.hasMore) notifier.loadMore();
-                            }
-                            return false;
-                          },
-                          child: ListView.builder(
-                            padding: EdgeInsets.zero,
-                            itemCount: conversations.length,
-                            itemBuilder: (context, index) {
-                              return DmListTile(
-                                conversation: conversations[index],
-                              );
-                            },
-                          ),
+                        return Column(
+                          children: [
+                            const _GroupDmsSection(),
+                            Expanded(
+                              child: NotificationListener<ScrollNotification>(
+                                onNotification: (scrollInfo) {
+                                  if (scrollInfo is ScrollEndNotification &&
+                                      scrollInfo.metrics.pixels >=
+                                          scrollInfo.metrics.maxScrollExtent * 0.85) {
+                                    final notifier = ref.read(
+                                      dmListProvider.notifier,
+                                    );
+                                    if (notifier.hasMore) notifier.loadMore();
+                                  }
+                                  return false;
+                                },
+                                child: ListView.builder(
+                                  padding: EdgeInsets.zero,
+                                  itemCount: conversations.length,
+                                  itemBuilder: (context, index) {
+                                    return DmListTile(
+                                      conversation: conversations[index],
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
                         );
                       },
                     );
@@ -292,11 +299,141 @@ class DmSidebarList extends ConsumerWidget {
     // 4. Navigate.
     ref.read(dmListProvider.notifier).addConversation(existingConvo);
     ref.read(selectedDmProvider.notifier).select(existingConvo);
+    ref.read(activeChatProvider.notifier).selectDirectMessage(existingConvo.channelId);
     ref.read(dmSearchQueryProvider.notifier).state = '';
 
     // 5. Clear unread badge.
     ref.read(dmListProvider.notifier).markConversationRead(
       existingConvo.channelId,
+    );
+  }
+}
+
+class _GroupDmsSection extends ConsumerWidget {
+  const _GroupDmsSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final groupDms = ref.watch(groupDmProvider);
+    final activeChat = ref.watch(activeChatProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Row(
+            children: [
+              Icon(
+                Icons.arrow_drop_down,
+                color: colors.onPrimary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Group DMs',
+                  style: TextStyle(
+                    color: colors.onPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              InkWell(
+                onTap: () {
+                  ref.read(activeChatProvider.notifier).selectNewGroupChat();
+                },
+                borderRadius: BorderRadius.circular(4),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: colors.onPrimary.withValues(alpha: 0.38),
+                    ),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Icon(
+                    Icons.add,
+                    color: colors.onPrimary,
+                    size: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (groupDms.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Text(
+              'No group DMs',
+              style: TextStyle(
+                color: colors.onPrimary.withValues(alpha: 0.5),
+                fontSize: 13,
+              ),
+            ),
+          )
+        else
+          ListView.builder(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: groupDms.length,
+            itemBuilder: (context, index) {
+              final group = groupDms[index];
+              final isSelected = activeChat.type == ActiveChatType.groupDm &&
+                  activeChat.id == group.id;
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    ref.read(activeChatProvider.notifier).selectGroupDm(group.id);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? colors.onPrimary.withValues(alpha: 0.12)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.chat_bubble_outline_rounded,
+                          color: colors.onPrimary.withValues(
+                            alpha: isSelected ? 0.95 : 0.6,
+                          ),
+                          size: 16,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            group.name,
+                            style: TextStyle(
+                              color: colors.onPrimary.withValues(
+                                alpha: isSelected ? 0.95 : 0.8,
+                              ),
+                              fontSize: 14,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+      ],
     );
   }
 }

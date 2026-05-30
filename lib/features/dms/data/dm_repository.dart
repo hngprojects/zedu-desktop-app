@@ -249,4 +249,11 @@ class DmRepository {
       },
     );
   }
+
+  Future<void> deleteMessage(String channelId, String messageId) async {
+    if (!isValidChannelId(channelId)) return;
+    await _apiClient.delete<Map<String, dynamic>>(
+      path: '${ApiEndpoints.dmsMessages(channelId)}/$messageId',
+    );
+  }
 }

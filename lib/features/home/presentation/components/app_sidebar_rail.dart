@@ -24,7 +24,23 @@ class AppSidebarRail extends ConsumerWidget {
         onTypeSelected!(type);
         return;
       }
+
+      final currentSidebar = ref.read(homeSidebarProvider);
+      if (currentSidebar == type) return;
+
       ref.read(homeSidebarProvider.notifier).setType(type);
+
+      if (type == HomeSidebarType.home) {
+        // Home always goes to the #general channel
+        ref.read(activeChatProvider.notifier).selectChannel('general');
+      } else if (type == HomeSidebarType.dms || type == HomeSidebarType.people) {
+        // DMs and People share the same chat area — don't reset the active chat
+        // so the user stays in whatever conversation they had open.
+        // If nothing is open yet, the area already shows the empty state.
+      } else {
+        // Files, Buzz, etc. — clear the main chat area
+        ref.read(activeChatProvider.notifier).clear();
+      }
     }
 
     return Container(

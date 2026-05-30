@@ -272,7 +272,7 @@ class _NewGroupChatViewState extends ConsumerState<NewGroupChatView> {
                                         member.name ??
                                         member.email.split('@').first;
                                     return InkWell(
-                                      onTap: () =>
+                                      onTapDown: (_) =>
                                           _toggleMemberSelection(member),
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(

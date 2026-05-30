@@ -1,4 +1,5 @@
-import '../../../../helpers/helpers.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -26,7 +27,6 @@ void main() {
           email: 'test@example.com',
           role: '01910544-d1e1-7ada-bdac-c761e527ec92',
           orgId: 'org-123',
-          userId: 'user-456',
         );
 
         expect(result.id, 'user-456');
@@ -74,7 +74,6 @@ void main() {
           email: 'test@example.com',
           role: '01910544-d1e1-7ada-bdac-c761e527ec92',
           orgId: 'org-123',
-          userId: 'user-456',
         );
 
         expect(result.id, 'user-456');

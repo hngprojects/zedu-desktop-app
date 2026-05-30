@@ -263,13 +263,13 @@ class UserMenuDialog extends ConsumerWidget {
 
               _MenuItemButton(
                 icon: Icons.logout_rounded,
-                label:
-                    'Sign out of ${authUser?.currentOrganisationSlug ?? 'Zedu'}',
+                label: 'Sign out of Zedu Desktop',
                 isError: true,
                 onTap: () async {
+                  final router = GoRouter.of(context);
                   Navigator.pop(context);
                   await ref.read(authNotifierProvider.notifier).logout();
-                  if (context.mounted) context.go(AppRouter.login);
+                  router.go(AppRouter.login);
                 },
               ),
               const SizedBox(height: 8),
