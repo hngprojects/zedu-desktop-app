@@ -34,12 +34,52 @@ class ChannelState {
 }
 
 class ChannelNotifier extends Notifier<ChannelState> {
+  StreamSubscription<ChatWebsocketMessage>? _wsSubscription;
+
   @override
   ChannelState build() {
     ref.watch(currentOrgIdProvider);
 
+    _listenToWebsockets();
+
+    ref.onDispose(() {
+      _wsSubscription?.cancel();
+    });
+
     Future.microtask(fetchChannels);
     return const ChannelState();
+  }
+
+  void _listenToWebsockets() {
+    _wsSubscription?.cancel();
+    final ws = ref.read(chatWebsocketProvider);
+    _wsSubscription = ws.messageStream.listen((msg) {
+      final authState = ref.read(authNotifierProvider);
+      final currentUser = authState.user;
+      final currentUserName = currentUser != null
+          ? '${currentUser.firstName} ${currentUser.lastName}'.trim()
+          : '';
+      final currentUsername = currentUser?.username ?? '';
+
+      final isMe =
+          msg.authorName == currentUserName ||
+          msg.authorName == currentUsername;
+      if (!isMe && msg.groupDmId.isNotEmpty) {
+        _handleIncomingMessage(msg.groupDmId, msg.text);
+      }
+    });
+  }
+
+  void _handleIncomingMessage(String channelId, String text) {
+    if (state.channels.isEmpty) return;
+    state = state.copyWith(
+      channels: state.channels.map((c) {
+        if (c.id == channelId) {
+          return c.copyWith(unreadCount: c.unreadCount + 1);
+        }
+        return c;
+      }).toList(),
+    );
   }
 
   Future<void> fetchChannels() async {
@@ -84,6 +124,11 @@ class ChannelNotifier extends Notifier<ChannelState> {
       } catch (_) {}
 
       state = state.copyWith(isLoading: false, channels: channelsList);
+
+      final activeIds = channelsList.map((c) => c.id).toList();
+      if (activeIds.isNotEmpty) {
+        ref.read(chatWebsocketProvider).connect(activeIds);
+      }
 
       final activeChat = ref.read(activeChatProvider);
 

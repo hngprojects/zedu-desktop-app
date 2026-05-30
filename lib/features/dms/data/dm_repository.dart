@@ -78,9 +78,7 @@ class DmRepository {
     List<dynamic>? mentions,
   }) async {
     final bool isThreadReply = threadId != null && threadId.isNotEmpty;
-    String path = isThreadReply
-        ? '/channels/$channelId/messages'
-        : '/threads/$channelId';
+    String path = '/channels/$channelId/messages';
 
     final data = <String, dynamic>{
       "content": content,
