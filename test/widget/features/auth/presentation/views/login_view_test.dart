@@ -1,9 +1,7 @@
+import '../../../../../helpers/helpers.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
-import '../../../../../helpers/helpers.dart';
 
-// Fake notifier that avoids GetIt/locator setup while remaining type-compatible
-// with authNotifierProvider (which is NotifierProvider<AuthNotifier, AuthState>).
 class FakeAuthNotifier extends AuthNotifier {
   FakeAuthNotifier({
     AuthState initial = const AuthState(status: AuthStatus.unauthenticated),

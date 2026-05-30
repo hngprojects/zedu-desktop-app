@@ -1,6 +1,3 @@
-// ignore_for_file: deprecated_member_use
-import 'dart:async';
-import 'dart:io';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -110,26 +107,32 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                           child: Consumer(
                             builder: (context, ref, child) {
                               final historyState = ref.watch(
-                                chatHistoryProvider(widget.conversation.channelId),
+                                chatHistoryProvider(
+                                  widget.conversation.channelId,
+                                ),
                               );
                               final messages = historyState.messages;
 
                               return NotificationListener<ScrollNotification>(
-                                onNotification: (ScrollNotification scrollInfo) {
-                                  if (!historyState.isLoading &&
-                                      historyState.hasMore &&
-                                      scrollInfo.metrics.pixels >=
-                                          scrollInfo.metrics.maxScrollExtent * 0.8) {
-                                    ref
-                                        .read(
-                                          chatHistoryProvider(
-                                            widget.conversation.channelId,
-                                          ),
-                                        )
-                                        .loadMore();
-                                  }
-                                  return false;
-                                },
+                                onNotification:
+                                    (ScrollNotification scrollInfo) {
+                                      if (!historyState.isLoading &&
+                                          historyState.hasMore &&
+                                          scrollInfo.metrics.pixels >=
+                                              scrollInfo
+                                                      .metrics
+                                                      .maxScrollExtent *
+                                                  0.8) {
+                                        ref
+                                            .read(
+                                              chatHistoryProvider(
+                                                widget.conversation.channelId,
+                                              ),
+                                            )
+                                            .loadMore();
+                                      }
+                                      return false;
+                                    },
                                 child: CustomScrollView(
                                   reverse: true,
                                   slivers: [
@@ -144,7 +147,8 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                                           index,
                                         ) {
                                           final msg = messages[index];
-                                          final messageId = msg['id'] as String? ?? '';
+                                          final messageId =
+                                              msg['id'] as String? ?? '';
                                           final key = _messageKeys.putIfAbsent(
                                             messageId,
                                             () => GlobalKey(),
@@ -154,11 +158,15 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                                             key: key,
                                             message: msg,
                                             conversation: widget.conversation,
-                                            channelId: widget.conversation.channelId,
-                                            isHighlighted: _highlightedMessageId == messageId,
+                                            channelId:
+                                                widget.conversation.channelId,
+                                            isHighlighted:
+                                                _highlightedMessageId ==
+                                                messageId,
                                             onReplyInThread: (message) {
                                               setState(() {
-                                                _activeThreadId = message['id'] as String?;
+                                                _activeThreadId =
+                                                    message['id'] as String?;
                                                 _activeThreadMessage = message;
                                               });
                                             },
@@ -169,7 +177,9 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                                     if (historyState.isLoading)
                                       const SliverToBoxAdapter(
                                         child: Padding(
-                                          padding: EdgeInsets.symmetric(vertical: 16),
+                                          padding: EdgeInsets.symmetric(
+                                            vertical: 16,
+                                          ),
                                           child: Center(
                                             child: CircularProgressIndicator(),
                                           ),
@@ -192,11 +202,19 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                           recipientName: _recipientHandle,
                           channelId: widget.conversation.channelId,
                           participants: widget.conversation.participants,
+                          isMember:
+                              widget.conversation.channelType != 'channel' ||
+                              ref
+                                  .watch(channelProvider)
+                                  .channels
+                                  .any(
+                                    (c) =>
+                                        c.id == widget.conversation.channelId,
+                                  ),
                         ),
                       ],
                     ),
 
-                  // FULL PAGE MODE INJECTION
                   Consumer(
                     builder: (context, ref, child) {
                       final activeCall = ref.watch(activeCallProvider);
@@ -208,7 +226,6 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                     },
                   ),
 
-                  // FLOATING / PIP INJECTION
                   Consumer(
                     builder: (context, ref, child) {
                       final activeCall = ref.watch(activeCallProvider);
@@ -220,10 +237,8 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                     },
                   ),
 
-                  // INCOMING CALL MODAL
                   const IncomingCallModal(),
 
-                  // RINGING STATE OVERLAY (Caller)
                   Consumer(
                     builder: (context, ref, child) {
                       final activeCall = ref.watch(activeCallProvider);
@@ -256,7 +271,8 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Text(
@@ -359,6 +375,10 @@ class _DmChatHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final isChannel =
+        conversation.channelType == 'channel' ||
+        conversation.channelType == 'group_dm';
+
     final participantInitial = conversation.displayName.trim().isEmpty
         ? '?'
         : conversation.displayName.trim()[0].toUpperCase();
@@ -371,25 +391,37 @@ class _DmChatHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: colors.primary,
-            backgroundImage: conversation.effectiveAvatarUrl != null
-                ? NetworkImage(conversation.effectiveAvatarUrl!)
-                : null,
-            child: conversation.effectiveAvatarUrl == null
-                ? Text(
-                    participantInitial,
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      color: colors.onPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                : null,
-          ),
-          const SizedBox(width: 12),
+          if (isChannel)
+            Text(
+              '# ',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: colors.textPrimary,
+              ),
+            )
+          else
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: colors.primary,
+              backgroundImage: conversation.effectiveAvatarUrl != null
+                  ? NetworkImage(conversation.effectiveAvatarUrl!)
+                  : null,
+              child: conversation.effectiveAvatarUrl == null
+                  ? Text(
+                      participantInitial,
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: colors.onPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  : null,
+            ),
+          if (!isChannel) const SizedBox(width: 12),
           Text(
-            conversation.displayName,
+            isChannel
+                ? conversation.displayName.replaceFirst('#', '').trim()
+                : conversation.displayName,
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
@@ -397,136 +429,61 @@ class _DmChatHeader extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          Consumer(
-            builder: (context, ref, child) {
-              return IconButton(
-                icon: const Icon(Icons.notifications_active_outlined),
-                tooltip: 'Test Notification (Delayed 5s)',
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Notification will fire in 5 seconds. Minimize the app now!',
-                      ),
-                    ),
-                  );
-                  Future.delayed(const Duration(seconds: 5), () {
-                    ref
-                        .read(notificationServiceProvider)
-                        .handleIncomingMessage(
-                          {
-                            'user_id': conversation.participantId,
-                            'content': 'Hello! This is a test DM notification.',
-                          },
-                          conversation.channelId,
-                          conversation.displayName,
-                          forceShow: true,
-                        );
-                  });
-                },
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-          Consumer(
-            builder: (context, ref, child) {
-              return InkWell(
-                onTap: () {
-                  ref
-                      .read(activeCallProvider.notifier)
-                      .initiateCall(
-                        remoteUserId: conversation.participantId,
-                        remoteUserName: conversation.displayName,
-                        channelId: conversation.channelId,
-                        remoteAvatarUrl: conversation.effectiveAvatarUrl,
-                      );
-                },
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: colors.divider),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Icon(
-                    Icons.headphones_outlined,
-                    size: 18,
-                    color: colors.textPrimary,
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: Icon(
-              showRightPanel ? Icons.push_pin : Icons.push_pin_outlined,
-              color: showRightPanel ? colors.primary : colors.textHint,
-            ),
-            tooltip: 'Pinned Messages',
-            onPressed: onToggleRightPanel,
-          ),
-          const SizedBox(width: 8),
-          if (conversation.channelType == 'channel' || conversation.channelType == 'group_dm') ...[
+          if (isChannel) ...[
             Consumer(
               builder: (context, ref, child) {
-                return IconButton(
-                  icon: Icon(Icons.person_add_alt_1_outlined, color: colors.textHint),
-                  tooltip: 'Add Members',
+                return OutlinedButton.icon(
                   onPressed: () {
-                    _showAddMembersDialog(context, ref, conversation.channelId, conversation.channelType);
+                    ref
+                        .read(activeCallProvider.notifier)
+                        .initiateCall(
+                          remoteUserId: conversation.participantId,
+                          remoteUserName: conversation.displayName,
+                          channelId: conversation.channelId,
+                          remoteAvatarUrl: conversation.effectiveAvatarUrl,
+                        );
                   },
+                  icon: const Icon(Icons.headphones, size: 16),
+                  label: const Text('Start Buzz'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: colors.textPrimary,
+                    side: BorderSide(color: colors.divider),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 0,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    minimumSize: const Size(0, 32),
+                  ),
                 );
               },
             ),
             const SizedBox(width: 8),
+            Container(width: 1, height: 24, color: colors.divider),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: Icon(Icons.person_outline, color: colors.primary),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (_) =>
+                      ChannelDetailsModal(conversation: conversation),
+                );
+              },
+            ),
             Consumer(
               builder: (context, ref, child) {
                 return PopupMenuButton<String>(
                   icon: Icon(Icons.more_vert, color: colors.textHint),
                   onSelected: (value) async {
-                    if (value == 'edit') {
-                      _showEditChannelDialog(
-                        context,
-                        ref,
-                        conversation.channelId,
-                      );
-                    } else if (value == 'archive') {
-                      final confirmed = await showDialog<bool>(
+                    if (value == 'details') {
+                      showDialog(
                         context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Archive Channel'),
-                          content: const Text(
-                            'Are you sure you want to archive this channel?',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: const Text('Cancel'),
-                            ),
-                            ElevatedButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              child: const Text('Archive'),
-                            ),
-                          ],
-                        ),
+                        builder: (_) =>
+                            ChannelDetailsModal(conversation: conversation),
                       );
-                      if (confirmed == true) {
-                        final success = await ref
-                            .read(channelProvider.notifier)
-                            .archiveChannel(conversation.channelId, true);
-                        if (success && context.mounted) {
-                          ref
-                              .read(activeChatProvider.notifier)
-                              .selectChannel('general');
-                          AppToastService.show(
-                            context,
-                            type: AppToastType.success,
-                            message: 'Channel archived successfully.',
-                          );
-                        }
-                      }
                     } else if (value == 'notifications') {
                       _showNotificationSettingsDialog(
                         context,
@@ -541,79 +498,112 @@ class _DmChatHeader extends StatelessWidget {
                         conversation.channelId,
                         conversation.displayName.replaceFirst('#', ''),
                       );
-                    } else if (value == 'privacy') {
-                      final channel = ref.read(channelProvider).channels.firstWhere((c) => c.id == conversation.channelId);
-                      final success = await ref
-                          .read(channelProvider.notifier)
-                          .toggleChannelPrivacy(conversation.channelId, !channel.isPrivate);
-                      if (success && context.mounted) {
-                        AppToastService.show(
-                          context,
-                          type: AppToastType.success,
-                          message: 'Channel privacy updated to ${!channel.isPrivate ? "Private" : "Public"}.',
-                        );
-                      }
                     }
                   },
-                  itemBuilder: (context) {
-                    final channel = ref.watch(channelProvider).channels.firstWhere((c) => c.id == conversation.channelId, orElse: () => const Channel(id: '', name: '', description: '', organisationId: '', ownerId: ''));
-                    final user = ref.watch(authNotifierProvider).user;
-                    final workspace = ref.watch(workspaceProvider).selectedWorkspace;
-                    final profileState = ref.watch(userProfileNotifierProvider);
-                    final isOwner = workspace?.ownerId == user?.id;
-                    final myMember = profileState.teamMembers.firstWhere(
-                      (m) => m.id == user?.id || m.email == user?.email,
-                      orElse: () => TeamMember(
-                        id: '',
-                        email: '',
-                        role: isOwner ? 'owner' : 'member',
-                        dateJoined: '',
-                        status: TeamMemberStatus.active,
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'details',
+                      child: Text(
+                        'Open channel details',
+                        style: TextStyle(fontSize: 13),
                       ),
-                    );
-                    final roleName = myMember.role.toLowerCase();
-                    final isAdmin = roleName.contains('admin') ||
-                        roleName.contains('lead') ||
-                        roleName.contains('manager') ||
-                        roleName.contains('instructor') ||
-                        roleName.contains('owner');
-                    final canManagePrivacy = isOwner || isAdmin;
-
-                    return [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Text('Edit Topic/Description'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'notifications',
+                      child: Text(
+                        'Notification Settings',
+                        style: TextStyle(fontSize: 13),
                       ),
-                      const PopupMenuItem(
-                        value: 'notifications',
-                        child: Text('Notification Settings'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'search',
+                      child: Text(
+                        'Search in channel',
+                        style: TextStyle(fontSize: 13),
                       ),
-                      if (canManagePrivacy)
-                        PopupMenuItem(
-                          value: 'privacy',
-                          child: Text(channel.isPrivate ? 'Make Public' : 'Make Private'),
-                        ),
-                      const PopupMenuItem(
-                        value: 'archive',
-                        child: Text('Archive Channel'),
+                    ),
+                    const PopupMenuDivider(),
+                    const PopupMenuItem(
+                      value: 'leave',
+                      child: Text(
+                        'Leave channel',
+                        style: TextStyle(fontSize: 13, color: Colors.red),
                       ),
-                      const PopupMenuDivider(),
-                      PopupMenuItem(
-                        value: 'leave',
-                        child: Text(
-                          'Leave channel',
-                          style: context.textTheme.bodyMedium?.copyWith(
-                            color: colors.error,
-                          ),
-                        ),
-                      ),
-                    ];
-                  },
+                    ),
+                  ],
                 );
               },
             ),
           ] else ...[
-            Icon(Icons.more_vert, color: colors.textHint),
+            Consumer(
+              builder: (context, ref, child) {
+                return IconButton(
+                  icon: const Icon(Icons.notifications_active_outlined),
+                  tooltip: 'Test Notification (Delayed 5s)',
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Notification will fire in 5 seconds.'),
+                      ),
+                    );
+                    Future.delayed(const Duration(seconds: 5), () {
+                      ref
+                          .read(notificationServiceProvider)
+                          .handleIncomingMessage(
+                            {
+                              'user_id': conversation.participantId,
+                              'content':
+                                  'Hello! This is a test DM notification.',
+                            },
+                            conversation.channelId,
+                            conversation.displayName,
+                            forceShow: true,
+                          );
+                    });
+                  },
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            Consumer(
+              builder: (context, ref, child) {
+                return InkWell(
+                  onTap: () {
+                    ref
+                        .read(activeCallProvider.notifier)
+                        .initiateCall(
+                          remoteUserId: conversation.participantId,
+                          remoteUserName: conversation.displayName,
+                          channelId: conversation.channelId,
+                          remoteAvatarUrl: conversation.effectiveAvatarUrl,
+                        );
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: colors.divider),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Icon(
+                      Icons.headphones_outlined,
+                      size: 18,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: Icon(
+                showRightPanel ? Icons.push_pin : Icons.push_pin_outlined,
+                color: showRightPanel ? colors.primary : colors.textHint,
+              ),
+              tooltip: 'Pinned Messages',
+              onPressed: onToggleRightPanel,
+            ),
           ],
         ],
       ),
@@ -651,9 +641,22 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
     final media = msg['media'] as List<dynamic>? ?? const [];
     for (var m in media) {
       if (m is Map) {
-        final name = (m['file_name'] ?? m['name'] ?? '').toString().toLowerCase();
+        final name = (m['file_name'] ?? m['name'] ?? '')
+            .toString()
+            .toLowerCase();
         final ext = name.split('.').last.toLowerCase();
-        if (['m4a', 'mp3', 'wav', 'aac', 'ogg', 'caf', 'opus', 'mp4', 'webm'].contains(ext) || name.contains('voice_note')) {
+        if ([
+              'm4a',
+              'mp3',
+              'wav',
+              'aac',
+              'ogg',
+              'caf',
+              'opus',
+              'mp4',
+              'webm',
+            ].contains(ext) ||
+            name.contains('voice_note')) {
           return true;
         }
       }
@@ -663,14 +666,30 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
 
   String _getAudioSource(Map<String, dynamic> msg) {
     if (msg['audio_source'] != null) return msg['audio_source'].toString();
-    if (msg['file_link'] != null && msg['file_link'].toString().endsWith('.m4a')) return msg['file_link'].toString();
+    if (msg['file_link'] != null &&
+        msg['file_link'].toString().endsWith('.m4a')) {
+      return msg['file_link'].toString();
+    }
 
     final media = msg['media'] as List<dynamic>? ?? const [];
     for (var m in media) {
       if (m is Map) {
-        final name = (m['file_name'] ?? m['name'] ?? '').toString().toLowerCase();
+        final name = (m['file_name'] ?? m['name'] ?? '')
+            .toString()
+            .toLowerCase();
         final ext = name.split('.').last.toLowerCase();
-        if (['m4a', 'mp3', 'wav', 'aac', 'ogg', 'caf', 'opus', 'mp4', 'webm'].contains(ext) || name.contains('voice_note')) {
+        if ([
+              'm4a',
+              'mp3',
+              'wav',
+              'aac',
+              'ogg',
+              'caf',
+              'opus',
+              'mp4',
+              'webm',
+            ].contains(ext) ||
+            name.contains('voice_note')) {
           return (m['file_link'] ?? m['path'] ?? '').toString();
         }
       }
@@ -682,7 +701,13 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
     final channels = ref.read(channelProvider).channels;
     final found = channels.firstWhere(
       (c) => c.name.toLowerCase() == channelName.toLowerCase(),
-      orElse: () => const Channel(id: '', name: '', description: '', organisationId: '', ownerId: ''),
+      orElse: () => const Channel(
+        id: '',
+        name: '',
+        description: '',
+        organisationId: '',
+        ownerId: '',
+      ),
     );
     if (found.id.isNotEmpty) {
       ref.read(homeSidebarProvider.notifier).setType(HomeSidebarType.home);
@@ -694,7 +719,13 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
     final teamMembers = ref.read(userProfileNotifierProvider).teamMembers;
     final found = teamMembers.firstWhere(
       (m) => (m.name ?? '').toLowerCase() == username.toLowerCase(),
-      orElse: () => const TeamMember(id: '', email: '', role: '', dateJoined: '', status: TeamMemberStatus.inactive),
+      orElse: () => const TeamMember(
+        id: '',
+        email: '',
+        role: '',
+        dateJoined: '',
+        status: TeamMemberStatus.inactive,
+      ),
     );
     if (found.id.isNotEmpty) {
       final conversations = ref.read(dmListProvider).value ?? [];
@@ -710,7 +741,9 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
       );
       ref.read(homeSidebarProvider.notifier).setType(HomeSidebarType.dms);
       ref.read(selectedDmProvider.notifier).select(existing);
-      ref.read(activeChatProvider.notifier).selectDirectMessage(existing.channelId);
+      ref
+          .read(activeChatProvider.notifier)
+          .selectDirectMessage(existing.channelId);
     }
   }
 
@@ -929,20 +962,14 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
     final history = ref.watch(chatHistoryProvider(widget.channelId));
     final isMe = history.isMyMessage(widget.message);
     final content = widget.message['content'] as String? ?? '';
-    final createdAt =
-        DateTime.tryParse(widget.message['created_at']?.toString() ?? '')?.toLocal() ??
-        DateTime.now();
+    final createdAt = DateFormatter.parseUtcString(widget.message['created_at']?.toString() ?? '');
     final status = widget.message['status'] as String?;
     final messageId = widget.message['id'] as String? ?? '';
 
-    final isEditable = isMe && DateTime.now().difference(createdAt).inMinutes < 10;
-
-    final hour = createdAt.hour > 12
-        ? createdAt.hour - 12
-        : (createdAt.hour == 0 ? 12 : createdAt.hour);
-    final minute = createdAt.minute.toString().padLeft(2, '0');
-    final period = createdAt.hour >= 12 ? 'PM' : 'AM';
-    final timeString = '$hour:$minute $period';
+    final isEditable =
+        isMe && DateTime.now().difference(createdAt).inMinutes < 10;
+        
+    final timeString = DateFormatter.formatTime12h(createdAt);
 
     final String senderName = isMe
         ? history.currentUserName
@@ -963,15 +990,19 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
         ? senderName[0].toUpperCase()
         : '?';
 
-    final List<dynamic> media = (widget.message['media'] as List<dynamic>?) ?? [];
-    final Map<String, dynamic> reactionsMap = widget.message['reactions'] as Map<String, dynamic>? ?? {};
+    final List<dynamic> media =
+        (widget.message['media'] as List<dynamic>?) ?? [];
+    final Map<String, dynamic> reactionsMap =
+        widget.message['reactions'] as Map<String, dynamic>? ?? {};
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovering = true),
       onExit: (_) => setState(() => _isHovering = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        color: widget.isHighlighted ? colors.primary.withValues(alpha: 0.15) : Colors.transparent,
+        color: widget.isHighlighted
+            ? colors.primary.withValues(alpha: 0.15)
+            : Colors.transparent,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
@@ -984,22 +1015,49 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                     : MainAxisAlignment.start,
                 children: [
                   if (!isMe) ...[
-                    CircleAvatar(
-                      radius: 15,
-                      backgroundColor: colors.primary,
-                      backgroundImage:
-                          senderAvatarUrl != null && senderAvatarUrl.isNotEmpty
-                          ? NetworkImage(senderAvatarUrl)
-                          : null,
-                      child: senderAvatarUrl == null || senderAvatarUrl.isEmpty
-                          ? Text(
-                              senderInitial,
-                              style: context.textTheme.bodySmall?.copyWith(
-                                color: colors.onPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            )
-                          : null,
+                    InkWell(
+                      onTap: () {
+                        final teamMembers = ref
+                            .read(userProfileNotifierProvider)
+                            .teamMembers;
+                        final found = teamMembers.firstWhere(
+                          (m) =>
+                              (m.name ?? '').toLowerCase() ==
+                              senderName.toLowerCase(),
+                          orElse: () => TeamMember(
+                            id: widget.message['sender_id']?.toString() ?? '',
+                            email: '',
+                            role: 'Member',
+                            dateJoined: '',
+                            status: TeamMemberStatus.active,
+                            name: senderName,
+                            avatarUrl: senderAvatarUrl,
+                          ),
+                        );
+                        ref.read(personalProfilePanelProvider.notifier).state =
+                            false;
+                        ref.read(profileDetailsPanelProvider.notifier).state =
+                            found;
+                      },
+                      child: CircleAvatar(
+                        radius: 15,
+                        backgroundColor: colors.primary,
+                        backgroundImage:
+                            senderAvatarUrl != null &&
+                                senderAvatarUrl.isNotEmpty
+                            ? NetworkImage(senderAvatarUrl)
+                            : null,
+                        child:
+                            senderAvatarUrl == null || senderAvatarUrl.isEmpty
+                            ? Text(
+                                senderInitial,
+                                style: context.textTheme.bodySmall?.copyWith(
+                                  color: colors.onPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              )
+                            : null,
+                      ),
                     ),
                     const SizedBox(width: 12),
                   ],
@@ -1025,9 +1083,13 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                               const SizedBox(width: 8),
                               Text(
                                 timeString,
-                                style: TextStyle(color: colors.textHint, fontSize: 11),
+                                style: TextStyle(
+                                  color: colors.textHint,
+                                  fontSize: 11,
+                                ),
                               ),
-                              if (widget.message['is_edited'] == true || widget.message['edited'] == true) ...[
+                              if (widget.message['is_edited'] == true ||
+                                  widget.message['edited'] == true) ...[
                                 const SizedBox(width: 4),
                                 Text(
                                   '(edited)',
@@ -1042,7 +1104,13 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                           ),
                         ),
                         if (history.editingMessageId == messageId)
-                          _buildInlineEditor(context, history, messageId, content, colors)
+                          _buildInlineEditor(
+                            context,
+                            history,
+                            messageId,
+                            content,
+                            colors,
+                          )
                         else if (_isAudioMessage(widget.message))
                           VoiceNotePlayer(
                             audioSource: _getAudioSource(widget.message),
@@ -1063,26 +1131,48 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                               text: _parseRichText(
                                 content,
                                 context.textTheme.bodyMedium?.copyWith(
-                                  color: isMe ? colors.onPrimary : colors.textPrimary,
-                                ) ?? const TextStyle(),
+                                      color: isMe
+                                          ? colors.onPrimary
+                                          : colors.textPrimary,
+                                    ) ??
+                                    const TextStyle(),
                               ),
                             ),
                           ),
                         if (media.isNotEmpty)
                           (() {
                             final filteredMedia = media.where((m) {
-                              final name = (m['file_name'] ?? m['name'] ?? '').toString().toLowerCase();
+                              final name = (m['file_name'] ?? m['name'] ?? '')
+                                  .toString()
+                                  .toLowerCase();
                               final ext = name.split('.').last.toLowerCase();
-                              final isAudio = ['m4a', 'mp3', 'wav', 'aac', 'ogg', 'caf', 'opus', 'mp4', 'webm'].contains(ext) || name.contains('voice_note');
+                              final isAudio =
+                                  [
+                                    'm4a',
+                                    'mp3',
+                                    'wav',
+                                    'aac',
+                                    'ogg',
+                                    'caf',
+                                    'opus',
+                                    'mp4',
+                                    'webm',
+                                  ].contains(ext) ||
+                                  name.contains('voice_note');
                               return !isAudio;
                             }).toList();
-                            if (filteredMedia.isEmpty) return const SizedBox.shrink();
+                            if (filteredMedia.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
                             return Padding(
-                              padding: EdgeInsets.only(top: content.isNotEmpty ? 8 : 0),
+                              padding: EdgeInsets.only(
+                                top: content.isNotEmpty ? 8 : 0,
+                              ),
                               child: _AttachmentBubbleList(
                                 media: filteredMedia,
                                 isMe: isMe,
-                                onImageTap: (url) => _showLightbox(context, url),
+                                onImageTap: (url) =>
+                                    _showLightbox(context, url),
                               ),
                             );
                           })(),
@@ -1093,39 +1183,68 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                               spacing: 4,
                               children: reactionsMap.entries.map((entry) {
                                 final emoji = entry.key;
-                                final userIds = List<String>.from(entry.value as List<dynamic>? ?? []);
-                                final currentUserId = ref.read(authNotifierProvider).user?.id ?? '';
-                                final hasReacted = userIds.contains(currentUserId);
+                                final userIds = List<String>.from(
+                                  entry.value as List<dynamic>? ?? [],
+                                );
+                                final currentUserId =
+                                    ref.read(authNotifierProvider).user?.id ??
+                                    '';
+                                final hasReacted = userIds.contains(
+                                  currentUserId,
+                                );
 
                                 return Tooltip(
-                                  message: 'Reacted by ${userIds.length} member(s)',
+                                  message:
+                                      'Reacted by ${userIds.length} member(s)',
                                   child: InkWell(
                                     onTap: () {
-                                      history.toggleReaction(messageId, emoji, currentUserId);
+                                      history.toggleReaction(
+                                        messageId,
+                                        emoji,
+                                        currentUserId,
+                                      );
                                     },
                                     borderRadius: BorderRadius.circular(12),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: hasReacted
-                                            ? colors.primary.withValues(alpha: 0.15)
-                                            : colors.onPrimary.withValues(alpha: 0.05),
+                                            ? colors.primary.withValues(
+                                                alpha: 0.15,
+                                              )
+                                            : colors.onPrimary.withValues(
+                                                alpha: 0.05,
+                                              ),
                                         border: Border.all(
-                                          color: hasReacted ? colors.primary : colors.divider,
+                                          color: hasReacted
+                                              ? colors.primary
+                                              : colors.divider,
                                         ),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Text(emoji, style: const TextStyle(fontSize: 12)),
+                                          Text(
+                                            emoji,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                            ),
+                                          ),
                                           const SizedBox(width: 4),
                                           Text(
                                             '${userIds.length}',
                                             style: TextStyle(
                                               fontSize: 11,
-                                              color: hasReacted ? colors.primary : colors.textSecondary,
-                                              fontWeight: hasReacted ? FontWeight.bold : FontWeight.normal,
+                                              color: hasReacted
+                                                  ? colors.primary
+                                                  : colors.textSecondary,
+                                              fontWeight: hasReacted
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
                                             ),
                                           ),
                                         ],
@@ -1139,11 +1258,15 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                         if (isMe && status != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 4),
-                            child: status == 'failed'
+                            child: status.toString().startsWith('failed')
                                 ? GestureDetector(
                                     onTap: () {
                                       ref
-                                          .read(chatHistoryProvider(widget.channelId))
+                                          .read(
+                                            chatHistoryProvider(
+                                              widget.channelId,
+                                            ),
+                                          )
                                           .retryMessage(messageId);
                                     },
                                     child: Row(
@@ -1155,12 +1278,16 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                                           color: colors.error,
                                         ),
                                         const SizedBox(width: 4),
-                                        Text(
-                                          'Failed – Tap to retry',
-                                          style: TextStyle(
-                                            color: colors.error,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w500,
+                                        Flexible(
+                                          child: Text(
+                                            status == 'failed'
+                                                ? 'Failed – Tap to retry'
+                                                : status.toString(),
+                                            style: TextStyle(
+                                              color: colors.error,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w500,
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -1174,33 +1301,53 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                                     ),
                                   ),
                           ),
-                        if ((widget.message['thread_count'] as int? ?? widget.message['reply_count'] as int? ?? 0) > 0)
+                        if ((widget.message['thread_count'] as int? ??
+                                widget.message['reply_count'] as int? ??
+                                0) >
+                            0)
                           Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: InkWell(
-                              onTap: () => widget.onReplyInThread?.call(widget.message),
+                              onTap: () =>
+                                  widget.onReplyInThread?.call(widget.message),
                               borderRadius: BorderRadius.circular(4),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: colors.primary.withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(color: colors.primary.withValues(alpha: 0.1)),
+                                  border: Border.all(
+                                    color: colors.primary.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                  ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.forum_outlined, size: 14, color: colors.primary),
+                                    Icon(
+                                      Icons.forum_outlined,
+                                      size: 14,
+                                      color: colors.primary,
+                                    ),
                                     const SizedBox(width: 6),
                                     Text(
                                       '${widget.message['thread_count'] ?? widget.message['reply_count']} ${widget.message['thread_count'] == 1 || widget.message['reply_count'] == 1 ? "reply" : "replies"}',
-                                      style: context.textTheme.labelSmall?.copyWith(
-                                        color: colors.primary,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: context.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color: colors.primary,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                     ),
                                     const SizedBox(width: 6),
-                                    Icon(Icons.chevron_right, size: 14, color: colors.primary),
+                                    Icon(
+                                      Icons.chevron_right,
+                                      size: 14,
+                                      color: colors.primary,
+                                    ),
                                   ],
                                 ),
                               ),
@@ -1220,11 +1367,11 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: colors.background,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: colors.divider),
                     boxShadow: [
                       BoxShadow(
-                        color: colors.textPrimary.withValues(alpha: 0.1),
+                        color: Colors.black.withOpacity(0.05),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -1234,14 +1381,23 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       PopupMenuButton<String>(
-                        icon: Icon(Icons.add_reaction_outlined, size: 16, color: colors.textHint),
+                        icon: Icon(
+                          Icons.add_reaction_outlined,
+                          size: 18,
+                          color: colors.textHint,
+                        ),
                         onSelected: (emoji) {
-                          final currentUserId = ref.read(authNotifierProvider).user?.id ?? '';
-                          history.toggleReaction(messageId, emoji, currentUserId);
+                          final currentUserId =
+                              ref.read(authNotifierProvider).user?.id ?? '';
+                          history.toggleReaction(
+                            messageId,
+                            emoji,
+                            currentUserId,
+                          );
                         },
                         offset: const Offset(0, 30),
-                        padding: const EdgeInsets.all(6),
-                        constraints: const BoxConstraints(minWidth: 40),
+                        padding: EdgeInsets.zero,
+                        tooltip: 'Add reaction',
                         itemBuilder: (context) => const [
                           PopupMenuItem(value: '👍', child: Text('👍')),
                           PopupMenuItem(value: '❤️', child: Text('❤️')),
@@ -1252,77 +1408,298 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                       ),
                       if (widget.onReplyInThread != null)
                         IconButton(
-                          icon: Icon(Icons.chat_bubble_outline, size: 16, color: colors.textHint),
+                          icon: Icon(
+                            Icons.chat_bubble_outline,
+                            size: 18,
+                            color: colors.textHint,
+                          ),
                           tooltip: 'Reply in thread',
-                          onPressed: () => widget.onReplyInThread?.call(widget.message),
+                          onPressed: () =>
+                              widget.onReplyInThread?.call(widget.message),
                           constraints: const BoxConstraints(),
-                          padding: const EdgeInsets.all(6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 6,
+                          ),
                         ),
-                      IconButton(
+                      PopupMenuButton<String>(
                         icon: Icon(
-                          ref.watch(pinnedMessagesProvider)[widget.channelId]?.any((m) => m.id == messageId) == true
-                              ? Icons.push_pin
-                              : Icons.push_pin_outlined,
-                          size: 16,
+                          Icons.more_vert,
+                          size: 18,
                           color: colors.textHint,
                         ),
-                        onPressed: () {
-                          final isPinned = ref.read(pinnedMessagesProvider)[widget.channelId]?.any((m) => m.id == messageId) == true;
-                          if (isPinned) {
-                            ref.read(pinnedMessagesProvider.notifier).unpinMessage(widget.channelId, messageId);
-                          } else {
-                            ref.read(pinnedMessagesProvider.notifier).pinMessage(
-                              widget.channelId,
-                              PinnedMessage(
-                                id: messageId,
-                                content: content,
-                                senderName: senderName,
-                                pinnedBy: ref.read(authNotifierProvider).user?.fullname ?? 'You',
-                                pinnedAt: DateTime.now(),
-                                channelId: widget.channelId,
-                              ),
-                            );
+                        tooltip: 'More options',
+                        offset: const Offset(0, 30),
+                        padding: EdgeInsets.zero,
+                        color: colors.background,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: BorderSide(color: colors.divider),
+                        ),
+                        onSelected: (value) async {
+                          switch (value) {
+                            case 'reply':
+                              widget.onReplyInThread?.call(widget.message);
+                              break;
+                            case 'pin':
+                              final isPinned =
+                                  ref
+                                      .read(
+                                        pinnedMessagesProvider,
+                                      )[widget.channelId]
+                                      ?.any((m) => m.id == messageId) ==
+                                  true;
+                              if (isPinned) {
+                                ref
+                                    .read(pinnedMessagesProvider.notifier)
+                                    .unpinMessage(widget.channelId, messageId);
+                              } else {
+                                ref
+                                    .read(pinnedMessagesProvider.notifier)
+                                    .pinMessage(
+                                      widget.channelId,
+                                      PinnedMessage(
+                                        id: messageId,
+                                        content: content,
+                                        senderName: senderName,
+                                        pinnedBy:
+                                            ref
+                                                .read(authNotifierProvider)
+                                                .user
+                                                ?.fullname ??
+                                            'You',
+                                        pinnedAt: DateTime.now(),
+                                        channelId: widget.channelId,
+                                      ),
+                                    );
+                              }
+                              break;
+                            case 'edit':
+                              history.startEditing(messageId);
+                              break;
+                            case 'delete':
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Delete Message'),
+                                  content: const Text(
+                                    'Are you sure you want to delete this message? This cannot be undone.',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: colors.error,
+                                        foregroundColor: colors.onPrimary,
+                                      ),
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true) {
+                                history.deleteMessage(messageId);
+                              }
+                              break;
+                            case 'unread':
+                            case 'copy':
+                            case 'forward':
+                            case 'save':
+                              AppToastService.show(
+                                context,
+                                type: AppToastType.info,
+                                message: 'Feature coming soon',
+                              );
+                              break;
                           }
                         },
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.all(6),
-                      ),
-                      if (isMe && isEditable) ...[
-                        IconButton(
-                          icon: Icon(Icons.edit_outlined, size: 16, color: colors.textHint),
-                          onPressed: () => history.startEditing(messageId),
-                          constraints: const BoxConstraints(),
-                          padding: const EdgeInsets.all(6),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.delete_outline, size: 16, color: colors.error),
-                          onPressed: () async {
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Delete Message'),
-                                content: const Text('Are you sure you want to delete this message? This cannot be undone.'),
-                                actions: [
-                                  TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-                                  ElevatedButton(
-                                    onPressed: () => Navigator.of(context).pop(true),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: colors.error,
-                                      foregroundColor: colors.onPrimary,
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'reply',
+                            height: 40,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.turn_left,
+                                  size: 18,
+                                  color: colors.textPrimary,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Reply in thread',
+                                  style: TextStyle(
+                                    color: colors.textPrimary,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'unread',
+                            height: 40,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.mark_email_unread_outlined,
+                                  size: 18,
+                                  color: colors.textPrimary,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Mark unread',
+                                  style: TextStyle(
+                                    color: colors.textPrimary,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'copy',
+                            height: 40,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.link,
+                                  size: 18,
+                                  color: colors.textPrimary,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Copy link',
+                                  style: TextStyle(
+                                    color: colors.textPrimary,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'pin',
+                            height: 40,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  ref
+                                              .watch(
+                                                pinnedMessagesProvider,
+                                              )[widget.channelId]
+                                              ?.any((m) => m.id == messageId) ==
+                                          true
+                                      ? Icons.push_pin
+                                      : Icons.push_pin_outlined,
+                                  size: 18,
+                                  color: colors.textPrimary,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Pin to this conversation',
+                                  style: TextStyle(
+                                    color: colors.textPrimary,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'forward',
+                            height: 40,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.forward_outlined,
+                                  size: 18,
+                                  color: colors.textPrimary,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Forward message',
+                                  style: TextStyle(
+                                    color: colors.textPrimary,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'save',
+                            height: 40,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.bookmark_border,
+                                  size: 18,
+                                  color: colors.textPrimary,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Save for later',
+                                  style: TextStyle(
+                                    color: colors.textPrimary,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (isMe && isEditable) ...[
+                            const PopupMenuDivider(),
+                            PopupMenuItem(
+                              value: 'edit',
+                              height: 40,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.edit_outlined,
+                                    size: 18,
+                                    color: colors.textPrimary,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Edit message',
+                                    style: TextStyle(
+                                      color: colors.textPrimary,
+                                      fontSize: 14,
                                     ),
-                                    child: const Text('Delete'),
                                   ),
                                 ],
                               ),
-                            );
-                            if (confirm == true) {
-                              history.deleteMessage(messageId);
-                            }
-                          },
-                          constraints: const BoxConstraints(),
-                          padding: const EdgeInsets.all(6),
-                        ),
-                      ],
+                            ),
+                            PopupMenuItem(
+                              value: 'delete',
+                              height: 40,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.delete_outline,
+                                    size: 18,
+                                    color: colors.error,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Delete message',
+                                    style: TextStyle(
+                                      color: colors.error,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -1399,7 +1776,7 @@ class _AttachmentBubbleList extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '1.2 MB', // Mock Size
+                    '1.2 MB',
                     style: context.textTheme.labelSmall?.copyWith(
                       color: colors.textHint,
                     ),
@@ -1409,8 +1786,14 @@ class _AttachmentBubbleList extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             IconButton(
-              icon: Icon(Icons.download_rounded, color: colors.primary, size: 18),
-              onPressed: fileLink.isNotEmpty ? () => _launchUrl(fileLink) : null,
+              icon: Icon(
+                Icons.download_rounded,
+                color: colors.primary,
+                size: 18,
+              ),
+              onPressed: fileLink.isNotEmpty
+                  ? () => _launchUrl(fileLink)
+                  : null,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
             ),
@@ -1463,29 +1846,31 @@ class _AttachmentBubbleList extends StatelessWidget {
                               context,
                             ),
                       )
-                    : (fileLink.startsWith('/') || fileLink.contains(':/') || fileLink.contains(':\\'))
-                        ? Image.file(
-                            File(fileLink),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                _buildGenericFile(
-                                  fileName,
-                                  fileLink,
-                                  isImage,
-                                  context,
-                                ),
-                          )
-                        : Image.asset(
-                            fileLink,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                _buildGenericFile(
-                                  fileName,
-                                  fileLink,
-                                  isImage,
-                                  context,
-                                ),
-                          ),
+                    : (fileLink.startsWith('/') ||
+                          fileLink.contains(':/') ||
+                          fileLink.contains(':\\'))
+                    ? Image.file(
+                        File(fileLink),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildGenericFile(
+                              fileName,
+                              fileLink,
+                              isImage,
+                              context,
+                            ),
+                      )
+                    : Image.asset(
+                        fileLink,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildGenericFile(
+                              fileName,
+                              fileLink,
+                              isImage,
+                              context,
+                            ),
+                      ),
               ),
             ),
           );
@@ -1548,11 +1933,18 @@ class _PinnedMessagesPanel extends ConsumerWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.push_pin_outlined, size: 48, color: colors.textHint),
+                      Icon(
+                        Icons.push_pin_outlined,
+                        size: 48,
+                        color: colors.textHint,
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         'No pinned messages',
-                        style: TextStyle(color: colors.textHint, fontStyle: FontStyle.italic),
+                        style: TextStyle(
+                          color: colors.textHint,
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                     ],
                   ),
@@ -1694,72 +2086,149 @@ void _showNotificationSettingsDialog(
       return StatefulBuilder(
         builder: (context, setState) {
           final colors = context.colors;
-          return AlertDialog(
-            title: Text('Notifications for #$channelName'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Send a notification for', style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                RadioListTile<int>(
-                  value: 0,
-                  groupValue: notifyFor,
-                  title: const Text('All new messages'),
-                  onChanged: (val) => setState(() => notifyFor = val!),
-                ),
-                RadioListTile<int>(
-                  value: 1,
-                  groupValue: notifyFor,
-                  title: const Text('Mentions'),
-                  onChanged: (val) => setState(() => notifyFor = val!),
-                ),
-                RadioListTile<int>(
-                  value: 2,
-                  groupValue: notifyFor,
-                  title: const Text('Nothing'),
-                  onChanged: (val) => setState(() => notifyFor = val!),
-                ),
-                const SizedBox(height: 12),
-                CheckboxListTile(
-                  value: notifyReplies,
-                  title: const Text('Get notified about all thread replies in this channel'),
-                  onChanged: (val) => setState(() => notifyReplies = val ?? true),
-                ),
-                CheckboxListTile(
-                  value: isMuted,
-                  title: const Text('Mute channel'),
-                  subtitle: Text(
-                    'Note: Mentions will still notify you',
-                    style: TextStyle(color: colors.textHint, fontSize: 11),
-                  ),
-                  onChanged: (val) => setState(() => isMuted = val ?? false),
-                ),
-              ],
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
+            child: Container(
+              width: 450,
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Notifications for #$channelName',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Send a notification for',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  const SizedBox(height: 12),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Radio<int>(
+                      value: 0,
+                      groupValue: notifyFor,
+                      onChanged: (val) => setState(() => notifyFor = val!),
+                      activeColor: colors.primary,
+                    ),
+                    title: const Text('All new messages'),
+                    onTap: () => setState(() => notifyFor = 0),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Radio<int>(
+                      value: 1,
+                      groupValue: notifyFor,
+                      onChanged: (val) => setState(() => notifyFor = val!),
+                      activeColor: colors.primary,
+                    ),
+                    title: const Text('Mentions'),
+                    onTap: () => setState(() => notifyFor = 1),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Radio<int>(
+                      value: 2,
+                      groupValue: notifyFor,
+                      onChanged: (val) => setState(() => notifyFor = val!),
+                      activeColor: colors.primary,
+                    ),
+                    title: const Text('Channels'),
+                    onTap: () => setState(() => notifyFor = 2),
+                  ),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Checkbox(
+                      value: notifyReplies,
+                      onChanged: (val) =>
+                          setState(() => notifyReplies = val ?? true),
+                      activeColor: colors.primary,
+                    ),
+                    title: const Text(
+                      'Get notified about all thread replies in this channel',
+                    ),
+                    onTap: () => setState(() => notifyReplies = !notifyReplies),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Checkbox(
+                      value: isMuted,
+                      onChanged: (val) =>
+                          setState(() => isMuted = val ?? false),
+                      activeColor: colors.primary,
+                    ),
+                    title: const Text('Mute channel'),
+                    onTap: () => setState(() => isMuted = !isMuted),
+                  ),
+                  const SizedBox(height: 16),
+                  RichText(
+                    text: TextSpan(
+                      style: TextStyle(
+                        color: colors.textPrimary.withOpacity(0.6),
+                        fontSize: 11,
+                      ),
+                      children: [
+                        const TextSpan(
+                          text:
+                              'Note: You can set notification keywords and change your workspace-wide settings in your ',
+                        ),
+                        TextSpan(
+                          text: 'settings',
+                          style: TextStyle(
+                            color: colors.primary,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(color: colors.textPrimary),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (isMuted != settings.isChannelMuted(channelId)) {
+                            ref
+                                .read(notificationSettingsProvider.notifier)
+                                .muteChannel(channelId);
+                          }
+                          Navigator.of(context).pop();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 16,
+                          ),
+                        ),
+                        child: const Text('Save changes'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              ElevatedButton(
-                onPressed: () {
-                  final notifier = ref.read(notificationSettingsProvider.notifier);
-                  if (isMuted) {
-                    notifier.muteChannel(channelId);
-                  } else {
-                    notifier.unmuteChannel(channelId);
-                  }
-                  Navigator.of(context).pop();
-                  AppToastService.show(
-                    context,
-                    type: AppToastType.success,
-                    message: 'Notification settings updated.',
-                  );
-                },
-                child: const Text('Save changes'),
-              ),
-            ],
+            ),
           );
         },
       );
@@ -1767,13 +2236,20 @@ void _showNotificationSettingsDialog(
   );
 }
 
-void _showAddMembersDialog(BuildContext context, WidgetRef ref, String channelId, String channelType) {
+void _showAddMembersDialog(
+  BuildContext context,
+  WidgetRef ref,
+  String channelId,
+  String channelType,
+) {
   showDialog<void>(
     context: context,
     builder: (context) {
       return Consumer(
         builder: (context, ref, child) {
-          final teamMembers = ref.watch(userProfileNotifierProvider).teamMembers;
+          final teamMembers = ref
+              .watch(userProfileNotifierProvider)
+              .teamMembers;
           Channel? channel;
           if (channelType == 'channel') {
             final channelState = ref.watch(channelProvider);
@@ -1815,10 +2291,12 @@ class _AddMembersDialogContent extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_AddMembersDialogContent> createState() => _AddMembersDialogContentState();
+  ConsumerState<_AddMembersDialogContent> createState() =>
+      _AddMembersDialogContentState();
 }
 
-class _AddMembersDialogContentState extends ConsumerState<_AddMembersDialogContent> {
+class _AddMembersDialogContentState
+    extends ConsumerState<_AddMembersDialogContent> {
   final List<String> _selectedIds = [];
   String _searchQuery = '';
   bool _isLoading = false;
@@ -1834,9 +2312,11 @@ class _AddMembersDialogContentState extends ConsumerState<_AddMembersDialogConte
     }).toList();
 
     return AlertDialog(
-      title: Text(widget.channelType == 'group_dm'
-          ? 'Add participants to Group DM'
-          : 'Add members to channel'),
+      title: Text(
+        widget.channelType == 'group_dm'
+            ? 'Add participants to Group DM'
+            : 'Add members to channel',
+      ),
       content: SizedBox(
         width: 400,
         height: 350,
@@ -1853,7 +2333,12 @@ class _AddMembersDialogContentState extends ConsumerState<_AddMembersDialogConte
             const SizedBox(height: 12),
             Expanded(
               child: filtered.isEmpty
-                  ? Center(child: Text('No members found', style: TextStyle(color: colors.textHint)))
+                  ? Center(
+                      child: Text(
+                        'No members found',
+                        style: TextStyle(color: colors.textHint),
+                      ),
+                    )
                   : ListView.builder(
                       itemCount: filtered.length,
                       itemBuilder: (context, index) {
@@ -1896,7 +2381,10 @@ class _AddMembersDialogContentState extends ConsumerState<_AddMembersDialogConte
                     if (widget.channelType == 'group_dm') {
                       success = await ref
                           .read(groupDmProvider.notifier)
-                          .addGroupDmParticipants(widget.channelId, _selectedIds);
+                          .addGroupDmParticipants(
+                            widget.channelId,
+                            _selectedIds,
+                          );
                     } else {
                       success = await ref
                           .read(channelProvider.notifier)
@@ -1915,7 +2403,8 @@ class _AddMembersDialogContentState extends ConsumerState<_AddMembersDialogConte
                         for (final _ in _selectedIds) {
                           final notification = LocalNotification(
                             title: 'Added to Channel',
-                            body: 'You have been added to channel #${widget.channel?.name ?? ''}',
+                            body:
+                                'You have been added to channel #${widget.channel?.name ?? ''}',
                           );
                           await notification.show();
                         }
@@ -2001,7 +2490,10 @@ void _showLeaveChannelConfirmDialog(
       title: const Text('Leave Channel'),
       content: Text('Are you sure you want to leave #$channelName?'),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('Cancel'),
+        ),
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(true),
           style: ElevatedButton.styleFrom(
@@ -2015,7 +2507,9 @@ void _showLeaveChannelConfirmDialog(
   );
 
   if (confirmed == true) {
-    final success = await ref.read(channelProvider.notifier).leaveChannel(channelId);
+    final success = await ref
+        .read(channelProvider.notifier)
+        .leaveChannel(channelId);
     if (success && context.mounted) {
       ref.read(activeChatProvider.notifier).selectChannel('general');
       AppToastService.show(
@@ -2046,7 +2540,9 @@ class _ThreadRepliesPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final textTheme = context.textTheme;
-    final threadHistory = ref.watch(chatHistoryProvider('$channelId:$threadId'));
+    final threadHistory = ref.watch(
+      chatHistoryProvider('$channelId:$threadId'),
+    );
     final replies = threadHistory.messages;
 
     return Column(
@@ -2100,28 +2596,31 @@ class _ThreadRepliesPanel extends ConsumerWidget {
             slivers: [
               // Replies List
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final msg = replies[index];
-                      return _MessageBubble(
-                        message: msg,
-                        conversation: conversation,
-                        channelId: '$channelId:$threadId',
-                        isHighlighted: false,
-                        onReplyInThread: null,
-                      );
-                    },
-                    childCount: replies.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final msg = replies[index];
+                    return _MessageBubble(
+                      message: msg,
+                      conversation: conversation,
+                      channelId: '$channelId:$threadId',
+                      isHighlighted: false,
+                      onReplyInThread: null,
+                    );
+                  }, childCount: replies.length),
                 ),
               ),
 
               // Separator / Reply count
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: [
                       Text(
@@ -2132,9 +2631,7 @@ class _ThreadRepliesPanel extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Expanded(
-                        child: Divider(color: colors.divider),
-                      ),
+                      Expanded(child: Divider(color: colors.divider)),
                     ],
                   ),
                 ),
@@ -2142,13 +2639,18 @@ class _ThreadRepliesPanel extends ConsumerWidget {
 
               // Original Message
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 sliver: SliverToBoxAdapter(
                   child: Container(
                     decoration: BoxDecoration(
                       color: colors.onPrimary.withValues(alpha: 0.02),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: colors.divider.withValues(alpha: 0.5)),
+                      border: Border.all(
+                        color: colors.divider.withValues(alpha: 0.5),
+                      ),
                     ),
                     padding: const EdgeInsets.all(8),
                     child: Column(
@@ -2181,9 +2683,7 @@ class _ThreadRepliesPanel extends ConsumerWidget {
                 const SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.all(16),
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    child: Center(child: CircularProgressIndicator()),
                   ),
                 ),
             ],

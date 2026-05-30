@@ -35,7 +35,6 @@ class UserMenuDialog extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ── Profile header ─────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -43,7 +42,6 @@ class UserMenuDialog extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    // Avatar with presence dot overlay
                     Stack(
                       children: [
                         Container(
@@ -81,7 +79,7 @@ class UserMenuDialog extends ConsumerWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          // Presence label
+
                           Text(
                             isOnline ? 'Active' : 'Away',
                             style: TextStyle(
@@ -120,7 +118,6 @@ class UserMenuDialog extends ConsumerWidget {
               Divider(height: 0, color: colors.divider),
               const SizedBox(height: 8),
 
-              // ── Custom status row ──────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: InkWell(
@@ -178,7 +175,6 @@ class UserMenuDialog extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
 
-              // ── Clear status (only visible when status is set) ─────────────
               if (status.hasCustomStatus)
                 _MenuItemButton(
                   icon: Icons.clear_all_outlined,
@@ -189,7 +185,6 @@ class UserMenuDialog extends ConsumerWidget {
                   },
                 ),
 
-              // ── Set yourself as active / away toggle ──────────────────────
               _MenuItemButton(
                 icon: isOnline
                     ? Icons.radio_button_checked
@@ -206,7 +201,6 @@ class UserMenuDialog extends ConsumerWidget {
                 },
               ),
 
-              // ── Pause notifications ────────────────────────────────────────
               _MenuItemButton(
                 icon: Icons.notifications_off_outlined,
                 label: 'Pause notifications',
@@ -221,7 +215,6 @@ class UserMenuDialog extends ConsumerWidget {
               Divider(height: 0, color: colors.divider),
               const SizedBox(height: 8),
 
-              // ── Settings shortcuts ─────────────────────────────────────────
               _MenuItemButton(
                 icon: Icons.person_outline,
                 label: 'Profile…',
@@ -251,7 +244,6 @@ class UserMenuDialog extends ConsumerWidget {
               Divider(height: 0, color: colors.divider),
               const SizedBox(height: 8),
 
-              // ── Sign out ───────────────────────────────────────────────────
               _MenuItemButton(
                 icon: Icons.logout_rounded,
                 label:
@@ -271,8 +263,6 @@ class UserMenuDialog extends ConsumerWidget {
     );
   }
 }
-
-// ── Internal helper widget ─────────────────────────────────────────────────────
 
 class _MenuItemButton extends StatelessWidget {
   final IconData icon;

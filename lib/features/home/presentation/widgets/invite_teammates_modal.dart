@@ -80,7 +80,7 @@ class _InviteTeammatesModalState extends ConsumerState<InviteTeammatesModal> {
   }
 
   Future<void> _submit() async {
-    _addEmailFromInput(); // Catch any typed email not yet submitted
+    _addEmailFromInput();
 
     if (_invites.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -100,7 +100,6 @@ class _InviteTeammatesModalState extends ConsumerState<InviteTeammatesModal> {
     int successCount = 0;
     String? lastError;
 
-    // Loop through and invite all
     for (final invite in _invites) {
       final email = invite['email']!;
       String? userId = invite['userId'];
@@ -115,12 +114,7 @@ class _InviteTeammatesModalState extends ConsumerState<InviteTeammatesModal> {
         }
       }
 
-      // Assuming 'User' role by default since there's no dropdown in UI
-      await notifier.inviteMember(
-        email: email,
-        role: 'User',
-        userId: userId,
-      );
+      await notifier.inviteMember(email: email, role: 'User', userId: userId);
       final state = ref.read(userProfileNotifierProvider);
       if (state.error != null) {
         lastError = state.error;

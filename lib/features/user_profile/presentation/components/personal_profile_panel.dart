@@ -31,7 +31,6 @@ class PersonalProfilePanel extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          // Header
           Container(
             height: 48,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -65,14 +64,12 @@ class PersonalProfilePanel extends ConsumerWidget {
             ),
           ),
 
-          // Scrollable body
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Avatar
                   Container(
                     width: 160,
                     height: 160,
@@ -86,7 +83,6 @@ class PersonalProfilePanel extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // Name and edit button
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -117,7 +113,6 @@ class PersonalProfilePanel extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4),
 
-                  // Role/Title
                   Text(
                     roleTitle,
                     style: context.textTheme.bodySmall?.copyWith(
@@ -126,7 +121,6 @@ class PersonalProfilePanel extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
 
-                  // Status row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -156,11 +150,9 @@ class PersonalProfilePanel extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4),
 
-                  // Time icon
                   Icon(Icons.access_time, size: 14, color: colors.textHint),
                   const SizedBox(height: 16),
 
-                  // Action buttons row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -197,7 +189,6 @@ class PersonalProfilePanel extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Contact Information section
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
@@ -210,7 +201,6 @@ class PersonalProfilePanel extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
 
-                  // Phone
                   _ContactRow(
                     icon: Icons.phone_outlined,
                     label: account.phoneNumber.isNotEmpty
@@ -221,7 +211,6 @@ class PersonalProfilePanel extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
 
-                  // Email
                   _ContactRow(
                     icon: Icons.email_outlined,
                     label: account.email,

@@ -108,7 +108,9 @@ class WorkspaceSwitcherList extends ConsumerWidget {
   ) {
     final colors = context.colors;
     final teamMembers = ref.watch(userProfileNotifierProvider).teamMembers;
-    final displayMembersCount = teamMembers.isNotEmpty ? teamMembers.length : workspace.membersCount;
+    final displayMembersCount = teamMembers.isNotEmpty
+        ? teamMembers.length
+        : workspace.membersCount;
 
     return Padding(
       padding: const EdgeInsets.all(16.0),

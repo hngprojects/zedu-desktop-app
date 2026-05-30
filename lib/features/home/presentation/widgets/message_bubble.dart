@@ -149,7 +149,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                                     100,
                                     0,
                                     0,
-                                  ), // Adjust this or use a button's render box
+                                  ),
                                   items: const [
                                     PopupMenuItem(
                                       value: '👍',

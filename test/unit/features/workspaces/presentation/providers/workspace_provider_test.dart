@@ -19,14 +19,15 @@ void main() {
 
     setUp(() {
       mockApiBaseService = MockApiBaseService();
-      
-      // Register mockApiBaseService in locator
+
       if (locator.isRegistered<ApiBaseService>()) {
         locator.unregister<ApiBaseService>();
       }
       locator.registerSingleton<ApiBaseService>(mockApiBaseService);
 
-      final json = Map<String, dynamic>.from(LoginResponseModel.mockLoginResponse);
+      final json = Map<String, dynamic>.from(
+        LoginResponseModel.mockLoginResponse,
+      );
       final userJson = Map<String, dynamic>.from(json['user'] as Map);
       userJson['id'] = 'user-123';
       json['user'] = userJson;
@@ -51,61 +52,62 @@ void main() {
       return container;
     }
 
-    test('fetchWorkspaces returns all workspaces including those created by other users', () async {
-      final apiResponse = ApiResponseModel<Map<String, dynamic>>(
-        statusCode: 200,
-        data: {
-          'data': [
-            {
-              'id': 'org-owner-123',
-              'name': 'My Organization',
-              'owner_id': 'user-123',
-              'channels_count': 5,
-            },
-            {
-              'id': 'org-creator-123',
-              'name': 'My Created Org',
-              'creator_id': 'user-123',
-              'channels_count': 3,
-            },
-            {
-              'id': 'org-other-user',
-              'name': 'Other Org',
-              'owner_id': 'user-999',
-              'channels_count': 10,
-            },
-            {
-              'id': 'org-no-owner',
-              'name': 'No Owner Org',
-              'channels_count': 1,
-            }
-          ]
-        },
-      );
+    test(
+      'fetchWorkspaces returns all workspaces including those created by other users',
+      () async {
+        final apiResponse = ApiResponseModel<Map<String, dynamic>>(
+          statusCode: 200,
+          data: {
+            'data': [
+              {
+                'id': 'org-owner-123',
+                'name': 'My Organization',
+                'owner_id': 'user-123',
+                'channels_count': 5,
+              },
+              {
+                'id': 'org-creator-123',
+                'name': 'My Created Org',
+                'creator_id': 'user-123',
+                'channels_count': 3,
+              },
+              {
+                'id': 'org-other-user',
+                'name': 'Other Org',
+                'owner_id': 'user-999',
+                'channels_count': 10,
+              },
+              {
+                'id': 'org-no-owner',
+                'name': 'No Owner Org',
+                'channels_count': 1,
+              },
+            ],
+          },
+        );
 
-      when(
-        () => mockApiBaseService.get<Map<String, dynamic>>(
-          path: '/users/organisations',
-        ),
-      ).thenAnswer((_) async => apiResponse);
+        when(
+          () => mockApiBaseService.get<Map<String, dynamic>>(
+            path: '/users/organisations',
+          ),
+        ).thenAnswer((_) async => apiResponse);
 
-      final container = createContainer();
+        final container = createContainer();
 
-      // Trigger workspace provider build and wait for fetchWorkspaces to finish
-      container.read(workspaceProvider);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
+        container.read(workspaceProvider);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      final state = container.read(workspaceProvider);
+        final state = container.read(workspaceProvider);
 
-      // Should keep My Organization, My Created Org, Other Org, and No Owner Org.
-      final workspaceIds = state.workspaces.map((w) => w.id).toList();
-      
-      expect(workspaceIds, contains('org-owner-123'));
-      expect(workspaceIds, contains('org-creator-123'));
-      expect(workspaceIds, contains('org-no-owner'));
-      expect(workspaceIds, contains('org-other-user'));
-      
-      expect(state.workspaces.length, equals(4));
-    });
+        final workspaceIds = state.workspaces.map((w) => w.id).toList();
+
+        expect(workspaceIds, contains('org-owner-123'));
+        expect(workspaceIds, contains('org-creator-123'));
+        expect(workspaceIds, contains('org-no-owner'));
+        expect(workspaceIds, contains('org-other-user'));
+
+        expect(state.workspaces.length, equals(4));
+      },
+    );
   });
 }

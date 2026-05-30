@@ -23,7 +23,9 @@ class _HomeViewState extends ConsumerState<HomeView> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final showProfile = ref.watch(personalProfilePanelProvider);
+    final showPersonalProfile = ref.watch(personalProfilePanelProvider);
+    final otherProfile = ref.watch(profileDetailsPanelProvider);
+    final showOtherProfile = otherProfile != null;
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -39,12 +41,19 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   child: Stack(
                     children: [
                       const Positioned.fill(child: _ChatAreaSwitcher()),
-                      if (showProfile)
+                      if (showPersonalProfile)
                         const Positioned(
                           right: 0,
                           top: 0,
                           bottom: 0,
                           child: PersonalProfilePanel(),
+                        )
+                      else if (showOtherProfile)
+                        const Positioned(
+                          right: 0,
+                          top: 0,
+                          bottom: 0,
+                          child: ProfileDetailsPanel(),
                         ),
                     ],
                   ),
@@ -134,112 +143,9 @@ class _MainSidebarSwitcher extends ConsumerWidget {
 }
 
 void _showCreateChannelDialog(BuildContext context, WidgetRef ref) {
-  final nameController = TextEditingController();
-  final descController = TextEditingController();
-  bool isPrivate = false;
-
   showDialog<void>(
     context: context,
-    builder: (context) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('Create a Channel'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Channel Name',
-                    hintText: 'e.g. team-marketing',
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: descController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description (optional)',
-                    hintText: 'What is this channel about?',
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Make Private'),
-                    Switch(
-                      value: isPrivate,
-                      onChanged: (val) {
-                        setState(() => isPrivate = val);
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  final name = nameController.text.trim();
-                  if (name.isEmpty) {
-                    AppToastService.show(
-                      context,
-                      type: AppToastType.error,
-                      message: 'Channel name cannot be empty',
-                    );
-                    return;
-                  }
-
-                  final channelState = ref.read(channelProvider);
-                  final isDuplicate = channelState.channels.any(
-                    (c) => c.name.toLowerCase() == name.toLowerCase(),
-                  );
-
-                  if (isDuplicate) {
-                    AppToastService.show(
-                      context,
-                      type: AppToastType.error,
-                      message: 'A channel with this name already exists',
-                    );
-                    return;
-                  }
-
-                  final success = await ref
-                      .read(channelProvider.notifier)
-                      .createChannel(
-                        name: name,
-                        description: descController.text.trim(),
-                        isPrivate: isPrivate,
-                      );
-
-                  if (success && context.mounted) {
-                    Navigator.of(context).pop();
-                    AppToastService.show(
-                      context,
-                      type: AppToastType.success,
-                      message: 'Channel #$name created successfully!',
-                    );
-                  } else if (context.mounted) {
-                    AppToastService.show(
-                      context,
-                      type: AppToastType.error,
-                      message: 'Failed to create channel.',
-                    );
-                  }
-                },
-                child: const Text('Create'),
-              ),
-            ],
-          );
-        },
-      );
-    },
+    builder: (context) => const CreateChannelModal(),
   );
 }
 
@@ -279,7 +185,10 @@ class _ChatAreaSwitcher extends ConsumerWidget {
         final channelState = ref.watch(channelProvider);
         final channelId = activeChat.id;
         final channel = channelState.channels.firstWhere(
-          (c) => c.id == channelId || (channelId != null && c.name.toLowerCase() == channelId.toLowerCase()),
+          (c) =>
+              c.id == channelId ||
+              (channelId != null &&
+                  c.name.toLowerCase() == channelId.toLowerCase()),
           orElse: () => Channel(
             id: channelId ?? '',
             name: channelId ?? 'general',
@@ -289,12 +198,16 @@ class _ChatAreaSwitcher extends ConsumerWidget {
           ),
         );
         final teamMembers = ref.watch(userProfileNotifierProvider).teamMembers;
-        final participants = teamMembers.map((m) => DmParticipant(
-          userId: m.id,
-          username: m.name ?? m.email.split('@').first,
-          email: m.email,
-          avatarUrl: m.avatarUrl,
-        )).toList();
+        final participants = teamMembers
+            .map(
+              (m) => DmParticipant(
+                userId: m.id,
+                username: m.name ?? m.email.split('@').first,
+                email: m.email,
+                avatarUrl: m.avatarUrl,
+              ),
+            )
+            .toList();
 
         final conversation = DmConversation(
           channelId: channel.id,
@@ -324,12 +237,16 @@ class _ChatAreaSwitcher extends ConsumerWidget {
           previewMessage: group.messages.isEmpty ? '' : group.messages.last,
           unreadCount: group.unreadCount,
           channelType: 'group_dm',
-          participants: group.members.map((m) => DmParticipant(
-            userId: m.id,
-            username: m.name ?? m.email.split('@').first,
-            email: m.email,
-            avatarUrl: m.avatarUrl,
-          )).toList(),
+          participants: group.members
+              .map(
+                (m) => DmParticipant(
+                  userId: m.id,
+                  username: m.name ?? m.email.split('@').first,
+                  email: m.email,
+                  avatarUrl: m.avatarUrl,
+                ),
+              )
+              .toList(),
         );
         return DmChatArea(
           key: ValueKey('group_${conversation.channelId}'),
@@ -399,7 +316,10 @@ class _MainSidebar extends ConsumerWidget {
                     )
                   else if (activeChannels.isEmpty)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
                       child: Text(
                         'No active channels',
                         style: TextStyle(
@@ -419,8 +339,12 @@ class _MainSidebar extends ConsumerWidget {
                         final isSelected =
                             activeChat.type == ActiveChatType.channel &&
                             (activeChat.id == channel.id ||
-                                (activeChat.id != null && activeChat.id!.toLowerCase() == channel.name.toLowerCase()));
-                        final isMuted = notificationSettings.isChannelMuted(channel.id);
+                                (activeChat.id != null &&
+                                    activeChat.id!.toLowerCase() ==
+                                        channel.name.toLowerCase()));
+                        final isMuted = notificationSettings.isChannelMuted(
+                          channel.id,
+                        );
                         return _ChannelItem(
                           key: ValueKey(channel.id),
                           label: channel.name,
@@ -510,10 +434,15 @@ class _MainSidebar extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Consumer(
                     builder: (context, ref, child) {
-                      final teamMembers = ref.watch(userProfileNotifierProvider).teamMembers;
+                      final teamMembers = ref
+                          .watch(userProfileNotifierProvider)
+                          .teamMembers;
                       if (teamMembers.isEmpty) {
                         return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 8,
+                          ),
                           child: Text(
                             'No members found',
                             style: TextStyle(
@@ -530,10 +459,11 @@ class _MainSidebar extends ConsumerWidget {
                         itemCount: teamMembers.length,
                         itemBuilder: (context, index) {
                           final member = teamMembers[index];
-                          final name = member.name ?? member.email.split('@').first;
-                          
-                          // Find DM conversation for this member if exists
-                          final conversations = ref.watch(dmListProvider).value ?? [];
+                          final name =
+                              member.name ?? member.email.split('@').first;
+
+                          final conversations =
+                              ref.watch(dmListProvider).value ?? [];
                           final existing = conversations.firstWhere(
                             (c) => c.participantId == member.id,
                             orElse: () => DmConversation(
@@ -545,26 +475,44 @@ class _MainSidebar extends ConsumerWidget {
                             ),
                           );
 
-                          final isSelected = activeChat.type == ActiveChatType.directMessage &&
-                              (activeChat.id == existing.channelId || activeChat.id == member.id);
+                          final isSelected =
+                              activeChat.type == ActiveChatType.directMessage &&
+                              (activeChat.id == existing.channelId ||
+                                  activeChat.id == member.id);
 
                           return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 2,
+                            ),
                             child: Material(
                               color: Colors.transparent,
                               child: InkWell(
                                 onTap: () {
-                                  ref.read(selectedDmProvider.notifier).select(existing);
-                                  ref.read(activeChatProvider.notifier).selectDirectMessage(existing.channelId);
+                                  ref
+                                      .read(selectedDmProvider.notifier)
+                                      .select(existing);
+                                  ref
+                                      .read(activeChatProvider.notifier)
+                                      .selectDirectMessage(existing.channelId);
                                 },
                                 borderRadius: BorderRadius.circular(6),
-                                hoverColor: colors.onPrimary.withValues(alpha: 0.08),
-                                splashColor: colors.onPrimary.withValues(alpha: 0.12),
+                                hoverColor: colors.onPrimary.withValues(
+                                  alpha: 0.08,
+                                ),
+                                splashColor: colors.onPrimary.withValues(
+                                  alpha: 0.12,
+                                ),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 6,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: isSelected
-                                        ? colors.onPrimary.withValues(alpha: 0.12)
+                                        ? colors.onPrimary.withValues(
+                                            alpha: 0.12,
+                                          )
                                         : Colors.transparent,
                                     borderRadius: BorderRadius.circular(6),
                                   ),
@@ -573,12 +521,18 @@ class _MainSidebar extends ConsumerWidget {
                                       CircleAvatar(
                                         radius: 10,
                                         backgroundColor: colors.primary,
-                                        backgroundImage: member.avatarUrl != null && member.avatarUrl!.isNotEmpty
+                                        backgroundImage:
+                                            member.avatarUrl != null &&
+                                                member.avatarUrl!.isNotEmpty
                                             ? NetworkImage(member.avatarUrl!)
                                             : null,
-                                        child: member.avatarUrl == null || member.avatarUrl!.isEmpty
+                                        child:
+                                            member.avatarUrl == null ||
+                                                member.avatarUrl!.isEmpty
                                             ? Text(
-                                                name.substring(0, 1).toUpperCase(),
+                                                name
+                                                    .substring(0, 1)
+                                                    .toUpperCase(),
                                                 style: const TextStyle(
                                                   color: Colors.white,
                                                   fontSize: 8,
@@ -668,9 +622,7 @@ class _ChannelItem extends StatelessWidget {
               children: [
                 Icon(
                   isPrivate ? Icons.lock_outline : Icons.tag,
-                  color: colors.onPrimary.withValues(
-                    alpha: iconOpacity,
-                  ),
+                  color: colors.onPrimary.withValues(alpha: iconOpacity),
                   size: 16,
                 ),
                 const SizedBox(width: 12),
@@ -678,9 +630,7 @@ class _ChannelItem extends StatelessWidget {
                   child: Text(
                     label,
                     style: TextStyle(
-                      color: colors.onPrimary.withValues(
-                        alpha: textOpacity,
-                      ),
+                      color: colors.onPrimary.withValues(alpha: textOpacity),
                       fontSize: 14,
                       fontWeight: isSelected
                           ? FontWeight.w600
@@ -762,11 +712,7 @@ class _GroupDmsSection extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
           child: Row(
             children: [
-              Icon(
-                Icons.arrow_drop_down,
-                color: colors.onPrimary,
-                size: 20,
-              ),
+              Icon(Icons.arrow_drop_down, color: colors.onPrimary, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -791,11 +737,7 @@ class _GroupDmsSection extends ConsumerWidget {
                     ),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Icon(
-                    Icons.add,
-                    color: colors.onPrimary,
-                    size: 14,
-                  ),
+                  child: Icon(Icons.add, color: colors.onPrimary, size: 14),
                 ),
               ),
             ],
@@ -820,21 +762,30 @@ class _GroupDmsSection extends ConsumerWidget {
             itemCount: groupDms.length,
             itemBuilder: (context, index) {
               final group = groupDms[index];
-              final isSelected = activeChat.type == ActiveChatType.groupDm &&
+              final isSelected =
+                  activeChat.type == ActiveChatType.groupDm &&
                   activeChat.id == group.id;
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 2,
+                ),
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () {
-                      ref.read(activeChatProvider.notifier).selectGroupDm(group.id);
+                      ref
+                          .read(activeChatProvider.notifier)
+                          .selectGroupDm(group.id);
                     },
                     borderRadius: BorderRadius.circular(6),
                     hoverColor: colors.onPrimary.withValues(alpha: 0.08),
                     splashColor: colors.onPrimary.withValues(alpha: 0.12),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? colors.onPrimary.withValues(alpha: 0.12)

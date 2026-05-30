@@ -18,10 +18,6 @@ class NotificationService {
     );
   }
 
-  /// Handles an incoming message and shows a desktop notification.
-  ///
-  /// When [forceShow] is `true` the focus-check and per-sender throttle are
-  /// skipped so that test / manual notifications always fire.
   Future<void> handleIncomingMessage(
     Map<String, dynamic> message,
     String channelId,
@@ -34,7 +30,6 @@ class NotificationService {
 
     final senderId = (message['user_id'] ?? message['userId']).toString();
 
-    // Never notify about our own messages (unless forced for testing).
     if (!forceShow && (senderId == currentUserId || senderId == 'me')) return;
 
     if (settings.isDndActive) return;
@@ -44,7 +39,8 @@ class NotificationService {
     final bool isMuted = settings.isChannelMuted(channelId);
     final String currentUsername = authState.user?.username ?? '';
     final String currentFullname = authState.user?.fullname ?? '';
-    final bool isMentioned = content.contains('@$currentUsername') ||
+    final bool isMentioned =
+        content.contains('@$currentUsername') ||
         (currentFullname.isNotEmpty && content.contains('@$currentFullname'));
 
     if (isMuted && !isMentioned) return;

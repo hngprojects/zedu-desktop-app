@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -228,7 +226,7 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
         path: '/organisations',
         data: {'name': name, 'type': type, 'country': country},
       );
-      // Small delay to ensure the event loop has processed the request
+
       await Future<void>.delayed(const Duration(milliseconds: 100));
       return OrganizationProfileModel.fromJson(
         response.data['data'] as Map<String, dynamic>,
@@ -255,7 +253,6 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     if (_config.usesMockData) {
       List<TeamMemberModel> loadedTeamMembers = [];
 
-      // Load persisted mock members if they exist
       if (orgId != null) {
         final storage = locator<SecureStorageService>();
         final data = await storage.readData('mock_team_members_$orgId');
@@ -274,7 +271,7 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
       }
 
       final list = _members.map(TeamMemberModel.fromJson).toList();
-      // Dynamically generate 1000+ mock members to demonstrate efficient search and scroll!
+
       if (list.length < 100) {
         final roles = ['User', 'Guess', 'Manager', 'Project Lead'];
         for (int i = 1; i <= 1000; i++) {
@@ -295,7 +292,7 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     }
 
     if (orgId == null || orgId.length < 36) {
-      orgId = '019700db-4e22-7f90-a20e-f9116291ef24';
+      return [];
     }
 
     try {
@@ -306,13 +303,12 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
       if (data == null) return [];
 
       return data.cast<Map<String, dynamic>>().map((user) {
-        // Map backend user to TeamMemberModel
         return TeamMemberModel(
           id: user['id'] as String? ?? '',
           email: user['email'] as String? ?? '',
           role: user['role'] as String? ?? 'User',
           dateJoined: user['created_at'] as String? ?? '',
-          status: TeamMemberStatus.active, // Or parse from user['status']
+          status: TeamMemberStatus.active,
           name:
               user['name'] as String? ??
               user['username'] as String? ??
@@ -338,7 +334,9 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
         email: email,
         role: role,
         dateJoined: userId != null ? 'Active' : 'Pending',
-        status: userId != null ? TeamMemberStatus.active : TeamMemberStatus.pending,
+        status: userId != null
+            ? TeamMemberStatus.active
+            : TeamMemberStatus.pending,
         name: email.split('@').first,
       );
     }
@@ -346,10 +344,7 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     if (userId != null && userId.isNotEmpty) {
       await _apiBaseService.post<Map<String, dynamic>>(
         path: '/organisations/$orgId/users',
-        data: {
-          'user_id': userId,
-          'role_Id': role,
-        },
+        data: {'user_id': userId, 'role_Id': role},
       );
       return TeamMemberModel(
         id: userId,

@@ -45,31 +45,33 @@ class ActiveChatNotifier extends Notifier<ActiveChatState> {
   @override
   ActiveChatState build() {
     final orgId = ref.watch(currentOrgIdProvider);
-    // ignore: avoid_print
-    print('ActiveChatNotifier.build: orgId=$orgId, _lastOrgId=$_lastOrgId, _currentState=${_currentState?.id}');
-    
+
+    print(
+      'ActiveChatNotifier.build: orgId=$orgId, _lastOrgId=$_lastOrgId, _currentState=${_currentState?.id}',
+    );
+
     if (_lastOrgId != null &&
         _lastOrgId!.isNotEmpty &&
         orgId.isNotEmpty &&
         _lastOrgId != orgId) {
-      // ignore: avoid_print
-      print('ActiveChatNotifier.build: Organization changed from $_lastOrgId to $orgId. Resetting active chat to general.');
+      print(
+        'ActiveChatNotifier.build: Organization changed from $_lastOrgId to $orgId. Resetting active chat to general.',
+      );
       _lastOrgId = orgId;
       _currentState = ActiveChatState.generalChannel;
       return ActiveChatState.generalChannel;
     }
-    
+
     if (orgId.isNotEmpty) {
       _lastOrgId = orgId;
     }
     final result = _currentState ?? ActiveChatState.generalChannel;
-    // ignore: avoid_print
+
     print('ActiveChatNotifier.build: returning active chat ${result.id}');
     return result;
   }
 
   void selectChannel(String channelId) {
-    // ignore: avoid_print
     print('ActiveChatNotifier.selectChannel: selecting channel $channelId');
     state = ActiveChatState(type: ActiveChatType.channel, id: channelId);
     _currentState = state;

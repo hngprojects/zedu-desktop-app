@@ -302,9 +302,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
 
       AppLogger.d('POST /auth/google', tag: _tag);
-      final data = <String, dynamic>{
-        'grant_code': grantCode,
-      };
+      final data = <String, dynamic>{'grant_code': grantCode};
 
       final response = await _apiBaseService.post<Map<String, dynamic>>(
         path: '/auth/google',

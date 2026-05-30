@@ -1,7 +1,5 @@
-import 'dart:math';
 import 'package:zedu/core/core.dart';
-
-import '../domain/dm_conversation.dart';
+import 'package:zedu/features/features.dart';
 
 final dmRepositoryProvider = Provider<DmRepository>((ref) {
   final apiClient = locator<ApiBaseService>();
@@ -74,48 +72,38 @@ class DmRepository {
   Future<Map<String, dynamic>> sendMessage(
     String channelId,
     String content, {
+    String? orgId,
     String? threadId,
     List<XFile>? media,
     List<dynamic>? mentions,
-    String channelType = 'channel',
   }) async {
-    String path;
+    final bool isThreadReply = threadId != null && threadId.isNotEmpty;
+    String path = isThreadReply
+        ? '/channels/$channelId/messages'
+        : '/threads/$channelId';
+
     final data = <String, dynamic>{
       "content": content,
+      if (!isThreadReply) "channel_id": channelId,
+      if (isThreadReply) "thread_id": threadId,
+      if (orgId != null) "organisation_id": orgId,
       if (media != null && media.isNotEmpty)
         "media": media.map(_mediaPayloadFromFile).toList(),
       ...?(mentions != null ? {'mentions': mentions} : null),
     };
 
-    if (channelType == 'dm') {
-      if (threadId == null || threadId.trim().isEmpty) {
-        path = '/dms/channels/$channelId/threads';
-      } else {
-        path = '/dms/messages/$channelId';
-        data['thread_id'] = threadId;
-      }
-    } else if (channelType == 'group_dm') {
-      if (threadId == null || threadId.trim().isEmpty) {
-        path = '/group-dms/channels/$channelId/threads';
-      } else {
-        path = '/group-dms/messages/$channelId';
-        data['thread_id'] = threadId;
-      }
-    } else {
-      // Default to public/private channel
-      if (threadId == null || threadId.trim().isEmpty) {
-        path = '/threads/$channelId';
-      } else {
-        path = '/channels/$channelId/messages';
-        data['thread_id'] = threadId;
-      }
-    }
-
     final response = await _apiClient.post<Map<String, dynamic>>(
       path: path,
       data: data,
     );
-    return (response.data['data'] as Map<dynamic, dynamic>?)?.cast<String, dynamic>() ?? const {};
+    
+    final responseData = response.data['data'];
+    if (responseData is List && responseData.isNotEmpty) {
+      return (responseData.first as Map<dynamic, dynamic>).cast<String, dynamic>();
+    } else if (responseData is Map) {
+      return responseData.cast<String, dynamic>();
+    }
+    return const {};
   }
 
   String _generateUuid() {
@@ -137,8 +125,11 @@ class DmRepository {
   }
 
   Map<String, dynamic> _mediaPayloadFromFile(XFile file) {
-    final bool isUrl = file.path.startsWith('http://') || file.path.startsWith('https://');
-    final String serverPath = isUrl ? file.path : 'https://example.com/mock-uploads/${file.name}';
+    final bool isUrl =
+        file.path.startsWith('http://') || file.path.startsWith('https://');
+    final String serverPath = isUrl
+        ? file.path
+        : 'https://example.com/mock-uploads/${file.name}';
     return {
       'id': _generateUuid(),
       'name': file.name,
@@ -180,9 +171,7 @@ class DmRepository {
   ) async {
     final response = await _apiClient.post<Map<String, dynamic>>(
       path: '/organisations/group-dms/$channelId/participants',
-      data: {
-        'user_ids': userIds,
-      },
+      data: {'user_ids': userIds},
     );
     return response.data;
   }
@@ -193,11 +182,10 @@ class DmRepository {
   }) async {
     final response = await _apiClient.post<Map<String, dynamic>>(
       path: '/organisations/$orgId/dms',
-      data: {
-        'chat_type': 'user',
-        'participant_id': participantId,
-      },
+      data: {'chat_type': 'user', 'participant_id': participantId},
     );
-    return (response.data['data'] as Map<dynamic, dynamic>?)?.cast<String, dynamic>() ?? const {};
+    return (response.data['data'] as Map<dynamic, dynamic>?)
+            ?.cast<String, dynamic>() ??
+        const {};
   }
 }

@@ -20,5 +20,8 @@ abstract class ChannelRepository {
   Future<Result<void>> toggleChannelPrivacy(String channelId, bool isPrivate);
   Future<Result<void>> leaveChannel(String channelId);
   Future<Result<void>> joinChannel(String channelId);
-  Future<Result<void>> addChannelMembers(String channelId, List<String> userIds);
+  Future<Result<void>> addChannelMembers(
+    String channelId,
+    List<String> userIds,
+  );
 }

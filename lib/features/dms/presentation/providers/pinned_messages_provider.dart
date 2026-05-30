@@ -42,7 +42,8 @@ class PinnedMessage {
   }
 }
 
-class PinnedMessagesNotifier extends Notifier<Map<String, List<PinnedMessage>>> {
+class PinnedMessagesNotifier
+    extends Notifier<Map<String, List<PinnedMessage>>> {
   @override
   Map<String, List<PinnedMessage>> build() {
     return {};
@@ -54,7 +55,7 @@ class PinnedMessagesNotifier extends Notifier<Map<String, List<PinnedMessage>>> 
 
     final updated = List<PinnedMessage>.from(current);
     if (updated.length >= 20) {
-      updated.removeAt(0); // Auto-unpin oldest message if list exceeds 20
+      updated.removeAt(0);
     }
     updated.add(message);
     state = {...state, channelId: updated};
@@ -71,5 +72,5 @@ class PinnedMessagesNotifier extends Notifier<Map<String, List<PinnedMessage>>> 
 
 final pinnedMessagesProvider =
     NotifierProvider<PinnedMessagesNotifier, Map<String, List<PinnedMessage>>>(
-  PinnedMessagesNotifier.new,
-);
+      PinnedMessagesNotifier.new,
+    );

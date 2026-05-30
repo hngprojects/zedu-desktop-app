@@ -185,7 +185,6 @@ class CreditPackageCard extends StatelessWidget {
                     ),
                   ),
 
-                  // This Spacer pushes the button to the bottom of the fixed-height container
                   const Spacer(),
 
                   if (isCurrentPlan || package.isFree)

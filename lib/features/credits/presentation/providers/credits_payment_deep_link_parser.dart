@@ -1,7 +1,6 @@
 class CreditsPaymentDeepLinkParser {
   const CreditsPaymentDeepLinkParser._();
 
-  /// Dummy redirect URI — replace when backend confirms production URL.
   static const dummySuccessUri =
       'zedu://credits/payment-success?session_id=cs_test_placeholder';
 

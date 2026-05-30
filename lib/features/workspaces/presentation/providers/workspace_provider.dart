@@ -1,8 +1,5 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/auth/auth.dart';
-
-import '../../data/models/workspace.dart';
-import 'workspace_state.dart';
+import 'package:zedu/features/features.dart';
 
 class WorkspaceNotifier extends Notifier<WorkspaceState> {
   @override
@@ -25,12 +22,29 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       );
       final data = response.data['data'] as List<dynamic>? ?? [];
 
+      final currentUserId = authState.user?.id;
       final List<Workspace> workspaces = [];
       for (var item in data) {
         if (item is Map<String, dynamic>) {
-          final ownerId = item['owner_id'] as String? ?? item['creator_id'] as String?;
+          final ownerId =
+              item['owner_id'] as String? ?? item['creator_id'] as String?;
           final usersList = item['Users'] as List? ?? item['users'] as List?;
-          final parsedMembersCount = (item['members_count'] as num?)?.toInt() ??
+
+          bool isMember = false;
+          if (ownerId == currentUserId) isMember = true;
+          if (usersList != null) {
+            for (var u in usersList) {
+              final uId = u['id'] ?? u['user_id'];
+              if (uId == currentUserId) {
+                isMember = true;
+                break;
+              }
+            }
+          }
+          if (!isMember) continue;
+
+          final parsedMembersCount =
+              (item['members_count'] as num?)?.toInt() ??
               (item['users_count'] as num?)?.toInt() ??
               usersList?.length ??
               (item['channels_count'] as num?)?.toInt() ??
@@ -70,7 +84,6 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
         isLoading: false,
       );
     } catch (e) {
-      // Ignore API errors and fallback to mock data implicitly if configured
       AppConfig? config;
       try {
         config = locator<AppConfig>();
@@ -124,7 +137,6 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       ),
     ];
 
-    // We use the mock workspaces defined above for initial state
     String? previousId;
     try {
       previousId = state.selectedWorkspace?.id;

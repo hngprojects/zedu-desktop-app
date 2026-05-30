@@ -1,7 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
-/// A list of common timezone labels for the timezone dropdown.
 const List<String> _kTimezones = [
   '(UTC-12:00) International Date Line West',
   '(UTC-11:00) Midway Island, Samoa',
@@ -111,7 +110,6 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 24, 16, 0),
               child: Row(
@@ -135,7 +133,6 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
             const SizedBox(height: 8),
             Divider(height: 0, color: colors.divider),
 
-            // Scrollable form body
             Flexible(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
@@ -144,7 +141,6 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Left column — form fields
                       Expanded(
                         flex: 3,
                         child: Column(
@@ -225,7 +221,6 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                             ),
                             const SizedBox(height: 16),
 
-                            // Timezone dropdown
                             ProfileFieldLabel('Timezone'),
                             const SizedBox(height: 6),
                             DropdownButtonFormField<String>(
@@ -266,7 +261,6 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                             ),
                             const SizedBox(height: 16),
 
-                            // Country dropdown (searchable)
                             ProfileFieldLabel('Country'),
                             const SizedBox(height: 6),
                             Autocomplete<String>(
@@ -389,7 +383,6 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                       ),
                       const SizedBox(width: 24),
 
-                      // Right column — profile photo
                       Expanded(
                         flex: 2,
                         child: Column(
@@ -421,9 +414,7 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                             const SizedBox(height: 12),
                             Center(
                               child: TextButton.icon(
-                                onPressed: () {
-                                  // Upload photo placeholder
-                                },
+                                onPressed: () {},
                                 icon: Icon(
                                   Icons.upload_outlined,
                                   size: 16,
@@ -440,9 +431,7 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                             ),
                             Center(
                               child: TextButton(
-                                onPressed: () {
-                                  // Remove photo placeholder
-                                },
+                                onPressed: () {},
                                 child: Text(
                                   'Remove photo',
                                   style: context.textTheme.bodySmall?.copyWith(
@@ -461,7 +450,6 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
               ),
             ),
 
-            // Footer
             Divider(height: 0, color: colors.divider),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),

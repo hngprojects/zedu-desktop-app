@@ -1,4 +1,4 @@
-// Core APIs
+
 export 'api_utils/api_client.dart';
 export 'api_utils/api_failure.dart';
 export 'api_utils/api_response_model.dart';
@@ -25,7 +25,6 @@ export 'widgets/app_toast.dart';
 export 'widgets/desktop_manager.dart';
 export 'mock/mock_credentials.dart';
 
-// Framework & External packages
 export 'package:flutter/material.dart';
 export 'package:flutter/foundation.dart';
 export 'package:flutter/services.dart';
@@ -43,7 +42,8 @@ export 'package:file_picker/file_picker.dart';
 export 'package:record/record.dart';
 export 'package:url_launcher/url_launcher.dart';
 export 'package:app_links/app_links.dart';
-export 'package:google_sign_in_all_platforms/google_sign_in_all_platforms.dart';
+export 'package:google_sign_in/google_sign_in.dart';
+export 'services/google_auth_service.dart';
 export 'package:agora_rtc_engine/agora_rtc_engine.dart' hide LogLevel;
 export 'package:desktop_drop/desktop_drop.dart';
 export 'package:cross_file/cross_file.dart';
@@ -51,3 +51,11 @@ export 'package:super_clipboard/super_clipboard.dart';
 export 'package:local_notifier/local_notifier.dart';
 export 'package:window_manager/window_manager.dart';
 export 'package:tray_manager/tray_manager.dart';
+
+export 'dart:async' hide AsyncError;
+export 'dart:convert';
+export 'dart:io';
+export 'dart:math' hide log, Rectangle;
+export 'dart:developer' show log;
+export 'package:web_socket_channel/web_socket_channel.dart';
+export 'package:audioplayers/audioplayers.dart';export 'utils/date_formatter.dart';

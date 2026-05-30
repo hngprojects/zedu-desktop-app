@@ -45,7 +45,7 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
   Future<void> _startRecording() async {
     if (await _audioRecorder.hasPermission()) {
       setState(() => _isRecording = true);
-      // In a real app we'd specify a path. Using default temp path for mock.
+
       await _audioRecorder.start(const RecordConfig(), path: '');
     }
   }
@@ -140,8 +140,8 @@ class _MessageComposerState extends ConsumerState<MessageComposer> {
         selection: TextSelection.collapsed(offset: offset + prefix.length),
       );
     }
-    setState(() {}); // Trigger rebuild to show send icon
-    _focusNode.requestFocus(); // Ensure cursor remains active
+    setState(() {});
+    _focusNode.requestFocus();
   }
 
   @override

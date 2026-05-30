@@ -42,55 +42,58 @@ void main() {
         );
       });
 
-      test('calls POST /organisations/org-123/users with user_id and role_Id when userId is present', () async {
-        when(
-          () => mockApi.post<Map<String, dynamic>>(
-            path: '/organisations/org-123/users',
-            data: {
-              'user_id': 'user-456',
-              'role_Id': '01910544-d1e1-7ada-bdac-c761e527ec92',
-            },
-          ),
-        ).thenAnswer(
-          (_) async => ApiResponseModel<Map<String, dynamic>>(
-            data: {
-              'status': 'success',
-              'status_code': 200,
-              'message': 'User added successfully',
-            },
-            statusCode: 200,
-          ),
-        );
+      test(
+        'calls POST /organisations/org-123/users with user_id and role_Id when userId is present',
+        () async {
+          when(
+            () => mockApi.post<Map<String, dynamic>>(
+              path: '/organisations/org-123/users',
+              data: {
+                'user_id': 'user-456',
+                'role_Id': '01910544-d1e1-7ada-bdac-c761e527ec92',
+              },
+            ),
+          ).thenAnswer(
+            (_) async => ApiResponseModel<Map<String, dynamic>>(
+              data: {
+                'status': 'success',
+                'status_code': 200,
+                'message': 'User added successfully',
+              },
+              statusCode: 200,
+            ),
+          );
 
-        final datasource = UserProfileRemoteDataSourceImpl(
-          config: const AppConfig(
-            apiBaseUrl: 'https://api.example.com',
-            usesMockData: false,
-          ),
-          apiBaseService: mockApi,
-        );
+          final datasource = UserProfileRemoteDataSourceImpl(
+            config: const AppConfig(
+              apiBaseUrl: 'https://api.example.com',
+              usesMockData: false,
+            ),
+            apiBaseService: mockApi,
+          );
 
-        final result = await datasource.inviteMember(
-          email: 'test@example.com',
-          role: '01910544-d1e1-7ada-bdac-c761e527ec92',
-          orgId: 'org-123',
-          userId: 'user-456',
-        );
+          final result = await datasource.inviteMember(
+            email: 'test@example.com',
+            role: '01910544-d1e1-7ada-bdac-c761e527ec92',
+            orgId: 'org-123',
+            userId: 'user-456',
+          );
 
-        expect(result.id, 'user-456');
-        expect(result.email, 'test@example.com');
-        expect(result.status, TeamMemberStatus.active);
+          expect(result.id, 'user-456');
+          expect(result.email, 'test@example.com');
+          expect(result.status, TeamMemberStatus.active);
 
-        verify(
-          () => mockApi.post<Map<String, dynamic>>(
-            path: '/organisations/org-123/users',
-            data: {
-              'user_id': 'user-456',
-              'role_Id': '01910544-d1e1-7ada-bdac-c761e527ec92',
-            },
-          ),
-        ).called(1);
-      });
+          verify(
+            () => mockApi.post<Map<String, dynamic>>(
+              path: '/organisations/org-123/users',
+              data: {
+                'user_id': 'user-456',
+                'role_Id': '01910544-d1e1-7ada-bdac-c761e527ec92',
+              },
+            ),
+          ).called(1);
+        },
+      );
 
       test('calls POST /invite when userId is null/empty', () async {
         when(
@@ -111,9 +114,9 @@ void main() {
                     'id': 'member-new',
                     'email': 'test@example.com',
                     'sent_at': 'Pending',
-                  }
+                  },
                 ],
-              }
+              },
             },
             statusCode: 200,
           ),

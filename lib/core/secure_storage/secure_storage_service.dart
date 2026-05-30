@@ -1,5 +1,4 @@
-import 'dart:io';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:zedu/core/core.dart';
 
 class SecureStorageService {
   SecureStorageService() : _storage = const FlutterSecureStorage();
@@ -8,13 +7,14 @@ class SecureStorageService {
 
   static const _accessTokenKey = 'access_token';
 
-  // Fallback storage files in user's home/profile directory
   File get _fallbackFile {
-    final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '.';
+    final home =
+        Platform.environment['HOME'] ??
+        Platform.environment['USERPROFILE'] ??
+        '.';
     return File('$home/.zedu_token');
   }
 
-  // Backup in-memory cache for speed
   static String? _memToken;
 
   Future<void> saveAccessToken(String token) async {
@@ -43,9 +43,7 @@ class SecureStorageService {
         _memToken = token;
         return token;
       }
-    } catch (e) {
-      // ignore, fall back to file
-    }
+    } catch (e) {}
 
     try {
       if (await _fallbackFile.exists()) {
@@ -94,9 +92,7 @@ class SecureStorageService {
         mOptions: const MacOsOptions(usesDataProtectionKeychain: false),
       );
       if (val != null) return val;
-    } catch (e) {
-      // ignore, fall back to file
-    }
+    } catch (e) {}
     try {
       final file = File('${_fallbackFile.parent.path}/.zedu_$key');
       if (await file.exists()) {

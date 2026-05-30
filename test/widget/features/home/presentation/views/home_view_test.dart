@@ -4,7 +4,9 @@ import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
 class MockChannelRepository extends Mock implements ChannelRepository {}
+
 class MockDmRepository extends Mock implements DmRepository {}
+
 class MockApiBaseService extends Mock implements ApiBaseService {}
 
 class FakeAuthNotifier extends AuthNotifier {
@@ -30,13 +32,15 @@ class FakeUserProfileNotifier extends UserProfileNotifier {
 
 void main() {
   setUpAll(() {
-    registerFallbackValue(const Channel(
-      id: '',
-      name: '',
-      description: '',
-      organisationId: '',
-      ownerId: '',
-    ));
+    registerFallbackValue(
+      const Channel(
+        id: '',
+        name: '',
+        description: '',
+        organisationId: '',
+        ownerId: '',
+      ),
+    );
   });
 
   group('HomeView Channel Switching Widget Tests', () {
@@ -51,19 +55,22 @@ void main() {
       mockChannelRepository = MockChannelRepository();
       mockDmRepository = MockDmRepository();
 
-      // Register mocks in service locator if not registered
       if (!locator.isRegistered<SecureStorageService>()) {
         final mockStorage = MockSecureStorageService();
         locator.registerSingleton<SecureStorageService>(mockStorage);
         when(() => mockStorage.readData(any())).thenAnswer((_) async => null);
-        when(() => mockStorage.getAccessToken()).thenAnswer((_) async => 'mock_token');
+        when(
+          () => mockStorage.getAccessToken(),
+        ).thenAnswer((_) async => 'mock_token');
       }
 
       if (!locator.isRegistered<AppConfig>()) {
-        locator.registerSingleton<AppConfig>(const AppConfig(
-          apiBaseUrl: 'https://api.example.com',
-          usesMockData: false,
-        ));
+        locator.registerSingleton<AppConfig>(
+          const AppConfig(
+            apiBaseUrl: 'https://api.example.com',
+            usesMockData: false,
+          ),
+        );
       }
 
       if (!locator.isRegistered<ApiBaseService>()) {
@@ -96,17 +103,11 @@ void main() {
           avatar: '',
         ),
         workspaces: [
-          const Workspace(
-            id: 'org-123',
-            name: 'Test Org',
-            avatar: '',
-          ),
+          const Workspace(id: 'org-123', name: 'Test Org', avatar: ''),
         ],
       );
 
-      userProfileState = const UserProfileState(
-        teamMembers: [],
-      );
+      userProfileState = const UserProfileState(teamMembers: []);
 
       channelState = ChannelState(
         channels: [
@@ -127,56 +128,62 @@ void main() {
         ],
       );
 
-      when(() => mockChannelRepository.fetchChannels(any())).thenAnswer((_) async => Success(channelState.channels));
-      when(() => mockDmRepository.getMessages(any(), page: any(named: 'page'), threadId: any(named: 'threadId'))).thenAnswer((_) async => []);
-    });
-
-    testWidgets('renders channels from channelProvider and allows switching channels', (tester) async {
-      await tester.binding.setSurfaceSize(const Size(1440, 1024));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-
-      final container = ProviderScope(
-        overrides: [
-          authNotifierProvider.overrideWith(() => FakeAuthNotifier(authState)),
-          workspaceProvider.overrideWith(() => FakeWorkspaceNotifier(workspaceState)),
-          userProfileNotifierProvider.overrideWith(() => FakeUserProfileNotifier(userProfileState)),
-          channelRepositoryProvider.overrideWithValue(mockChannelRepository),
-          dmRepositoryProvider.overrideWithValue(mockDmRepository),
-          // We don't override channelProvider completely because we want its notifier to run,
-          // but we can override the repository it uses (mockChannelRepository).
-        ],
-        child: const MaterialApp(
-          home: HomeView(),
+      when(
+        () => mockChannelRepository.fetchChannels(any()),
+      ).thenAnswer((_) async => Success(channelState.channels));
+      when(
+        () => mockDmRepository.getMessages(
+          any(),
+          page: any(named: 'page'),
+          threadId: any(named: 'threadId'),
         ),
-      );
-
-      await tester.pumpWidget(container);
-      await tester.pumpAndSettle(const Duration(milliseconds: 100));
-
-      // Wait for fetchChannels to finish
-      await tester.pumpAndSettle();
-
-      // Check if both general and random channels are rendered in the sidebar
-      expect(find.text('general'), findsWidgets);
-      expect(find.text('random'), findsWidgets);
-
-      // Initially, general is the active channel. Check if DmChatArea for general is shown.
-      // DmChatArea is initialized with key ValueKey('channel_chan-general') or 'channel_general'
-      expect(find.text('#general'), findsAtLeastNWidgets(1));
-
-      // Now click on the 'random' channel
-      final randomChannelFinder = find.text('random').last;
-      await tester.ensureVisible(randomChannelFinder);
-      await tester.tap(randomChannelFinder);
-
-      // Pump to trigger build
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-      await tester.pumpAndSettle();
-
-      // The active channel should change to random
-      expect(find.text('#random'), findsAtLeastNWidgets(1));
+      ).thenAnswer((_) async => []);
     });
+
+    testWidgets(
+      'renders channels from channelProvider and allows switching channels',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(1440, 1024));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        final container = ProviderScope(
+          overrides: [
+            authNotifierProvider.overrideWith(
+              () => FakeAuthNotifier(authState),
+            ),
+            workspaceProvider.overrideWith(
+              () => FakeWorkspaceNotifier(workspaceState),
+            ),
+            userProfileNotifierProvider.overrideWith(
+              () => FakeUserProfileNotifier(userProfileState),
+            ),
+            channelRepositoryProvider.overrideWithValue(mockChannelRepository),
+            dmRepositoryProvider.overrideWithValue(mockDmRepository),
+          ],
+          child: const MaterialApp(home: HomeView()),
+        );
+
+        await tester.pumpWidget(container);
+        await tester.pumpAndSettle(const Duration(milliseconds: 100));
+
+        await tester.pumpAndSettle();
+
+        expect(find.text('general'), findsWidgets);
+        expect(find.text('random'), findsWidgets);
+
+        expect(find.text('#general'), findsAtLeastNWidgets(1));
+
+        final randomChannelFinder = find.text('random').last;
+        await tester.ensureVisible(randomChannelFinder);
+        await tester.tap(randomChannelFinder);
+
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+        await tester.pumpAndSettle();
+
+        expect(find.text('#random'), findsAtLeastNWidgets(1));
+      },
+    );
   });
 }
 

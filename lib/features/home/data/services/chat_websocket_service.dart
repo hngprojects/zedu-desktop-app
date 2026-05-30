@@ -1,15 +1,16 @@
-import 'dart:async';
-import 'dart:convert';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:zedu/core/core.dart';
 
 class ChatWebsocketMessage {
+  final String id;
+  final String userId;
   final String groupDmId;
   final String text;
   final String authorName;
   final DateTime timestamp;
 
   const ChatWebsocketMessage({
+    required this.id,
+    required this.userId,
     required this.groupDmId,
     required this.text,
     required this.authorName,
@@ -19,13 +20,13 @@ class ChatWebsocketMessage {
 
 class ChatWebsocketService {
   final _messageController = StreamController<ChatWebsocketMessage>.broadcast();
-  
+
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _socketSubscription;
   bool _isConnected = false;
   bool _isConnecting = false;
   int _connectCommandId = 1;
-  
+
   final Set<String> _activeChannelIds = {};
   final Set<String> _subscribedChannels = {};
   Timer? _reconnectTimer;
@@ -34,7 +35,9 @@ class ChatWebsocketService {
   Stream<ChatWebsocketMessage> get messageStream => _messageController.stream;
 
   void connect(List<String> channelIds) {
-    final validChannelIds = channelIds.where((id) => id.trim().isNotEmpty).toList();
+    final validChannelIds = channelIds
+        .where((id) => id.trim().isNotEmpty)
+        .toList();
     if (validChannelIds.isEmpty) return;
     _activeChannelIds.addAll(validChannelIds);
     _connectSocket(validChannelIds);
@@ -54,7 +57,6 @@ class ChatWebsocketService {
   Future<void> _connectSocket(List<String> channelIds) async {
     final config = locator<AppConfig>();
     if (config.usesMockData) {
-      // Simulate connection establishing for mock data
       Future<void>.delayed(const Duration(milliseconds: 500), () {
         debugPrint('Mock WebSocket Connected');
         _startMockingMessages(channelIds);
@@ -81,19 +83,19 @@ class ChatWebsocketService {
       debugPrint('WebSocket: Connecting to $wsUrl');
       final uri = Uri.parse(wsUrl);
       _channel = WebSocketChannel.connect(uri);
-      
-      // Handle the ready future to catch and log handshake errors, preventing unhandled exceptions.
-      _channel!.ready.then((_) {
-        debugPrint('WebSocket: Connection handshaked successfully.');
-      }).catchError((Object error) {
-        debugPrint('WebSocket: Connection ready error: $error');
-      });
-      
+
+      _channel!.ready
+          .then((_) {
+            debugPrint('WebSocket: Connection handshaked successfully.');
+          })
+          .catchError((Object error) {
+            debugPrint('WebSocket: Connection ready error: $error');
+          });
+
       _isConnecting = false;
       _isConnected = true;
       _subscribedChannels.clear();
 
-      // Send connection command
       _sendConnectCommand(token);
 
       _socketSubscription = _channel!.stream.listen(
@@ -121,9 +123,7 @@ class ChatWebsocketService {
   void _sendConnectCommand(String token) {
     final cmd = {
       "id": _connectCommandId++,
-      "connect": {
-        "token": token,
-      }
+      "connect": {"token": token},
     };
     _sendJson(cmd);
   }
@@ -144,9 +144,7 @@ class ChatWebsocketService {
         debugPrint('WebSocket subscribing to channel: $channelId');
         final cmd = {
           "id": _connectCommandId++,
-          "subscribe": {
-            "channel": channelId,
-          }
+          "subscribe": {"channel": channelId},
         };
         _sendJson(cmd);
         _subscribedChannels.add(channelId);
@@ -157,7 +155,7 @@ class ChatWebsocketService {
   void _handleIncomingMessage(dynamic event) {
     debugPrint('WebSocket received: $event');
     if (event == null) return;
-    
+
     final rawText = event.toString().trim();
     if (rawText.isEmpty) return;
 
@@ -167,7 +165,6 @@ class ChatWebsocketService {
       if (trimmedLine.isEmpty) continue;
 
       if (trimmedLine == '{}') {
-        // Send pong
         _channel?.sink.add('{}');
         continue;
       }
@@ -175,7 +172,6 @@ class ChatWebsocketService {
       try {
         final decoded = jsonDecode(trimmedLine);
         if (decoded is Map<String, dynamic>) {
-          // Centrifugo push publication
           if (decoded.containsKey('push')) {
             final push = decoded['push'] as Map<String, dynamic>?;
             if (push != null && push.containsKey('pub')) {
@@ -183,13 +179,25 @@ class ChatWebsocketService {
               final channel = push['channel'] as String? ?? '';
               final data = pub?['data'] as Map<String, dynamic>?;
               if (data != null) {
-                final text = data['content'] as String? ?? data['text'] as String? ?? '';
-                final authorName = data['sender_name'] as String? ?? data['username'] as String? ?? 'Someone';
-                final createdAtStr = data['created_at'] as String? ?? data['timestamp'] as String? ?? '';
-                final timestamp = DateTime.tryParse(createdAtStr) ?? DateTime.now();
+                final id = data['id'] as String? ?? 'ws-${DateTime.now().millisecondsSinceEpoch}';
+                final userId = data['sender_id'] as String? ?? data['user_id'] as String? ?? data['userId'] as String? ?? '';
+                final text =
+                    data['content'] as String? ?? data['text'] as String? ?? '';
+                final authorName =
+                    data['sender_name'] as String? ??
+                    data['username'] as String? ??
+                    'Someone';
+                final createdAtStr =
+                    data['created_at'] as String? ??
+                    data['timestamp'] as String? ??
+                    '';
+                final timestamp =
+                    (DateTime.tryParse(createdAtStr) ?? DateTime.now()).toLocal();
 
                 _messageController.add(
                   ChatWebsocketMessage(
+                    id: id,
+                    userId: userId,
                     groupDmId: channel,
                     text: text,
                     authorName: authorName,
@@ -211,7 +219,7 @@ class ChatWebsocketService {
     _isConnecting = false;
     _subscribedChannels.clear();
     _socketSubscription?.cancel();
-    
+
     _reconnectTimer?.cancel();
     _reconnectTimer = Timer(const Duration(seconds: 5), () {
       debugPrint('WebSocket: Reconnecting...');
@@ -227,8 +235,11 @@ class ChatWebsocketService {
       final groupId = activeGroupDmIds[timer.tick % activeGroupDmIds.length];
       _messageController.add(
         ChatWebsocketMessage(
+          id: 'mock-${timer.tick}',
+          userId: 'mock-user',
           groupDmId: groupId,
-          text: 'This is a simulated real-time incoming message (#${timer.tick})',
+          text:
+              'This is a simulated real-time incoming message (#${timer.tick})',
           authorName: 'Mock Member',
           timestamp: DateTime.now(),
         ),
@@ -236,9 +247,7 @@ class ChatWebsocketService {
     });
   }
 
-  void sendMessage(String groupDmId, String text) {
-    // Message sending is handled via REST API in dm_repository.dart
-  }
+  void sendMessage(String groupDmId, String text) {}
 
   void dispose() {
     _reconnectTimer?.cancel();

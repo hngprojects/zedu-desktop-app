@@ -77,12 +77,16 @@ class DmSidebarList extends ConsumerWidget {
                             : g.messages.last,
                         unreadCount: g.unreadCount,
                         channelType: 'group_dm',
-                        participants: g.members.map((m) => DmParticipant(
-                          userId: m.id,
-                          username: m.name ?? m.email.split('@').first,
-                          email: m.email,
-                          avatarUrl: m.avatarUrl,
-                        )).toList(),
+                        participants: g.members
+                            .map(
+                              (m) => DmParticipant(
+                                userId: m.id,
+                                username: m.name ?? m.email.split('@').first,
+                                email: m.email,
+                                avatarUrl: m.avatarUrl,
+                              ),
+                            )
+                            .toList(),
                       );
                     }).toList();
 
@@ -102,7 +106,6 @@ class DmSidebarList extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // DIRECT MESSAGES SECTION
                             Padding(
                               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                               child: Row(
@@ -155,7 +158,6 @@ class DmSidebarList extends ConsumerWidget {
 
                             const SizedBox(height: 20),
 
-                            // GROUP DMs SECTION
                             Padding(
                               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                               child: Row(

@@ -9,10 +9,6 @@ class AppConfig {
     this.googleClientSecret = '',
   });
 
-  /// Resolves config after [loadAppEnv] has run in [main] (root `.env` /
-  /// `.env.example`, bundled as assets).
-  ///
-  /// Precedence: `--dart-define` wins, then dotenv keys from those files, then
   factory AppConfig.fromEnvironment() {
     const defineBaseUrl = String.fromEnvironment('API_BASE_URL');
     const defineUsesMock = String.fromEnvironment('USE_MOCK_DATA');
@@ -24,13 +20,13 @@ class AppConfig {
     final envClientId = dotenv.maybeGet('GOOGLE_CLIENT_ID')?.trim();
     final envClientSecret = dotenv.maybeGet('GOOGLE_CLIENT_SECRET')?.trim();
 
-    // Default to the staging Zedu URL where user accounts and Google OAuth credentials are registered.
-    // Allow overrides from --dart-define or .env if they are configured and not the default placeholder.
     String apiBaseUrl = defineBaseUrl.isNotEmpty
         ? defineBaseUrl
-        : (envBaseUrl != null && envBaseUrl.isNotEmpty && envBaseUrl != 'https://example.com/api')
-            ? envBaseUrl
-            : 'https://api.staging.zedu.chat/api/v1/';
+        : (envBaseUrl != null &&
+              envBaseUrl.isNotEmpty &&
+              envBaseUrl != 'https://example.com/api')
+        ? envBaseUrl
+        : 'https://api.staging.zedu.chat/api/v1/';
 
     apiBaseUrl = apiBaseUrl.replaceAll('"', '').replaceAll("'", "");
 
@@ -42,7 +38,7 @@ class AppConfig {
         ? _parseBool(defineUsesMock, defaultValue: false)
         : envUsesMock != null && envUsesMock.isNotEmpty
         ? _parseBool(envUsesMock, defaultValue: false)
-        : false; // Changed to false so real backend is used by default
+        : false;
 
     var googleClientId = defineClientId.isNotEmpty
         ? defineClientId
@@ -50,7 +46,6 @@ class AppConfig {
         ? envClientId!
         : '764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com';
 
-    // Sanitize in case it's passed with http/https prefix or trailing slash
     googleClientId = googleClientId.trim();
     if (googleClientId.startsWith('http://')) {
       googleClientId = googleClientId.substring(7);
@@ -89,7 +84,6 @@ class AppConfig {
     return '$scheme://${uri.host}/connection/websocket';
   }
 }
-
 
 bool _parseBool(String raw, {required bool defaultValue}) {
   final normalized = raw.trim().toLowerCase();

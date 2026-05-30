@@ -1,6 +1,3 @@
-import 'dart:async';
-import 'dart:math';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:zedu/core/core.dart';
 
 class VoiceNotePlayer extends StatefulWidget {
@@ -37,7 +34,9 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
       if (mounted) setState(() => _position = pos);
     });
 
-    _playerStateSubscription = _audioPlayer.onPlayerStateChanged.listen((state) {
+    _playerStateSubscription = _audioPlayer.onPlayerStateChanged.listen((
+      state,
+    ) {
       if (mounted) {
         setState(() {
           _isPlaying = state == PlayerState.playing;
@@ -64,13 +63,15 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
     if (_isPlaying) {
       await _audioPlayer.pause();
     } else {
-      // If it's a mock or empty source, we'll simulate playing locally
-      if (widget.audioSource.isEmpty || widget.audioSource.contains('Attached')) {
-        // Just mock it by setting source to a dummy asset or URL if possible
+      if (widget.audioSource.isEmpty ||
+          widget.audioSource.contains('Attached')) {
         try {
-          await _audioPlayer.play(UrlSource('https://codesandbox.io/api/v1/sandboxes/play/mock-audio.mp3'));
+          await _audioPlayer.play(
+            UrlSource(
+              'https://codesandbox.io/api/v1/sandboxes/play/mock-audio.mp3',
+            ),
+          );
         } catch (_) {
-          // Fallback if network fails
           _simulateMockPlayback();
         }
       } else {
@@ -88,7 +89,6 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
   }
 
   void _simulateMockPlayback() {
-    // If audioplayer fails on mock source, we manually simulate position changes for demo
     setState(() => _isPlaying = true);
     _duration = const Duration(seconds: 5);
     _position = Duration.zero;
@@ -150,7 +150,7 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
               if (_duration.inMilliseconds > 0) {
                 final RenderBox box = context.findRenderObject() as RenderBox;
                 final localOffset = box.globalToLocal(details.globalPosition);
-                // The waveform area starts after the button (approx 44 pixels) and is 120 pixels wide
+
                 final relativeX = (localOffset.dx - 44).clamp(0.0, 120.0);
                 final newProgress = relativeX / 120.0;
                 final newMs = (newProgress * _duration.inMilliseconds).toInt();
@@ -175,8 +175,8 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
             _isPlaying
                 ? _formatDuration(_position)
                 : (_duration == Duration.zero
-                    ? '0:05'
-                    : _formatDuration(_duration)),
+                      ? '0:05'
+                      : _formatDuration(_duration)),
             style: context.textTheme.bodySmall?.copyWith(
               color: colors.primary,
               fontWeight: FontWeight.bold,
@@ -184,11 +184,14 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
           ),
           const SizedBox(width: 8),
           IconButton(
-            icon: Icon(Icons.download_rounded, color: colors.textHint, size: 16),
+            icon: Icon(
+              Icons.download_rounded,
+              color: colors.textHint,
+              size: 16,
+            ),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
             onPressed: () {
-              // Simulated download
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Audio download started...')),
               );
@@ -229,7 +232,6 @@ class _WaveformPainter extends CustomPainter {
       final top = centerY - height / 2;
       final bottom = centerY + height / 2;
 
-      // Color based on play progress
       final itemProgress = i / amplitudes.length;
       paint.color = itemProgress <= progress ? color : backgroundColor;
 

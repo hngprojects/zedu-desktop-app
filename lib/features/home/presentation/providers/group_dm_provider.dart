@@ -1,5 +1,3 @@
-import 'dart:async';
-import 'dart:convert';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -107,7 +105,7 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
     final orgId = ref.watch(currentOrgIdProvider);
     _listenToWebsockets();
     _listenToNetwork();
-    
+
     ref.onDispose(() {
       _wsSubscription?.cancel();
     });
@@ -124,12 +122,14 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
     _wsSubscription = ws.messageStream.listen((msg) {
       final authState = ref.read(authNotifierProvider);
       final currentUser = authState.user;
-      final currentUserName = currentUser != null 
+      final currentUserName = currentUser != null
           ? '${currentUser.firstName} ${currentUser.lastName}'.trim()
           : '';
       final currentUsername = currentUser?.username ?? '';
 
-      final isMe = msg.authorName == currentUserName || msg.authorName == currentUsername;
+      final isMe =
+          msg.authorName == currentUserName ||
+          msg.authorName == currentUsername;
       if (!isMe) {
         _handleIncomingMessage(msg.groupDmId, msg.text);
       }
@@ -158,10 +158,14 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
         final List<GroupDM> groups = [];
         for (final item in decoded) {
           final group = _groupDmFromJson(item as Map<String, dynamic>);
-          final cachedMsgs = await ref.read(chatStorageProvider).getCachedMessages(group.id);
-          groups.add(group.copyWith(
-            messages: cachedMsgs.isNotEmpty ? cachedMsgs : group.messages,
-          ));
+          final cachedMsgs = await ref
+              .read(chatStorageProvider)
+              .getCachedMessages(group.id);
+          groups.add(
+            group.copyWith(
+              messages: cachedMsgs.isNotEmpty ? cachedMsgs : group.messages,
+            ),
+          );
         }
         state = groups;
 
@@ -169,7 +173,11 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
         ref.read(chatWebsocketProvider).connect(activeIds);
       }
     } catch (e, stack) {
-      AppLogger.e('Error loading cached group DMs', error: e, stackTrace: stack);
+      AppLogger.e(
+        'Error loading cached group DMs',
+        error: e,
+        stackTrace: stack,
+      );
     }
   }
 
@@ -215,10 +223,7 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
       final api = locator<ApiBaseService>();
       final response = await api.post<Map<String, dynamic>>(
         path: '/organisations/$orgId/group-dms',
-        data: {
-          'chat_type': 'user',
-          'participants': participantIds,
-        },
+        data: {'chat_type': 'user', 'participants': participantIds},
       );
 
       final data = response.data['data'] as Map<String, dynamic>?;
@@ -232,7 +237,9 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
               TeamMember(
                 id: p['user_id'] as String? ?? '',
                 email: p['email'] as String? ?? '',
-                name: p['username'] as String? ?? (p['email'] as String? ?? '').split('@').first,
+                name:
+                    p['username'] as String? ??
+                    (p['email'] as String? ?? '').split('@').first,
                 role: 'User',
                 dateJoined: DateTime.now().toString(),
                 status: TeamMemberStatus.active,
@@ -329,10 +336,13 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
       await repository.sendMessage(
         groupDmId,
         messageText,
-        channelType: 'group_dm',
       );
     } catch (e, stack) {
-      AppLogger.e('Error sending Group DM message to server', error: e, stackTrace: stack);
+      AppLogger.e(
+        'Error sending Group DM message to server',
+        error: e,
+        stackTrace: stack,
+      );
     }
   }
 
@@ -351,10 +361,16 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
     _saveCachedGroupDms();
   }
 
-  Future<bool> addGroupDmParticipants(String channelId, List<String> userIds) async {
+  Future<bool> addGroupDmParticipants(
+    String channelId,
+    List<String> userIds,
+  ) async {
     try {
       final repository = ref.read(dmRepositoryProvider);
-      final responseData = await repository.addGroupDmParticipants(channelId, userIds);
+      final responseData = await repository.addGroupDmParticipants(
+        channelId,
+        userIds,
+      );
 
       final data = responseData['data'] as Map<String, dynamic>?;
       if (data != null) {
@@ -366,7 +382,9 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
               TeamMember(
                 id: p['user_id'] as String? ?? '',
                 email: p['email'] as String? ?? '',
-                name: p['username'] as String? ?? (p['email'] as String).split('@').first,
+                name:
+                    p['username'] as String? ??
+                    (p['email'] as String).split('@').first,
                 role: 'User',
                 dateJoined: DateTime.now().toString(),
                 status: TeamMemberStatus.active,
@@ -394,10 +412,14 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
       state = [
         for (final group in state)
           if (group.id == channelId)
-            group.copyWith(members: [
-              ...group.members,
-              ...added.where((a) => !group.members.any((existing) => existing.id == a.id))
-            ])
+            group.copyWith(
+              members: [
+                ...group.members,
+                ...added.where(
+                  (a) => !group.members.any((existing) => existing.id == a.id),
+                ),
+              ],
+            )
           else
             group,
       ];

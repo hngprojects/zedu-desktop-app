@@ -20,10 +20,7 @@ class AppRouter {
   static final router = GoRouter(
     initialLocation: splash,
     routes: [
-      GoRoute(
-        path: splash,
-        builder: (context, state) => const SplashView(),
-      ),
+      GoRoute(path: splash, builder: (context, state) => const SplashView()),
       GoRoute(path: login, builder: (context, state) => const LoginView()),
       GoRoute(
         path: magicLinkRequest,

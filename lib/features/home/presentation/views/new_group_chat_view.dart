@@ -15,7 +15,6 @@ class _NewGroupChatViewState extends ConsumerState<NewGroupChatView> {
   bool _isLoading = false;
   String? _errorMessage;
 
-  // Filtered members list
   List<TeamMember> _filteredMembers = [];
   bool _showDropdown = false;
 
@@ -41,7 +40,6 @@ class _NewGroupChatViewState extends ConsumerState<NewGroupChatView> {
 
     setState(() {
       if (query.isEmpty) {
-        // Show all members that are not already selected
         _filteredMembers = allMembers
             .where((m) => !_selectedMembers.any((s) => s.id == m.id))
             .toList();
@@ -62,7 +60,7 @@ class _NewGroupChatViewState extends ConsumerState<NewGroupChatView> {
     setState(() {
       _showDropdown = _focusNode.hasFocus;
       if (_showDropdown) {
-        _onSearchChanged(); // Refresh items
+        _onSearchChanged();
       }
     });
   }
@@ -75,7 +73,7 @@ class _NewGroupChatViewState extends ConsumerState<NewGroupChatView> {
         _selectedMembers.add(member);
       }
       _searchController.clear();
-      _onSearchChanged(); // Refresh
+      _onSearchChanged();
     });
   }
 
@@ -100,7 +98,7 @@ class _NewGroupChatViewState extends ConsumerState<NewGroupChatView> {
     switch (result) {
       case Success<GroupDM>():
         final newGroup = result.value;
-        // Check if this was a duplicate group that already existed
+
         final selectedIds = _selectedMembers.map((m) => m.id).toSet();
         final groupIds = newGroup.members.map((m) => m.id).toSet();
         final isDuplicate =
@@ -109,7 +107,6 @@ class _NewGroupChatViewState extends ConsumerState<NewGroupChatView> {
 
         if (isDuplicate &&
             ref.read(groupDmProvider).any((g) => g.id == newGroup.id)) {
-          // If the group DM was already in the sidebar list, we show a SnackBar and open it
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
@@ -140,7 +137,6 @@ class _NewGroupChatViewState extends ConsumerState<NewGroupChatView> {
           );
         }
 
-        // Navigate to the newly created/existing Group DM!
         ref.read(activeChatProvider.notifier).selectGroupDm(newGroup.id);
 
       case Failure<GroupDM>():
@@ -160,10 +156,8 @@ class _NewGroupChatViewState extends ConsumerState<NewGroupChatView> {
         children: [
           Column(
             children: [
-              // 1. Header
               _buildHeader(colors),
 
-              // 2. Main Search and Chips Section
               Expanded(
                 child: SingleChildScrollView(
                   child: Padding(
@@ -174,11 +168,9 @@ class _NewGroupChatViewState extends ConsumerState<NewGroupChatView> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Input container
                             _buildSearchInputContainer(colors),
                             const SizedBox(height: 12),
 
-                            // Selected Member Chips
                             if (_selectedMembers.isNotEmpty) ...[
                               Wrap(
                                 spacing: 8,
@@ -233,16 +225,12 @@ class _NewGroupChatViewState extends ConsumerState<NewGroupChatView> {
                               const SizedBox(height: 16),
                             ],
 
-                            // Validation Helper Text
                             _buildValidationHelper(colors),
 
-                            const SizedBox(
-                              height: 120,
-                            ), // Spacer so the suggestion box isn't clipped
+                            const SizedBox(height: 120),
                           ],
                         ),
 
-                        // Suggestions Dropdown Card (Inline Layer overlay)
                         if (_showDropdown && _filteredMembers.isNotEmpty)
                           Positioned(
                             top: 60,
@@ -282,76 +270,74 @@ class _NewGroupChatViewState extends ConsumerState<NewGroupChatView> {
                                             horizontal: 16,
                                             vertical: 12,
                                           ),
-                                        decoration: BoxDecoration(
-                                          border: Border(
-                                            bottom: BorderSide(
-                                              color: colors.divider,
-                                              width: 0.5,
+                                          decoration: BoxDecoration(
+                                            border: Border(
+                                              bottom: BorderSide(
+                                                color: colors.divider,
+                                                width: 0.5,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            // Avatar
-                                            CircleAvatar(
-                                              radius: 16,
-                                              backgroundColor: colors.primary
-                                                  .withValues(alpha: 0.1),
-                                              child: Text(
-                                                name
-                                                    .substring(
-                                                      0,
-                                                      name.length > 1 ? 2 : 1,
-                                                    )
-                                                    .toUpperCase(),
-                                                style: TextStyle(
-                                                  color: colors.primary,
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.bold,
+                                          child: Row(
+                                            children: [
+                                              CircleAvatar(
+                                                radius: 16,
+                                                backgroundColor: colors.primary
+                                                    .withValues(alpha: 0.1),
+                                                child: Text(
+                                                  name
+                                                      .substring(
+                                                        0,
+                                                        name.length > 1 ? 2 : 1,
+                                                      )
+                                                      .toUpperCase(),
+                                                  style: TextStyle(
+                                                    color: colors.primary,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                            const SizedBox(width: 12),
+                                              const SizedBox(width: 12),
 
-                                            // Text
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    name,
-                                                    style: TextStyle(
-                                                      color: colors.textPrimary,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 14,
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      name,
+                                                      style: TextStyle(
+                                                        color:
+                                                            colors.textPrimary,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 14,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  const SizedBox(height: 2),
-                                                  Text(
-                                                    member.email,
-                                                    style: TextStyle(
-                                                      color: colors.textHint,
-                                                      fontSize: 12,
+                                                    const SizedBox(height: 2),
+                                                    Text(
+                                                      member.email,
+                                                      style: TextStyle(
+                                                        color: colors.textHint,
+                                                        fontSize: 12,
+                                                      ),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
-                                            ),
 
-                                            // Checkbox / Add icon
-                                            Icon(
-                                              Icons.add_circle_outline,
-                                              color: colors.primary,
-                                              size: 20,
-                                            ),
-                                          ],
+                                              Icon(
+                                                Icons.add_circle_outline,
+                                                color: colors.primary,
+                                                size: 20,
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
                                 ),
                               ),
                             ),
@@ -362,12 +348,10 @@ class _NewGroupChatViewState extends ConsumerState<NewGroupChatView> {
                 ),
               ),
 
-              // 3. Bottom Message Editor (Mock UI replicating home message editor)
               _buildBottomMessageEditor(colors),
             ],
           ),
 
-          // 4. Loading/Saving Spinner Overlay
           if (_isLoading)
             Container(
               color: Colors.white.withValues(alpha: 0.7),
@@ -390,7 +374,6 @@ class _NewGroupChatViewState extends ConsumerState<NewGroupChatView> {
               ),
             ),
 
-          // 5. Error & Retry Full Overlay
           if (_errorMessage != null)
             Container(
               color: Colors.white.withValues(alpha: 0.95),
@@ -603,7 +586,7 @@ class _NewGroupChatViewState extends ConsumerState<NewGroupChatView> {
             ),
             Divider(height: 24, color: colors.divider),
             const TextField(
-              enabled: false, // Disabled during creation screen
+              enabled: false,
               decoration: InputDecoration(
                 hintText: 'Message Ruby - Social Media Handler',
                 border: InputBorder.none,

@@ -50,7 +50,6 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Header
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -238,7 +237,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
               ),
             ),
           ),
-          // Bottom Controls
+
           Container(
             padding: const EdgeInsets.only(bottom: 24),
             child: Row(

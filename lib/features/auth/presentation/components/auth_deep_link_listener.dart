@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -48,7 +47,6 @@ class _AuthDeepLinkListenerState extends ConsumerState<AuthDeepLinkListener> {
   }
 
   Future<void> _handleUri(Uri uri) async {
-    // 1. Process Magic Link
     final magicToken = MagicLinkDeepLinkParser.extractToken(uri);
     if (magicToken != null) {
       if (magicToken == _lastProcessedToken) return;
@@ -57,7 +55,6 @@ class _AuthDeepLinkListenerState extends ConsumerState<AuthDeepLinkListener> {
       return;
     }
 
-    // 2. Process Invitation Link
     final inviteToken = InvitationDeepLinkParser.extractToken(uri);
     if (inviteToken != null) {
       if (inviteToken == _lastProcessedToken) return;

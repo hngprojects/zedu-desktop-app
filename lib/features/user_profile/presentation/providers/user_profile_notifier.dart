@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -252,7 +250,6 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
         path: '/organisations/$orgId/users/$userId',
       );
 
-      // Now remove workspace from local state
       ref.read(workspaceProvider.notifier).removeWorkspace(orgId);
 
       state = state.copyWith(
@@ -276,12 +273,9 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       );
       final data = response.data['data'] as List<dynamic>?;
       if (data != null && data.isNotEmpty) {
-        return data.last['id']
-            as String; // Just pick a valid role ID to avoid 404
+        return data.last['id'] as String;
       }
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
     return '019700d8-9085-7f7b-839a-fcbd08b9e26d';
   }
 
@@ -299,7 +293,25 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
         data: {'organisation_id': orgId, 'role_id': roleId},
       );
       final data = response.data['data'] as Map<String, dynamic>?;
-      return data?['invitation_link'] as String?;
+      if (data == null) return null;
+
+      String? token = data['invitation_token']?.toString() ?? data['token']?.toString();
+      final link = data['invitation_link']?.toString();
+
+      if (token == null && link != null) {
+        final uri = Uri.tryParse(link);
+        if (uri != null) {
+          token = uri.queryParameters['token'] ?? uri.queryParameters['invitation_token'];
+          if (token == null && uri.pathSegments.isNotEmpty) {
+            token = uri.pathSegments.last;
+          }
+        }
+      }
+
+      if (token != null) {
+        return 'http://staging.zedu.chat/accept_general_invitation?org_id=$orgId&invitation_token=$token';
+      }
+      return link;
     } catch (e) {
       return null;
     }
@@ -313,9 +325,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       if (data != null) {
         return data.cast<Map<String, dynamic>>();
       }
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
     return [];
   }
 
@@ -335,7 +345,6 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       orgId = '019700db-4e22-7f90-a20e-f9116291ef24';
     }
 
-    // Map human readable role to a valid UUID role_id by fetching from backend
     String roleId = await _getRoleId(orgId);
 
     if (orgId == null) {
@@ -361,7 +370,6 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           successMessage: 'Invite sent successfully.',
         );
 
-        // Persist the mock state across restarts if we are using mock data
         final config = locator<AppConfig>();
         if (config.usesMockData) {
           final storage = locator<SecureStorageService>();
@@ -393,7 +401,8 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
               errStr.contains('registered')) {
             final users = await fetchRegisteredUsers();
             final match = users.firstWhere(
-              (u) => (u['email'] as String?)?.toLowerCase() == email.toLowerCase(),
+              (u) =>
+                  (u['email'] as String?)?.toLowerCase() == email.toLowerCase(),
               orElse: () => <String, dynamic>{},
             );
             final resolvedId = match['id'] as String?;
@@ -405,7 +414,10 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
                 userId: resolvedId,
               );
               if (retryResult is Success<TeamMember>) {
-                final newTeamMembers = [...state.teamMembers, retryResult.value];
+                final newTeamMembers = [
+                  ...state.teamMembers,
+                  retryResult.value,
+                ];
                 state = state.copyWith(
                   teamMembers: newTeamMembers,
                   isSaving: false,
@@ -475,7 +487,8 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
 
   Future<void> load({String? orgId}) async {
     state = state.copyWith(isLoading: true, clearError: true);
-    final activeOrgId = orgId ?? ref.read(workspaceProvider).selectedWorkspace?.id;
+    final activeOrgId =
+        orgId ?? ref.read(workspaceProvider).selectedWorkspace?.id;
     final results = await Future.wait([
       _repository.getAccount(),
       _repository.getNotificationPreferences(),
@@ -500,7 +513,6 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
 
     var loadedTeamMembers = _valueOrNull(teamResult) ?? const [];
 
-    // Load persisted mock members if they exist
     if (activeOrgId != null) {
       final storage = locator<SecureStorageService>();
       final data = await storage.readData('mock_team_members_$activeOrgId');

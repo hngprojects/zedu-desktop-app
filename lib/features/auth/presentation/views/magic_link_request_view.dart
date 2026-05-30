@@ -52,11 +52,7 @@ class _MagicLinkRequestViewState extends ConsumerState<MagicLinkRequestView> {
           context.go(AppRouter.home);
         }
       });
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final isLoading = ref.watch(magicLinkNotifierProvider).isLoading;

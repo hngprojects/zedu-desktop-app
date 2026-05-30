@@ -1,4 +1,3 @@
-// Data
 export 'data/datasource/auth_remote_datasource.dart';
 export 'data/models/login_response_model.dart';
 export 'data/models/user_model.dart';
@@ -8,13 +7,11 @@ export 'data/models/plan_details_model.dart';
 export 'data/models/user_role_model.dart';
 export 'data/repositories/auth_repository_impl.dart';
 
-// Domain
 export 'domain/entities/auth_session.dart';
 export 'domain/entities/user.dart';
 export 'domain/entities/user_status.dart';
 export 'domain/repository/auth_repository.dart';
 
-// Presentation
 export 'package:flutter/gestures.dart';
 export 'package:flutter/services.dart';
 export 'presentation/components/auth_deep_link_listener.dart';

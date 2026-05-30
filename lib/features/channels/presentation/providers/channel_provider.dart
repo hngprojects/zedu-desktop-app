@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -38,7 +37,7 @@ class ChannelNotifier extends Notifier<ChannelState> {
   @override
   ChannelState build() {
     ref.watch(currentOrgIdProvider);
-    // Schedule fetch after build
+
     Future.microtask(fetchChannels);
     return const ChannelState();
   }
@@ -56,34 +55,43 @@ class ChannelNotifier extends Notifier<ChannelState> {
     if (result is Success<List<Channel>>) {
       final authState = ref.read(authNotifierProvider);
       final userId = authState.user?.id ?? '';
-      
+
       var channelsList = result.value;
-      
+
       try {
         final storage = locator<SecureStorageService>();
-        final orderJson = await storage.readData('channel_order_${userId}_$orgId');
+        final orderJson = await storage.readData(
+          'channel_order_${userId}_$orgId',
+        );
         if (orderJson != null && orderJson.isNotEmpty) {
-          final List<dynamic> orderedIds = jsonDecode(orderJson) as List<dynamic>;
-          final idToIndex = {for (int i = 0; i < orderedIds.length; i++) orderedIds[i].toString(): i};
-          
-          channelsList = List<Channel>.from(channelsList)..sort((a, b) {
-            final idxA = idToIndex[a.id];
-            final idxB = idToIndex[b.id];
-            if (idxA != null && idxB != null) return idxA.compareTo(idxB);
-            if (idxA != null) return -1;
-            if (idxB != null) return 1;
-            return a.name.compareTo(b.name);
-          });
+          final List<dynamic> orderedIds =
+              jsonDecode(orderJson) as List<dynamic>;
+          final idToIndex = {
+            for (int i = 0; i < orderedIds.length; i++)
+              orderedIds[i].toString(): i,
+          };
+
+          channelsList = List<Channel>.from(channelsList)
+            ..sort((a, b) {
+              final idxA = idToIndex[a.id];
+              final idxB = idToIndex[b.id];
+              if (idxA != null && idxB != null) return idxA.compareTo(idxB);
+              if (idxA != null) return -1;
+              if (idxB != null) return 1;
+              return a.name.compareTo(b.name);
+            });
         }
       } catch (_) {}
 
       state = state.copyWith(isLoading: false, channels: channelsList);
-      
-      // Auto-update general channel selection from name to UUID
+
       final activeChat = ref.read(activeChatProvider);
-      // ignore: avoid_print
-      print('ChannelNotifier.fetchChannels: activeChat.type=${activeChat.type.name}, activeChat.id=${activeChat.id}');
-      if (activeChat.type == ActiveChatType.channel && activeChat.id == 'general') {
+
+      print(
+        'ChannelNotifier.fetchChannels: activeChat.type=${activeChat.type.name}, activeChat.id=${activeChat.id}',
+      );
+      if (activeChat.type == ActiveChatType.channel &&
+          activeChat.id == 'general') {
         final realGeneral = channelsList.firstWhere(
           (c) => c.name.toLowerCase() == 'general',
           orElse: () => channelsList.isNotEmpty
@@ -97,8 +105,9 @@ class ChannelNotifier extends Notifier<ChannelState> {
                 ),
         );
         if (realGeneral.id != 'general') {
-          // ignore: avoid_print
-          print('ChannelNotifier.fetchChannels: Updating general selection from "general" to ${realGeneral.id}');
+          print(
+            'ChannelNotifier.fetchChannels: Updating general selection from "general" to ${realGeneral.id}',
+          );
           ref.read(activeChatProvider.notifier).selectChannel(realGeneral.id);
         }
       }
@@ -155,7 +164,6 @@ class ChannelNotifier extends Notifier<ChannelState> {
     );
 
     if (result is Success<void>) {
-      // Update local state
       final updatedChannels = state.channels.map((c) {
         if (c.id == channelId) {
           return Channel(
@@ -218,12 +226,15 @@ class ChannelNotifier extends Notifier<ChannelState> {
     final String? orgId = workspaceState.selectedWorkspace?.id;
     final authState = ref.read(authNotifierProvider);
     final userId = authState.user?.id ?? '';
-    
+
     if (orgId != null && userId.isNotEmpty) {
       final orderedIds = channelsList.map((c) => c.id).toList();
       try {
         final storage = locator<SecureStorageService>();
-        await storage.writeData('channel_order_${userId}_$orgId', jsonEncode(orderedIds));
+        await storage.writeData(
+          'channel_order_${userId}_$orgId',
+          jsonEncode(orderedIds),
+        );
       } catch (_) {}
     }
 
@@ -234,7 +245,10 @@ class ChannelNotifier extends Notifier<ChannelState> {
         final orderedIds = previousList.map((c) => c.id).toList();
         try {
           final storage = locator<SecureStorageService>();
-          await storage.writeData('channel_order_${userId}_$orgId', jsonEncode(orderedIds));
+          await storage.writeData(
+            'channel_order_${userId}_$orgId',
+            jsonEncode(orderedIds),
+          );
         } catch (_) {}
       }
       throw Exception('Network connection lost. Reorder reverted.');
@@ -294,7 +308,6 @@ class ChannelNotifier extends Notifier<ChannelState> {
       );
       return true;
     } else {
-      // Local resilient fallback for mock/local/offline testing
       state = state.copyWith(
         channels: state.channels.map((c) {
           if (c.id == channelId) {

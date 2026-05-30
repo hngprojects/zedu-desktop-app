@@ -77,7 +77,10 @@ class ChannelRepositoryImpl implements ChannelRepository {
   }
 
   @override
-  Future<Result<void>> toggleChannelPrivacy(String channelId, bool isPrivate) async {
+  Future<Result<void>> toggleChannelPrivacy(
+    String channelId,
+    bool isPrivate,
+  ) async {
     try {
       await remoteDataSource.toggleChannelPrivacy(channelId, isPrivate);
       return const Success(null);
@@ -113,7 +116,10 @@ class ChannelRepositoryImpl implements ChannelRepository {
   }
 
   @override
-  Future<Result<void>> addChannelMembers(String channelId, List<String> userIds) async {
+  Future<Result<void>> addChannelMembers(
+    String channelId,
+    List<String> userIds,
+  ) async {
     try {
       await remoteDataSource.addChannelMembers(channelId, userIds);
       return const Success(null);

@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:zedu/core/core.dart';
+import 'package:zedu/features/features.dart';
 
 class AppPalette {
   final Brightness brightness;
@@ -18,10 +19,8 @@ class AppPalette {
   final Color errorBg;
   final Color primaryBg;
 
-  /// Green dot — user is active/online.
   final Color presenceActive;
 
-  /// Dark semi-transparent dot — user is away/offline.
   final Color presenceAway;
 
   const AppPalette({

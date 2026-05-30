@@ -63,11 +63,7 @@ class _SignUpViewState extends ConsumerState<SignUpView> {
           context.go(AppRouter.home);
         }
       });
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final theme = Theme.of(context);

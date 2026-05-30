@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:zedu/core/core.dart';
@@ -243,10 +241,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Should not be accepted yet since unauthenticated
       expect(acceptedToken, isNull);
 
-      // Now authenticate
       final element = tester.element(find.byType(AuthDeepLinkListener));
       final container = ProviderScope.containerOf(element);
       (container.read(authNotifierProvider.notifier)
@@ -254,7 +250,6 @@ void main() {
           .logIn();
       await tester.pumpAndSettle();
 
-      // Should now be accepted!
       expect(acceptedToken, 'invite-later');
       await tester.pump(const Duration(seconds: 5));
     });
