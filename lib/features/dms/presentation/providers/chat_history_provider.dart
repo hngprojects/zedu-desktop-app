@@ -84,7 +84,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
                 "sender_name": msg.authorName,
                 "username": msg.authorName,
                 "type": "user",
-                "created_at": msg.timestamp.toIso8601String(),
+                "created_at": msg.timestamp.toUtc().toIso8601String(),
               };
               messages = [newMsg, ...messages];
               _seenIds.add(msg.id);
@@ -123,7 +123,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
       "userId": senderId,
       "sender_name": senderName,
       "type": "user",
-      "created_at": DateTime.now().toIso8601String(),
+      "created_at": DateTime.now().toUtc().toIso8601String(),
       if (isPending) "status": "sending",
     };
   }
@@ -380,7 +380,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
       "user_id": _currentUserId,
       "userId": _currentUserId,
       "type": "user",
-      "created_at": DateTime.now().toIso8601String(),
+      "created_at": DateTime.now().toUtc().toIso8601String(),
       "status": "sending",
       if (media != null && media.isNotEmpty)
         "media": media
