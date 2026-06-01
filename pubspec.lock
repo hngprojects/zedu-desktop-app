@@ -2,7 +2,7 @@
 # See https://dart.dev/tools/pub/glossary#lockfile
 packages:
   _discoveryapis_commons:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: _discoveryapis_commons
       sha256: "113c4100b90a5b70a983541782431b82168b3cae166ab130649c36eb3559d498"
@@ -274,7 +274,7 @@ packages:
     source: hosted
     version: "2.1.2"
   extension_google_sign_in_as_googleapis_auth:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: extension_google_sign_in_as_googleapis_auth
       sha256: "8a9c887a377ee5b990b2b29be229de8401a43002a7d0d0b29f7d014c1c6bfeac"
@@ -489,53 +489,13 @@ packages:
     source: hosted
     version: "0.3.3+1"
   google_sign_in:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: google_sign_in
       sha256: "521031b65853b4409b8213c0387d57edaad7e2a949ce6dea0d8b2afc9cb29763"
       url: "https://pub.dev"
     source: hosted
     version: "7.2.0"
-  google_sign_in_all_platforms:
-    dependency: "direct main"
-    description:
-      name: google_sign_in_all_platforms
-      sha256: "5c9d7e4f7afa2f4e904c71c97d933f1afeb953b314fcf0b44b687626599b874b"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.3"
-  google_sign_in_all_platforms_desktop:
-    dependency: transitive
-    description:
-      name: google_sign_in_all_platforms_desktop
-      sha256: d0ad9f7ed30eb7d8aa5a781ef58d4f1c9c7ad9d7634e27652411436fb6b2c670
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.0"
-  google_sign_in_all_platforms_interface:
-    dependency: transitive
-    description:
-      name: google_sign_in_all_platforms_interface
-      sha256: bf9b2a17067d2e023862cd565a076555c8de088c64e4d35ee68826cad0ad972d
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.1"
-  google_sign_in_all_platforms_mobile:
-    dependency: transitive
-    description:
-      name: google_sign_in_all_platforms_mobile
-      sha256: "4d09eaf2676bf44925550fc9346ea8e6ff3a32c9885c566025bf0e90feab2aee"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.1"
-  google_sign_in_all_platforms_web:
-    dependency: transitive
-    description:
-      name: google_sign_in_all_platforms_web
-      sha256: "1af470d499396a522740044f70906d3e220a7da40c2976d5a46ec0ede5d2cfb1"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.0"
   google_sign_in_android:
     dependency: transitive
     description:
@@ -568,14 +528,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.3"
-  googleapis:
-    dependency: transitive
-    description:
-      name: googleapis
-      sha256: "5c9e0f25be1dec13d8d2158263141104c51b5ba83487537c17a2330581e505ee"
-      url: "https://pub.dev"
-    source: hosted
-    version: "14.0.0"
   googleapis_auth:
     dependency: transitive
     description:
@@ -625,7 +577,7 @@ packages:
     source: hosted
     version: "1.6.0"
   http_methods:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: http_methods
       sha256: "6bccce8f1ec7b5d701e7921dca35e202d425b57e317ba1a37f2638590e29e566"
@@ -796,10 +748,10 @@ packages:
     dependency: transitive
     description:
       name: meta
-      sha256: "23f08335362185a5ea2ad3a4e597f1375e78bce8a040df5c600c8d3552ef2394"
+      sha256: "1741988757a65eb6b36abe716829688cf01910bbf91c34354ff7ec1c3de2b349"
       url: "https://pub.dev"
     source: hosted
-    version: "1.17.0"
+    version: "1.18.0"
   mime:
     dependency: transitive
     description:
@@ -908,12 +860,12 @@ packages:
     dependency: "direct main"
     description:
       name: permission_handler
-      sha256: bc917da36261b00137bbc8896bf1482169cd76f866282368948f032c8c1caae1
+      sha256: ca045d03615023c08ccdb297aad46a9198193666039ddd36d4d85fd0b1864b98
       url: "https://pub.dev"
     source: hosted
-    version: "12.0.1"
+    version: "12.0.2"
   permission_handler_android:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: permission_handler_android
       sha256: "1e3bc410ca1bf84662104b100eb126e066cb55791b7451307f9708d4007350e6"
@@ -921,15 +873,15 @@ packages:
     source: hosted
     version: "13.0.1"
   permission_handler_apple:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: permission_handler_apple
-      sha256: f000131e755c54cf4d84a5d8bd6e4149e262cc31c5a8b1d698de1ac85fa41023
+      sha256: "447c18bc3c5fdea5c3039f042b2b365fd51e3634f5f6e269ed22c1f00071addc"
       url: "https://pub.dev"
     source: hosted
-    version: "9.4.7"
+    version: "9.4.8"
   permission_handler_html:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: permission_handler_html
       sha256: "38f000e83355abb3392140f6bc3030660cfaef189e1f87824facb76300b4ff24"
@@ -937,7 +889,7 @@ packages:
     source: hosted
     version: "0.1.3+5"
   permission_handler_platform_interface:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: permission_handler_platform_interface
       sha256: eb99b295153abce5d683cac8c02e22faab63e50679b937fa1bf67d58bb282878
@@ -945,7 +897,7 @@ packages:
     source: hosted
     version: "4.3.0"
   permission_handler_windows:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: permission_handler_windows
       sha256: "1a790728016f79a41216d88672dbc5df30e686e811ad4e698bfc51f76ad91f1e"
@@ -993,7 +945,7 @@ packages:
     source: hosted
     version: "1.5.2"
   protobuf:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: protobuf
       sha256: "75ec242d22e950bdcc79ee38dd520ce4ee0bc491d7fadc4ea47694604d22bf06"
@@ -1129,7 +1081,7 @@ packages:
     source: hosted
     version: "0.2.0"
   shared_preferences:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: shared_preferences
       sha256: c3025c5534b01739267eb7d76959bbc25a6d10f6988e1c2a3036940133dd10bf
@@ -1201,7 +1153,7 @@ packages:
     source: hosted
     version: "3.0.2"
   shelf_router:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: shelf_router
       sha256: f5e5d492440a7fb165fe1e2e1a623f31f734d3370900070b2b1e0d0428d59864
@@ -1329,26 +1281,26 @@ packages:
     dependency: "direct dev"
     description:
       name: test
-      sha256: "280d6d890011ca966ad08df7e8a4ddfab0fb3aa49f96ed6de56e3521347a9ae7"
+      sha256: "8d9ceddbab833f180fbefed08afa76d7c03513dfdba87ffcec2718b02bbcbf20"
       url: "https://pub.dev"
     source: hosted
-    version: "1.30.0"
+    version: "1.31.0"
   test_api:
     dependency: transitive
     description:
       name: test_api
-      sha256: "8161c84903fd860b26bfdefb7963b3f0b68fee7adea0f59ef805ecca346f0c7a"
+      sha256: "949a932224383300f01be9221c39180316445ecb8e7547f70a41a35bf421fb9e"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.10"
+    version: "0.7.11"
   test_core:
     dependency: transitive
     description:
       name: test_core
-      sha256: "0381bd1585d1a924763c308100f2138205252fb90c9d4eeaf28489ee65ccde51"
+      sha256: "1991d4cfe85d5043241acac92962c3977c8d2f2add1ee73130c7b286417d1d34"
       url: "https://pub.dev"
     source: hosted
-    version: "0.6.16"
+    version: "0.6.17"
   tray_manager:
     dependency: "direct main"
     description:
@@ -1510,7 +1462,7 @@ packages:
     source: hosted
     version: "1.0.1"
   web_socket_channel:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: web_socket_channel
       sha256: d645757fb0f4773d602444000a8131ff5d48c9e47adfe9772652dd1a4f2d45c8

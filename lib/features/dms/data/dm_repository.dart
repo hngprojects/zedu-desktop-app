@@ -103,6 +103,7 @@ class DmRepository {
   Future<List<Map<String, dynamic>>> getMessages(
     String channelId, {
     int page = 1,
+    String? threadId,
   }) async {
     if (!isValidChannelId(channelId)) return const [];
 
@@ -152,17 +153,14 @@ class DmRepository {
           (m['message'] as String).isNotEmpty) {
         m['content'] = m['message'];
       }
-      // Normalize timestamp keys
       if (!m.containsKey('created_at') && m.containsKey('createdAt')) {
         m['created_at'] = m['createdAt'];
       }
-      // Normalize sender id keys
       if (!m.containsKey('user_id') && m.containsKey('userId')) {
         m['user_id'] = m['userId'];
       }
     }
 
-    // Log timestamps for a quick sanity check (first few messages only)
     try {
       final sample = parsed
           .take(5)
@@ -180,7 +178,9 @@ class DmRepository {
   Future<Map<String, dynamic>?> sendMessage(
     String channelId,
     String content, {
-    List<Map<String, dynamic>>? media,
+    String? orgId,
+    String? threadId,
+    List<dynamic>? media,
     List<dynamic>? mentions,
   }) async {
     if (!isValidChannelId(channelId)) {
@@ -255,5 +255,12 @@ class DmRepository {
     await _apiClient.delete<Map<String, dynamic>>(
       path: '${ApiEndpoints.dmsMessages(channelId)}/$messageId',
     );
+  }
+
+  Future<Map<String, dynamic>> addGroupDmParticipants(
+    String groupId,
+    List<String> userIds,
+  ) async {
+    return <String, dynamic>{};
   }
 }

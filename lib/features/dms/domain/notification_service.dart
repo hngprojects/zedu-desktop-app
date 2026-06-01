@@ -1,5 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+import 'package:zedu/core/services/realtime_service.dart';
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService(ref);
@@ -48,18 +49,20 @@ class NotificationService {
     final authState = _ref.read(authNotifierProvider);
     final currentUserId = authState.user?.id ?? '';
     final callerId = payload['caller_id']?.toString() ?? '';
-    
+
     if (callerId == currentUserId) return true; // Don't ring for our own calls
 
     final callerName = payload['caller_name']?.toString() ?? 'Incoming call';
 
     // 1. Trigger the app's ringing UI
-    _ref.read(activeCallProvider).receiveIncomingCall(
-      buzzId: payload['buzz_id']?.toString() ?? '',
-      remoteUserId: callerId,
-      remoteUserName: callerName,
-      channelId: payload['channel_id']?.toString() ?? channelId,
-    );
+    _ref
+        .read(activeCallProvider)
+        .receiveIncomingCall(
+          buzzId: payload['buzz_id']?.toString() ?? '',
+          remoteUserId: callerId,
+          remoteUserName: callerName,
+          channelId: payload['channel_id']?.toString() ?? channelId,
+        );
 
     // 2. Show desktop notification
     final notification = LocalNotification(
@@ -118,7 +121,8 @@ class NotificationService {
     final bool isMuted = settings.isChannelMuted(channelId);
     final String currentUsername = authState.user?.username ?? '';
     final String currentFullname = authState.user?.fullname ?? '';
-    final bool isMentioned = content.contains('@$currentUsername') ||
+    final bool isMentioned =
+        content.contains('@$currentUsername') ||
         (currentFullname.isNotEmpty && content.contains('@$currentFullname'));
 
     if (isMuted && !isMentioned) return;

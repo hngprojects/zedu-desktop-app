@@ -59,7 +59,6 @@ class _ChangePasswordViewState extends ConsumerState<ChangePasswordView> {
 
     final authState = ref.watch(authNotifierProvider);
 
-    // Format the email to mask it like pl***@gmail.com
     String maskedEmail = widget.email;
     if (maskedEmail.contains('@')) {
       final parts = maskedEmail.split('@');

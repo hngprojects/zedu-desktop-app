@@ -170,8 +170,8 @@ enum ApiFailureKind {
   unauthorized,
   forbidden,
   notFound,
-  client, // 4xx other than the named ones
-  server, // 5xx
-  parsing, // response shape didn't match
+  client,
+  server,
+  parsing,
   unknown,
 }

@@ -12,11 +12,8 @@ class ProfileAccount {
     this.country = '',
   });
 
-  factory ProfileAccount.empty() => const ProfileAccount(
-    name: '',
-    email: '',
-    timezone: 'Africa/Lagos',
-  );
+  factory ProfileAccount.empty() =>
+      const ProfileAccount(name: '', email: '', timezone: 'Africa/Lagos');
 
   final String name;
   final String email;
@@ -50,7 +47,7 @@ class ProfileAccount {
   }) {
     final e = email ?? this.email;
     final u = username ?? this.username;
-    
+
     return ProfileAccount(
       name: name ?? this.name,
       email: e,

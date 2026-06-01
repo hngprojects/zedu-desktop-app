@@ -1,8 +1,6 @@
-import 'dart:io';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
-/// Shows a confirmation dialog and calls [onConfirm] if user agrees.
 Future<void> showProfileConfirmDialog(
   BuildContext context, {
   required String title,
@@ -42,7 +40,6 @@ Future<void> showProfileConfirmDialog(
   if (confirmed == true) await onConfirm();
 }
 
-/// Dialog for editing account information.
 Future<void> showEditAccountDialog(
   BuildContext context,
   ProfileAccount account,
@@ -128,7 +125,6 @@ Future<void> showEditAccountDialog(
   timezoneCtrl.dispose();
 }
 
-/// Dialog for changing password.
 Future<void> showChangePasswordDialog(
   BuildContext context,
   Future<bool> Function({
@@ -565,7 +561,6 @@ class _EditOrganizationDialogState
   }
 }
 
-/// Dialog for inviting a team member.
 Future<void> showInviteMemberDialog(
   BuildContext context,
   Future<void> Function({required String email, required String role}) onInvite,
@@ -658,7 +653,6 @@ Future<void> showInviteMemberDialog(
   emailCtrl.dispose();
 }
 
-/// Dialog for editing a team member's role.
 Future<void> showEditMemberDialog(
   BuildContext context,
   TeamMember member,

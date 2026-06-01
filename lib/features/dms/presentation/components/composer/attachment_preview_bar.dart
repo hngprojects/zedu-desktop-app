@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:zedu/core/core.dart';
 
 class AttachmentPreviewBar extends StatelessWidget {
@@ -25,7 +24,8 @@ class AttachmentPreviewBar extends StatelessWidget {
         itemBuilder: (context, index) {
           final file = files[index];
           final lowerName = file.name.toLowerCase();
-          final isImage = lowerName.endsWith('.png') ||
+          final isImage =
+              lowerName.endsWith('.png') ||
               lowerName.endsWith('.jpg') ||
               lowerName.endsWith('.jpeg') ||
               lowerName.endsWith('.gif') ||
@@ -50,7 +50,8 @@ class AttachmentPreviewBar extends StatelessWidget {
                           fit: BoxFit.cover,
                           width: 72,
                           height: 72,
-                          errorBuilder: (context, err, stack) => const Icon(Icons.image),
+                          errorBuilder: (context, err, stack) =>
+                              const Icon(Icons.image),
                         ),
                       )
                     : Column(

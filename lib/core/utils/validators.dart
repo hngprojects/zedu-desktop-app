@@ -23,6 +23,12 @@ class Validators {
     if (_hasSequentialOrRepeating(value)) {
       return 'Password must not contain sequential or repeating characters';
     }
+    if (!RegExp(r'[^a-zA-Z0-9]').hasMatch(value)) {
+      return 'Password must contain at least one special character';
+    }
+    if (_hasSequentialOrRepeating(value)) {
+      return 'Password must not contain sequential or repeating characters';
+    }
     return null;
   }
 

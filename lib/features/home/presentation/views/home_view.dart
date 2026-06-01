@@ -59,10 +59,7 @@ class _HomeAppBar extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
         children: [
-          Image.asset(
-            'assets/pngs/zedu_logo.png',
-            height: 24,
-          ),
+          Image.asset('assets/pngs/zedu_logo.png', height: 24),
           const SizedBox(width: 12),
           TopUserMenu(userName: userName),
           const Spacer(),
@@ -224,7 +221,6 @@ class _ChatAreaSwitcher extends ConsumerWidget {
       case ActiveChatType.newGroupChat:
         return const NewGroupChatView();
 
-      case ActiveChatType.none:
       default:
         return const _EmptyChatArea();
     }
@@ -254,7 +250,7 @@ class _MainSidebarState extends ConsumerState<_MainSidebar> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const WorkspaceSwitcherHeader(),
-          
+
           // Channels
           InkWell(
             onTap: () {
@@ -266,7 +262,13 @@ class _MainSidebarState extends ConsumerState<_MainSidebar> {
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
               child: Row(
                 children: [
-                  Icon(_channelsExpanded ? Icons.arrow_drop_down : Icons.arrow_right, color: colors.onPrimary, size: 20),
+                  Icon(
+                    _channelsExpanded
+                        ? Icons.arrow_drop_down
+                        : Icons.arrow_right,
+                    color: colors.onPrimary,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Channels',
@@ -280,13 +282,16 @@ class _MainSidebarState extends ConsumerState<_MainSidebar> {
               ),
             ),
           ),
-          
+
           if (_channelsExpanded) ...[
             const _ChannelItem(label: 'general'),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: colors.onPrimary.withValues(alpha: 0.24),
@@ -316,9 +321,9 @@ class _MainSidebarState extends ConsumerState<_MainSidebar> {
             ),
             const _AddChannelButton(),
           ],
-          
+
           const SizedBox(height: 20),
-          
+
           // People
           InkWell(
             onTap: () {
@@ -330,7 +335,11 @@ class _MainSidebarState extends ConsumerState<_MainSidebar> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  Icon(_peopleExpanded ? Icons.arrow_drop_down : Icons.arrow_right, color: colors.onPrimary, size: 20),
+                  Icon(
+                    _peopleExpanded ? Icons.arrow_drop_down : Icons.arrow_right,
+                    color: colors.onPrimary,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'People',
@@ -344,17 +353,23 @@ class _MainSidebarState extends ConsumerState<_MainSidebar> {
               ),
             ),
           ),
-          
+
           if (_peopleExpanded) ...[
             const SizedBox(height: 8),
             peopleAsyncValue.when(
               data: (people) {
                 if (people.isEmpty) {
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 8,
+                    ),
                     child: Text(
                       'No team members yet.',
-                      style: TextStyle(color: colors.onPrimary.withValues(alpha: 0.7), fontSize: 13),
+                      style: TextStyle(
+                        color: colors.onPrimary.withValues(alpha: 0.7),
+                        fontSize: 13,
+                      ),
                     ),
                   );
                 }
@@ -362,28 +377,39 @@ class _MainSidebarState extends ConsumerState<_MainSidebar> {
                   children: people.map((person) {
                     final name = person.name ?? person.email.split('@').first;
                     final List<Color> avatarColors = [
-                      Colors.purple, Colors.blue, Colors.green, Colors.orange, Colors.red, Colors.teal
+                      Colors.purple,
+                      Colors.blue,
+                      Colors.green,
+                      Colors.orange,
+                      Colors.red,
+                      Colors.teal,
                     ];
                     final colorIndex = person.id.hashCode % avatarColors.length;
                     final avatarColor = avatarColors[colorIndex];
-                    
+
                     return InkWell(
                       onTap: () async {
                         final orgId = ref.read(currentOrgIdProvider);
-                        if (orgId == null) return;
-                        
+                        if (orgId == null) ;
+
                         final dmRepo = ref.read(dmRepositoryProvider);
                         final conv = await dmRepo.createDmChannel(
                           orgId: orgId,
                           userId: person.id,
                         );
-                        
-                        ref.read(homeSidebarProvider.notifier).state = HomeSidebarType.dms;
+
+                        ref.read(homeSidebarProvider.notifier).state =
+                            HomeSidebarType.dms;
                         ref.read(selectedDmProvider.notifier).state = conv;
-                        ref.read(activeChatProvider.notifier).selectDirectMessage(conv.channelId);
+                        ref
+                            .read(activeChatProvider.notifier)
+                            .selectDirectMessage(conv.channelId);
                       },
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 6,
+                        ),
                         child: Row(
                           children: [
                             Container(
@@ -424,13 +450,23 @@ class _MainSidebarState extends ConsumerState<_MainSidebar> {
               },
               loading: () => Center(
                 child: SizedBox(
-                  height: 20, width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: colors.primary),
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: colors.primary,
+                  ),
                 ),
               ),
               error: (error, _) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                child: Text('Error loading people.', style: TextStyle(color: colors.error)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 8,
+                ),
+                child: Text(
+                  'Error loading people.',
+                  style: TextStyle(color: colors.error),
+                ),
               ),
             ),
           ],
@@ -455,19 +491,22 @@ class _ChannelItem extends ConsumerWidget {
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Row(
-        children: [
-          Text(
-            '#',
-            style: TextStyle(
-              color: colors.onPrimary.withValues(alpha: 0.54),
-              fontSize: 18,
+        child: Row(
+          children: [
+            Text(
+              '#',
+              style: TextStyle(
+                color: colors.onPrimary.withValues(alpha: 0.54),
+                fontSize: 18,
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Text(label, style: TextStyle(color: colors.onPrimary, fontSize: 15)),
-        ],
-      ),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(color: colors.onPrimary, fontSize: 15),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -585,7 +624,10 @@ class _ChatArea extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          const _HeaderAction(icon: Icons.headphones_outlined, label: 'Start Buzz'),
+          const _HeaderAction(
+            icon: Icons.headphones_outlined,
+            label: 'Start Buzz',
+          ),
           const SizedBox(width: 12),
           CircleAvatar(
             radius: 14,
@@ -843,7 +885,10 @@ class _FilesViewState extends State<_FilesView> {
             children: [
               // Header
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -981,7 +1026,10 @@ class _FilesViewState extends State<_FilesView> {
                     // New folder button
                     OutlinedButton.icon(
                       onPressed: () {},
-                      icon: const Icon(Icons.create_new_folder_outlined, size: 16),
+                      icon: const Icon(
+                        Icons.create_new_folder_outlined,
+                        size: 16,
+                      ),
                       label: const Text('New folder'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: colors.primary,
@@ -1026,10 +1074,7 @@ class _FilesViewState extends State<_FilesView> {
               ),
 
               // Divider
-              Container(
-                height: 1,
-                color: const Color(0xFFE5E7EB),
-              ),
+              Container(height: 1, color: const Color(0xFFE5E7EB)),
 
               // Empty state (shared by all nav items)
               Expanded(
@@ -1127,8 +1172,7 @@ class _FilesNavItem extends StatelessWidget {
                 color: isSelected
                     ? colors.onPrimary
                     : colors.onPrimary.withValues(alpha: 0.6),
-                fontWeight:
-                    isSelected ? FontWeight.w600 : FontWeight.normal,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
           ],

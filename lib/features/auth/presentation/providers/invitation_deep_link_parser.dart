@@ -13,14 +13,10 @@ class InvitationDeepLinkParser {
     final host = uri.host.toLowerCase();
     final path = _normalizePath(uri.path);
 
-    // Matches zedu://invite/accept?token=... or zedu://invite?token=...
     if (scheme == 'zedu' && (host == 'invite' || path.startsWith('/invite'))) {
       return true;
     }
 
-    // Matches https://<any-host>/invite/accept?token=...
-    // or https://<any-host>/accept-invite?token=...
-    // or https://<any-host>/invite?token=...
     if ((scheme == 'https' || scheme == 'http') &&
         (path.contains('/invite/accept') ||
             path.contains('/accept-invite') ||

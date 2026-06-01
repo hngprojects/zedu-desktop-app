@@ -26,7 +26,6 @@ class _SearchPanelState extends State<SearchPanel> {
 
     setState(() {
       _isSearching = true;
-      // Mock search delay
     });
 
     Future.delayed(const Duration(milliseconds: 500), () {

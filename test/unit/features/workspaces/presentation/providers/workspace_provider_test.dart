@@ -1,5 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
+import '../../../../../helpers/helpers.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -20,14 +19,16 @@ void main() {
 
     setUp(() {
       mockApiBaseService = MockApiBaseService();
-      
+
       // Register mockApiBaseService in locator
       if (locator.isRegistered<ApiBaseService>()) {
         locator.unregister<ApiBaseService>();
       }
       locator.registerSingleton<ApiBaseService>(mockApiBaseService);
 
-      final json = Map<String, dynamic>.from(LoginResponseModel.mockLoginResponse);
+      final json = Map<String, dynamic>.from(
+        LoginResponseModel.mockLoginResponse,
+      );
       final userJson = Map<String, dynamic>.from(json['user'] as Map);
       userJson['id'] = 'user-123';
       json['user'] = userJson;
@@ -75,12 +76,8 @@ void main() {
               'owner_id': 'user-999',
               'channels_count': 10,
             },
-            {
-              'id': 'org-no-owner',
-              'name': 'No Owner Org',
-              'channels_count': 1,
-            }
-          ]
+            {'id': 'org-no-owner', 'name': 'No Owner Org', 'channels_count': 1},
+          ],
         },
       );
 
@@ -101,12 +98,12 @@ void main() {
       // Should filter out the organisation created by user-999 (Other Org)
       // but keep My Organization, My Created Org, and No Owner Org.
       final workspaceIds = state.workspaces.map((w) => w.id).toList();
-      
+
       expect(workspaceIds, contains('org-owner-123'));
       expect(workspaceIds, contains('org-creator-123'));
       expect(workspaceIds, contains('org-no-owner'));
       expect(workspaceIds, isNot(contains('org-other-user')));
-      
+
       expect(state.workspaces.length, equals(3));
     });
   });

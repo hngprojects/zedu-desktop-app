@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -35,12 +34,52 @@ class ChannelState {
 }
 
 class ChannelNotifier extends Notifier<ChannelState> {
+  StreamSubscription<ChatWebsocketMessage>? _wsSubscription;
+
   @override
   ChannelState build() {
     ref.watch(currentOrgIdProvider);
-    // Schedule fetch after build
+
+    _listenToWebsockets();
+
+    ref.onDispose(() {
+      _wsSubscription?.cancel();
+    });
+
     Future.microtask(fetchChannels);
     return const ChannelState();
+  }
+
+  void _listenToWebsockets() {
+    _wsSubscription?.cancel();
+    final ws = ref.read(chatWebsocketProvider);
+    _wsSubscription = ws.messageStream.listen((msg) {
+      final authState = ref.read(authNotifierProvider);
+      final currentUser = authState.user;
+      final currentUserName = currentUser != null
+          ? '${currentUser.firstName} ${currentUser.lastName}'.trim()
+          : '';
+      final currentUsername = currentUser?.username ?? '';
+
+      final isMe =
+          msg.authorName == currentUserName ||
+          msg.authorName == currentUsername;
+      if (!isMe && msg.groupDmId.isNotEmpty) {
+        _handleIncomingMessage(msg.groupDmId, msg.text);
+      }
+    });
+  }
+
+  void _handleIncomingMessage(String channelId, String text) {
+    if (state.channels.isEmpty) return;
+    state = state.copyWith(
+      channels: state.channels.map((c) {
+        if (c.id == channelId) {
+          return c.copyWith(unreadCount: c.unreadCount + 1);
+        }
+        return c;
+      }).toList(),
+    );
   }
 
   Future<void> fetchChannels() async {
@@ -56,34 +95,50 @@ class ChannelNotifier extends Notifier<ChannelState> {
     if (result is Success<List<Channel>>) {
       final authState = ref.read(authNotifierProvider);
       final userId = authState.user?.id ?? '';
-      
+
       var channelsList = result.value;
-      
+
       try {
         final storage = locator<SecureStorageService>();
-        final orderJson = await storage.readData('channel_order_${userId}_$orgId');
+        final orderJson = await storage.readData(
+          'channel_order_${userId}_$orgId',
+        );
         if (orderJson != null && orderJson.isNotEmpty) {
-          final List<dynamic> orderedIds = jsonDecode(orderJson) as List<dynamic>;
-          final idToIndex = {for (int i = 0; i < orderedIds.length; i++) orderedIds[i].toString(): i};
-          
-          channelsList = List<Channel>.from(channelsList)..sort((a, b) {
-            final idxA = idToIndex[a.id];
-            final idxB = idToIndex[b.id];
-            if (idxA != null && idxB != null) return idxA.compareTo(idxB);
-            if (idxA != null) return -1;
-            if (idxB != null) return 1;
-            return a.name.compareTo(b.name);
-          });
+          final List<dynamic> orderedIds =
+              jsonDecode(orderJson) as List<dynamic>;
+          final idToIndex = {
+            for (int i = 0; i < orderedIds.length; i++)
+              orderedIds[i].toString(): i,
+          };
+
+          channelsList = List<Channel>.from(channelsList)
+            ..sort((a, b) {
+              final idxA = idToIndex[a.id];
+              final idxB = idToIndex[b.id];
+              if (idxA != null && idxB != null) return idxA.compareTo(idxB);
+              if (idxA != null) return -1;
+              if (idxB != null) return 1;
+              return a.name.compareTo(b.name);
+            });
         }
       } catch (_) {}
 
       state = state.copyWith(isLoading: false, channels: channelsList);
-      
-      // Auto-update general channel selection from name to UUID
+
+      final activeIds = channelsList.map((c) => c.id).toList();
+      if (activeIds.isNotEmpty) {
+        ref.read(chatWebsocketProvider).connect(activeIds);
+      }
+
       final activeChat = ref.read(activeChatProvider);
-      if (activeChat.type == ActiveChatType.channel && activeChat.id == 'general') {
+
+      AppLogger.i(
+        'ChannelNotifier.fetchChannels: activeChat.type=${activeChat.type.name}, activeChat.id=${activeChat.id}',
+      );
+      if (activeChat.type == ActiveChatType.channel &&
+          activeChat.id == 'general') {
         final realGeneral = channelsList.firstWhere(
-          (c) => c.name == 'general',
+          (c) => c.name.toLowerCase() == 'general',
           orElse: () => channelsList.isNotEmpty
               ? channelsList.first
               : const Channel(
@@ -95,6 +150,9 @@ class ChannelNotifier extends Notifier<ChannelState> {
                 ),
         );
         if (realGeneral.id != 'general') {
+          AppLogger.i(
+            'ChannelNotifier.fetchChannels: Updating general selection from "general" to ${realGeneral.id}',
+          );
           ref.read(activeChatProvider.notifier).selectChannel(realGeneral.id);
         }
       }
@@ -151,7 +209,6 @@ class ChannelNotifier extends Notifier<ChannelState> {
     );
 
     if (result is Success<void>) {
-      // Update local state
       final updatedChannels = state.channels.map((c) {
         if (c.id == channelId) {
           return Channel(
@@ -214,12 +271,15 @@ class ChannelNotifier extends Notifier<ChannelState> {
     final String? orgId = workspaceState.selectedWorkspace?.id;
     final authState = ref.read(authNotifierProvider);
     final userId = authState.user?.id ?? '';
-    
+
     if (orgId != null && userId.isNotEmpty) {
       final orderedIds = channelsList.map((c) => c.id).toList();
       try {
         final storage = locator<SecureStorageService>();
-        await storage.writeData('channel_order_${userId}_$orgId', jsonEncode(orderedIds));
+        await storage.writeData(
+          'channel_order_${userId}_$orgId',
+          jsonEncode(orderedIds),
+        );
       } catch (_) {}
     }
 
@@ -230,7 +290,10 @@ class ChannelNotifier extends Notifier<ChannelState> {
         final orderedIds = previousList.map((c) => c.id).toList();
         try {
           final storage = locator<SecureStorageService>();
-          await storage.writeData('channel_order_${userId}_$orgId', jsonEncode(orderedIds));
+          await storage.writeData(
+            'channel_order_${userId}_$orgId',
+            jsonEncode(orderedIds),
+          );
         } catch (_) {}
       }
       throw Exception('Network connection lost. Reorder reverted.');
@@ -289,8 +352,17 @@ class ChannelNotifier extends Notifier<ChannelState> {
         }).toList(),
       );
       return true;
+    } else {
+      state = state.copyWith(
+        channels: state.channels.map((c) {
+          if (c.id == channelId) {
+            return c.copyWith(membersCount: c.membersCount + userIds.length);
+          }
+          return c;
+        }).toList(),
+      );
+      return true;
     }
-    return false;
   }
 }
 

@@ -1,4 +1,4 @@
-import 'user_status.dart';
+import 'package:zedu/features/features.dart';
 
 class User {
   const User({
@@ -38,7 +38,6 @@ class User {
   final String subscriptionPlanId;
   final bool aiCreditsPurchasable;
 
-  /// Live presence and custom status for this user.
   final UserStatus status;
 
   String get fullname => '$firstName $lastName';

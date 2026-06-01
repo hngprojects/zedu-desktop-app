@@ -1,5 +1,3 @@
-import 'dart:async';
-import 'dart:io';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -77,8 +75,12 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
         _recordingDuration = 0;
       });
       final tempDir = Directory.systemTemp;
-      final path = '${tempDir.path}/voice_note_${DateTime.now().millisecondsSinceEpoch}.m4a';
-      await _audioRecorder.start(const RecordConfig(encoder: AudioEncoder.aacLc), path: path);
+      final path =
+          '${tempDir.path}/voice_note_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      await _audioRecorder.start(
+        const RecordConfig(encoder: AudioEncoder.aacLc),
+        path: path,
+      );
 
       _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
         if (!_isRecordingPaused) {
@@ -87,7 +89,9 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
             if (_recordingDuration >= 300) {
               _stopRecording();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Recording limit of 5 minutes reached.')),
+                const SnackBar(
+                  content: Text('Recording limit of 5 minutes reached.'),
+                ),
               );
             }
           });
@@ -127,7 +131,9 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
       _recordingDuration = 0;
       if (path != null) {
         _controller.text = '[Voice Note Attached]';
-        _controller.selection = TextSelection.collapsed(offset: _controller.text.length);
+        _controller.selection = TextSelection.collapsed(
+          offset: _controller.text.length,
+        );
         final file = XFile(path, name: 'voice_note.m4a', mimeType: 'audio/m4a');
         _pendingFiles = [file];
       }
@@ -339,8 +345,11 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
     if (!sel.isValid) {
       sel = TextSelection.collapsed(offset: text.length);
     }
-    final insert = sel.isCollapsed ? '\n- ' : '\n- ${text.substring(sel.start, sel.end)}';
-    final newText = text.substring(0, sel.start) + insert + text.substring(sel.end);
+    final insert = sel.isCollapsed
+        ? '\n- '
+        : '\n- ${text.substring(sel.start, sel.end)}';
+    final newText =
+        text.substring(0, sel.start) + insert + text.substring(sel.end);
     _controller.value = TextEditingValue(
       text: newText,
       selection: TextSelection.collapsed(offset: sel.start + insert.length),
@@ -354,8 +363,11 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
     if (!sel.isValid) {
       sel = TextSelection.collapsed(offset: text.length);
     }
-    final insert = sel.isCollapsed ? '\n1. ' : '\n1. ${text.substring(sel.start, sel.end)}';
-    final newText = text.substring(0, sel.start) + insert + text.substring(sel.end);
+    final insert = sel.isCollapsed
+        ? '\n1. '
+        : '\n1. ${text.substring(sel.start, sel.end)}';
+    final newText =
+        text.substring(0, sel.start) + insert + text.substring(sel.end);
     _controller.value = TextEditingValue(
       text: newText,
       selection: TextSelection.collapsed(offset: sel.start + insert.length),
@@ -449,7 +461,8 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
     setState(() {
       final removed = _pendingFiles[index];
       _pendingFiles = List<XFile>.of(_pendingFiles)..removeAt(index);
-      if (removed.name == 'voice_note.m4a' && _controller.text == '[Voice Note Attached]') {
+      if (removed.name == 'voice_note.m4a' &&
+          _controller.text == '[Voice Note Attached]') {
         _controller.clear();
       }
     });
@@ -469,7 +482,9 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
 
   void _deleteVoiceNote() {
     setState(() {
-      _pendingFiles = _pendingFiles.where((f) => f.name != 'voice_note.m4a').toList();
+      _pendingFiles = _pendingFiles
+          .where((f) => f.name != 'voice_note.m4a')
+          .toList();
       if (_controller.text == '[Voice Note Attached]') {
         _controller.clear();
       }
@@ -502,7 +517,8 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final canSend = _controller.text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
+    final canSend =
+        _controller.text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
 
     final mainColumn = Column(
       mainAxisSize: MainAxisSize.min,
@@ -529,9 +545,13 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
 
         if (_pendingFiles.where((f) => f.name != 'voice_note.m4a').isNotEmpty)
           AttachmentPreviewBar(
-            files: _pendingFiles.where((f) => f.name != 'voice_note.m4a').toList(),
+            files: _pendingFiles
+                .where((f) => f.name != 'voice_note.m4a')
+                .toList(),
             onRemove: (int index) {
-              final nonVoiceFiles = _pendingFiles.where((f) => f.name != 'voice_note.m4a').toList();
+              final nonVoiceFiles = _pendingFiles
+                  .where((f) => f.name != 'voice_note.m4a')
+                  .toList();
               final fileToRemove = nonVoiceFiles[index];
               _removeFile(_pendingFiles.indexOf(fileToRemove));
             },
@@ -659,14 +679,18 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
                   ),
                 ),
                 Divider(height: 12, color: colors.divider),
-                 Padding(
+                Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: _isRecording
                       ? Container(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Row(
                             children: [
-                              Icon(Icons.fiber_manual_record, color: colors.error, size: 16),
+                              Icon(
+                                Icons.fiber_manual_record,
+                                color: colors.error,
+                                size: 16,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 'Recording: ${_recordingDuration ~/ 60}:${(_recordingDuration % 60).toString().padLeft(2, '0')}',
@@ -692,9 +716,18 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
                                 onPressed: _cancelRecording,
                               ),
                               IconButton(
-                                icon: Icon(_isRecordingPaused ? Icons.play_arrow : Icons.pause, color: colors.primary),
-                                tooltip: _isRecordingPaused ? 'Resume' : 'Pause',
-                                onPressed: _isRecordingPaused ? _resumeRecording : _pauseRecording,
+                                icon: Icon(
+                                  _isRecordingPaused
+                                      ? Icons.play_arrow
+                                      : Icons.pause,
+                                  color: colors.primary,
+                                ),
+                                tooltip: _isRecordingPaused
+                                    ? 'Resume'
+                                    : 'Pause',
+                                onPressed: _isRecordingPaused
+                                    ? _resumeRecording
+                                    : _pauseRecording,
                               ),
                               IconButton(
                                 icon: Icon(Icons.check, color: colors.primary),
@@ -705,49 +738,54 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
                           ),
                         )
                       : _hasVoiceNoteAttached
-                          ? Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: VoiceNotePlayer(
-                                      audioSource: _voiceNoteFile!.path,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  IconButton(
-                                    icon: Icon(Icons.delete_outline, color: colors.error),
-                                    tooltip: 'Delete Voice Note',
-                                    onPressed: _deleteVoiceNote,
-                                  ),
-                                ],
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: VoiceNotePlayer(
+                                  audioSource: _voiceNoteFile!.path,
+                                ),
                               ),
-                            )
-                          : Focus(
-                              onKeyEvent: _handleKeyEvent,
-                              child: TextField(
-                                controller: _controller,
-                                focusNode: _focusNode,
-                                maxLines: null,
-                                minLines: 1,
-                                decoration: InputDecoration(
-                                  hintText: _isEditMode
-                                      ? 'Editing message…'
-                                      : 'Message ${widget.recipientName}',
-                                  hintStyle: TextStyle(
-                                    color: colors.textHint.withValues(alpha: 0.75),
-                                    fontSize: 12,
-                                  ),
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.delete_outline,
+                                  color: colors.error,
                                 ),
-                                style: TextStyle(
-                                  color: colors.textPrimary,
-                                  fontSize: 13,
-                                  height: 1.5,
-                                ),
+                                tooltip: 'Delete Voice Note',
+                                onPressed: _deleteVoiceNote,
+                              ),
+                            ],
+                          ),
+                        )
+                      : Focus(
+                          onKeyEvent: _handleKeyEvent,
+                          child: TextField(
+                            controller: _controller,
+                            focusNode: _focusNode,
+                            maxLines: null,
+                            minLines: 1,
+                            decoration: InputDecoration(
+                              hintText: _isEditMode
+                                  ? 'Editing message…'
+                                  : 'Message ${widget.recipientName}',
+                              hintStyle: TextStyle(
+                                color: colors.textHint.withValues(alpha: 0.75),
+                                fontSize: 12,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 8,
                               ),
                             ),
+                            style: TextStyle(
+                              color: colors.textPrimary,
+                              fontSize: 13,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
                 ),
                 const SizedBox(height: 2),
                 Padding(
@@ -818,18 +856,26 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
                         icon: Icons.videocam_outlined,
                         tooltip: 'Video call',
                         onTap: () {
-                          ref.read(activeCallProvider.notifier).initiateCall(
-                            remoteUserId: widget.participants.firstOrNull?.userId ?? widget.channelId,
-                            remoteUserName: widget.recipientName,
-                            channelId: widget.channelId,
-                          );
+                          ref
+                              .read(activeCallProvider.notifier)
+                              .initiateCall(
+                                remoteUserId:
+                                    widget.participants.firstOrNull?.userId ??
+                                    widget.channelId,
+                                remoteUserName: widget.recipientName,
+                                channelId: widget.channelId,
+                              );
                         },
                         colors: colors,
                       ),
                       const SizedBox(width: 4),
                       ToolbarButton(
-                        icon: _isRecording ? Icons.stop_circle_rounded : Icons.mic_none_rounded,
-                        tooltip: _isRecording ? 'Stop recording' : 'Voice message',
+                        icon: _isRecording
+                            ? Icons.stop_circle_rounded
+                            : Icons.mic_none_rounded,
+                        tooltip: _isRecording
+                            ? 'Stop recording'
+                            : 'Voice message',
                         onTap: () {
                           if (_isRecording) {
                             _stopRecording();

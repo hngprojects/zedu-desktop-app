@@ -24,23 +24,7 @@ class AppSidebarRail extends ConsumerWidget {
         onTypeSelected!(type);
         return;
       }
-
-      final currentSidebar = ref.read(homeSidebarProvider);
-      if (currentSidebar == type) return;
-
       ref.read(homeSidebarProvider.notifier).setType(type);
-
-      if (type == HomeSidebarType.home) {
-        // Home always goes to the #general channel
-        ref.read(activeChatProvider.notifier).selectChannel('general');
-      } else if (type == HomeSidebarType.dms || type == HomeSidebarType.people) {
-        // DMs and People share the same chat area — don't reset the active chat
-        // so the user stays in whatever conversation they had open.
-        // If nothing is open yet, the area already shows the empty state.
-      } else {
-        // Files, Buzz, etc. — clear the main chat area
-        ref.read(activeChatProvider.notifier).clear();
-      }
     }
 
     return Container(
@@ -87,7 +71,6 @@ class AppSidebarRail extends ConsumerWidget {
             icon: Icons.notifications_none_outlined,
             hasNotification: true,
             onTap: () {
-              // Fire a test notification replicating DM notification
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Notification will fire in 5 seconds.'),
@@ -139,8 +122,6 @@ class _BuzzRailItem extends ConsumerWidget {
         ? 'Buzz'
         : 'Last Buzz: ${_formatDateTime(call.lastCallAt!)}';
 
-    final missedCount = ref.watch(buzzLogProvider).missedCount;
-
     return Tooltip(
       message: tooltip,
       waitDuration: const Duration(milliseconds: 350),
@@ -148,25 +129,14 @@ class _BuzzRailItem extends ConsumerWidget {
         icon: Icons.phone_outlined,
         label: 'Buzz',
         isActive: isActive,
-        badgeCount: missedCount > 0 ? missedCount : null,
-        onTap: () {
-          if (missedCount > 0) {
-            ref.read(buzzLogProvider.notifier).clearMissedBadge();
-          }
-          onTap();
-        },
+        onTap: onTap,
       ),
     );
   }
 
   String _formatDateTime(DateTime value) {
-    final local = value.toLocal();
-    final hour = local.hour > 12
-        ? local.hour - 12
-        : (local.hour == 0 ? 12 : local.hour);
-    final minute = local.minute.toString().padLeft(2, '0');
-    final period = local.hour >= 12 ? 'PM' : 'AM';
-    return '${local.day}/${local.month}/${local.year} $hour:$minute $period';
+    final timeString = DateFormatter.formatTime12h(value);
+    return '${value.day}/${value.month}/${value.year} $timeString';
   }
 }
 
@@ -175,14 +145,12 @@ class _RailNavItem extends StatelessWidget {
     required this.icon,
     required this.label,
     this.isActive = false,
-    this.badgeCount,
     this.onTap,
   });
 
   final IconData icon;
   final String label;
   final bool isActive;
-  final int? badgeCount;
   final VoidCallback? onTap;
 
   @override
@@ -195,41 +163,16 @@ class _RailNavItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
         child: Column(
           children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? colors.primary.withValues(alpha: 0.95)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(7),
-                  ),
-                  child: Icon(icon, color: colors.onPrimary, size: 18),
-                ),
-                if (badgeCount != null)
-                  Positioned(
-                    right: -4,
-                    top: -4,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: colors.error,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        badgeCount.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: isActive
+                    ? colors.primary.withValues(alpha: 0.95)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(7),
+              ),
+              child: Icon(icon, color: colors.onPrimary, size: 18),
             ),
             const SizedBox(height: 4),
             Text(

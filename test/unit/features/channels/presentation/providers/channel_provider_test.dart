@@ -1,5 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
+import '../../../../../helpers/helpers.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -66,7 +65,6 @@ void main() {
       ).thenAnswer((_) async => Success(<Channel>[]));
       final container = createContainer();
 
-      // Trigger build and wait for fetchChannels to finish
       container.read(channelProvider);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
@@ -93,7 +91,6 @@ void main() {
 
       final container = createContainer();
 
-      // Trigger build and wait for fetchChannels to finish
       container.read(channelProvider);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
@@ -115,7 +112,6 @@ void main() {
 
       final container = createContainer();
 
-      // Trigger build and wait for fetchChannels to finish
       container.read(channelProvider);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
@@ -151,7 +147,6 @@ void main() {
 
       final container = createContainer();
 
-      // Trigger build and wait for fetchChannels to finish
       container.read(channelProvider);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
@@ -192,7 +187,6 @@ void main() {
 
         final container = createContainer();
 
-        // Trigger build and wait for fetchChannels to finish
         container.read(channelProvider);
         await Future<void>.delayed(const Duration(milliseconds: 50));
 
@@ -229,7 +223,6 @@ void main() {
 
       final container = createContainer();
 
-      // Trigger build and wait for fetchChannels to finish
       container.read(channelProvider);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
@@ -322,7 +315,9 @@ void main() {
       final result = await notifier.joinChannel('c-2');
 
       expect(result, isTrue);
-      verify(() => mockChannelRepository.fetchChannels('org-123')).called(greaterThan(0));
+      verify(
+        () => mockChannelRepository.fetchChannels('org-123'),
+      ).called(greaterThan(0));
     });
 
     test('addChannelMembers increments membersCount locally', () async {
@@ -351,7 +346,10 @@ void main() {
       final result = await notifier.addChannelMembers('c-1', ['u-1', 'u-2']);
 
       expect(result, isTrue);
-      expect(container.read(channelProvider).channels.first.membersCount, equals(4));
+      expect(
+        container.read(channelProvider).channels.first.membersCount,
+        equals(4),
+      );
     });
   });
 }

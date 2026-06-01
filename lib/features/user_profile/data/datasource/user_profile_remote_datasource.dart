@@ -33,11 +33,13 @@ abstract interface class UserProfileRemoteDataSource {
     required String email,
     required String role,
     required String orgId,
+    String? userId,
   });
   Future<TeamMemberModel> updateMember(TeamMember member);
   Future<void> removeMember(String memberId);
   Future<List<RolePermissionModel>> getRolesAndPermissions();
   Future<BillingInfoModel> getBillingInfo();
+  Future<void> acceptInvitation(String token);
   Future<void> addUserDirectly({
     required String orgId,
     required String userId,
@@ -70,15 +72,9 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     required String userId,
     required String roleId,
   }) async {
-    // Note: The backend expects "role_Id" with a capital 'I' according to the Swagger schema,
-    // but we send both just in case it was fixed to 'role_id'.
-    // Also sending member_id in case it expects that instead of user_id.
     await _apiBaseService.post<Map<String, dynamic>>(
       path: '/organisations/$orgId/users',
-      data: {
-        'user_id': userId,
-        'role_Id': roleId,
-      },
+      data: {'user_id': userId, 'role_Id': roleId},
     );
   }
 
@@ -276,17 +272,13 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
   }) async {
     try {
       final response = await _apiBaseService.post<Map<String, dynamic>>(
-        path: ApiEndpoints.organisations,
+        path: '/organisations',
         data: {'name': name, 'type': type, 'country': country},
       );
-      // Small delay to ensure the event loop has processed the request
-      await Future<void>.delayed(const Duration(milliseconds: 100));
 
-      // FIX: was `as Map<String, dynamic>` — hard cast crashes if the backend
-      // returns a List or wraps the org differently. Use a safe is-check.
-      final data = response.data['data'];
+      await Future<void>.delayed(const Duration(milliseconds: 100));
       return OrganizationProfileModel.fromJson(
-        data is Map<String, dynamic> ? data : const <String, dynamic>{},
+        response.data['data'] as Map<String, dynamic>,
       );
     } catch (e) {
       if (e is DioException) {
@@ -303,55 +295,85 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
     );
   }
 
-  @override
-  Future<List<TeamMemberModel>> getTeamMembers({String? orgId}) async {
-    try {
-      if (orgId == null || orgId.isEmpty) return const [];
-      final response = await _apiBaseService.get<Map<String, dynamic>>(
-        path: ApiEndpoints.organizationUsers(orgId),
-      );
+  // @override
+  // Future<List<TeamMemberModel>> getTeamMembers({String? orgId}) async {
+  //   if (_config.usesMockData) {
+  //     List<TeamMemberModel> loadedTeamMembers = [];
 
-      final rawData = response.data['data'];
-      List<dynamic> data = [];
+  //     if (orgId != null) {
+  //       final storage = locator<SecureStorageService>();
+  //       final data = await storage.readData('mock_team_members_$orgId');
+  //       if (data != null) {
+  //         try {
+  //           final List<dynamic> decoded = jsonDecode(data) as List<dynamic>;
+  //           loadedTeamMembers = decoded
+  //               .map((e) => TeamMemberModel.fromJson(e as Map<String, dynamic>))
+  //               .toList();
+  //         } catch (_) {}
+  //       }
+  //     }
 
-      if (rawData is List) {
-        data = rawData;
-      } else if (rawData is Map<String, dynamic>) {
-        // FIX: was `as List<dynamic>` — hard cast crashes when the backend
-        // returns a Map for users/members/data instead of a List.
-        // The error `type '_Map<String, dynamic>' is not a subtype of
-        // type 'List<dynamic>?'` was thrown exactly here.
-        final candidate =
-            rawData['users'] ?? rawData['members'] ?? rawData['data'];
-        data = candidate is List ? candidate : [];
-      }
+  //     if (loadedTeamMembers.isNotEmpty) {
+  //       return loadedTeamMembers;
+  //     }
 
-      if (data.isEmpty) return [];
+  //     final list = _members.map(TeamMemberModel.fromJson).toList();
 
-      return data.whereType<Map<String, dynamic>>().map((user) {
-        return TeamMemberModel(
-          id: user['id'] as String? ?? '',
-          email: user['email'] as String? ?? '',
-          role: user['role'] as String? ?? 'User',
-          dateJoined: user['created_at'] as String? ?? '',
-          status: TeamMemberStatus.active,
-          name:
-              user['name'] as String? ??
-              user['username'] as String? ??
-              'Unknown',
-          avatarUrl: user['avatar_url'] as String?,
-        );
-      }).toList();
-    } catch (e) {
-      return [];
-    }
-  }
+  //     if (list.length < 100) {
+  //       final roles = ['User', 'Guess', 'Manager', 'Project Lead'];
+  //       for (int i = 1; i <= 1000; i++) {
+  //         list.add(
+  //           TeamMemberModel(
+  //             id: 'member-mock-$i',
+  //             email: 'teammate$i@zedu.app',
+  //             role: roles[i % roles.length],
+  //             dateJoined: 'May ${i % 20 + 1}, 2026',
+  //             status: TeamMemberStatus.active,
+  //             name: 'Teammate $i',
+  //             avatarUrl: null,
+  //           ),
+  //         );
+  //       }
+  //     }
+  //     return list;
+  //   }
+
+  //   if (orgId == null || orgId.length < 36) {
+  //     return [];
+  //   }
+
+  //   try {
+  //     final response = await _apiBaseService.get<Map<String, dynamic>>(
+  //       path: '/organisations/$orgId/users',
+  //     );
+  //     final data = response.data['data'] as List<dynamic>?;
+  //     if (data == null) return [];
+
+  //     return data.cast<Map<String, dynamic>>().map((user) {
+  //       return TeamMemberModel(
+  //         id: user['id'] as String? ?? '',
+  //         email: user['email'] as String? ?? '',
+  //         role: user['role'] as String? ?? 'User',
+  //         dateJoined: user['created_at'] as String? ?? '',
+  //         status: TeamMemberStatus.active,
+  //         name:
+  //             user['name'] as String? ??
+  //             user['username'] as String? ??
+  //             'Unknown',
+  //         avatarUrl: user['avatar_url'] as String?,
+  //       );
+  //     }).toList();
+  //   } catch (e) {
+  //     return [];
+  //   }
+  // }
 
   @override
   Future<TeamMemberModel> inviteMember({
     required String email,
     required String role,
     required String orgId,
+    String? userId,
   }) async {
     final response = await _apiBaseService.post<Map<String, dynamic>>(
       path: ApiEndpoints.invite,
@@ -361,14 +383,44 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
         'role_id': role,
       },
     );
-    // FIX: was `as Map<String, dynamic>` — hard cast crashes if the backend
-    // returns a List or null under 'data'. Use a safe is-check instead.
+
     final raw = response.data['data'];
     final data = raw is Map<String, dynamic> ? raw : const <String, dynamic>{};
     final rawInvitations = data['invitations'];
     final invites = rawInvitations is List
         ? rawInvitations
         : (rawInvitations is Map ? [rawInvitations] : <dynamic>[]);
+
+    if (invites.isNotEmpty) {
+      final invite = invites.first as Map<String, dynamic>;
+      return TeamMemberModel(
+        id:
+            invite['id'] as String? ??
+            DateTime.now().millisecondsSinceEpoch.toString(),
+        email: invite['email'] as String? ?? email,
+        role: role,
+        dateJoined: userId != null ? 'Active' : 'Pending',
+        status: userId != null
+            ? TeamMemberStatus.active
+            : TeamMemberStatus.pending,
+        name: email.split('@').first,
+      );
+    }
+
+    if (userId != null && userId.isNotEmpty) {
+      await _apiBaseService.post<Map<String, dynamic>>(
+        path: '/organisations/$orgId/users',
+        data: {'user_id': userId, 'role_Id': role},
+      );
+      return TeamMemberModel(
+        id: userId,
+        email: email,
+        role: role,
+        dateJoined: DateTime.now().toString(),
+        status: TeamMemberStatus.active,
+        name: email.split('@').first,
+      );
+    }
 
     if (invites.isNotEmpty) {
       final invite = invites.first as Map<String, dynamic>;
@@ -399,8 +451,6 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
       path: ApiEndpoints.organizationMember(member.id),
       data: {'email': member.email, 'role': member.role},
     );
-    // FIX: was `as Map<String, dynamic>` — hard cast crashes if the backend
-    // returns a List or wraps the member differently. Use a safe is-check.
     final data = response.data['data'];
     return TeamMemberModel.fromJson(
       data is Map<String, dynamic> ? data : const <String, dynamic>{},
@@ -439,7 +489,17 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
   }
 
   @override
+  Future<void> acceptInvitation(String token) async {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<BillingInfoModel> getBillingInfo() async {
-    return BillingInfoModel.fromJson(const <String, dynamic>{});
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<TeamMemberModel>> getTeamMembers({String? orgId}) async {
+    return [];
   }
 }

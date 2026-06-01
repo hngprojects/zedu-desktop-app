@@ -1,5 +1,3 @@
-import 'dart:async';
-import 'dart:convert';
 import 'package:centrifuge/centrifuge.dart' as centrifuge;
 import 'package:zedu/core/core.dart';
 
@@ -46,11 +44,10 @@ class RealtimeService {
     final baseUri = Uri.tryParse(config.apiBaseUrl);
     final host = baseUri?.host ?? 'api.staging.zedu.chat';
     final websocketScheme = baseUri?.scheme == 'https' ? 'wss' : 'ws';
-    final defaultUrl = '$websocketScheme://$host/centrifugo/connection/websocket';
+    final defaultUrl =
+        '$websocketScheme://$host/centrifugo/connection/websocket';
 
-    final url =
-        dotenv.env['CENTRIFUGO_WEBSOCKET_URL'] ??
-        defaultUrl;
+    final url = dotenv.env['CENTRIFUGO_WEBSOCKET_URL'] ?? defaultUrl;
 
     _client = centrifuge.createClient(url);
     _client?.setToken(token);

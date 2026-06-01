@@ -11,7 +11,10 @@ class SecureStorageService {
 
   // Fallback storage files in user's home/profile directory
   File get _fallbackFile {
-    final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '.';
+    final home =
+        Platform.environment['HOME'] ??
+        Platform.environment['USERPROFILE'] ??
+        '.';
     return File('$home/.zedu_token');
   }
 

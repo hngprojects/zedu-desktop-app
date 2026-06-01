@@ -1,8 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
-// data/repositories/auth_repository_impl.dart
-
 class AuthRepositoryImpl implements AuthRepository {
   const AuthRepositoryImpl({required AuthRemoteDataSource remote})
     : _remote = remote;
@@ -108,10 +106,10 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       return Success(
         AuthSession(
+          notificationToken: response.notificationToken,
           user: response.user.toEntity(),
           accessToken: response.accessToken,
           accessTokenExpiresIn: response.accessTokenExpiresIn,
-          notificationToken: response.notificationToken,
         ),
       );
     } on ApiFailure catch (failure) {
@@ -158,10 +156,10 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       return Success(
         AuthSession(
+          notificationToken: response.notificationToken,
           user: response.user.toEntity(),
           accessToken: response.accessToken,
           accessTokenExpiresIn: response.accessTokenExpiresIn,
-          notificationToken: response.notificationToken,
         ),
       );
     } on ApiFailure catch (failure) {

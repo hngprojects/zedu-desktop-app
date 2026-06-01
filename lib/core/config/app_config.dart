@@ -4,17 +4,11 @@ class AppConfig {
   const AppConfig({
     required this.apiBaseUrl,
     required this.usesMockData,
-    // Web Client ID: '764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com'
-    // Desktop Client ID:
     this.googleClientId =
-        '764182056638-qtmk2mattvq035th78hjgpe5docu0oh1.apps.googleusercontent.com',
+        '764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com',
     this.googleClientSecret = '',
   });
 
-  /// Resolves config after [loadAppEnv] has run in [main] (root `.env` /
-  /// `.env.example`, bundled as assets).
-  ///
-  /// Precedence: `--dart-define` wins, then dotenv keys from those files, then
   factory AppConfig.fromEnvironment() {
     const defineBaseUrl = String.fromEnvironment('API_BASE_URL');
     const defineUsesMock = String.fromEnvironment('USE_MOCK_DATA');
@@ -26,13 +20,13 @@ class AppConfig {
     final envClientId = dotenv.maybeGet('GOOGLE_CLIENT_ID')?.trim();
     final envClientSecret = dotenv.maybeGet('GOOGLE_CLIENT_SECRET')?.trim();
 
-    // Default to the staging Zedu URL where user accounts and Google OAuth credentials are registered.
-    // Allow overrides from --dart-define or .env if they are configured and not the default placeholder.
     String apiBaseUrl = defineBaseUrl.isNotEmpty
         ? defineBaseUrl
-        : (envBaseUrl != null && envBaseUrl.isNotEmpty && envBaseUrl != 'https://example.com/api')
-            ? envBaseUrl
-            : 'https://api.staging.zedu.chat/api/v1/';
+        : (envBaseUrl != null &&
+              envBaseUrl.isNotEmpty &&
+              envBaseUrl != 'https://example.com/api')
+        ? envBaseUrl
+        : 'https://api.staging.zedu.chat/api/v1/';
 
     apiBaseUrl = apiBaseUrl.replaceAll('"', '').replaceAll("'", "");
 
@@ -44,15 +38,23 @@ class AppConfig {
         ? _parseBool(defineUsesMock, defaultValue: false)
         : envUsesMock != null && envUsesMock.isNotEmpty
         ? _parseBool(envUsesMock, defaultValue: false)
-        : false; // Changed to false so real backend is used by default
+        : false;
 
-    final googleClientId = defineClientId.isNotEmpty
+    var googleClientId = defineClientId.isNotEmpty
         ? defineClientId
         : (envClientId?.isNotEmpty ?? false)
         ? envClientId!
-        // Web Client ID: '764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com'
-        // Desktop Client ID:
-        : '764182056638-08g88e196e643mhpa2tuv5dpr7iumd1j.apps.googleusercontent.com';
+        : '764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com';
+
+    googleClientId = googleClientId.trim();
+    if (googleClientId.startsWith('http://')) {
+      googleClientId = googleClientId.substring(7);
+    } else if (googleClientId.startsWith('https://')) {
+      googleClientId = googleClientId.substring(8);
+    }
+    if (googleClientId.endsWith('/')) {
+      googleClientId = googleClientId.substring(0, googleClientId.length - 1);
+    }
 
     final googleClientSecret = defineClientSecret.isNotEmpty
         ? defineClientSecret
@@ -72,6 +74,15 @@ class AppConfig {
   final bool usesMockData;
   final String googleClientId;
   final String googleClientSecret;
+
+  String get websocketUrl {
+    final uri = Uri.parse(apiBaseUrl);
+    final scheme = uri.scheme == 'https' ? 'wss' : 'ws';
+    if (uri.host.contains('zedu.chat')) {
+      return '$scheme://${uri.host}/centrifugo/connection/websocket';
+    }
+    return '$scheme://${uri.host}/connection/websocket';
+  }
 }
 
 bool _parseBool(String raw, {required bool defaultValue}) {

@@ -51,31 +51,29 @@ void main() {
       await tester.pumpWidget(buildCreateOrgUnderTest());
       await tester.pumpAndSettle();
 
-      // Transparent AppBar back button
       expect(find.byIcon(Icons.arrow_back), findsOneWidget);
 
-      // Form details
       expect(find.text('Create Your Organization'), findsOneWidget);
       expect(find.text('Organization Name'), findsOneWidget);
       expect(find.text('Organization Type'), findsOneWidget);
       expect(find.text('Country'), findsOneWidget);
     });
 
-    testWidgets('clicking back button navigates to Home View when pop is not possible', (
-      tester,
-    ) async {
-      await tester.binding.setSurfaceSize(const Size(1440, 1024));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+    testWidgets(
+      'clicking back button navigates to Home View when pop is not possible',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(1440, 1024));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      await tester.pumpWidget(buildCreateOrgUnderTest());
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildCreateOrgUnderTest());
+        await tester.pumpAndSettle();
 
-      final backButton = find.byIcon(Icons.arrow_back);
-      await tester.tap(backButton);
-      await tester.pumpAndSettle();
+        final backButton = find.byIcon(Icons.arrow_back);
+        await tester.tap(backButton);
+        await tester.pumpAndSettle();
 
-      // Navigated back to AppRouter.home ('Home View')
-      expect(find.text('Home View'), findsOneWidget);
-    });
+        expect(find.text('Home View'), findsOneWidget);
+      },
+    );
   });
 }

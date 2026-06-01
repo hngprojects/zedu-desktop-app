@@ -22,7 +22,8 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
       _guard(() => _remote.deleteAccount(password: password));
 
   @override
-  Future<Result<void>> uploadAvatar(String filePath) => _guard(() => _remote.uploadAvatar(filePath));
+  Future<Result<void>> uploadAvatar(String filePath) =>
+      _guard(() => _remote.uploadAvatar(filePath));
 
   @override
   Future<Result<void>> deleteAvatar() => _guard(_remote.deleteAvatar);
@@ -130,11 +131,8 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     required String roleId,
   }) {
     return _guard(
-      () => _remote.addUserDirectly(
-        orgId: orgId,
-        userId: userId,
-        roleId: roleId,
-      ),
+      () =>
+          _remote.addUserDirectly(orgId: orgId, userId: userId, roleId: roleId),
     );
   }
 

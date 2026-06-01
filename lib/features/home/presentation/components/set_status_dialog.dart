@@ -15,7 +15,6 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
   bool _pauseNotifications = false;
   bool _isSaving = false;
 
-  // ── Preset statuses (second Figma screen) ──────────────────────────────────
   static const _presets = [
     _StatusPreset('📅', 'In a meeting', StatusTimeout.oneHour),
     _StatusPreset('🚗', 'Commuting', StatusTimeout.thirtyMinutes),
@@ -27,7 +26,7 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
   @override
   void initState() {
     super.initState();
-    // Pre-fill from current status if any.
+
     final current = ref.read(authNotifierProvider).user?.status;
     _textCtrl = TextEditingController(text: current?.text ?? '');
     _selectedEmoji = current?.emoji;
@@ -97,7 +96,6 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Header ─────────────────────────────────────────────────────
               Row(
                 children: [
                   Expanded(
@@ -118,7 +116,6 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
               ),
               const SizedBox(height: 20),
 
-              // ── Status text field with emoji prefix ────────────────────────
               Container(
                 decoration: BoxDecoration(
                   border: Border.all(color: colors.borderOutline),
@@ -126,7 +123,6 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
                 ),
                 child: Row(
                   children: [
-                    // Emoji picker trigger
                     InkWell(
                       onTap: _pickEmoji,
                       borderRadius: const BorderRadius.horizontal(
@@ -154,7 +150,7 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
                       height: 28,
                       color: colors.borderOutline,
                     ),
-                    // Text input
+
                     Expanded(
                       child: TextField(
                         controller: _textCtrl,
@@ -183,7 +179,7 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
                             }) => null,
                       ),
                     ),
-                    // Clear button
+
                     if (_textCtrl.text.isNotEmpty || _selectedEmoji != null)
                       IconButton(
                         icon: Icon(
@@ -202,7 +198,6 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
               ),
               const SizedBox(height: 20),
 
-              // ── Quick-pick presets ─────────────────────────────────────────
               Text(
                 'Suggested',
                 style: context.textTheme.bodySmall?.copyWith(
@@ -249,7 +244,6 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
               }),
               const SizedBox(height: 20),
 
-              // ── Remove after dropdown ──────────────────────────────────────
               Text(
                 'Remove status after…',
                 style: context.textTheme.bodySmall?.copyWith(
@@ -264,7 +258,6 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
               ),
               const SizedBox(height: 16),
 
-              // ── Pause notifications checkbox ───────────────────────────────
               Row(
                 children: [
                   Checkbox(
@@ -288,7 +281,6 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
               ),
               const SizedBox(height: 24),
 
-              // ── Actions ────────────────────────────────────────────────────
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -346,8 +338,6 @@ class _SetStatusDialogState extends ConsumerState<SetStatusDialog> {
   }
 }
 
-// ── Small internal widgets ─────────────────────────────────────────────────────
-
 class _StatusPreset {
   const _StatusPreset(this.emoji, this.label, this.timeout);
   final String emoji;
@@ -390,8 +380,6 @@ class _TimeoutDropdown extends StatelessWidget {
   }
 }
 
-/// A small coloured dot that represents user online/away presence.
-/// Used in the sidebar rail user button and conversation tiles.
 class PresenceDot extends StatelessWidget {
   const PresenceDot({super.key, required this.online, this.size = 10});
 

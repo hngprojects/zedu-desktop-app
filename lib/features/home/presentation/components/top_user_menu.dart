@@ -118,7 +118,10 @@ class TopUserMenu extends ConsumerWidget {
           children: [
             Builder(
               builder: (context) {
-                final avatarUrl = ref.watch(userProfileNotifierProvider).account?.avatarUrl;
+                final avatarUrl = ref
+                    .watch(userProfileNotifierProvider)
+                    .account
+                    ?.avatarUrl;
                 return Container(
                   width: 18,
                   height: 18,
@@ -131,16 +134,17 @@ class TopUserMenu extends ConsumerWidget {
                       ? Image.network(
                           avatarUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Center(
-                            child: Text(
-                              'ZU',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 8,
-                                fontWeight: FontWeight.bold,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Center(
+                                child: Text(
+                                  'ZU',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
                         )
                       : const Center(
                           child: Text(

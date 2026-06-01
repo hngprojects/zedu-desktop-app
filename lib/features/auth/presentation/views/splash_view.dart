@@ -9,7 +9,6 @@ class SplashView extends ConsumerWidget {
     final status = ref.watch(authNotifierProvider.select((s) => s.status));
     final colors = context.colors;
 
-    // Reactively redirect once the session state is resolved
     if (status == AuthStatus.authenticated) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {

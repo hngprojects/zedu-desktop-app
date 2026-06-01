@@ -1,4 +1,5 @@
 import 'package:zedu/core/core.dart';
+import 'package:zedu/core/services/realtime_service.dart';
 
 final buzzRepositoryProvider = Provider<BuzzRepository>((ref) {
   final apiClient = locator<ApiBaseService>();

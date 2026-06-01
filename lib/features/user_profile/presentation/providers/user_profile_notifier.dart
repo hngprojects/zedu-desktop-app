@@ -1,17 +1,17 @@
-import 'dart:convert';
-
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+import 'package:zedu/core/services/realtime_service.dart'; // Adjust path if needed
 
 class UserProfileNotifier extends Notifier<UserProfileState> {
   late UserProfileRepository _repository;
 
   @override
   UserProfileState build() {
+    final authStatus = ref.watch(authNotifierProvider.select((s) => s.status));
+    final orgId = ref.watch(currentOrgIdProvider);
     _repository = ref.read(userProfileRepositoryProvider);
     // load();
 
-    final orgId = ref.watch(workspaceProvider).selectedWorkspace?.id;
     final realtimeService = ref.read(realtimeServiceProvider);
 
     if (orgId != null && orgId.isNotEmpty) {
@@ -283,6 +283,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
                 ownerId: userId,
               ),
             );
+
       case Failure<OrganizationProfile>():
         state = state.copyWith(
           isSaving: false,
@@ -376,7 +377,8 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       if (data != null && data.isNotEmpty) {
         final last = data.last;
         if (last is Map) {
-          final id = last['id'] ?? last['role_id'] ?? last['roleId'] ?? last['_id'];
+          final id =
+              last['id'] ?? last['role_id'] ?? last['roleId'] ?? last['_id'];
           if (id != null) return id.toString();
           // Fallback: search values for any UUID
           for (final value in last.values) {
@@ -613,7 +615,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     }
   }
 
-  Future<void> load() async {
+  Future<void> load({String? orgId}) async {
     state = state.copyWith(isLoading: true, clearError: true);
     final orgId = ref.read(workspaceProvider).selectedWorkspace?.id;
     final results = await Future.wait([
@@ -625,6 +627,8 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       _repository.getRolesAndPermissions(),
       _repository.getBillingInfo(),
     ]);
+
+    if (!ref.mounted) return;
 
     final accountResult = results[0] as Result<ProfileAccount>;
     final notificationResult = results[1] as Result<NotificationPreferences>;

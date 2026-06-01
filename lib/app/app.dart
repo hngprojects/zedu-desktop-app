@@ -1,5 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+import '../features/user_profile/presentation/components/global_profile_overlay.dart';
 
 class App extends ConsumerWidget {
   const App({super.key});
@@ -11,12 +12,9 @@ class App extends ConsumerWidget {
       title: 'Zedu',
       theme: AppTheme.light,
       routerConfig: AppRouter.router,
-      builder: (context, child) =>
-          AuthDeepLinkListener(
-            child: GlobalProfileOverlay(
-              child: child ?? const SizedBox.shrink(),
-            ),
-          ),
+      builder: (context, child) => AuthDeepLinkListener(
+        child: GlobalProfileOverlay(child: child ?? const SizedBox.shrink()),
+      ),
     );
   }
 }

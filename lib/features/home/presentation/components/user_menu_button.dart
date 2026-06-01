@@ -8,35 +8,32 @@ class UserMenuButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final menuState = ref.watch<UserMenuState>(userMenuStateProvider);
-    final isAway = menuState.isAway;
 
     return GestureDetector(
       onTap: () {
-        showDialog<void>(
-          context: context,
-          barrierColor: Colors.black.withValues(alpha: 0.3),
-          builder: (context) => const UserMenuDialog(),
-        );
+        context.go(AppRouter.profile);
       },
       child: Stack(
-        clipBehavior: Clip.none,
         children: [
-          // Avatar using the global reactive widget
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: const UserAvatar(size: 32, borderRadius: 8),
+            child: Container(
+              width: 48,
+              height: 48,
+              color: colors.sidebar,
+              child: Icon(Icons.person, color: colors.onPrimary, size: 32),
+            ),
           ),
-          // Presence dot — bottom-left of the avatar, matching the design spec
           Positioned(
-            left: 0,
+            right: 0,
             bottom: 0,
             child: Container(
-              width: 10,
-              height: 10,
+              width: 12,
+              height: 12,
               decoration: BoxDecoration(
-                color: isAway ? colors.textHint : colors.success,
+                color: menuState.isAway ? colors.textHint : colors.success,
                 shape: BoxShape.circle,
-                border: Border.all(color: colors.sidebar, width: 1.5),
+                border: Border.all(color: colors.sidebar, width: 2),
               ),
             ),
           ),

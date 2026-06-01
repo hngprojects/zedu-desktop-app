@@ -1,18 +1,20 @@
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/auth/auth.dart';
-
-import '../../data/models/workspace.dart';
-import 'workspace_state.dart';
+import 'package:zedu/features/features.dart';
 
 class WorkspaceNotifier extends Notifier<WorkspaceState> {
   @override
   WorkspaceState build() {
-    ref.watch(authNotifierProvider);
-    Future.microtask(fetchWorkspaces);
-    return const WorkspaceState(workspaces: [], isLoading: true);
+    final authStatus = ref.watch(authNotifierProvider.select((s) => s.status));
+    if (authStatus == AuthStatus.authenticated) {
+      Future.microtask(fetchWorkspaces);
+    }
+    return _getInitialState();
   }
 
   Future<void> fetchWorkspaces() async {
+    final authState = ref.read(authNotifierProvider);
+    if (authState.status != AuthStatus.authenticated) return;
+
     try {
       final api = locator<ApiBaseService>();
       final response = await api.get<Map<String, dynamic>>(
@@ -20,93 +22,134 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       );
       final data = response.data['data'] as List<dynamic>? ?? [];
 
-      if (data.isNotEmpty) {
-        final List<Workspace> workspaces = [];
-        final currentUserId = ref.read(authNotifierProvider).user?.id;
-        for (var item in data) {
-          if (item is Map<String, dynamic>) {
-            final ownerId = item['owner_id'] as String? ?? item['creator_id'] as String?;
-            if (ownerId != null && currentUserId != null) {
-              // Removed owner filter to allow users to see all orgs they are part of
+      final currentUserId = authState.user?.id;
+      final List<Workspace> workspaces = [];
+      for (var item in data) {
+        if (item is Map<String, dynamic>) {
+          final ownerId =
+              item['owner_id'] as String? ?? item['creator_id'] as String?;
+          final usersList = item['Users'] as List? ?? item['users'] as List?;
+
+          bool isMember = false;
+          if (ownerId == currentUserId) isMember = true;
+          if (usersList != null) {
+            for (var u in usersList) {
+              final uId = u['id'] ?? u['user_id'];
+              if (uId == currentUserId) {
+                isMember = true;
+                break;
+              }
             }
-            workspaces.add(
-              Workspace(
-                id: item['id'] as String? ?? '1',
-                name: item['name'] as String? ?? 'Workspace',
-                avatar: item['logo_url'] as String? ?? '',
-                membersCount: (item['channels_count'] as num?)?.toInt() ?? 0,
-                ownerId: ownerId,
-              ),
-            );
           }
-        }
-        if (workspaces.isNotEmpty) {
-          state = state.copyWith(
-            workspaces: workspaces,
-            selectedWorkspace: workspaces.first,
-            isLoading: false,
+          if (!isMember) continue;
+
+          final parsedMembersCount =
+              (item['members_count'] as num?)?.toInt() ??
+              (item['users_count'] as num?)?.toInt() ??
+              usersList?.length ??
+              (item['channels_count'] as num?)?.toInt() ??
+              0;
+
+          workspaces.add(
+            Workspace(
+              id: item['id'] as String? ?? '1',
+              name: item['name'] as String? ?? 'Workspace',
+              avatar: item['logo_url'] as String? ?? '',
+              membersCount: parsedMembersCount,
+              ownerId: ownerId,
+            ),
           );
         }
-      } else {
-        final createResponse = await api.post<Map<String, dynamic>>(
-          path: '/organisations',
-          data: {
-            'name': 'Personal Workspace',
-            'type': 'Personal',
-            'country': 'Nigeria',
-          },
-        );
-        final newOrgData = createResponse.data['data'] as Map<String, dynamic>;
+      }
 
-        final newWorkspace = Workspace(
-          id: newOrgData['id'] as String? ?? '',
-          name: newOrgData['name'] as String? ?? 'Personal Workspace',
-          avatar: newOrgData['logo_url'] as String? ?? '',
-          membersCount: 1,
-        );
-        state = state.copyWith(
-          workspaces: [newWorkspace],
-          selectedWorkspace: newWorkspace,
-          isLoading: false,
-        );
+      Workspace? selected;
+      String? previousId;
+      try {
+        previousId = state.selectedWorkspace?.id;
+      } catch (_) {}
+
+      if (previousId != null) {
+        for (final ws in workspaces) {
+          if (ws.id == previousId) {
+            selected = ws;
+            break;
+          }
+        }
       }
-    } catch (e) {
-      AppLogger.e(
-        '_fetchWorkspaces failed',
-        error: e,
-        tag: 'WorkspaceNotifier',
+      selected ??= workspaces.isNotEmpty ? workspaces.first : null;
+
+      state = WorkspaceState(
+        workspaces: workspaces,
+        selectedWorkspace: selected,
+        isLoading: false,
       );
-      if (e is ApiFailure && e.message.toLowerCase().contains('not a member')) {
-        await _createPersonalWorkspace();
-        return;
+    } catch (e) {
+      AppConfig? config;
+      try {
+        config = locator<AppConfig>();
+      } catch (_) {}
+      if ((config?.usesMockData ?? false) && state.workspaces.isEmpty) {
+        state = _getInitialState();
       }
-      state = state.copyWith(isLoading: false);
     }
   }
 
-  Future<void> _createPersonalWorkspace() async {
-    final api = locator<ApiBaseService>();
-    final createResponse = await api.post<Map<String, dynamic>>(
-      path: '/organisations',
-      data: {
-        'name': 'Personal Workspace',
-        'type': 'Personal',
-        'country': 'Nigeria',
-      },
-    );
-    final newOrgData = createResponse.data['data'] as Map<String, dynamic>;
+  WorkspaceState _getInitialState() {
+    AppConfig? config;
+    try {
+      config = locator<AppConfig>();
+    } catch (_) {}
+    final usesMockData = config?.usesMockData ?? false;
+    final authState = ref.read(authNotifierProvider);
 
-    final newWorkspace = Workspace(
-      id: newOrgData['id'] as String? ?? '',
-      name: newOrgData['name'] as String? ?? 'Personal Workspace',
-      avatar: newOrgData['logo_url'] as String? ?? '',
-      membersCount: 1,
-    );
-    state = state.copyWith(
-      workspaces: [newWorkspace],
-      selectedWorkspace: newWorkspace,
-      isLoading: false,
-    );
+    if (!usesMockData || authState.status != AuthStatus.authenticated) {
+      return const WorkspaceState(workspaces: [], selectedWorkspace: null);
+    }
+
+    final workspaces = [
+      const Workspace(
+        id: '1',
+        name: 'HNG Workspace',
+        avatar: '',
+        unreadCount: 1351,
+        membersCount: 1351,
+      ),
+      const Workspace(
+        id: '2',
+        name: 'TeamFlow Collective',
+        avatar: '',
+        unreadCount: 15,
+        membersCount: 42,
+      ),
+      const Workspace(
+        id: '3',
+        name: 'Coffee & Code House',
+        avatar: '',
+        unreadCount: 0,
+        membersCount: 12,
+      ),
+      const Workspace(
+        id: '4',
+        name: 'ConnectHub',
+        avatar: '',
+        unreadCount: 3,
+        membersCount: 89,
+      ),
+    ];
+
+    String? previousId;
+    try {
+      previousId = state.selectedWorkspace?.id;
+    } catch (_) {}
+
+    final selected = previousId != null
+        ? workspaces.firstWhere(
+            (ws) => ws.id == previousId,
+            orElse: () => workspaces.first,
+          )
+        : workspaces.first;
+
+    return WorkspaceState(workspaces: workspaces, selectedWorkspace: selected);
   }
 
   void addWorkspace(Workspace workspace, {bool switchTo = true}) {

@@ -1,5 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+import 'package:zedu/core/services/realtime_service.dart'; // Adjust path if needed
 
 final currentOrgIdProvider = Provider<String>((ref) {
   final workspace = ref.watch(workspaceProvider).selectedWorkspace;
@@ -55,23 +56,33 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
       final user = ref.read(authNotifierProvider).user;
       if (user != null) {
         String selfChannelId = '';
-        
+
         try {
           final channelRepo = ref.read(channelRepositoryProvider);
           final channelsResult = await channelRepo.fetchChannels(orgId);
           if (channelsResult is Success<List<Channel>>) {
             final selfChannel = channelsResult.value.firstWhere(
               (c) => c.name == user.username,
-              orElse: () => Channel(id: '', name: '', description: '', organisationId: '', ownerId: ''),
+              orElse: () => Channel(
+                id: '',
+                name: '',
+                description: '',
+                organisationId: '',
+                ownerId: '',
+              ),
             );
             if (selfChannel.id.isNotEmpty) {
               selfChannelId = selfChannel.id;
             }
           }
           // If channel lookup didn't find a valid ID, try creating one
-          if (selfChannelId.isEmpty || !DmRepository.isValidChannelId(selfChannelId)) {
+          if (selfChannelId.isEmpty ||
+              !DmRepository.isValidChannelId(selfChannelId)) {
             final dmRepo = ref.read(dmRepositoryProvider);
-            final created = await dmRepo.createDmChannel(orgId: orgId, userId: user.id);
+            final created = await dmRepo.createDmChannel(
+              orgId: orgId,
+              userId: user.id,
+            );
             selfChannelId = created.channelId;
           }
         } catch (_) {}
@@ -99,7 +110,7 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
           );
         }
       }
-      
+
       if (results.isEmpty) {
         return [
           DmConversation(
@@ -141,7 +152,11 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
 
   void addConversation(DmConversation conversation) {
     final current = state.value ?? [];
-    if (!current.any((c) => c.channelId == conversation.channelId || c.participantId == conversation.participantId)) {
+    if (!current.any(
+      (c) =>
+          c.channelId == conversation.channelId ||
+          c.participantId == conversation.participantId,
+    )) {
       state = AsyncValue.data([conversation, ...current]);
     }
   }
@@ -181,7 +196,7 @@ final dmSearchResultsProvider = FutureProvider<List<TeamMember>>((ref) async {
 
   final repository = ref.watch(userProfileRepositoryProvider);
   final result = await repository.getTeamMembers(orgId: orgId);
-  
+
   if (result is Success<List<TeamMember>>) {
     return result.value.where((member) {
       final nameMatches = (member.name ?? '').toLowerCase().contains(query);
@@ -189,6 +204,6 @@ final dmSearchResultsProvider = FutureProvider<List<TeamMember>>((ref) async {
       return nameMatches || emailMatches;
     }).toList();
   }
-  
+
   return [];
 });
