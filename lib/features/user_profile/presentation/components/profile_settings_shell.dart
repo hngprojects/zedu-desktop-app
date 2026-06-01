@@ -48,14 +48,6 @@ class ProfileSettingsShell extends ConsumerWidget {
                       context.go(AppRouter.home);
                     },
                   ),
-                  AppSidebarRail(
-                    activeType: null,
-                    settingsSelected: true,
-                    onTypeSelected: (type) {
-                      ref.read(homeSidebarProvider.notifier).setType(type);
-                      context.go(AppRouter.home);
-                    },
-                  ),
                   _SettingsNavigation(
                     userName: userName,
                     selectedSection: selectedSection,
