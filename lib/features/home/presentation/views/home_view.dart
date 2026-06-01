@@ -59,7 +59,13 @@ class _HomeAppBar extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
         children: [
-          Image.asset('assets/pngs/zedu_logo.png', height: 24),
+          Image.asset(
+            'assets/pngs/zedu_logo.png',
+            width: 82,
+            height: 31,
+            color: Colors.white,
+            colorBlendMode: BlendMode.srcIn,
+          ),
           const SizedBox(width: 12),
           TopUserMenu(userName: userName),
           const Spacer(),

@@ -62,3 +62,4 @@ export 'dart:developer' show log;
 export 'package:web_socket_channel/web_socket_channel.dart';
 export 'package:audioplayers/audioplayers.dart';
 export 'utils/date_formatter.dart';
+export 'utils/dm_formatter.dart';

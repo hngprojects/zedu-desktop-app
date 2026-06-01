@@ -136,9 +136,9 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                                     }
                                   }
 
-                                  final content =
-                                      msg['content']?.toString() ?? '';
-                                  // Hide system messages that indicate a conversation started
+                                  final content = parseHtmlToMarkdown(
+                                    msg['content']?.toString() ?? '',
+                                  );
                                   if (content.startsWith('<p>') &&
                                       content.contains(
                                         'started a conversation',
@@ -665,7 +665,9 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
     final colors = context.colors;
     final history = ref.watch(chatHistoryProvider(widget.channelId));
     final isMe = history.isMyMessage(widget.message);
-    final content = widget.message['content'] as String? ?? '';
+    final content = parseHtmlToMarkdown(
+      widget.message['content'] as String? ?? '',
+    );
     final createdAt =
         DateTime.tryParse(
           widget.message['created_at']?.toString() ?? '',
@@ -696,7 +698,7 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
 
     final List<dynamic> media =
         (widget.message['media'] as List<dynamic>?) ?? [];
-        
+
     final type = widget.message['type'] as String?;
 
     if (type == 'call' || type == 'call_log') {
@@ -723,12 +725,24 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Buzz Call', style: TextStyle(fontWeight: FontWeight.bold, color: colors.textPrimary)),
-                  Text(content.isNotEmpty ? content : 'Call ended', style: TextStyle(color: colors.textHint, fontSize: 13)),
+                  Text(
+                    'Buzz Call',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    content.isNotEmpty ? content : 'Call ended',
+                    style: TextStyle(color: colors.textHint, fontSize: 13),
+                  ),
                 ],
               ),
             ),
-            Text(timeString, style: TextStyle(color: colors.textHint, fontSize: 12)),
+            Text(
+              timeString,
+              style: TextStyle(color: colors.textHint, fontSize: 12),
+            ),
           ],
         ),
       );
@@ -831,7 +845,9 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
         onExit: (_) => setState(() => _isHovered = false),
         child: Container(
           padding: const EdgeInsets.only(left: 42, bottom: 2, right: 8),
-          color: _isHovered ? colors.primary.withValues(alpha: 0.05) : Colors.transparent,
+          color: _isHovered
+              ? colors.primary.withValues(alpha: 0.05)
+              : Colors.transparent,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -886,7 +902,9 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
       onExit: (_) => setState(() => _isHovered = false),
       child: Container(
         padding: const EdgeInsets.only(bottom: 4, top: 8, right: 8),
-        color: _isHovered ? colors.primary.withValues(alpha: 0.05) : Colors.transparent,
+        color: _isHovered
+            ? colors.primary.withValues(alpha: 0.05)
+            : Colors.transparent,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
