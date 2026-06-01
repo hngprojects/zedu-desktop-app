@@ -7,38 +7,39 @@ class UserMenuButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    final menuState = ref.watch<UserMenuState>(userMenuStateProvider);
+    final isOnline =
+        ref.watch(authNotifierProvider).user?.status.online ?? true;
 
     return GestureDetector(
       onTap: () {
         showDialog<void>(
           context: context,
-          barrierColor:
-              Colors.transparent, // Keeps the click-away behavior clean
+          barrierColor: Colors.transparent,
           builder: (context) => const UserMenuDialog(),
         );
       },
       child: Stack(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: 48,
-              height: 48,
-              color: colors.sidebar,
-              child: Icon(Icons.person, color: colors.onPrimary, size: 32),
-            ),
-          ),
+          const UserAvatar(size: 36, borderRadius: 8),
           Positioned(
-            right: 0,
-            bottom: 0,
+            right: -2,
+            bottom: -2,
             child: Container(
-              width: 12,
-              height: 12,
+              width: 16,
+              height: 16,
+              padding: const EdgeInsets.all(2.5),
               decoration: BoxDecoration(
-                color: menuState.isAway ? colors.textHint : colors.success,
+                color: colors.sidebar,
                 shape: BoxShape.circle,
-                border: Border.all(color: colors.sidebar, width: 2),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isOnline ? colors.success : colors.sidebar,
+                  border: isOnline
+                      ? null
+                      : Border.all(color: colors.textHint, width: 1.5),
+                ),
               ),
             ),
           ),
