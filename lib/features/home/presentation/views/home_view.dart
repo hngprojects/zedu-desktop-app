@@ -396,7 +396,7 @@ class _MainSidebarState extends ConsumerState<_MainSidebar> {
                     return InkWell(
                       onTap: () async {
                         final orgId = ref.read(currentOrgIdProvider);
-                        if (orgId == null) ;
+                        // if (orgId == null) ;
 
                         final dmRepo = ref.read(dmRepositoryProvider);
                         final conv = await dmRepo.createDmChannel(
@@ -404,9 +404,10 @@ class _MainSidebarState extends ConsumerState<_MainSidebar> {
                           userId: person.id,
                         );
 
-                        ref.read(homeSidebarProvider.notifier).state =
-                            HomeSidebarType.dms;
-                        ref.read(selectedDmProvider.notifier).state = conv;
+                        ref
+                            .read(homeSidebarProvider.notifier)
+                            .setType(HomeSidebarType.dms);
+                        ref.read(selectedDmProvider.notifier).select(conv);
                         ref
                             .read(activeChatProvider.notifier)
                             .selectDirectMessage(conv.channelId);

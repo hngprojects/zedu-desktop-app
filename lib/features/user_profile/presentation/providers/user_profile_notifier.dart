@@ -7,14 +7,14 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
 
   @override
   UserProfileState build() {
-    final authStatus = ref.watch(authNotifierProvider.select((s) => s.status));
+    // final authStatus = ref.watch(authNotifierProvider.select((s) => s.status));
     final orgId = ref.watch(currentOrgIdProvider);
     _repository = ref.read(userProfileRepositoryProvider);
     // load();
 
     final realtimeService = ref.read(realtimeServiceProvider);
 
-    if (orgId != null && orgId.isNotEmpty) {
+    if (orgId.isNotEmpty) {
       Future.microtask(() => load());
       realtimeService.subscribeToOrg(orgId);
     }
