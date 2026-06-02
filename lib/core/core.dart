@@ -32,8 +32,6 @@ export 'package:flutter_riverpod/legacy.dart';
 export 'package:flutter_secure_storage/flutter_secure_storage.dart';
 export 'package:flutter_svg/flutter_svg.dart';
 export 'package:google_fonts/google_fonts.dart';
-export 'package:flutter_test/flutter_test.dart';
-export 'package:mocktail/mocktail.dart';
 export 'package:dio/dio.dart';
 export 'package:flutter_dotenv/flutter_dotenv.dart';
 export 'package:go_router/go_router.dart';
