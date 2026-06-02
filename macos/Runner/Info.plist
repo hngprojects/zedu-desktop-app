@@ -30,8 +30,6 @@
 	<string>NSApplication</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Zedu needs access to your microphone to send voice notes.</string>
-<<<<<<< HEAD
-=======
 	<!-- Google Sign-In config -->
 	<key>GIDClientID</key>
 	<string>764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com</string>
@@ -47,6 +45,5 @@
 			</array>
 		</dict>
 	</array>
->>>>>>> origin/yourfavoriteswe-update
 </dict>
 </plist>

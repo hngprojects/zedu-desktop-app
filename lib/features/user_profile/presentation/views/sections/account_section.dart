@@ -57,7 +57,9 @@ class AccountSection extends ConsumerWidget {
                 ),
                 Text(
                   account.username.isNotEmpty
-                      ? (account.username.startsWith('@') ? account.username : '@${account.username}')
+                      ? (account.username.startsWith('@')
+                            ? account.username
+                            : '@${account.username}')
                       : '@${account.name.replaceAll(' ', '').toLowerCase()}',
                   style: context.textTheme.bodySmall?.copyWith(
                     color: const Color(0xFF6B7280),
@@ -92,19 +94,17 @@ class AccountSection extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 18),
           ),
           loading: isSaving,
-          onPressed: () => showDeleteAccountDialog(
-            context,
-            account.email,
-            (password) async {
-              await onDelete(password);
-              if (context.mounted) {
-                final hasError = ref.read(userProfileNotifierProvider).error != null;
-                if (!hasError) {
-                  ref.read(authNotifierProvider.notifier).logout();
+          onPressed: () =>
+              showDeleteAccountDialog(context, account.email, (password) async {
+                await onDelete(password);
+                if (context.mounted) {
+                  final hasError =
+                      ref.read(userProfileNotifierProvider).error != null;
+                  if (!hasError) {
+                    ref.read(authNotifierProvider.notifier).logout();
+                  }
                 }
-              }
-            },
-          ),
+              }),
         ),
       ],
     );
@@ -114,6 +114,5 @@ class AccountSection extends ConsumerWidget {
     BuildContext context,
     ProfileAccount account,
     ValueChanged<ProfileAccount> onSave,
-  ) =>
-      showEditAccountDialog(context, account, onSave);
+  ) => showEditAccountDialog(context, account, onSave);
 }

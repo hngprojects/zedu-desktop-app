@@ -84,9 +84,7 @@ class ApiBaseService {
     Map<String, String>? headers,
     bool isMultipart = false,
   }) {
-    final defaultHeaders = <String, String>{
-      'Accept': 'application/json',
-    };
+    final defaultHeaders = <String, String>{'Accept': 'application/json'};
     if (!isMultipart) {
       defaultHeaders['Content-Type'] = 'application/json';
     }
@@ -111,7 +109,7 @@ class ApiBaseService {
         options: Options(
           method: method,
           headers: headersForPath(
-            path, 
+            path,
             headers: headers,
             isMultipart: data is FormData,
           ),

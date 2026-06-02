@@ -19,7 +19,8 @@ class UserManagementSection extends StatefulWidget {
   onInvite;
   final ValueChanged<TeamMember> onUpdate;
   final ValueChanged<String> onRemove;
-  final Future<void> Function({required String userId, required String email}) onAddUser;
+  final Future<void> Function({required String userId, required String email})
+  onAddUser;
   final Future<List<Map<String, dynamic>>> Function() onFetchUsers;
 
   @override
@@ -90,7 +91,9 @@ class _UserManagementSectionState extends State<UserManagementSection> {
               behavior: HitTestBehavior.opaque,
               child: _TabLabel(
                 label: 'Members',
-                count: widget.members.where((m) => m.status != TeamMemberStatus.pending).length,
+                count: widget.members
+                    .where((m) => m.status != TeamMemberStatus.pending)
+                    .length,
                 active: _activeTab == 'Members',
               ),
             ),
@@ -100,7 +103,9 @@ class _UserManagementSectionState extends State<UserManagementSection> {
               behavior: HitTestBehavior.opaque,
               child: _TabLabel(
                 label: 'Invites',
-                count: widget.members.where((m) => m.status == TeamMemberStatus.pending).length,
+                count: widget.members
+                    .where((m) => m.status == TeamMemberStatus.pending)
+                    .length,
                 active: _activeTab == 'Invites',
               ),
             ),
@@ -415,7 +420,8 @@ class _AddUserDialogState extends State<_AddUserDialog> {
     setState(() {
       _filteredUsers = _allUsers.where((u) {
         final email = (u['email'] as String?)?.toLowerCase() ?? '';
-        final name = (u['full_name'] as String?)?.toLowerCase() ??
+        final name =
+            (u['full_name'] as String?)?.toLowerCase() ??
             (u['username'] as String?)?.toLowerCase() ??
             '';
         // Exclude users already in the org
@@ -498,18 +504,21 @@ class _AddUserDialogState extends State<_AddUserDialog> {
                   itemBuilder: (context, index) {
                     final user = _filteredUsers[index];
                     final email = user['email'] as String? ?? '';
-                    final name = user['full_name'] as String? ??
+                    final name =
+                        user['full_name'] as String? ??
                         user['username'] as String? ??
                         email.split('@').first;
-                    final userId = user['id'] as String? ?? user['user_id'] as String? ?? user['uuid'] as String? ?? '';
+                    final userId =
+                        user['id'] as String? ??
+                        user['user_id'] as String? ??
+                        user['uuid'] as String? ??
+                        '';
                     return ListTile(
                       leading: CircleAvatar(
                         radius: 16,
                         backgroundColor: colors.primary.withValues(alpha: 0.1),
                         child: Text(
-                          name.isNotEmpty
-                              ? name[0].toUpperCase()
-                              : '?',
+                          name.isNotEmpty ? name[0].toUpperCase() : '?',
                           style: TextStyle(
                             color: colors.primary,
                             fontWeight: FontWeight.w600,
@@ -527,14 +536,10 @@ class _AddUserDialogState extends State<_AddUserDialog> {
                       ),
                       subtitle: Text(
                         email,
-                        style: TextStyle(
-                          color: colors.textHint,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: colors.textHint, fontSize: 12),
                       ),
                       trailing: TextButton(
-                        onPressed: () =>
-                            widget.onAddUser(userId, email),
+                        onPressed: () => widget.onAddUser(userId, email),
                         child: const Text('Add'),
                       ),
                     );

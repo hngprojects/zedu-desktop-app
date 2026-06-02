@@ -229,6 +229,7 @@ class DmRepository {
 
   Future<void> editMessage(
     String channelId, {
+    required String messageId, // ← add this
     required String content,
     List<Map<String, dynamic>>? media,
     List<Map<String, dynamic>>? mentions,
@@ -241,7 +242,7 @@ class DmRepository {
     }
 
     await _apiClient.put<Map<String, dynamic>>(
-      path: ApiEndpoints.dmsMessages(channelId),
+      path: '${ApiEndpoints.dmsMessages(channelId)}/$messageId', // ← fixed path
       data: {
         'content': content,
         'media': media ?? <Map<String, dynamic>>[],

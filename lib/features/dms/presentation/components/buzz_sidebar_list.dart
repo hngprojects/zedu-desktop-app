@@ -69,8 +69,8 @@ class BuzzSidebarList extends ConsumerWidget {
                         trailing: Icon(
                           log.isIncoming
                               ? (log.isMissed
-                                  ? Icons.call_missed
-                                  : Icons.call_received)
+                                    ? Icons.call_missed
+                                    : Icons.call_received)
                               : Icons.call_made,
                           color: log.isMissed
                               ? colors.error
@@ -88,7 +88,9 @@ class BuzzSidebarList extends ConsumerWidget {
 
   String _formatDate(DateTime date) {
     final local = date.toLocal();
-    final hour = local.hour > 12 ? local.hour - 12 : (local.hour == 0 ? 12 : local.hour);
+    final hour = local.hour > 12
+        ? local.hour - 12
+        : (local.hour == 0 ? 12 : local.hour);
     final minute = local.minute.toString().padLeft(2, '0');
     final period = local.hour >= 12 ? 'PM' : 'AM';
     return '${local.day}/${local.month}/${local.year} $hour:$minute $period';

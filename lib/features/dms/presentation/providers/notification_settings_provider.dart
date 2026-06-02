@@ -14,8 +14,7 @@ class NotificationSettings {
   bool get isDndActive => dndUntil != null && dndUntil!.isAfter(DateTime.now());
   bool isMuted(String participantId) =>
       mutedParticipantIds.contains(participantId);
-  bool isChannelMuted(String channelId) =>
-      mutedChannelIds.contains(channelId);
+  bool isChannelMuted(String channelId) => mutedChannelIds.contains(channelId);
 
   NotificationSettings copyWith({
     DateTime? dndUntil,
@@ -65,14 +64,12 @@ class NotificationSettingsNotifier extends Notifier<NotificationSettings> {
   }
 
   void muteChannel(String channelId) {
-    final newMuted = Set<String>.from(state.mutedChannelIds)
-      ..add(channelId);
+    final newMuted = Set<String>.from(state.mutedChannelIds)..add(channelId);
     state = state.copyWith(mutedChannelIds: newMuted);
   }
 
   void unmuteChannel(String channelId) {
-    final newMuted = Set<String>.from(state.mutedChannelIds)
-      ..remove(channelId);
+    final newMuted = Set<String>.from(state.mutedChannelIds)..remove(channelId);
     state = state.copyWith(mutedChannelIds: newMuted);
   }
 

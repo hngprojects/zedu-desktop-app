@@ -7,11 +7,11 @@ environment:
   sdk: ^3.10.0
 
 dependencies:
-  audioplayers: ^6.6.0
   agora_rtc_engine: ^6.5.4
   cross_file: ^0.3.5+2
   desktop_drop: ^0.7.1
   app_links: ^7.0.0
+  audioplayers: ^6.6.0
   dio: ^5.9.2
   file_picker: ^11.0.2
   flutter:
@@ -49,6 +49,7 @@ dependencies:
   protobuf: ^6.0.0
   shelf_router: ^1.1.4
   shared_preferences: ^2.5.5
+  google_sign_in_all_platforms: ^2.0.3
 
 dev_dependencies:
   flutter_test:

@@ -4,21 +4,20 @@ class AppConfig {
   const AppConfig({
     required this.apiBaseUrl,
     required this.usesMockData,
-    this.googleClientId =
-        '764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com',
+    this.googleClientId = '',
     this.googleClientSecret = '',
   });
 
   factory AppConfig.fromEnvironment() {
-    const defineBaseUrl = String.fromEnvironment('API_BASE_URL');
     const defineUsesMock = String.fromEnvironment('USE_MOCK_DATA');
     const defineClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
     const defineClientSecret = String.fromEnvironment('GOOGLE_CLIENT_SECRET');
+    const defineBaseUrl = String.fromEnvironment('API_BASE_URL'); // ADD THIS
 
-    final envBaseUrl = dotenv.maybeGet('API_BASE_URL')?.trim();
     final envUsesMock = dotenv.maybeGet('USE_MOCK_DATA')?.trim();
     final envClientId = dotenv.maybeGet('GOOGLE_CLIENT_ID')?.trim();
     final envClientSecret = dotenv.maybeGet('GOOGLE_CLIENT_SECRET')?.trim();
+    final envBaseUrl = dotenv.maybeGet('API_BASE_URL')?.trim(); // ADD THIS
 
     String apiBaseUrl = defineBaseUrl.isNotEmpty
         ? defineBaseUrl
@@ -26,8 +25,7 @@ class AppConfig {
               envBaseUrl.isNotEmpty &&
               envBaseUrl != 'https://example.com/api')
         ? envBaseUrl
-        : 'https://api.staging.zedu.chat/api/v1/';
-
+        : '';
     apiBaseUrl = apiBaseUrl.replaceAll('"', '').replaceAll("'", "");
 
     if (!apiBaseUrl.endsWith('/')) {
@@ -44,7 +42,7 @@ class AppConfig {
         ? defineClientId
         : (envClientId?.isNotEmpty ?? false)
         ? envClientId!
-        : '764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com';
+        : '';
 
     googleClientId = googleClientId.trim();
     if (googleClientId.startsWith('http://')) {

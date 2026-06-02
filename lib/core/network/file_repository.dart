@@ -16,17 +16,10 @@ class FileRepository {
     final multipartFiles = <MultipartFile>[];
     for (final file in files) {
       final bytes = await file.readAsBytes();
-      multipartFiles.add(
-        MultipartFile.fromBytes(
-          bytes,
-          filename: file.name,
-        ),
-      );
+      multipartFiles.add(MultipartFile.fromBytes(bytes, filename: file.name));
     }
 
-    final formData = FormData.fromMap({
-      'files': multipartFiles,
-    });
+    final formData = FormData.fromMap({'files': multipartFiles});
 
     final response = await _apiClient.post<Map<String, dynamic>>(
       path: ApiEndpoints.uploadFiles,

@@ -353,15 +353,7 @@ class ChannelNotifier extends Notifier<ChannelState> {
       );
       return true;
     } else {
-      state = state.copyWith(
-        channels: state.channels.map((c) {
-          if (c.id == channelId) {
-            return c.copyWith(membersCount: c.membersCount + userIds.length);
-          }
-          return c;
-        }).toList(),
-      );
-      return true;
+      return false;
     }
   }
 }

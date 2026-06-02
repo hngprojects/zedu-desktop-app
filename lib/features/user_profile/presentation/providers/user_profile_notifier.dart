@@ -504,6 +504,27 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           );
         }
 
+      // if (config.usesMockData) {
+      //   final storage = locator<SecureStorageService>();
+      //   final jsonList = newTeamMembers
+      //       .map(
+      //         (m) => {
+      //           'id': m.id,
+      //           'email': m.email,
+      //           'role': m.role,
+      //           'name': m.name,
+      //           'avatar_url': m.avatarUrl,
+      //           'date_joined': m.dateJoined,
+      //           'status': m.status.name,
+      //         },
+      //       )
+      //       .toList();
+      //   await storage.writeData(
+      //     'mock_team_members_$orgId',
+      //     jsonEncode(jsonList),
+      //   );
+      // }
+
       case Failure<TeamMember>():
         state = state.copyWith(
           isSaving: false,
@@ -623,6 +644,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       _repository.getNotificationPreferences(),
       _repository.getSecuritySessions(),
       _repository.getOrganization(),
+      _repository.getTeamMembers(orgId: orgId),
       _repository.getTeamMembers(orgId: orgId),
       _repository.getRolesAndPermissions(),
       _repository.getBillingInfo(),

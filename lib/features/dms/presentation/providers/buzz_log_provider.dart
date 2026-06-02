@@ -20,15 +20,9 @@ class BuzzLogState {
   final List<BuzzLogEntry> logs;
   final int missedCount;
 
-  const BuzzLogState({
-    this.logs = const [],
-    this.missedCount = 0,
-  });
+  const BuzzLogState({this.logs = const [], this.missedCount = 0});
 
-  BuzzLogState copyWith({
-    List<BuzzLogEntry>? logs,
-    int? missedCount,
-  }) {
+  BuzzLogState copyWith({List<BuzzLogEntry>? logs, int? missedCount}) {
     return BuzzLogState(
       logs: logs ?? this.logs,
       missedCount: missedCount ?? this.missedCount,

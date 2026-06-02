@@ -74,8 +74,9 @@ class UserProfileState {
       isLoading: isLoading ?? this.isLoading,
       isSaving: isSaving ?? this.isSaving,
       error: clearError ? null : (error ?? this.error),
-      successMessage:
-          clearSuccess ? null : (successMessage ?? this.successMessage),
+      successMessage: clearSuccess
+          ? null
+          : (successMessage ?? this.successMessage),
       localAvatarPath: clearLocalAvatar
           ? null
           : (localAvatarPath ?? this.localAvatarPath),

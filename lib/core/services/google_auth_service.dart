@@ -19,9 +19,7 @@ class GoogleAuthService {
   Future<String?> getGrantCode() async {
     try {
       await _ensureInitialized();
-      // Using authenticate() instead of the deprecated signIn()
       final account = await GoogleSignIn.instance.authenticate();
-      if (account == null) return null;
       return account.id;
     } catch (e) {
       return null;

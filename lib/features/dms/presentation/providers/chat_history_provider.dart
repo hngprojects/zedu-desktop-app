@@ -696,6 +696,9 @@ class ChatHistoryNotifier extends ChangeNotifier {
       return;
     }
 
+    // Save before clearing for revert in catch
+    final originalContent = _editingOriginalContent;
+
     messages = messages.map((m) {
       if (m['id'] == messageId) {
         final updated = Map<String, dynamic>.from(m);
@@ -712,13 +715,18 @@ class ChatHistoryNotifier extends ChangeNotifier {
 
     try {
       final repository = ref.read(dmRepositoryProvider);
-      await repository.editMessage(channelId, content: newContent);
+      await repository.editMessage(
+        channelId,
+        messageId: messageId,
+        content: newContent,
+      );
     } catch (_) {
-      if (_editingOriginalContent != null) {
+      if (originalContent != null) {
+        // ← now correctly uses local var
         messages = messages.map((m) {
           if (m['id'] == messageId) {
             final reverted = Map<String, dynamic>.from(m);
-            reverted['content'] = _editingOriginalContent;
+            reverted['content'] = originalContent;
             reverted.remove('is_edited');
             reverted.remove('edited');
             return reverted;

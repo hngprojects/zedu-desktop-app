@@ -29,6 +29,7 @@ abstract interface class UserProfileRepository {
     required String type,
     required String country,
   });
+
   Future<Result<OrganizationProfile>> updateOrganization(
     OrganizationProfile organization,
   );

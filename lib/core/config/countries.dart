@@ -1,3 +1,4 @@
+/// Complete list of world countries for dropdown selections.
 const List<String> kCountries = [
   'Afghanistan',
   'Albania',

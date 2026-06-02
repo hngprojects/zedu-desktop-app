@@ -201,7 +201,8 @@ class DmSidebarList extends ConsumerWidget {
                                 onNotification: (scrollInfo) {
                                   if (scrollInfo is ScrollEndNotification &&
                                       scrollInfo.metrics.pixels >=
-                                          scrollInfo.metrics.maxScrollExtent * 0.85) {
+                                          scrollInfo.metrics.maxScrollExtent *
+                                              0.85) {
                                     final notifier = ref.read(
                                       dmListProvider.notifier,
                                     );
@@ -299,13 +300,15 @@ class DmSidebarList extends ConsumerWidget {
     // 4. Navigate.
     ref.read(dmListProvider.notifier).addConversation(existingConvo);
     ref.read(selectedDmProvider.notifier).select(existingConvo);
-    ref.read(activeChatProvider.notifier).selectDirectMessage(existingConvo.channelId);
+    ref
+        .read(activeChatProvider.notifier)
+        .selectDirectMessage(existingConvo.channelId);
     ref.read(dmSearchQueryProvider.notifier).state = '';
 
     // 5. Clear unread badge.
-    ref.read(dmListProvider.notifier).markConversationRead(
-      existingConvo.channelId,
-    );
+    ref
+        .read(dmListProvider.notifier)
+        .markConversationRead(existingConvo.channelId);
   }
 }
 
@@ -325,11 +328,7 @@ class _GroupDmsSection extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
           child: Row(
             children: [
-              Icon(
-                Icons.arrow_drop_down,
-                color: colors.onPrimary,
-                size: 20,
-              ),
+              Icon(Icons.arrow_drop_down, color: colors.onPrimary, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -354,11 +353,7 @@ class _GroupDmsSection extends ConsumerWidget {
                     ),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Icon(
-                    Icons.add,
-                    color: colors.onPrimary,
-                    size: 14,
-                  ),
+                  child: Icon(Icons.add, color: colors.onPrimary, size: 14),
                 ),
               ),
             ],
@@ -383,17 +378,26 @@ class _GroupDmsSection extends ConsumerWidget {
             itemCount: groupDms.length,
             itemBuilder: (context, index) {
               final group = groupDms[index];
-              final isSelected = activeChat.type == ActiveChatType.groupDm &&
+              final isSelected =
+                  activeChat.type == ActiveChatType.groupDm &&
                   activeChat.id == group.id;
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 2,
+                ),
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
-                    ref.read(activeChatProvider.notifier).selectGroupDm(group.id);
+                    ref
+                        .read(activeChatProvider.notifier)
+                        .selectGroupDm(group.id);
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? colors.onPrimary.withValues(alpha: 0.12)

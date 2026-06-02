@@ -95,7 +95,7 @@ class ActiveCallNotifier extends ChangeNotifier {
     try {
       final repo = _ref.read(buzzRepositoryProvider);
       final res = await repo.initiateDirectCall(channelId);
-      
+
       if (res['success'] == false) {
         await leaveCall();
         return;
@@ -158,8 +158,10 @@ class ActiveCallNotifier extends ChangeNotifier {
       await _ref
           .read(buzzRepositoryProvider)
           .respondToInvitation(_state.buzzId!, true);
-      
-      final res = await _ref.read(buzzRepositoryProvider).joinBuzz(_state.buzzId!);
+
+      final res = await _ref
+          .read(buzzRepositoryProvider)
+          .joinBuzz(_state.buzzId!);
       if (res['success'] == true) {
         _state = _state.copyWith(
           status: CallStatus.active,
@@ -201,7 +203,9 @@ class ActiveCallNotifier extends ChangeNotifier {
     if (buzzId != null && _state.status == CallStatus.active) {
       final user = _ref.read(authNotifierProvider).user;
       if (user != null) {
-        await _ref.read(buzzRepositoryProvider).leaveBuzz(
+        await _ref
+            .read(buzzRepositoryProvider)
+            .leaveBuzz(
               buzzId: buzzId,
               buzzCode: _state.buzzCode ?? '',
               participantId: user.id.toString(),
