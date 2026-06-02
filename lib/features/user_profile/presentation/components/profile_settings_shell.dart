@@ -25,8 +25,6 @@ class ProfileSettingsShell extends ConsumerWidget {
       userName = state.account!.name;
     }
 
-
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
