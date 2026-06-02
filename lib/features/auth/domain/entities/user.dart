@@ -15,9 +15,9 @@ class User {
     required this.currentOrganisationSlug,
     required this.avatarUrl,
     required this.defaultAvatarUrl,
-    this.creditBalance = 0,
-    this.subscriptionPlanId = 'free',
-    this.aiCreditsPurchasable = true,
+    // this.creditBalance = 0,
+    // this.subscriptionPlanId = 'free',
+    // this.aiCreditsPurchasable = true,
     this.status = UserStatus.empty,
   });
 
@@ -34,9 +34,9 @@ class User {
   final String currentOrganisationSlug;
   final String avatarUrl;
   final String defaultAvatarUrl;
-  final int creditBalance;
-  final String subscriptionPlanId;
-  final bool aiCreditsPurchasable;
+  // final int creditBalance;
+  // final String subscriptionPlanId;
+  // final bool aiCreditsPurchasable;
 
   final UserStatus status;
 
@@ -56,9 +56,9 @@ class User {
     'current_organisation_slug': currentOrganisationSlug,
     'avatar_url': avatarUrl,
     'default_avatar_url': defaultAvatarUrl,
-    'credit_balance': creditBalance,
-    'subscription_plan_id': subscriptionPlanId,
-    'ai_credits_purchasable': aiCreditsPurchasable,
+    // 'credit_balance': creditBalance,
+    // 'subscription_plan_id': subscriptionPlanId,
+    // 'ai_credits_purchasable': aiCreditsPurchasable,
     'status': status.toJson(),
   };
 
@@ -76,9 +76,9 @@ class User {
     currentOrganisationSlug: json['current_organisation_slug'] as String? ?? '',
     avatarUrl: json['avatar_url'] as String? ?? '',
     defaultAvatarUrl: json['default_avatar_url'] as String? ?? '',
-    creditBalance: json['credit_balance'] as int? ?? 0,
-    subscriptionPlanId: json['subscription_plan_id'] as String? ?? 'free',
-    aiCreditsPurchasable: json['ai_credits_purchasable'] as bool? ?? true,
+    // creditBalance: json['credit_balance'] as int? ?? 0,
+    // subscriptionPlanId: json['subscription_plan_id'] as String? ?? 'free',
+    // aiCreditsPurchasable: json['ai_credits_purchasable'] as bool? ?? true,
     status: json['status'] != null
         ? UserStatus.fromJson(json['status'] as Map<String, dynamic>)
         : UserStatus.empty,

@@ -11,7 +11,7 @@ class OrganisationModel {
     required this.country,
     required this.ownerId,
     required this.logoUrl,
-    required this.creditBalance,
+    // required this.creditBalance,
     required this.channelsCount,
     required this.totalMessagesCount,
     required this.orgRoles,
@@ -37,7 +37,7 @@ class OrganisationModel {
   final String country;
   final String ownerId;
   final String logoUrl;
-  final int creditBalance;
+  // final int creditBalance;
   final int channelsCount;
   final int totalMessagesCount;
   final List<dynamic> orgRoles;
@@ -64,7 +64,7 @@ class OrganisationModel {
       country: json['country'] as String? ?? '',
       ownerId: json['owner_id'] as String? ?? '',
       logoUrl: json['logo_url'] as String? ?? '',
-      creditBalance: (json['credit_balance'] as num?)?.toInt() ?? 0,
+      // creditBalance: (json['credit_balance'] as num?)?.toInt() ?? 0,
       channelsCount: (json['channels_count'] as num?)?.toInt() ?? 0,
       totalMessagesCount: (json['total_messages_count'] as num?)?.toInt() ?? 0,
       orgRoles: json['org_roles'] as List<dynamic>? ?? const [],

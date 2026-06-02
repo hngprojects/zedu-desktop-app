@@ -89,7 +89,7 @@ void main() {
         createdAt: DateTime.now(),
         avatarUrl: '',
         defaultAvatarUrl: '',
-        creditBalance: 100,
+        // creditBalance: 100,
         currentOrg: 'org-123',
         currentOrganisationSlug: '',
       );

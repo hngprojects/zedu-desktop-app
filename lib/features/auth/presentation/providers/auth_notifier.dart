@@ -496,9 +496,9 @@ extension _UserStatusSwap on User {
     currentOrganisationSlug: currentOrganisationSlug,
     avatarUrl: avatarUrl,
     defaultAvatarUrl: defaultAvatarUrl,
-    creditBalance: creditBalance,
-    subscriptionPlanId: subscriptionPlanId,
-    aiCreditsPurchasable: aiCreditsPurchasable,
+    // creditBalance: creditBalance,
+    // subscriptionPlanId: subscriptionPlanId,
+    // aiCreditsPurchasable: aiCreditsPurchasable,
     status: newStatus,
   );
 }

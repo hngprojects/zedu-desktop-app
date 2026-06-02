@@ -138,9 +138,9 @@ class UserModel {
     currentOrganisationSlug: currentOrganisationSlug,
     avatarUrl: avatarUrl,
     defaultAvatarUrl: defaultAvatarUrl,
-    creditBalance: organisation.creditBalance,
-    subscriptionPlanId: organisation.subscriptionPlanId,
-    aiCreditsPurchasable:
-        organisation.organisationPlan.planDetails.aiCreditsPurchasable,
+    // creditBalance: organisation.creditBalance,
+    // subscriptionPlanId: organisation.subscriptionPlanId,
+    // aiCreditsPurchasable:
+    //     organisation.organisationPlan.planDetails.aiCreditsPurchasable,
   );
 }

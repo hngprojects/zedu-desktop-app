@@ -16,20 +16,18 @@ class TopUserMenu extends ConsumerWidget {
       offset: const Offset(0, 40),
       onSelected: (value) async {
         if (value == 'buy_credits') {
-          if (context.mounted) {
-            context.go(AppRouter.buyCredits);
-          }
-        } else if (value == 'profile') {
-          // Toggle the personal profile panel overlay
-          ref.read(personalProfilePanelProvider.notifier).state = true;
-        } else if (value == 'preferences') {
-          if (context.mounted) {
-            context.go(AppRouter.profile);
-          }
-        } else if (value == 'logout') {
-          await ref.read(authNotifierProvider.notifier).logout();
-          if (context.mounted) {
-            context.go(AppRouter.login);
+          if (value == 'profile') {
+            // Toggle the personal profile panel overlay
+            ref.read(personalProfilePanelProvider.notifier).state = true;
+          } else if (value == 'preferences') {
+            if (context.mounted) {
+              context.go(AppRouter.profile);
+            }
+          } else if (value == 'logout') {
+            await ref.read(authNotifierProvider.notifier).logout();
+            if (context.mounted) {
+              context.go(AppRouter.login);
+            }
           }
         }
       },

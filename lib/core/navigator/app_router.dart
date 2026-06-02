@@ -15,7 +15,7 @@ class AppRouter {
   static const changePassword = '/change-password';
   static const profile = '/profile';
   static const createOrganization = '/create-organization';
-  static const buyCredits = '/credits/buy';
+  // static const buyCredits = '/credits/buy';
 
   static final navigatorKey = GlobalKey<NavigatorState>();
 

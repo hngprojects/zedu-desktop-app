@@ -254,7 +254,7 @@ class UserMenuDialog extends ConsumerWidget {
                 isHighlight: true,
                 onTap: () {
                   Navigator.pop(context);
-                  if (context.mounted) context.go(AppRouter.buyCredits);
+                  // if (context.mounted) context.go(AppRouter.buyCredits);
                 },
               ),
               const SizedBox(height: 8),

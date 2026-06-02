@@ -16,7 +16,7 @@ class PlanDetailsModel {
     required this.isForLargeEnterprise,
     required this.unlimitedAiCoWorkers,
     required this.createYourOwnAiCoWorkers,
-    required this.aiCreditsPurchasable,
+    // required this.aiCreditsPurchasable,
     required this.maxCallDuration,
     required this.maxBuzzParticipants,
     required this.maxActiveCalls,
@@ -25,7 +25,7 @@ class PlanDetailsModel {
     required this.advancedControls,
     required this.advancedControlsUser,
     required this.createdAt,
-    required this.credits,
+    // required this.credits,
     required this.updatedAt,
   });
 
@@ -45,7 +45,7 @@ class PlanDetailsModel {
   final bool isForLargeEnterprise;
   final bool unlimitedAiCoWorkers;
   final bool createYourOwnAiCoWorkers;
-  final bool aiCreditsPurchasable;
+  // final bool aiCreditsPurchasable;
   final int maxCallDuration;
   final int maxBuzzParticipants;
   final int maxActiveCalls;
@@ -54,7 +54,7 @@ class PlanDetailsModel {
   final bool advancedControls;
   final bool advancedControlsUser;
   final DateTime createdAt;
-  final int credits;
+  // final int credits;
   final DateTime updatedAt;
 
   factory PlanDetailsModel.fromJson(Map<String, dynamic> json) {
@@ -78,7 +78,7 @@ class PlanDetailsModel {
       unlimitedAiCoWorkers: json['unlimited_ai_co_workers'] as bool? ?? false,
       createYourOwnAiCoWorkers:
           json['create_your_own_ai_co_workers'] as bool? ?? false,
-      aiCreditsPurchasable: json['ai_credits_purchasable'] as bool? ?? false,
+      // aiCreditsPurchasable: json['ai_credits_purchasable'] as bool? ?? false,
       maxCallDuration: (json['max_call_duration'] as num?)?.toInt() ?? 0,
       maxBuzzParticipants:
           (json['max_buzz_participants'] as num?)?.toInt() ?? 0,
@@ -90,7 +90,7 @@ class PlanDetailsModel {
       createdAt: DateTime.parse(
         json['created_at'] as String? ?? '0001-01-01T00:00:00Z',
       ),
-      credits: (json['credits'] as num?)?.toInt() ?? 0,
+      // credits: (json['credits'] as num?)?.toInt() ?? 0,
       updatedAt: DateTime.parse(
         json['updated_at'] as String? ?? '0001-01-01T00:00:00Z',
       ),
