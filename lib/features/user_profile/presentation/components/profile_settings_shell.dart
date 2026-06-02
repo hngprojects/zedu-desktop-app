@@ -25,11 +25,7 @@ class ProfileSettingsShell extends ConsumerWidget {
       userName = state.account!.name;
     }
 
-    if (authState.user != null && authState.user!.username.isNotEmpty) {
-      userName = authState.user!.username;
-    } else if (state.account?.name != null && state.account!.name.isNotEmpty) {
-      userName = state.account!.name;
-    }
+
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -48,14 +44,7 @@ class ProfileSettingsShell extends ConsumerWidget {
                       context.go(AppRouter.home);
                     },
                   ),
-                  AppSidebarRail(
-                    activeType: null,
-                    settingsSelected: true,
-                    onTypeSelected: (type) {
-                      ref.read(homeSidebarProvider.notifier).setType(type);
-                      context.go(AppRouter.home);
-                    },
-                  ),
+
                   _SettingsNavigation(
                     userName: userName,
                     selectedSection: selectedSection,
