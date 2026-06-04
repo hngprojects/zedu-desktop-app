@@ -1,6 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
-import 'package:zedu/core/services/realtime_service.dart';
+// import 'package:zedu/core/services/realtime_service.dart';
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService(ref);

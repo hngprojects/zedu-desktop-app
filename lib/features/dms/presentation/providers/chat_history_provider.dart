@@ -532,15 +532,16 @@ class ChatHistoryNotifier extends ChangeNotifier {
       }
 
       var responseData = <String, dynamic>{};
+      
+      // --- NEW FILE UPLOAD LOGIC ---
+      List<Map<String, dynamic>> uploadedMedia = [];
+      if (media != null && media.isNotEmpty) {
+        final fileRepo = ref.read(fileRepositoryProvider);
+        uploadedMedia = await fileRepo.uploadFiles(media);
+      }
+
       try {
         final orgId = ref.read(currentOrgIdProvider);
-
-        // --- NEW FILE UPLOAD LOGIC ---
-        List<Map<String, dynamic>> uploadedMedia = [];
-        if (media != null && media.isNotEmpty) {
-          final fileRepo = ref.read(fileRepositoryProvider);
-          uploadedMedia = await fileRepo.uploadFiles(media);
-        }
 
         responseData =
             await repository.sendMessage(
@@ -568,7 +569,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
                   content,
                   orgId: ref.read(currentOrgIdProvider),
                   threadId: threadId,
-                  media: media,
+                  media: uploadedMedia,
                   mentions: mentions,
                 ) ??
                 <String, dynamic>{};
@@ -673,12 +674,15 @@ class ChatHistoryNotifier extends ChangeNotifier {
       }).toList();
 
       var responseData = <String, dynamic>{};
+      
+      // --- NEW FILE UPLOAD LOGIC ---
+      List<Map<String, dynamic>> uploadedMedia = [];
+      if (mediaFiles != null && mediaFiles.isNotEmpty) {
+        final fileRepo = ref.read(fileRepositoryProvider);
+        uploadedMedia = await fileRepo.uploadFiles(mediaFiles);
+      }
+
       try {
-        List<Map<String, dynamic>> uploadedMedia = [];
-        if (mediaFiles != null && mediaFiles.isNotEmpty) {
-          final fileRepo = ref.read(fileRepositoryProvider);
-          uploadedMedia = await fileRepo.uploadFiles(mediaFiles);
-        }
 
         responseData =
             await repository.sendMessage(
@@ -704,7 +708,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
                   content,
                   orgId: ref.read(currentOrgIdProvider),
                   threadId: threadId,
-                  media: mediaFiles,
+                  media: uploadedMedia,
                 ) ??
                 <String, dynamic>{};
           } else {

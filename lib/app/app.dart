@@ -7,14 +7,18 @@ class App extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      title: 'Zedu',
-      theme: AppTheme.light,
-      routerConfig: AppRouter.router,
-      builder: (context, child) => DesktopManager(
-        child: AuthDeepLinkListener(
-          child: GlobalProfileOverlay(child: child ?? const SizedBox.shrink()),
+    return DesktopManager(
+      child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
+        title: 'Zedu',
+        theme: AppTheme.light,
+        routerConfig: AppRouter.router,
+        builder: (context, child) => DesktopManager(
+          child: AuthDeepLinkListener(
+            child: GlobalProfileOverlay(
+              child: child ?? const SizedBox.shrink(),
+            ),
+          ),
         ),
       ),
     );

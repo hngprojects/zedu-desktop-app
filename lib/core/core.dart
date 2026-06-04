@@ -52,7 +52,7 @@ export 'package:super_clipboard/super_clipboard.dart';
 export 'package:local_notifier/local_notifier.dart';
 export 'package:window_manager/window_manager.dart';
 export 'package:tray_manager/tray_manager.dart';
-// import 'package:zedu/core/services/realtime_service.dart'; // Adjust path if needed
+export 'services/realtime_service.dart';
 
 export 'dart:async' hide AsyncError;
 export 'dart:convert';

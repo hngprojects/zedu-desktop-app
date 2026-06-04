@@ -162,6 +162,8 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
     // Enable Audio and Video
     await _engine.enableAudio();
     await _engine.enableVideo();
+    await _engine.muteLocalAudioStream(false);
+    await _engine.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
 
     // Enable Audio Volume Indication
     await _engine.enableAudioVolumeIndication(

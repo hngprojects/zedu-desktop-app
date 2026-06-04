@@ -22,6 +22,15 @@ class AppRouter {
   static final router = GoRouter(
     navigatorKey: navigatorKey,
     initialLocation: splash,
+    redirect: (context, state) {
+      try {
+        final authState = ProviderScope.containerOf(context).read(authNotifierProvider);
+        if (authState.status == AuthStatus.unauthenticated && state.uri.path == home) {
+          return login;
+        }
+      } catch (_) {}
+      return null;
+    },
     routes: [
       GoRoute(path: splash, builder: (context, state) => const SplashView()),
       GoRoute(path: login, builder: (context, state) => const LoginView()),

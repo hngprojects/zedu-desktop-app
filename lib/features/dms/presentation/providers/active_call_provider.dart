@@ -118,6 +118,14 @@ class ActiveCallNotifier extends ChangeNotifier {
       if (buzzId != null && token != null) {
         _state = _state.copyWith(status: CallStatus.active);
         notifyListeners();
+        
+        _ref.read(buzzLogProvider.notifier).addLog(BuzzLogEntry(
+          id: buzzId,
+          callerName: remoteUserName,
+          timestamp: DateTime.now(),
+          isMissed: false,
+          isIncoming: false,
+        ));
       } else {
         await leaveCall();
       }
@@ -170,6 +178,14 @@ class ActiveCallNotifier extends ChangeNotifier {
           channelName: res['channelName'] as String?,
         );
         notifyListeners();
+        
+        _ref.read(buzzLogProvider.notifier).addLog(BuzzLogEntry(
+          id: _state.buzzId ?? DateTime.now().toString(),
+          callerName: _state.remoteUserName ?? 'Unknown',
+          timestamp: DateTime.now(),
+          isMissed: false,
+          isIncoming: true,
+        ));
       } else {
         await leaveCall();
       }
@@ -183,6 +199,14 @@ class ActiveCallNotifier extends ChangeNotifier {
       await _ref
           .read(buzzRepositoryProvider)
           .respondToInvitation(_state.buzzId!, false);
+          
+      _ref.read(buzzLogProvider.notifier).addLog(BuzzLogEntry(
+        id: _state.buzzId!,
+        callerName: _state.remoteUserName ?? 'Unknown',
+        timestamp: DateTime.now(),
+        isMissed: true,
+        isIncoming: true,
+      ));
     }
     await leaveCall();
   }

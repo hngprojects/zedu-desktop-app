@@ -30,6 +30,15 @@ class DmListTile extends ConsumerWidget {
     final selected = ref.watch(selectedDmProvider);
     final isSelected = selected?.channelId == conversation.channelId;
     final hasUnread = conversation.unreadCount > 0;
+    
+    final currentUserId = ref.watch(authNotifierProvider).user?.id;
+    String displayPrefix = '';
+    if (conversation.previewThreads.isNotEmpty) {
+      final lastThread = conversation.previewThreads.first;
+      if (lastThread.userId == currentUserId) {
+        displayPrefix = 'You: ';
+      }
+    }
 
     return InkWell(
       onTap: () => DmSidebarList.openOrCreateDm(
@@ -106,7 +115,7 @@ class DmListTile extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    parseHtmlToMarkdown(conversation.previewMessage),
+                    '$displayPrefix${parseHtmlToMarkdown(conversation.previewMessage)}',
                     style: TextStyle(
                       color: colors.onPrimary.withValues(alpha: 0.86),
                       fontSize: 11,

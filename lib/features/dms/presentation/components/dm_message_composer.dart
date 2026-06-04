@@ -179,10 +179,18 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
     }
     final query = atMatch.group(1)!.toLowerCase();
     _mentionQuery = query;
-    final suggestions = widget.participants.where((p) {
-      return p.username.toLowerCase().contains(query) ||
-          p.email.toLowerCase().contains(query);
-    }).toList();
+    
+    final allMembers = ref.read(userProfileNotifierProvider).teamMembers;
+    
+    final suggestions = allMembers.where((m) {
+      return (m.name ?? '').toLowerCase().contains(query) ||
+          m.email.toLowerCase().contains(query);
+    }).map((m) => DmParticipant(
+      username: m.name ?? m.email.split('@').first,
+      email: m.email,
+      userId: m.id,
+    )).toList();
+    
     setState(() => _mentionSuggestions = suggestions);
   }
 

@@ -500,6 +500,38 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
 
   @override
   Future<List<TeamMemberModel>> getTeamMembers({String? orgId}) async {
-    return [];
+    if (orgId == null || orgId.isEmpty) {
+      return [];
+    }
+
+    try {
+      final response = await _apiBaseService.get<Map<String, dynamic>>(
+        path: '/organisations/$orgId/users',
+      );
+      
+      final raw = response.data['data'];
+      // The API might wrap the array in 'users' or 'data', or just return the array directly.
+      final data = raw is List ? raw : (raw is Map ? raw['users'] ?? raw['data'] : null);
+      
+      if (data is! List) return [];
+
+      return data.whereType<Map<String, dynamic>>().map((user) {
+        return TeamMemberModel(
+          id: user['id'] as String? ?? '',
+          email: user['email'] as String? ?? '',
+          role: user['role'] as String? ?? 'User',
+          dateJoined: user['created_at'] as String? ?? '',
+          status: TeamMemberStatus.active,
+          name:
+              user['name'] as String? ??
+              user['username'] as String? ??
+              user['email']?.toString().split('@').first ??
+              'Unknown',
+          avatarUrl: user['avatar_url'] as String?,
+        );
+      }).toList();
+    } catch (e) {
+      return [];
+    }
   }
 }

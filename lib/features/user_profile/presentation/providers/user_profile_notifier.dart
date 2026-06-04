@@ -1,6 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
-import 'package:zedu/core/services/realtime_service.dart'; // Adjust path if needed
+// import 'package:zedu/core/services/realtime_service.dart'; // Adjust path if needed
 
 class UserProfileNotifier extends Notifier<UserProfileState> {
   late UserProfileRepository _repository;
@@ -644,7 +644,6 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       _repository.getNotificationPreferences(),
       _repository.getSecuritySessions(),
       _repository.getOrganization(),
-      _repository.getTeamMembers(orgId: orgId),
       _repository.getTeamMembers(orgId: orgId),
       _repository.getRolesAndPermissions(),
       _repository.getBillingInfo(),

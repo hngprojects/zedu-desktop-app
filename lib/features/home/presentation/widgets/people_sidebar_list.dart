@@ -117,44 +117,40 @@ class _PeopleList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final currentUserId = ref.watch(authNotifierProvider).user?.id;
+    final peopleState = ref.watch(userProfileNotifierProvider);
 
-    return ref.watch(orgPeopleProvider).when(
-      loading: () => const Center(
+    if (peopleState.isLoading && peopleState.teamMembers.isEmpty) {
+      return const Center(
         child: CircularProgressIndicator(color: Colors.white),
-      ),
-      error: (err, st) => Center(
+      );
+    }
+
+    final members = peopleState.teamMembers;
+
+    final filtered = query.isEmpty
+        ? members
+        : members.where((m) {
+            final name = (m.name ?? '').toLowerCase();
+            final email = m.email.toLowerCase();
+            return name.contains(query) || email.contains(query);
+          }).toList();
+
+    if (filtered.isEmpty) {
+      return Center(
         child: Text(
-          'Could not load members',
+          'No members found',
           style: TextStyle(color: colors.onPrimary.withValues(alpha: 0.5)),
         ),
+      );
+    }
+
+    return ListView.builder(
+      padding: EdgeInsets.zero,
+      itemCount: filtered.length,
+      itemBuilder: (context, index) => _PeopleTile(
+        member: filtered[index],
+        isCurrentUser: filtered[index].id == currentUserId,
       ),
-      data: (members) {
-        final filtered = query.isEmpty
-            ? members
-            : members.where((m) {
-                final name = (m.name ?? '').toLowerCase();
-                final email = m.email.toLowerCase();
-                return name.contains(query) || email.contains(query);
-              }).toList();
-
-        if (filtered.isEmpty) {
-          return Center(
-            child: Text(
-              'No members found',
-              style: TextStyle(color: colors.onPrimary.withValues(alpha: 0.5)),
-            ),
-          );
-        }
-
-        return ListView.builder(
-          padding: EdgeInsets.zero,
-          itemCount: filtered.length,
-          itemBuilder: (context, index) => _PeopleTile(
-            member: filtered[index],
-            isCurrentUser: filtered[index].id == currentUserId,
-          ),
-        );
-      },
     );
   }
 }
