@@ -159,9 +159,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         path: '/auth/password-reset',
         data: {
           'email': email,
-          'client_url': 'https://zedu.chat/reset-password',
-          'redirect_url': 'https://zedu.chat/reset-password',
-          'redirect_uri': 'https://zedu.chat/reset-password',
+          'client_url': dotenv.maybeGet('RESET_PASSWORD_URL') ?? '',
+          'redirect_url': dotenv.maybeGet('RESET_PASSWORD_URL') ?? '',
+          'redirect_uri': dotenv.maybeGet('RESET_PASSWORD_URL') ?? '',
         },
         headers: {
           'Origin': 'https://zedu.chat',

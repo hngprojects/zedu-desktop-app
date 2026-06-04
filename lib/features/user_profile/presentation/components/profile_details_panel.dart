@@ -116,7 +116,7 @@ class ProfileDetailsPanel extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _ActionButton(
+                      ActionButton(
                         icon: Icons.notifications_off_outlined,
                         label: 'Mute',
                         colors: colors,
@@ -129,7 +129,7 @@ class ProfileDetailsPanel extends ConsumerWidget {
                         },
                       ),
                       const SizedBox(width: 24),
-                      _ActionButton(
+                      ActionButton(
                         icon: Icons.visibility_off_outlined,
                         label: 'Hide',
                         colors: colors,
@@ -157,7 +157,7 @@ class ProfileDetailsPanel extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  _ContactInfoRow(
+                  ContactInfoRow(
                     icon: Icons.email_outlined,
                     label: 'Email',
                     value: member.email,
@@ -165,7 +165,7 @@ class ProfileDetailsPanel extends ConsumerWidget {
                     textTheme: textTheme,
                   ),
                   const SizedBox(height: 16),
-                  _ContactInfoRow(
+                  ContactInfoRow(
                     icon: Icons.phone_outlined,
                     label: 'Phone',
                     value: '(555) 012-3456',
@@ -182,95 +182,3 @@ class ProfileDetailsPanel extends ConsumerWidget {
   }
 }
 
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final AppPalette colors;
-  final VoidCallback onTap;
-
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.colors,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colors.primary.withValues(alpha: 0.05),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: colors.primary, size: 20),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: colors.textSecondary,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ContactInfoRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final AppPalette colors;
-  final TextTheme textTheme;
-
-  const _ContactInfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.colors,
-    required this.textTheme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: colors.textSecondary),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: colors.textPrimary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                style: textTheme.bodySmall?.copyWith(
-                  color: colors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}

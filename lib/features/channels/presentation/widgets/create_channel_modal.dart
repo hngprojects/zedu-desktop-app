@@ -119,7 +119,6 @@ class _CreateChannelModalState extends ConsumerState<CreateChannelModal> {
                         Expanded(
                           child: TextField(
                             controller: _nameController,
-                            // ignore: deprecated_member_use
                             onChanged: (v) => setState(() {}),
                             maxLength: 40,
                             buildCounter:

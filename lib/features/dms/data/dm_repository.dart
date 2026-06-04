@@ -85,7 +85,7 @@ class DmRepository {
       if (!isThreadReply) "channel_id": channelId,
       if (isThreadReply) "thread_id": threadId,
       // ignore: use_null_aware_elements
-      if (orgId != null) "organisation_id": orgId,
+      if (orgId != null) "org_id": orgId,
       if (media != null && media.isNotEmpty)
         "media": media.map(_mediaPayloadFromFile).toList(),
       ...?(mentions != null ? {'mentions': mentions} : null),
@@ -129,7 +129,7 @@ class DmRepository {
         file.path.startsWith('http://') || file.path.startsWith('https://');
     final String serverPath = isUrl
         ? file.path
-        : 'https://example.com/mock-uploads/${file.name}';
+        : '${dotenv.maybeGet('MOCK_UPLOADS_URL') ?? ''}${file.name}';
     return {
       'id': _generateUuid(),
       'name': file.name,

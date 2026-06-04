@@ -15,6 +15,7 @@ void main() {
       test('returns mock response when usesMockData is true', () async {
         final datasource = UserProfileRemoteDataSourceImpl(
           config: const AppConfig(
+      googleClientId: 'test-client-id',
             apiBaseUrl: 'https://api.example.com',
             usesMockData: true,
           ),
@@ -65,6 +66,7 @@ void main() {
 
           final datasource = UserProfileRemoteDataSourceImpl(
             config: const AppConfig(
+      googleClientId: 'test-client-id',
               apiBaseUrl: 'https://api.example.com',
               usesMockData: false,
             ),
@@ -123,6 +125,7 @@ void main() {
 
         final datasource = UserProfileRemoteDataSourceImpl(
           config: const AppConfig(
+      googleClientId: 'test-client-id',
             apiBaseUrl: 'https://api.example.com',
             usesMockData: false,
           ),

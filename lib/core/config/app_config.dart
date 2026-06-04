@@ -4,8 +4,7 @@ class AppConfig {
   const AppConfig({
     required this.apiBaseUrl,
     required this.usesMockData,
-    this.googleClientId =
-        '764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com',
+    required this.googleClientId,
     this.googleClientSecret = '',
   });
 
@@ -22,11 +21,9 @@ class AppConfig {
 
     String apiBaseUrl = defineBaseUrl.isNotEmpty
         ? defineBaseUrl
-        : (envBaseUrl != null &&
-              envBaseUrl.isNotEmpty &&
-              envBaseUrl != 'https://example.com/api')
+        : (envBaseUrl != null && envBaseUrl.isNotEmpty)
         ? envBaseUrl
-        : 'https://api.staging.zedu.chat/api/v1/';
+        : throw Exception('API_BASE_URL is missing from environment');
 
     apiBaseUrl = apiBaseUrl.replaceAll('"', '').replaceAll("'", "");
 
@@ -44,7 +41,7 @@ class AppConfig {
         ? defineClientId
         : (envClientId?.isNotEmpty ?? false)
         ? envClientId!
-        : '764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4.apps.googleusercontent.com';
+        : throw Exception('GOOGLE_CLIENT_ID is missing from environment');
 
     googleClientId = googleClientId.trim();
     if (googleClientId.startsWith('http://')) {

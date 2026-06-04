@@ -11,6 +11,9 @@ class FakeWorkspaceNotifier extends WorkspaceNotifier {
   WorkspaceState build() => _initialState;
 }
 
+class MockAppConfig extends Mock implements AppConfig {}
+class MockSecureStorageService extends Mock implements SecureStorageService {}
+
 class FakeAuthNotifier extends AuthNotifier {
   final AuthState _initialState;
   FakeAuthNotifier(this._initialState);
@@ -22,11 +25,30 @@ class FakeAuthNotifier extends AuthNotifier {
 void main() {
   group('ChannelNotifier Tests', () {
     late MockChannelRepository mockChannelRepository;
+    late MockAppConfig mockAppConfig;
+    late MockSecureStorageService mockSecureStorage;
     late WorkspaceState workspaceState;
     late AuthState authState;
 
     setUp(() {
       mockChannelRepository = MockChannelRepository();
+      mockAppConfig = MockAppConfig();
+      mockSecureStorage = MockSecureStorageService();
+
+      when(() => mockAppConfig.usesMockData).thenReturn(false);
+      when(() => mockAppConfig.websocketUrl).thenReturn('wss://test.com');
+      when(() => mockSecureStorage.readData(any())).thenAnswer((_) async => null);
+      when(() => mockSecureStorage.getAccessToken()).thenAnswer((_) async => 'mock_token');
+
+      if (locator.isRegistered<SecureStorageService>()) {
+        locator.unregister<SecureStorageService>();
+      }
+      locator.registerSingleton<SecureStorageService>(mockSecureStorage);
+
+      if (locator.isRegistered<AppConfig>()) {
+        locator.unregister<AppConfig>();
+      }
+      locator.registerSingleton<AppConfig>(mockAppConfig);
 
       final mockUser = LoginResponseModel.fromJson(
         LoginResponseModel.mockLoginResponse,
@@ -41,6 +63,15 @@ void main() {
       );
 
       authState = AuthState(status: AuthStatus.authenticated, user: mockUser);
+    });
+
+    tearDown(() {
+      if (locator.isRegistered<SecureStorageService>()) {
+        locator.unregister<SecureStorageService>();
+      }
+      if (locator.isRegistered<AppConfig>()) {
+        locator.unregister<AppConfig>();
+      }
     });
 
     ProviderContainer createContainer() {

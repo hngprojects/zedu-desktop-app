@@ -52,7 +52,7 @@ void main() {
     }
 
     test(
-      'fetchWorkspaces returns all workspaces including those created by other users',
+      'fetchWorkspaces filters out workspaces that the user is not a member of',
       () async {
         final apiResponse = ApiResponseModel<Map<String, dynamic>>(
           statusCode: 200,
@@ -102,10 +102,10 @@ void main() {
 
         expect(workspaceIds, contains('org-owner-123'));
         expect(workspaceIds, contains('org-creator-123'));
-        expect(workspaceIds, contains('org-no-owner'));
-        expect(workspaceIds, contains('org-other-user'));
+        expect(workspaceIds.contains('org-no-owner'), isFalse);
+        expect(workspaceIds.contains('org-other-user'), isFalse);
 
-        expect(state.workspaces.length, equals(4));
+        expect(state.workspaces.length, equals(2));
       },
     );
   });

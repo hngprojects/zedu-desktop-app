@@ -28,7 +28,9 @@ class SecureStorageService {
     } catch (e) {
       try {
         await _fallbackFile.writeAsString(token);
-      } catch (_) {}
+      } catch (fallbackError) {
+        AppLogger.e('Failed to save access token to fallback: $fallbackError');
+      }
     }
   }
 
@@ -44,7 +46,7 @@ class SecureStorageService {
         return token;
       }
     } catch (e) {
-      /* ignore */
+      AppLogger.e('Secure storage read access token error: $e');
     }
 
     try {
@@ -53,7 +55,9 @@ class SecureStorageService {
         _memToken = token;
         return token;
       }
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.e('Fallback read access token error: $e');
+    }
     return null;
   }
 
@@ -64,12 +68,16 @@ class SecureStorageService {
         key: _accessTokenKey,
         mOptions: const MacOsOptions(usesDataProtectionKeychain: false),
       );
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.e('Secure storage delete access token error: $e');
+    }
     try {
       if (await _fallbackFile.exists()) {
         await _fallbackFile.delete();
       }
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.e('Fallback delete access token error: $e');
+    }
   }
 
   Future<void> writeData(String key, String value) async {
@@ -83,7 +91,9 @@ class SecureStorageService {
       try {
         final file = File('${_fallbackFile.parent.path}/.zedu_$key');
         await file.writeAsString(value);
-      } catch (_) {}
+      } catch (fallbackError) {
+        AppLogger.e('Failed to save data to fallback: $fallbackError');
+      }
     }
   }
 
@@ -95,14 +105,16 @@ class SecureStorageService {
       );
       if (val != null) return val;
     } catch (e) {
-      /* ignore */
+      AppLogger.e('Secure storage read data error: $e');
     }
     try {
       final file = File('${_fallbackFile.parent.path}/.zedu_$key');
       if (await file.exists()) {
         return await file.readAsString();
       }
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.e('Fallback read data error: $e');
+    }
     return null;
   }
 
@@ -112,7 +124,9 @@ class SecureStorageService {
       await _storage.deleteAll(
         mOptions: const MacOsOptions(usesDataProtectionKeychain: false),
       );
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.e('Secure storage clear all error: $e');
+    }
     try {
       final dir = _fallbackFile.parent;
       final entities = dir.listSync();
@@ -124,6 +138,8 @@ class SecureStorageService {
       if (await _fallbackFile.exists()) {
         await _fallbackFile.delete();
       }
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.e('Fallback clear all error: $e');
+    }
   }
 }
