@@ -42,7 +42,50 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
 
     _currentPage = 1;
     _hasMore = true;
+
+    // Subscribe to incoming Centrifugo messages to update the list in real-time.
+    final sub = ref
+        .read(realtimeServiceProvider)
+        .dmMessageStream
+        .listen(_onRealtimeMessage);
+    ref.onDispose(sub.cancel);
+
     return _fetchPage(orgId, 1);
+  }
+
+  void _onRealtimeMessage(Map<String, dynamic> event) {
+    final channelId = event['channelId']?.toString() ?? '';
+    final msg = event['message'];
+    if (channelId.isEmpty || msg is! Map<String, dynamic>) return;
+    onNewMessage(channelId, msg);
+  }
+
+  /// Called by [ChatHistoryNotifier] and the Centrifugo listener when a new
+  /// message arrives. Moves the conversation to the top and updates the preview.
+  void onNewMessage(String channelId, Map<String, dynamic> msg) {
+    final current = state.value;
+    if (current == null) return;
+
+    final idx = current.indexWhere((c) => c.channelId == channelId);
+    if (idx == -1) return;
+
+    final updated = List<DmConversation>.from(current);
+    final conv = updated.removeAt(idx);
+
+    final rawContent = (msg['content'] ?? '').toString();
+    final preview = parseHtmlToMarkdown(rawContent);
+
+    final selectedDm = ref.read(selectedDmProvider);
+    final isOpen = selectedDm?.channelId == channelId;
+
+    updated.insert(
+      0,
+      conv.copyWith(
+        previewMessage: preview.isNotEmpty ? preview : conv.previewMessage,
+        unreadCount: isOpen ? conv.unreadCount : conv.unreadCount + 1,
+      ),
+    );
+    state = AsyncValue.data(updated);
   }
 
   Future<List<DmConversation>> _fetchPage(String orgId, int page) async {
@@ -191,19 +234,11 @@ final dmSearchResultsProvider = FutureProvider<List<TeamMember>>((ref) async {
   final query = ref.watch(dmSearchQueryProvider).toLowerCase();
   if (query.isEmpty) return [];
 
-  final orgId = ref.watch(currentOrgIdProvider);
-  if (orgId.isEmpty) return [];
+  final teamMembers = ref.watch(userProfileNotifierProvider).teamMembers;
 
-  final repository = ref.watch(userProfileRepositoryProvider);
-  final result = await repository.getTeamMembers(orgId: orgId);
-
-  if (result is Success<List<TeamMember>>) {
-    return result.value.where((member) {
-      final nameMatches = (member.name ?? '').toLowerCase().contains(query);
-      final emailMatches = member.email.toLowerCase().contains(query);
-      return nameMatches || emailMatches;
-    }).toList();
-  }
-
-  return [];
+  return teamMembers.where((member) {
+    final nameMatches = (member.name ?? '').toLowerCase().contains(query);
+    final emailMatches = member.email.toLowerCase().contains(query);
+    return nameMatches || emailMatches;
+  }).toList();
 });

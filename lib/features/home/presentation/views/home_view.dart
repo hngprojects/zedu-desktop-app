@@ -1,6 +1,7 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 import '../providers/org_people_provider.dart';
+import '../widgets/people_sidebar_list.dart';
 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
@@ -110,8 +111,11 @@ class _MainSidebarSwitcher extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(homeSidebarProvider);
-    if (state == HomeSidebarType.dms || state == HomeSidebarType.people) {
+    if (state == HomeSidebarType.dms) {
       return const DmSidebarList();
+    }
+    if (state == HomeSidebarType.people) {
+      return const PeopleSidebarList();
     }
     if (state == HomeSidebarType.buzz) {
       return const BuzzSidebarList();

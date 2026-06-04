@@ -12,8 +12,10 @@ class App extends ConsumerWidget {
       title: 'Zedu',
       theme: AppTheme.light,
       routerConfig: AppRouter.router,
-      builder: (context, child) => AuthDeepLinkListener(
-        child: GlobalProfileOverlay(child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => DesktopManager(
+        child: AuthDeepLinkListener(
+          child: GlobalProfileOverlay(child: child ?? const SizedBox.shrink()),
+        ),
       ),
     );
   }

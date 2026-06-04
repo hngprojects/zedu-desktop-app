@@ -14,6 +14,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
   String? editingMessageId;
   String? _editingOriginalContent;
   StreamSubscription<ChatWebsocketMessage>? _websocketSubscription;
+  StreamSubscription<Map<String, dynamic>>? _realtimeSubscription;
 
   ChatHistoryNotifier(String channelOrThreadId, this.ref)
     : channelId = channelOrThreadId.contains(':')
@@ -30,7 +31,70 @@ class ChatHistoryNotifier extends ChangeNotifier {
       _listenToGroupDmChanges();
     } else {
       _loadInitial();
+      _listenToCentrifugo();
     }
+  }
+
+  void _listenToCentrifugo() {
+    // Ensure we are subscribed to this channel via Centrifugo.
+    ref.read(realtimeServiceProvider).subscribeToDmChannel(channelId);
+
+    _realtimeSubscription = ref
+        .read(realtimeServiceProvider)
+        .dmMessageStream
+        .listen((event) {
+          if (event['channelId'] != channelId) return;
+          final msg = event['message'];
+          if (msg is! Map<String, dynamic>) return;
+
+          final id = msg['id']?.toString();
+          if (id == null || id.isEmpty) return;
+
+          // Try to reconcile with an existing optimistic message first.
+          bool foundMatch = false;
+          final content = (msg['content'] ?? msg['text'] ?? '').toString();
+          final authorId = (msg['user_id'] ?? msg['sender_id'] ?? '').toString();
+          final authorName =
+              (msg['sender_name'] ?? msg['username'] ?? '').toString();
+
+          messages = messages.map((m) {
+            if (m['id'] == id) {
+              foundMatch = true;
+              return m;
+            }
+            if (!foundMatch &&
+                m['content'] == content &&
+                (m['user_id'] == authorId ||
+                    m['sender_name'] == authorName ||
+                    m['username'] == authorName)) {
+              foundMatch = true;
+              return Map<String, dynamic>.from(m)
+                ..['id'] = id
+                ..['user_id'] = authorId.isNotEmpty ? authorId : m['user_id']
+                ..remove('status');
+            }
+            return m;
+          }).toList();
+
+          if (!foundMatch) {
+            if (_seenIds.contains(id)) return;
+            _seenIds.add(id);
+            messages = [msg, ...messages];
+
+            // Update DM list sidebar.
+            ref.read(dmListProvider.notifier).onNewMessage(channelId, msg);
+
+            // Trigger a local notification for messages from others.
+            final currentUserId = ref.read(authNotifierProvider).user?.id ?? '';
+            if (authorId != currentUserId && authorId.isNotEmpty) {
+              ref
+                  .read(notificationServiceProvider)
+                  .handleIncomingMessage(msg, channelId, authorName);
+            }
+          }
+
+          notifyListeners();
+        });
   }
 
   void _listenToWebsocket() {
@@ -290,7 +354,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
       if (id != null) _seenIds.add(id);
     }
 
-    _pollingTimer = Stream<int>.periodic(const Duration(seconds: 10), (i) => i)
+    _pollingTimer = Stream<int>.periodic(const Duration(seconds: 30), (i) => i)
         .listen((_) {
           _pollForNewMessages();
         });
@@ -339,6 +403,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
   void dispose() {
     (_pollingTimer as dynamic)?.cancel();
     _websocketSubscription?.cancel();
+    _realtimeSubscription?.cancel();
     super.dispose();
   }
 
@@ -469,13 +534,22 @@ class ChatHistoryNotifier extends ChangeNotifier {
       var responseData = <String, dynamic>{};
       try {
         final orgId = ref.read(currentOrgIdProvider);
+
+        // --- NEW FILE UPLOAD LOGIC ---
+        List<Map<String, dynamic>> uploadedMedia = [];
+        if (media != null && media.isNotEmpty) {
+          final fileRepo = ref.read(fileRepositoryProvider);
+          uploadedMedia = await fileRepo.uploadFiles(media);
+        }
+
         responseData =
             await repository.sendMessage(
               activeChannelId,
               content,
               orgId: orgId,
               threadId: threadId,
-              media: media,
+              media:
+                  uploadedMedia, // Passing uploaded URLs instead of raw XFiles
               mentions: mentions,
             ) ??
             <String, dynamic>{};
@@ -600,13 +674,19 @@ class ChatHistoryNotifier extends ChangeNotifier {
 
       var responseData = <String, dynamic>{};
       try {
+        List<Map<String, dynamic>> uploadedMedia = [];
+        if (mediaFiles != null && mediaFiles.isNotEmpty) {
+          final fileRepo = ref.read(fileRepositoryProvider);
+          uploadedMedia = await fileRepo.uploadFiles(mediaFiles);
+        }
+
         responseData =
             await repository.sendMessage(
               channelId,
               content,
               orgId: ref.read(currentOrgIdProvider),
               threadId: threadId,
-              media: mediaFiles,
+              media: uploadedMedia,
             ) ??
             <String, dynamic>{};
       } catch (e) {

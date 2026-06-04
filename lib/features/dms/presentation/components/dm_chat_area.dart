@@ -1020,51 +1020,91 @@ class _AttachmentBubbleList extends StatelessWidget {
       alignment: isMe ? WrapAlignment.end : WrapAlignment.start,
       children: media.map((item) {
         final String fileName = (item['file_name'] ?? 'Attachment').toString();
-        final String fileLink = (item['file_link'] ?? '').toString();
-        final isImage = [
-          'png',
-          'jpg',
-          'jpeg',
-          'gif',
-          'webp',
-        ].contains((item['file_type'] ?? '').toString().toLowerCase());
+        // Try multiple field names the backend might use for the URL.
+        final String fileLink = (item['file_link'] ??
+                item['file_url'] ??
+                item['url'] ??
+                item['link'] ??
+                '')
+            .toString();
 
+        // Derive extension from file_type, or fall back to the filename/url.
+        final rawType = (item['file_type'] ?? '').toString().toLowerCase();
+        final ext = rawType.isNotEmpty
+            ? rawType
+            : fileName.contains('.')
+                ? fileName.split('.').last.toLowerCase()
+                : fileLink.contains('.')
+                    ? fileLink.split('.').last.split('?').first.toLowerCase()
+                    : '';
+
+        const imageExts = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'};
+        const audioExts = {'m4a', 'mp3', 'ogg', 'wav', 'aac', 'webm', 'opus'};
+
+        final isImage = imageExts.contains(ext);
+        final isAudio = audioExts.contains(ext);
+
+        // ── Audio: render a playable VoiceNotePlayer ─────────────────────────
+        if (isAudio && fileLink.isNotEmpty) {
+          return SizedBox(
+            width: 260,
+            child: VoiceNotePlayer(audioSource: fileLink),
+          );
+        }
+
+        // ── Image: render inline with network or local file support ──────────
         if (isImage && fileLink.isNotEmpty) {
           final isNetwork = fileLink.startsWith('http');
-          return GestureDetector(
-            onTap: () => _launchUrl(fileLink),
-            child: Container(
-              width: 250,
-              height: 200,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: context.colors.divider),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: isNetwork
-                    ? Image.network(
-                        fileLink,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            _buildGenericFile(
-                              fileName,
-                              fileLink,
-                              isImage,
-                              context,
-                            ),
-                      )
-                    : Image.asset(
-                        fileLink,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            _buildGenericFile(
-                              fileName,
-                              fileLink,
-                              isImage,
-                              context,
-                            ),
-                      ),
+          return MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () => _launchUrl(fileLink),
+              child: Container(
+                width: 250,
+                height: 200,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.colors.divider),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: isNetwork
+                      ? Image.network(
+                          fileLink,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, progress) {
+                            if (progress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: progress.expectedTotalBytes != null
+                                    ? progress.cumulativeBytesLoaded /
+                                        progress.expectedTotalBytes!
+                                    : null,
+                                strokeWidth: 2,
+                                color: context.colors.primary,
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) =>
+                              _buildGenericFile(
+                                fileName,
+                                fileLink,
+                                isImage,
+                                context,
+                              ),
+                        )
+                      : Image.file(
+                          File(fileLink),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              _buildGenericFile(
+                                fileName,
+                                fileLink,
+                                isImage,
+                                context,
+                              ),
+                        ),
+                ),
               ),
             ),
           );
