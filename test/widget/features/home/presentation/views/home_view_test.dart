@@ -65,7 +65,7 @@ void main() {
       if (!locator.isRegistered<AppConfig>()) {
         locator.registerSingleton<AppConfig>(
           const AppConfig(
-      googleClientId: 'test-client-id',
+            googleClientId: 'test-client-id',
             apiBaseUrl: 'https://api.example.com',
             usesMockData: false,
           ),

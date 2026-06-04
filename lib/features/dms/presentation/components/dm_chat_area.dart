@@ -2057,9 +2057,9 @@ void _showNotificationSettingsDialog(
                     leading: Radio<int>(
                       value: 0,
                       // ignore: deprecated_member_use
-                            groupValue: notifyFor,
+                      groupValue: notifyFor,
                       // ignore: deprecated_member_use
-                            onChanged: (val) => setState(() => notifyFor = val!),
+                      onChanged: (val) => setState(() => notifyFor = val!),
                       activeColor: colors.primary,
                     ),
                     title: const Text('All new messages'),
@@ -2070,9 +2070,9 @@ void _showNotificationSettingsDialog(
                     leading: Radio<int>(
                       value: 1,
                       // ignore: deprecated_member_use
-                            groupValue: notifyFor,
+                      groupValue: notifyFor,
                       // ignore: deprecated_member_use
-                            onChanged: (val) => setState(() => notifyFor = val!),
+                      onChanged: (val) => setState(() => notifyFor = val!),
                       activeColor: colors.primary,
                     ),
                     title: const Text('Mentions'),
@@ -2083,9 +2083,9 @@ void _showNotificationSettingsDialog(
                     leading: Radio<int>(
                       value: 2,
                       // ignore: deprecated_member_use
-                            groupValue: notifyFor,
+                      groupValue: notifyFor,
                       // ignore: deprecated_member_use
-                            onChanged: (val) => setState(() => notifyFor = val!),
+                      onChanged: (val) => setState(() => notifyFor = val!),
                       activeColor: colors.primary,
                     ),
                     title: const Text('Channels'),
@@ -2097,7 +2097,7 @@ void _showNotificationSettingsDialog(
                     leading: Checkbox(
                       value: notifyReplies,
                       // ignore: deprecated_member_use
-                            onChanged: (val) =>
+                      onChanged: (val) =>
                           setState(() => notifyReplies = val ?? true),
                       activeColor: colors.primary,
                     ),
@@ -2111,7 +2111,7 @@ void _showNotificationSettingsDialog(
                     leading: Checkbox(
                       value: isMuted,
                       // ignore: deprecated_member_use
-                            onChanged: (val) =>
+                      onChanged: (val) =>
                           setState(() => isMuted = val ?? false),
                       activeColor: colors.primary,
                     ),

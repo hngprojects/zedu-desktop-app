@@ -13,7 +13,9 @@ void main() {
     });
 
     test('extracts token from https invite accept link', () {
-      final uri = Uri.parse('https://example.com/invite/accept?token=invite123');
+      final uri = Uri.parse(
+        'https://example.com/invite/accept?token=invite123',
+      );
 
       final token = InvitationDeepLinkParser.extractToken(uri);
 
@@ -21,7 +23,9 @@ void main() {
     });
 
     test('extracts token from https accept-invite link', () {
-      final uri = Uri.parse('https://example.com/accept-invite?token=invite123');
+      final uri = Uri.parse(
+        'https://example.com/accept-invite?token=invite123',
+      );
 
       final token = InvitationDeepLinkParser.extractToken(uri);
 

@@ -12,6 +12,7 @@ class FakeWorkspaceNotifier extends WorkspaceNotifier {
 }
 
 class MockAppConfig extends Mock implements AppConfig {}
+
 class MockSecureStorageService extends Mock implements SecureStorageService {}
 
 class FakeAuthNotifier extends AuthNotifier {
@@ -37,8 +38,12 @@ void main() {
 
       when(() => mockAppConfig.usesMockData).thenReturn(false);
       when(() => mockAppConfig.websocketUrl).thenReturn('wss://test.com');
-      when(() => mockSecureStorage.readData(any())).thenAnswer((_) async => null);
-      when(() => mockSecureStorage.getAccessToken()).thenAnswer((_) async => 'mock_token');
+      when(
+        () => mockSecureStorage.readData(any()),
+      ).thenAnswer((_) async => null);
+      when(
+        () => mockSecureStorage.getAccessToken(),
+      ).thenAnswer((_) async => 'mock_token');
 
       if (locator.isRegistered<SecureStorageService>()) {
         locator.unregister<SecureStorageService>();
