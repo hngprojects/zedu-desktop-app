@@ -1,6 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
-import 'package:zedu/features/home/presentation/providers/org_people_provider.dart';
+// import 'package:zedu/features/home/presentation/providers/org_people_provider.dart';
 
 class PeopleSidebarList extends ConsumerStatefulWidget {
   const PeopleSidebarList({super.key});
@@ -80,7 +80,11 @@ class _SearchBar extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 8),
-          Icon(Icons.search, color: colors.onPrimary.withValues(alpha: 0.9), size: 16),
+          Icon(
+            Icons.search,
+            color: colors.onPrimary.withValues(alpha: 0.9),
+            size: 16,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: TextField(

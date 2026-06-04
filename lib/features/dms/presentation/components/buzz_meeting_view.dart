@@ -15,12 +15,11 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
   bool _isHandRaised = false;
 
   late RtcEngine _engine;
-  int? _remoteUid;
   bool _isEngineInitialized = false;
 
-  // New State variables
   VideoViewController? _localVideoController;
-  VideoViewController? _remoteVideoController;
+  // Multi-participant: uid → controller
+  final Map<int, VideoViewController> _remoteControllers = {};
 
   bool? _lastIsFullPage;
   bool _showEmojis = false;
@@ -76,8 +75,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
         onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
           debugPrint('remote user $remoteUid joined');
           setState(() {
-            _remoteUid = remoteUid;
-            _remoteVideoController = VideoViewController.remote(
+            _remoteControllers[remoteUid] = VideoViewController.remote(
               rtcEngine: _engine,
               canvas: VideoCanvas(uid: remoteUid),
               connection: RtcConnection(channelId: channelName),
@@ -92,10 +90,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
             ) {
               debugPrint('remote user $remoteUid left channel');
               setState(() {
-                if (_remoteUid == remoteUid) {
-                  _remoteUid = null;
-                  _remoteVideoController = null;
-                }
+                _remoteControllers.remove(remoteUid);
                 _mutedUsers.remove(remoteUid);
                 _activeSpeakers.remove(remoteUid);
                 _raisedHands.remove(remoteUid);
@@ -331,12 +326,14 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
         rtcEngine: _engine,
         canvas: const VideoCanvas(uid: 0),
       );
-      if (_remoteUid != null && activeCall.state.channelName != null) {
-        _remoteVideoController = VideoViewController.remote(
-          rtcEngine: _engine,
-          canvas: VideoCanvas(uid: _remoteUid!),
-          connection: RtcConnection(channelId: activeCall.state.channelName!),
-        );
+      if (activeCall.state.channelName != null) {
+        for (final uid in _remoteControllers.keys.toList()) {
+          _remoteControllers[uid] = VideoViewController.remote(
+            rtcEngine: _engine,
+            canvas: VideoCanvas(uid: uid),
+            connection: RtcConnection(channelId: activeCall.state.channelName!),
+          );
+        }
       }
       if (!_isVideoOff && _isEngineInitialized) {
         Future.microtask(() async {
@@ -347,8 +344,6 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
       }
     }
     _lastIsFullPage = isFullPage;
-
-    final remoteName = activeCall.state.remoteUserName ?? 'Unknown';
 
     if (!isFullPage) {
       return Positioned(
@@ -395,7 +390,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                             ),
                           ),
                           Text(
-                            '2 participant',
+                            '${_remoteControllers.length + 1} participant${_remoteControllers.isEmpty ? '' : 's'}',
                             style: TextStyle(
                               fontSize: 11,
                               color: colors.textHint,
@@ -418,30 +413,9 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _buildVideoFeed(
-                          Colors.green.shade900,
-                          'You',
-                          null,
-                          80,
-                          isLocal: true,
-                          uid: 0,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _buildVideoFeed(
-                          Colors.grey.shade800,
-                          remoteName,
-                          activeCall.state.remoteAvatarUrl,
-                          80,
-                          isLocal: false,
-                          uid: _remoteUid,
-                        ),
-                      ),
-                    ],
+                  child: SizedBox(
+                    height: 80,
+                    child: _buildPipGrid(),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -524,53 +498,46 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                 Icon(Icons.people_outline, size: 16, color: colors.textHint),
                 const SizedBox(width: 4),
                 Text(
-                  '2 participant',
+                  '${_remoteControllers.length + 1} participant${_remoteControllers.isEmpty ? '' : 's'}',
                   style: TextStyle(fontSize: 13, color: colors.textHint),
                 ),
                 const Spacer(),
-                Text(
-                  'Full page',
-                  style: TextStyle(fontSize: 13, color: colors.textPrimary),
+                // Add People button
+                _buildControlButton(
+                  icon: Icons.person_add_outlined,
+                  color: Colors.grey.shade700,
+                  onTap: () {
+                    final buzzId =
+                        ref.read(activeCallProvider).state.buzzId ?? '';
+                    if (buzzId.isNotEmpty) {
+                      showDialog<void>(
+                        context: context,
+                        builder: (_) =>
+                            BuzzAddPeopleDialog(buzzId: buzzId),
+                      );
+                    }
+                  },
+                  small: false,
                 ),
                 const SizedBox(width: 8),
-                Switch(
-                  value: true,
-                  onChanged: (val) {
+                IconButton(
+                  icon: Icon(
+                    Icons.close_fullscreen,
+                    size: 16,
+                    color: colors.textHint,
+                  ),
+                  tooltip: 'Minimise',
+                  onPressed: () {
                     ref.read(activeCallProvider.notifier).setFullPage(false);
                   },
-                  activeThumbColor: colors.primary,
                 ),
               ],
             ),
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: _buildVideoFeed(
-                      const Color(0xFF4A2B1D),
-                      remoteName,
-                      activeCall.state.remoteAvatarUrl,
-                      double.infinity,
-                      isLocal: false,
-                      uid: _remoteUid,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: _buildVideoFeed(
-                      const Color(0xFF1E3A2F),
-                      'You',
-                      null,
-                      double.infinity,
-                      isLocal: true,
-                      uid: 0,
-                    ),
-                  ),
-                ],
-              ),
+              padding: const EdgeInsets.all(16),
+              child: _buildFullPageGrid(),
             ),
           ),
           // Bottom Controls
@@ -638,6 +605,211 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
     );
   }
 
+  // ── Participant grid layouts ────────────────────────────────────────────
+
+  /// Full-page grid: adapts columns based on participant count.
+  Widget _buildFullPageGrid() {
+    final remoteUids = _remoteControllers.keys.toList();
+    final totalCount = remoteUids.length + 1; // +1 for local
+
+    // 1 total (just local) — centered
+    if (remoteUids.isEmpty) {
+      return _buildTile(isLocal: true, uid: 0, name: 'You', flex: 1);
+    }
+
+    // 2 total — vertical split
+    if (totalCount == 2) {
+      return Column(
+        children: [
+          Expanded(
+            child: _buildTile(
+              isLocal: false,
+              uid: remoteUids.first,
+              name: 'Participant',
+              flex: 1,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: _buildTile(isLocal: true, uid: 0, name: 'You', flex: 1),
+          ),
+        ],
+      );
+    }
+
+    // 3–4 — 2×2 grid
+    final allEntries = [
+      {'isLocal': true, 'uid': 0, 'name': 'You'},
+      for (final uid in remoteUids)
+        {'isLocal': false, 'uid': uid, 'name': 'Participant'},
+    ];
+
+    final crossAxisCount = totalCount <= 4 ? 2 : 3;
+    return GridView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 16 / 9,
+      ),
+      itemCount: allEntries.length,
+      itemBuilder: (ctx, i) {
+        final e = allEntries[i];
+        return _buildTile(
+          isLocal: e['isLocal'] as bool,
+          uid: e['uid'] as int,
+          name: e['name'] as String,
+          flex: 1,
+        );
+      },
+    );
+  }
+
+  /// PiP compact row: local + up to 1 remote tile.
+  Widget _buildPipGrid() {
+    final remoteUids = _remoteControllers.keys.toList();
+    if (remoteUids.isEmpty) {
+      return _buildTile(isLocal: true, uid: 0, name: 'You', flex: 1);
+    }
+    return Row(
+      children: [
+        Expanded(
+          child: _buildTile(isLocal: true, uid: 0, name: 'You', flex: 1),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: _buildTile(
+            isLocal: false,
+            uid: remoteUids.first,
+            name: 'Participant',
+            flex: 1,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Single participant tile with video/avatar, name label, hand-raise, mute.
+  Widget _buildTile({
+    required bool isLocal,
+    required int uid,
+    required String name,
+    required int flex,
+  }) {
+    final isSpeaker = _activeSpeakers.contains(uid);
+    final isMuted = isLocal
+        ? _isMuted
+        : _mutedUsers.contains(uid);
+    final hasHandRaised = _raisedHands.contains(uid);
+    final activeEmoji = _activeEmojis[uid];
+
+    Widget? videoView;
+    if (_isEngineInitialized) {
+      if (isLocal && !_isVideoOff && _localVideoController != null) {
+        videoView = AgoraVideoView(controller: _localVideoController!);
+      } else if (!isLocal && _remoteControllers.containsKey(uid)) {
+        videoView = AgoraVideoView(controller: _remoteControllers[uid]!);
+      }
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isLocal ? const Color(0xFF1E3A2F) : const Color(0xFF2B2B4A),
+        borderRadius: BorderRadius.circular(12),
+        border: isSpeaker && !isMuted
+            ? Border.all(color: Colors.green, width: 3)
+            : Border.all(color: Colors.transparent, width: 3),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (videoView != null)
+            videoView
+          else
+            const Center(
+              child: CircleAvatar(
+                radius: 24,
+                backgroundColor: Color(0xFF6458F5),
+                child: Icon(Icons.person, size: 24, color: Colors.white),
+              ),
+            ),
+          // Name label
+          Positioned(
+            top: 8,
+            left: 8,
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                if (hasHandRaised) ...[
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.back_hand,
+                      size: 10,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (isMuted)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.mic_off,
+                  size: 12,
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          if (activeEmoji != null)
+            Positioned(
+              top: 36,
+              left: 8,
+              child: Text(
+                activeEmoji,
+                style: const TextStyle(fontSize: 28),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // ── Legacy video feed (kept for PiP fallback compatibility) ────────────────
+
   Widget _buildVideoFeed(
     Color bgColor,
     String name,
@@ -657,8 +829,8 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
     if (_isEngineInitialized) {
       if (isLocal && !_isVideoOff && _localVideoController != null) {
         videoView = AgoraVideoView(controller: _localVideoController!);
-      } else if (!isLocal && uid != null && _remoteVideoController != null) {
-        videoView = AgoraVideoView(controller: _remoteVideoController!);
+      } else if (!isLocal && uid != null && _remoteControllers.containsKey(uid)) {
+        videoView = AgoraVideoView(controller: _remoteControllers[uid]!);
       }
     }
 

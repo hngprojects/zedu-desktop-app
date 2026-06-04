@@ -16,6 +16,9 @@ class ActiveCallState {
   final String? buzzCode;
   final bool isFullPage;
   final DateTime? lastCallAt;
+  // For org buzz invitations — used to respond via the correct endpoint
+  final String? invitationId;
+  final bool isOrgBuzz;
 
   const ActiveCallState({
     this.status = CallStatus.none,
@@ -28,6 +31,8 @@ class ActiveCallState {
     this.appId,
     this.channelName,
     this.buzzCode,
+    this.invitationId,
+    this.isOrgBuzz = false,
     this.isFullPage = false,
     this.lastCallAt,
   });
@@ -43,6 +48,8 @@ class ActiveCallState {
     String? appId,
     String? channelName,
     String? buzzCode,
+    String? invitationId,
+    bool? isOrgBuzz,
     bool? isFullPage,
     DateTime? lastCallAt,
   }) {
@@ -57,6 +64,8 @@ class ActiveCallState {
       appId: appId ?? this.appId,
       channelName: channelName ?? this.channelName,
       buzzCode: buzzCode ?? this.buzzCode,
+      invitationId: invitationId ?? this.invitationId,
+      isOrgBuzz: isOrgBuzz ?? this.isOrgBuzz,
       isFullPage: isFullPage ?? this.isFullPage,
       lastCallAt: lastCallAt ?? this.lastCallAt,
     );
@@ -237,6 +246,77 @@ class ActiveCallNotifier extends ChangeNotifier {
             );
       }
     }
+    _state = ActiveCallState(lastCallAt: _state.lastCallAt);
+    notifyListeners();
+  }
+
+  /// Activates an org buzz session after createOrgBuzz() or joinBuzzByCode().
+  /// Called by OrgBuzzNotifier once Agora token data is available.
+  void activateOrgBuzz({
+    required String buzzId,
+    required String channelId,
+    required String token,
+    required String appId,
+    required String channelName,
+    String? buzzCode,
+    String? hostName,
+  }) {
+    _state = ActiveCallState(
+      status: CallStatus.active,
+      buzzId: buzzId,
+      channelId: channelId,
+      token: token,
+      appId: appId,
+      channelName: channelName,
+      buzzCode: buzzCode,
+      remoteUserName: hostName,
+      isOrgBuzz: true,
+      isFullPage: true,
+      lastCallAt: DateTime.now(),
+    );
+    notifyListeners();
+  }
+
+  /// Called by NotificationService when a buzz_invitation Centrifugo event arrives.
+  void receiveOrgBuzzInvitation({
+    required String invitationId,
+    required String buzzId,
+    required String inviterName,
+    required String channelId,
+  }) {
+    if (_state.status != CallStatus.none) return;
+    _state = ActiveCallState(
+      status: CallStatus.incoming,
+      buzzId: buzzId,
+      channelId: channelId,
+      remoteUserName: inviterName,
+      invitationId: invitationId,
+      isOrgBuzz: true,
+      isFullPage: false,
+      lastCallAt: DateTime.now(),
+    );
+    notifyListeners();
+  }
+
+  Future<void> declineOrgBuzzInvitation() async {
+    final invId = _state.invitationId;
+    final buzzId = _state.buzzId;
+    if (invId != null) {
+      await _ref
+          .read(orgBuzzRepositoryProvider)
+          .respondToOrgBuzzInvitation(invId, false);
+    } else if (buzzId != null) {
+      await _ref
+          .read(buzzRepositoryProvider)
+          .respondToInvitation(buzzId, false);
+    }
+    _ref.read(buzzLogProvider.notifier).addLog(BuzzLogEntry(
+      id: buzzId ?? DateTime.now().toString(),
+      callerName: _state.remoteUserName ?? 'Unknown',
+      timestamp: DateTime.now(),
+      isMissed: true,
+      isIncoming: true,
+    ));
     _state = ActiveCallState(lastCallAt: _state.lastCallAt);
     notifyListeners();
   }

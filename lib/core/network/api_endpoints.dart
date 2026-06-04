@@ -31,4 +31,13 @@ class ApiEndpoints {
       '/channels/$channelId/messages';
   static String dmsMessages(String channelId) =>
       '/dms/channels/$channelId/threads';
+
+  // --- Buzz (Group Video/Voice Calls) ---
+  static const String createOrgBuzz = '/buzz/create-org-buzz';
+  static const String getOrgBuzzList = '/buzz/org-buzz-list';
+  static const String searchBuzzMembers = '/buzz/search-channel-members';
+  static const String inviteUsersToBuzz = '/buzz/invite';
+  static const String respondBuzzInvitation = '/buzz/respond-invitation';
+  static const String getPendingBuzzInvitations = '/buzz/pending-invitations';
+  static String joinBuzzByCode(String codeOrId) => '/buzz/$codeOrId/join';
 }

@@ -2,6 +2,7 @@ import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 import '../providers/org_people_provider.dart';
 import '../widgets/people_sidebar_list.dart';
+import 'package:zedu/features/dms/presentation/views/general_buzz_view.dart';
 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
@@ -118,7 +119,7 @@ class _MainSidebarSwitcher extends ConsumerWidget {
       return const PeopleSidebarList();
     }
     if (state == HomeSidebarType.buzz) {
-      return const BuzzSidebarList();
+      return const SizedBox.shrink(); // Buzz is full-width; no secondary sidebar
     }
     if (state == HomeSidebarType.files) {
       // FilesView provides its own internal left panel
@@ -139,6 +140,18 @@ class _ChatAreaSwitcher extends ConsumerWidget {
     // ── Files tab: always show the Files UI ───────────────────────────────
     if (sidebar == HomeSidebarType.files) {
       return const _FilesView();
+    }
+
+    // ── Buzz tab: full-width meeting hub ───────────────────────────────────
+    if (sidebar == HomeSidebarType.buzz) {
+      final callStatus = ref.watch(activeCallProvider).state.status;
+      if (callStatus == CallStatus.active) {
+        return const BuzzMeetingView();
+      }
+      if (callStatus == CallStatus.calling) {
+        return const BuzzPreparationView();
+      }
+      return const GeneralBuzzView();
     }
 
     // ── DMs / People: if no DM or Group chat is active, show empty state ──
@@ -366,114 +379,116 @@ class _MainSidebarState extends ConsumerState<_MainSidebar> {
 
           if (_peopleExpanded) ...[
             const SizedBox(height: 8),
-            Builder(builder: (context) {
-              final peopleState = ref.watch(userProfileNotifierProvider);
-              if (peopleState.isLoading && peopleState.teamMembers.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: colors.primary,
-                      ),
-                    ),
-                  ),
-                );
-              }
-              final people = peopleState.teamMembers;
-              if (people.isEmpty) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 8,
-                  ),
-                  child: Text(
-                    'No team members yet.',
-                    style: TextStyle(
-                      color: colors.onPrimary.withValues(alpha: 0.7),
-                      fontSize: 13,
-                    ),
-                  ),
-                );
-              }
-              return Column(
-                children: people.map((person) {
-                  final name = person.name ?? person.email.split('@').first;
-                  final List<Color> avatarColors = [
-                    Colors.purple,
-                    Colors.blue,
-                    Colors.green,
-                    Colors.orange,
-                    Colors.red,
-                    Colors.teal,
-                  ];
-                  final colorIndex = person.id.hashCode % avatarColors.length;
-                  final avatarColor = avatarColors[colorIndex];
-
-                  return InkWell(
-                    onTap: () async {
-                      final orgId = ref.read(currentOrgIdProvider);
-
-                      final dmRepo = ref.read(dmRepositoryProvider);
-                      final conv = await dmRepo.createDmChannel(
-                        orgId: orgId,
-                        userId: person.id,
-                      );
-
-                      ref
-                          .read(homeSidebarProvider.notifier)
-                          .setType(HomeSidebarType.dms);
-                      ref.read(selectedDmProvider.notifier).select(conv);
-                      ref
-                          .read(activeChatProvider.notifier)
-                          .selectDirectMessage(conv.channelId);
-                    },
+            Builder(
+              builder: (context) {
+                final peopleState = ref.watch(userProfileNotifierProvider);
+                if (peopleState.isLoading && peopleState.teamMembers.isEmpty) {
+                  return Center(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 6,
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: avatarColor,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              name.substring(0, 1).toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              name,
-                              style: TextStyle(
-                                color: colors.onPrimary,
-                                fontSize: 14,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: colors.primary,
+                        ),
                       ),
                     ),
                   );
-                }).toList(),
-              );
-            }),
+                }
+                final people = peopleState.teamMembers;
+                if (people.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      'No team members yet.',
+                      style: TextStyle(
+                        color: colors.onPrimary.withValues(alpha: 0.7),
+                        fontSize: 13,
+                      ),
+                    ),
+                  );
+                }
+                return Column(
+                  children: people.map((person) {
+                    final name = person.name ?? person.email.split('@').first;
+                    final List<Color> avatarColors = [
+                      Colors.purple,
+                      Colors.blue,
+                      Colors.green,
+                      Colors.orange,
+                      Colors.red,
+                      Colors.teal,
+                    ];
+                    final colorIndex = person.id.hashCode % avatarColors.length;
+                    final avatarColor = avatarColors[colorIndex];
+
+                    return InkWell(
+                      onTap: () async {
+                        final orgId = ref.read(currentOrgIdProvider);
+
+                        final dmRepo = ref.read(dmRepositoryProvider);
+                        final conv = await dmRepo.createDmChannel(
+                          orgId: orgId,
+                          userId: person.id,
+                        );
+
+                        ref
+                            .read(homeSidebarProvider.notifier)
+                            .setType(HomeSidebarType.dms);
+                        ref.read(selectedDmProvider.notifier).select(conv);
+                        ref
+                            .read(activeChatProvider.notifier)
+                            .selectDirectMessage(conv.channelId);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 6,
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                color: avatarColor,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                name.substring(0, 1).toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                name,
+                                style: TextStyle(
+                                  color: colors.onPrimary,
+                                  fontSize: 14,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
           ],
         ],
       ),

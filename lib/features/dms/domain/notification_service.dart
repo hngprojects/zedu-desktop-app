@@ -41,41 +41,60 @@ class NotificationService {
   bool _handleCallEvent(Map<String, dynamic> event, String channelId) {
     final eventName = event['event']?.toString();
     final payload = event['payload'];
-    if (eventName != 'direct_call_initiated' ||
-        payload is! Map<String, dynamic>) {
-      return false;
-    }
+    if (payload is! Map<String, dynamic>) return false;
 
     final authState = _ref.read(authNotifierProvider);
     final currentUserId = authState.user?.id ?? '';
-    final callerId = payload['caller_id']?.toString() ?? '';
 
-    if (callerId == currentUserId) return true; // Don't ring for our own calls
+    // ── Direct 1:1 call ──────────────────────────────────────────────────
+    if (eventName == 'direct_call_initiated') {
+      final callerId = payload['caller_id']?.toString() ?? '';
+      if (callerId == currentUserId) return true;
 
-    final callerName = payload['caller_name']?.toString() ?? 'Incoming call';
+      final callerName = payload['caller_name']?.toString() ?? 'Incoming call';
+      _ref
+          .read(activeCallProvider)
+          .receiveIncomingCall(
+            buzzId: payload['buzz_id']?.toString() ?? '',
+            remoteUserId: callerId,
+            remoteUserName: callerName,
+            channelId: payload['channel_id']?.toString() ?? channelId,
+          );
+      _showCallNotification('Incoming Buzz Call', '$callerName is calling you…');
+      return true;
+    }
 
-    // 1. Trigger the app's ringing UI
-    _ref
-        .read(activeCallProvider)
-        .receiveIncomingCall(
-          buzzId: payload['buzz_id']?.toString() ?? '',
-          remoteUserId: callerId,
-          remoteUserName: callerName,
-          channelId: payload['channel_id']?.toString() ?? channelId,
-        );
+    // ── Org buzz invitation ───────────────────────────────────────────────
+    if (eventName == 'buzz_invitation') {
+      final inviterId = payload['inviter_id']?.toString() ?? '';
+      if (inviterId == currentUserId) return true;
 
-    // 2. Show desktop notification
-    final notification = LocalNotification(
-      title: 'Incoming Buzz Call',
-      body: '$callerName is calling you...',
-    );
+      final inviterName = payload['inviter_name']?.toString() ?? 'Someone';
+      _ref
+          .read(activeCallProvider)
+          .receiveOrgBuzzInvitation(
+            invitationId: payload['invitation_id']?.toString() ?? '',
+            buzzId: payload['buzz_id']?.toString() ?? '',
+            inviterName: inviterName,
+            channelId: payload['channel_id']?.toString() ?? channelId,
+          );
+      _showCallNotification(
+        'Buzz Meeting Invitation',
+        '$inviterName invited you to a meeting. Tap to join.',
+      );
+      return true;
+    }
+
+    return false;
+  }
+
+  void _showCallNotification(String title, String body) {
+    final notification = LocalNotification(title: title, body: body);
     notification.onClick = () async {
       await windowManager.show();
       await windowManager.focus();
     };
     notification.show();
-
-    return true;
   }
 
   Map<String, dynamic> _normalizeMessage(Map<String, dynamic> event) {
