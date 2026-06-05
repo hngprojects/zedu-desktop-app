@@ -619,7 +619,7 @@ class _PeopleTabState extends ConsumerState<_PeopleTab> {
                   ),
                 );
 
-                showDialog(
+                showDialog<void>(
                   context: context,
                   builder: (context) => AddChannelMembersModal(
                     channel: channel,
