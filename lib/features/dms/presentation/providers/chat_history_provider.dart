@@ -169,18 +169,19 @@ class ChatHistoryNotifier extends ChangeNotifier {
   }
 
   bool isMyMessage(Map<String, dynamic> message) {
-    var rawSender = message['user_id'] ??
+    var rawSender =
+        message['user_id'] ??
         message['userId'] ??
         message['sender_id'] ??
         message['author_id'];
-    
+
     if (rawSender == null && message['sender'] is Map) {
       rawSender = (message['sender'] as Map)['id'];
     }
-    
+
     final senderId = rawSender?.toString() ?? '';
     final currentId = _currentUserId;
-    
+
     if (currentId.isEmpty) return false;
     return senderId == currentId || senderId == 'me';
   }
@@ -229,7 +230,11 @@ class ChatHistoryNotifier extends ChangeNotifier {
 
     try {
       final repository = ref.read(dmRepositoryProvider);
-      final cType = _isGroupDm ? 'group_dm' : _isChannel ? 'channel' : 'dm';
+      final cType = _isGroupDm
+          ? 'group_dm'
+          : _isChannel
+          ? 'channel'
+          : 'dm';
       messages = await repository.getMessages(
         channelId,
         page: 1,
@@ -369,7 +374,11 @@ class ChatHistoryNotifier extends ChangeNotifier {
     try {
       final repository = ref.read(dmRepositoryProvider);
       final nextPage = page + 1;
-      final cType = _isGroupDm ? 'group_dm' : _isChannel ? 'channel' : 'dm';
+      final cType = _isGroupDm
+          ? 'group_dm'
+          : _isChannel
+          ? 'channel'
+          : 'dm';
       final newMessages = await repository.getMessages(
         channelId,
         page: nextPage,
@@ -611,7 +620,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
       final repository = ref.read(dmRepositoryProvider);
       final activeChat = ref.read(activeChatProvider);
       final isDirectMessage = activeChat.type == ActiveChatType.directMessage;
-      
+
       final rawMedia = failedMsg['media'] as List<dynamic>?;
       final mediaFiles = rawMedia?.map((m) {
         final map = m as Map<dynamic, dynamic>;

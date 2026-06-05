@@ -186,7 +186,8 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                                         ),
                                       ),
                                     if (!historyState.hasMore)
-                                      if (widget.conversation.channelType == 'dm')
+                                      if (widget.conversation.channelType ==
+                                          'dm')
                                         SliverToBoxAdapter(
                                           child: DmProfileCard(
                                             conversation: widget.conversation,
@@ -974,21 +975,25 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
 
     final timeString = DateFormatter.formatTime12h(createdAt);
 
-    String? fallbackName = widget.message['sender_name']?.toString() ??
+    String? fallbackName =
+        widget.message['sender_name']?.toString() ??
         widget.message['username']?.toString() ??
         widget.message['user_name']?.toString();
 
-    if (fallbackName == null && widget.message['sender'] is Map<String, dynamic>) {
+    if (fallbackName == null &&
+        widget.message['sender'] is Map<String, dynamic>) {
       final senderMap = widget.message['sender'] as Map<String, dynamic>;
-      fallbackName = senderMap['username']?.toString() ??
+      fallbackName =
+          senderMap['username']?.toString() ??
           senderMap['name']?.toString() ??
           senderMap['user_name']?.toString();
     }
 
     if (fallbackName == null) {
-      final userId = widget.message['user_id']?.toString() ?? 
-                     widget.message['userId']?.toString() ?? 
-                     widget.message['sender_id']?.toString();
+      final userId =
+          widget.message['user_id']?.toString() ??
+          widget.message['userId']?.toString() ??
+          widget.message['sender_id']?.toString();
       if (userId != null && userId.isNotEmpty) {
         try {
           final participant = widget.conversation.participants.firstWhere(
@@ -1109,7 +1114,10 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                                         (m.name ?? '').toLowerCase() ==
                                         senderName.toLowerCase(),
                                     orElse: () => TeamMember(
-                                      id: widget.message['sender_id']?.toString() ?? '',
+                                      id:
+                                          widget.message['sender_id']
+                                              ?.toString() ??
+                                          '',
                                       email: '',
                                       role: 'Member',
                                       dateJoined: '',
@@ -1118,15 +1126,29 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                                       avatarUrl: senderAvatarUrl,
                                     ),
                                   );
-                                  ref.read(personalProfilePanelProvider.notifier).state = false;
-                                  ref.read(profileDetailsPanelProvider.notifier).state = found;
+                                  ref
+                                          .read(
+                                            personalProfilePanelProvider
+                                                .notifier,
+                                          )
+                                          .state =
+                                      false;
+                                  ref
+                                          .read(
+                                            profileDetailsPanelProvider
+                                                .notifier,
+                                          )
+                                          .state =
+                                      found;
                                 },
                                 child: Text(
                                   senderName,
                                   style: TextStyle(
                                     color: isMe
                                         ? colors.primary
-                                        : const Color(0xFF00BFA5), // Teal accent for receiving
+                                        : const Color(
+                                            0xFF00BFA5,
+                                          ), // Teal accent for receiving
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
                                   ),

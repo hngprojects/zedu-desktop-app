@@ -558,7 +558,7 @@ class _PeopleTabState extends ConsumerState<_PeopleTab> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    
+
     final filteredParticipants = widget.conversation.participants.where((p) {
       if (_searchQuery.isEmpty) return true;
       final q = _searchQuery.toLowerCase();
@@ -612,7 +612,9 @@ class _PeopleTabState extends ConsumerState<_PeopleTab> {
                   (c) => c.id == widget.conversation.channelId,
                   orElse: () => Channel(
                     id: widget.conversation.channelId,
-                    name: widget.conversation.displayName.replaceFirst('#', '').trim(),
+                    name: widget.conversation.displayName
+                        .replaceFirst('#', '')
+                        .trim(),
                     description: '',
                     organisationId: '',
                     ownerId: '',

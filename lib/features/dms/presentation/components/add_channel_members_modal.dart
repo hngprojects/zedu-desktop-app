@@ -101,7 +101,7 @@ class _AddChannelMembersModalState
     try {
       final userIds = _selectedMembers.map((m) => m.id).toList();
       bool success = false;
-      
+
       if (widget.conversation.channelType == 'group_dm') {
         success = await ref
             .read(groupDmProvider.notifier)
@@ -113,11 +113,13 @@ class _AddChannelMembersModalState
       }
 
       if (!mounted) return;
-      
+
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Successfully added ${_selectedMembers.length} member(s).'),
+            content: Text(
+              'Successfully added ${_selectedMembers.length} member(s).',
+            ),
             backgroundColor: context.colors.success,
           ),
         );

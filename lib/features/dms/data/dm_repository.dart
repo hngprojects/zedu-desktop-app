@@ -68,10 +68,7 @@ class DmRepository {
 
     final response = await _apiClient.get<Map<String, dynamic>>(
       path: endpointPath,
-      queryParameters: {
-        'page': page,
-        'limit': pageSize,
-      },
+      queryParameters: {'page': page, 'limit': pageSize},
     );
 
     final data = response.data;
