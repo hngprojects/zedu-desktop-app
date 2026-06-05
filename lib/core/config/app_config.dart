@@ -11,21 +11,21 @@ class AppConfig {
     this.googleClientSecret = '',
   });
 
-  /// Resolves config after [loadAppEnv] has run in [main] (root `.env` /
-  /// `.env.example`, bundled as assets).
+  /// Resolves config after [loadAppEnv] has run in [main] (root `.env.json`,
+  /// bundled as an asset).
   ///
-  /// Precedence: `--dart-define` wins, then dotenv keys from those files, then
-  /// defaults. See [String.fromEnvironment](https://api.flutter.dev/flutter/dart-ui/String/String.fromEnvironment.html).
+  /// Precedence: `--dart-define` wins, then `.env.json` keys, then defaults.
+  /// See [String.fromEnvironment](https://api.flutter.dev/flutter/dart-ui/String/String.fromEnvironment.html).
   factory AppConfig.fromEnvironment() {
     const defineUsesMock = String.fromEnvironment('USE_MOCK_DATA');
     const defineClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
     const defineClientSecret = String.fromEnvironment('GOOGLE_CLIENT_SECRET');
 
-    final envUsesMock = dotenv.maybeGet('USE_MOCK_DATA')?.trim();
-    final envClientId = dotenv.maybeGet('GOOGLE_CLIENT_ID')?.trim();
-    final envClientSecret = dotenv.maybeGet('GOOGLE_CLIENT_SECRET')?.trim();
+    final envUsesMock = AppEnv.maybeGet('USE_MOCK_DATA')?.trim();
+    final envClientId = AppEnv.maybeGet('GOOGLE_CLIENT_ID')?.trim();
+    final envClientSecret = AppEnv.maybeGet('GOOGLE_CLIENT_SECRET')?.trim();
 
-    // Force the Zedu URL regardless of .env to bypass any local misconfiguration
+    // Force the Zedu URL regardless of `.env.json` to bypass local misconfiguration
     String apiBaseUrl = 'https://api.staging.zedu.chat/api/v1/';
 
     apiBaseUrl = apiBaseUrl.replaceAll('"', '').replaceAll("'", "");

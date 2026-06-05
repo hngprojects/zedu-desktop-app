@@ -43,6 +43,7 @@ class ProfileSectionContent extends StatelessWidget {
               isSaving: state.isSaving,
               onSave: notifier.updateOrganization,
               onDelete: notifier.deleteOrganization,
+              onLeave: notifier.leaveOrganization,
             ),
             UserProfileSection.userManagement => UserManagementSection(
               members: state.teamMembers,

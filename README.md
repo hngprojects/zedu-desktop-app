@@ -7,7 +7,7 @@ A lean Flutter app using Clean Architecture, Material 3, and Riverpod. The codeb
 - Flutter 3.x / Dart `^3.11`
 - Material 3, Roboto and Lato fonts (see `pubspec.yaml`)
 - Riverpod, GetIt, GoRouter
-- Dio, `flutter_dotenv`
+- Dio
 - `flutter_secure_storage`, `flutter_svg`
 - Mocktail (tests), `flutter_lints` plus strict analyzer language flags in `analysis_options.yaml`
 
@@ -15,7 +15,7 @@ A lean Flutter app using Clean Architecture, Material 3, and Riverpod. The codeb
 
 ```txt
 .
-├── .env.example          # Tracked template; bundled as a Flutter asset
+├── .env.json             # Tracked defaults; bundled as a Flutter asset
 ├── lib/
 │   ├── main.dart
 │   ├── app/
@@ -105,30 +105,35 @@ Rules:
 
 ## Configuration
 
-Env keys are read from **dotenv** after `loadAppEnv()` in `main.dart`. The repo bundles **`.env.example`** as a Flutter asset so `flutter analyze` and first runs work on a clean clone without a local `.env`.
+Env keys are read from **`.env.json`** after `loadAppEnv()` in `main.dart`. The repo bundles **`.env.json`** as a Flutter asset so `flutter analyze` and first runs work on a clean clone.
 
-`loadAppEnv()` tries `.env` first, then `.env.example`. Only `.env.example` is listed under `flutter.assets` by default (avoids missing-asset warnings when `.env` is gitignored). If you want to package a root `.env` for a build, add `- .env` under `flutter.assets` and ensure that file exists on the machine that runs `flutter build`.
+1. Edit `.env.json` for local overrides (avoid committing real secrets).
+2. Prefer CI variables or `--dart-define-from-file` / `--dart-define` for production secrets.
 
-1. Copy `.env.example` to `.env` for local overrides, or edit values in `.env.example` for experiments (avoid committing secrets).
-2. Prefer CI variables or `--dart-define` for production secrets.
-
-```txt
-API_BASE_URL=https://example.com/api
-USE_MOCK_DATA=false
-APP_FLAVOR=development
+```json
+{
+  "API_BASE_URL": "https://example.com/api",
+  "USE_MOCK_DATA": "false",
+  "APP_FLAVOR": "development"
+}
 ```
 
 `USE_MOCK_DATA` accepts `true` / `false` (also `1` / `0`, `yes` / `no`). `APP_FLAVOR` accepts `development`, `staging`, or `production` (case-insensitive).
 
 ### Overrides for CI or release builds
 
-`--dart-define` overrides dotenv when you need non-file config:
+`--dart-define-from-file` or `--dart-define` overrides `.env.json` when you need non-file config:
+
+```sh
+flutter run --dart-define-from-file=.env.json
+flutter build windows --release --dart-define-from-file=.env.json
+```
 
 ```sh
 flutter run --dart-define=API_BASE_URL=https://api.example.com --dart-define=USE_MOCK_DATA=false --dart-define=APP_FLAVOR=production
 ```
 
-Defaults when neither `.env` / `.env.example` nor defines set a value (see `AppConfig.fromEnvironment` and `AppFlavorConfig`):
+Defaults when neither `.env.json` nor defines set a value (see `AppConfig.fromEnvironment` and `AppFlavorConfig`):
 
 ```txt
 API_BASE_URL=https://example.com/api
@@ -149,19 +154,7 @@ cd zedu-desktop
 
 ```sh
 flutter pub get
-flutter run
-```
-
-Optional: create a local `.env` from the template.
-
-```sh
-cp .env.example .env
-```
-
-Windows (PowerShell):
-
-```powershell
-Copy-Item .env.example .env
+flutter run --dart-define-from-file=.env.json
 ```
 
 ## Common commands

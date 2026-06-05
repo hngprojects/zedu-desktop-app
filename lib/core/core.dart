@@ -16,7 +16,6 @@ export 'package:flutter_secure_storage/flutter_secure_storage.dart';
 export 'package:flutter_svg/flutter_svg.dart';
 export 'package:google_fonts/google_fonts.dart';
 export 'package:dio/dio.dart';
-export 'package:flutter_dotenv/flutter_dotenv.dart';
 export 'package:go_router/go_router.dart';
 export 'package:get_it/get_it.dart';
 export 'package:flutter_markdown/flutter_markdown.dart';

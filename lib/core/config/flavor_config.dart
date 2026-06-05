@@ -13,7 +13,7 @@ class AppFlavorConfig {
 
   static AppFlavor _loadFlavor() {
     const defineFlavor = String.fromEnvironment('APP_FLAVOR');
-    final envFlavor = dotenv.maybeGet('APP_FLAVOR')?.trim();
+    final envFlavor = AppEnv.maybeGet('APP_FLAVOR')?.trim();
 
     final rawFlavor = defineFlavor.isNotEmpty
         ? defineFlavor

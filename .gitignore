@@ -43,10 +43,7 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Local env (keep `.env.example` tracked; copy to `.env` per machine)
-.env
-temp_auto_push.bat
-temp_interactive_push.bat
+# Local env overrides (tracked `.env.json` holds safe defaults)
 public/fonts/fa-solid-400.woff2
 *.woff2
 *.woff2

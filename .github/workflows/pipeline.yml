@@ -32,8 +32,8 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Create dummy .env
-        run: touch .env
+      - name: Verify .env.json
+        run: test -f .env.json
 
       - name: Dart analyze
         run: flutter analyze --fatal-infos --fatal-warnings
