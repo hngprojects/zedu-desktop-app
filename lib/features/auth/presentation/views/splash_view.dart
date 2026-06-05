@@ -1,5 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+import '../components/auth_desktop_app_bar.dart';
 
 class SplashView extends ConsumerWidget {
   const SplashView({super.key});
@@ -25,6 +26,7 @@ class SplashView extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colors.background,
+      appBar: const AuthDesktopAppBar(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

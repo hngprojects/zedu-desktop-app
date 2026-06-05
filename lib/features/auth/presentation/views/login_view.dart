@@ -1,5 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+import '../components/auth_desktop_app_bar.dart';
 
 class LoginView extends ConsumerStatefulWidget {
   const LoginView({super.key});
@@ -76,37 +77,25 @@ class _LoginViewState extends ConsumerState<LoginView> {
 
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(
-        toolbarHeight: 80,
-        backgroundColor: context.colors.background,
-        elevation: 0,
-        title: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      appBar: AuthDesktopAppBar(
+        trailing: Text.rich(
+          TextSpan(
+            text: "Don't have an account? ",
+            style: context.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w400,
+              color: context.colors.textPrimary,
+              fontFamily: FontFamily.roboto,
+            ),
             children: [
-              Image.asset('assets/pngs/zedu_logo.png', width: 83, height: 31),
-              Text.rich(
-                TextSpan(
-                  text: "Don't have an account? ",
-                  style: context.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w400,
-                    color: context.colors.textPrimary,
-                    fontFamily: FontFamily.roboto,
-                  ),
-                  children: [
-                    TextSpan(
-                      text: 'Sign up',
-                      style: context.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w400,
-                        color: context.colors.primary,
-                        fontFamily: FontFamily.roboto,
-                      ),
-                      recognizer: TapGestureRecognizer()
-                        ..onTap = () => context.push(AppRouter.signup),
-                    ),
-                  ],
+              TextSpan(
+                text: 'Sign up',
+                style: context.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w400,
+                  color: context.colors.primary,
+                  fontFamily: FontFamily.roboto,
                 ),
+                recognizer: TapGestureRecognizer()
+                  ..onTap = () => context.go(AppRouter.signup),
               ),
             ],
           ),

@@ -70,6 +70,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
         },
         onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
           debugPrint('remote user $remoteUid joined');
+          ref.read(activeCallProvider.notifier).handleRemoteJoined();
           setState(() {
             _remoteControllers[remoteUid] = VideoViewController.remote(
               rtcEngine: _engine,
@@ -604,10 +605,27 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
 
   /// Full-page grid: adapts columns based on participant count.
   Widget _buildFullPageGrid() {
+    final activeCall = ref.read(activeCallProvider);
     final remoteUids = _remoteControllers.keys.toList();
+
+    // If no one else is here AND we are waiting for them
+    if (remoteUids.isEmpty && !activeCall.state.isRemoteJoined && !activeCall.state.isOrgBuzz) {
+      return Column(
+        children: [
+          Expanded(
+            child: _buildWaitingTile(name: activeCall.state.remoteUserName ?? 'Participant'),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: _buildTile(isLocal: true, uid: 0, name: 'You', flex: 1),
+          ),
+        ],
+      );
+    }
+
     final totalCount = remoteUids.length + 1; // +1 for local
 
-    // 1 total (just local) — centered
+    // 1 total (just local, but not waiting) — centered
     if (remoteUids.isEmpty) {
       return _buildTile(isLocal: true, uid: 0, name: 'You', flex: 1);
     }
@@ -620,7 +638,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
             child: _buildTile(
               isLocal: false,
               uid: remoteUids.first,
-              name: 'Participant',
+              name: activeCall.state.remoteUserName ?? 'Participant',
               flex: 1,
             ),
           ),
@@ -636,7 +654,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
     final allEntries = [
       {'isLocal': true, 'uid': 0, 'name': 'You'},
       for (final uid in remoteUids)
-        {'isLocal': false, 'uid': uid, 'name': 'Participant'},
+        {'isLocal': false, 'uid': uid, 'name': activeCall.state.remoteUserName ?? 'Participant'},
     ];
 
     final crossAxisCount = totalCount <= 4 ? 2 : 3;
@@ -663,7 +681,23 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
 
   /// PiP compact row: local + up to 1 remote tile.
   Widget _buildPipGrid() {
+    final activeCall = ref.read(activeCallProvider);
     final remoteUids = _remoteControllers.keys.toList();
+    
+    if (remoteUids.isEmpty && !activeCall.state.isRemoteJoined && !activeCall.state.isOrgBuzz) {
+      return Row(
+        children: [
+          Expanded(
+            child: _buildTile(isLocal: true, uid: 0, name: 'You', flex: 1),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: _buildWaitingTile(name: activeCall.state.remoteUserName ?? 'Participant'),
+          ),
+        ],
+      );
+    }
+
     if (remoteUids.isEmpty) {
       return _buildTile(isLocal: true, uid: 0, name: 'You', flex: 1);
     }
@@ -677,11 +711,52 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
           child: _buildTile(
             isLocal: false,
             uid: remoteUids.first,
-            name: 'Participant',
+            name: activeCall.state.remoteUserName ?? 'Participant',
             flex: 1,
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildWaitingTile({required String name}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF2B2B4A),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.transparent, width: 3),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          const Center(
+            child: CircularProgressIndicator(color: Color(0xFF6458F5)),
+          ),
+          Positioned(
+            top: 8,
+            left: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6,
+                vertical: 3,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                'Inviting $name...',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

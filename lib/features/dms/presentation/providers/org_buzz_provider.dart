@@ -91,7 +91,7 @@ class OrgBuzzNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final orgId = _ref.read(authNotifierProvider).user?.currentOrg ?? '';
+      final orgId = _ref.read(currentOrgIdProvider);
       final data = await _repo.createOrgBuzz(orgId: orgId);
       _applyBuzzData(data);
       _callNotifier.activateOrgBuzz(
@@ -120,7 +120,7 @@ class OrgBuzzNotifier extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final orgId = _ref.read(authNotifierProvider).user?.currentOrg ?? '';
+      final orgId = _ref.read(currentOrgIdProvider);
       final data = await _repo.createOrgBuzz(orgId: orgId);
       _applyBuzzData(data);
       // Join Agora immediately — same as startInstantMeeting.
@@ -200,21 +200,23 @@ class OrgBuzzNotifier extends ChangeNotifier {
     _state = _state.copyWith(isSearching: true);
     notifyListeners();
 
-    final orgId = _ref.read(authNotifierProvider).user?.currentOrg ?? '';
+    final orgId = _ref.read(currentOrgIdProvider);
     final channelId = _state.channelId ?? '';
     
     List<BuzzMember> results;
-    if (channelId.isEmpty && orgId.isNotEmpty) {
+    if (orgId.isNotEmpty) {
       results = await _repo.searchOrgMembers(
         orgId: orgId,
         query: query.trim(),
       );
-    } else {
+    } else if (channelId.isNotEmpty) {
       results = await _repo.searchChannelMembers(
         channelId: channelId,
         buzzId: _state.buzzId ?? '',
         query: query.trim(),
       );
+    } else {
+      results = [];
     }
 
     _state = _state.copyWith(searchResults: results, isSearching: false);

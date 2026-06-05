@@ -64,6 +64,16 @@ class NotificationService {
       return true;
     }
 
+    // ── Direct call declined ─────────────────────────────────────────────
+    if (eventName == 'direct_call_declined' || eventName == 'call_declined') {
+      final buzzId = payload['buzz_id']?.toString() ?? '';
+      final currentCall = _ref.read(activeCallProvider).state;
+      if (currentCall.buzzId == buzzId && currentCall.status != CallStatus.none) {
+        _ref.read(activeCallProvider.notifier).handleRemoteDecline();
+      }
+      return true;
+    }
+
     // ── Org buzz invitation ───────────────────────────────────────────────
     if (eventName == 'buzz_invitation') {
       final inviterId = payload['inviter_id']?.toString() ?? '';

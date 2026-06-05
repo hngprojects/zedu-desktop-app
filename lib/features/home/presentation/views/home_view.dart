@@ -1,7 +1,10 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:window_manager/window_manager.dart';
 // import '../providers/org_people_provider.dart';
 import '../widgets/people_sidebar_list.dart';
+import '../../../dms/presentation/components/global_call_overlay.dart';
 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
@@ -27,18 +30,23 @@ class _HomeViewState extends ConsumerState<HomeView> {
     final colors = context.colors;
     return Scaffold(
       backgroundColor: colors.background,
-      body: Column(
+      body: Stack(
         children: [
-          const _HomeAppBar(),
-          Expanded(
-            child: Row(
-              children: [
-                AppSidebarRail(activeType: ref.watch(homeSidebarProvider)),
-                const _MainSidebarSwitcher(),
-                const Expanded(child: _ChatAreaSwitcher()),
-              ],
-            ),
+          Column(
+            children: [
+              const _HomeAppBar(),
+              Expanded(
+                child: Row(
+                  children: [
+                    AppSidebarRail(activeType: ref.watch(homeSidebarProvider)),
+                    const _MainSidebarSwitcher(),
+                    const Expanded(child: _ChatAreaSwitcher()),
+                  ],
+                ),
+              ),
+            ],
           ),
+          const GlobalCallOverlay(),
         ],
       ),
     );
@@ -54,52 +62,81 @@ class _HomeAppBar extends ConsumerWidget {
     final userName =
         ref.watch(authNotifierProvider).user?.fullname ?? 'Zedu User';
 
-    return Container(
-      height: 44,
-      color: colors.sidebar,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        children: [
-          Image.asset(
-            'assets/pngs/zedu_logo.png',
-            width: 82,
-            height: 31,
-            color: Colors.white,
-            colorBlendMode: BlendMode.srcIn,
-          ),
-          const SizedBox(width: 12),
-          TopUserMenu(userName: userName),
-          const Spacer(),
-          Flexible(
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 400),
-              height: 28,
-              decoration: BoxDecoration(
-                color: colors.onPrimary.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.search,
-                    color: colors.onPrimary.withValues(alpha: 0.7),
-                    size: 18,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Search messages...',
-                    style: TextStyle(
+    return DragToMoveArea(
+      child: Container(
+        height: 44,
+        color: colors.sidebar,
+        padding: const EdgeInsets.only(left: 24, right: 10),
+        child: Row(
+          children: [
+            Image.asset(
+              'assets/pngs/zedu_logo.png',
+              width: 82,
+              height: 31,
+              color: Colors.white,
+              colorBlendMode: BlendMode.srcIn,
+            ),
+            const SizedBox(width: 12),
+            TopUserMenu(userName: userName),
+            const Spacer(),
+            Flexible(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 400),
+                height: 28,
+                decoration: BoxDecoration(
+                  color: colors.onPrimary.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.search,
                       color: colors.onPrimary.withValues(alpha: 0.7),
-                      fontSize: 13,
+                      size: 18,
                     ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Search messages...',
+                      style: TextStyle(
+                        color: colors.onPrimary.withValues(alpha: 0.7),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const Spacer(),
+            if (!kIsWeb &&
+                (defaultTargetPlatform == TargetPlatform.windows ||
+                    defaultTargetPlatform == TargetPlatform.macOS ||
+                    defaultTargetPlatform == TargetPlatform.linux))
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  WindowCaptionButton.minimize(
+                    brightness: Brightness.dark,
+                    onPressed: () async => await windowManager.minimize(),
+                  ),
+                  WindowCaptionButton.maximize(
+                    brightness: Brightness.dark,
+                    onPressed: () async {
+                      if (await windowManager.isMaximized()) {
+                        await windowManager.unmaximize();
+                      } else {
+                        await windowManager.maximize();
+                      }
+                    },
+                  ),
+                  WindowCaptionButton.close(
+                    brightness: Brightness.dark,
+                    onPressed: () async => await windowManager.close(),
                   ),
                 ],
               ),
-            ),
-          ),
-          const Spacer(),
-        ],
+          ],
+        ),
       ),
     );
   }

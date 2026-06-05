@@ -16,9 +16,9 @@ class ActiveCallState {
   final String? buzzCode;
   final bool isFullPage;
   final DateTime? lastCallAt;
-  // For org buzz invitations — used to respond via the correct endpoint
   final String? invitationId;
   final bool isOrgBuzz;
+  final bool isRemoteJoined; // Tracks if the remote user has joined the meeting
 
   const ActiveCallState({
     this.status = CallStatus.none,
@@ -33,6 +33,7 @@ class ActiveCallState {
     this.buzzCode,
     this.invitationId,
     this.isOrgBuzz = false,
+    this.isRemoteJoined = false,
     this.isFullPage = false,
     this.lastCallAt,
   });
@@ -50,6 +51,7 @@ class ActiveCallState {
     String? buzzCode,
     String? invitationId,
     bool? isOrgBuzz,
+    bool? isRemoteJoined,
     bool? isFullPage,
     DateTime? lastCallAt,
   }) {
@@ -66,6 +68,7 @@ class ActiveCallState {
       buzzCode: buzzCode ?? this.buzzCode,
       invitationId: invitationId ?? this.invitationId,
       isOrgBuzz: isOrgBuzz ?? this.isOrgBuzz,
+      isRemoteJoined: isRemoteJoined ?? this.isRemoteJoined,
       isFullPage: isFullPage ?? this.isFullPage,
       lastCallAt: lastCallAt ?? this.lastCallAt,
     );
@@ -125,7 +128,10 @@ class ActiveCallNotifier extends ChangeNotifier {
       notifyListeners();
 
       if (buzzId != null && token != null) {
-        _state = _state.copyWith(status: CallStatus.active);
+        _state = _state.copyWith(
+          status: CallStatus.active,
+          isRemoteJoined: false, // Caller enters, waiting for remote
+        );
         notifyListeners();
         
         _ref.read(buzzLogProvider.notifier).addLog(BuzzLogEntry(
@@ -248,6 +254,26 @@ class ActiveCallNotifier extends ChangeNotifier {
     }
     _state = ActiveCallState(lastCallAt: _state.lastCallAt);
     notifyListeners();
+  }
+
+  void handleRemoteJoined() {
+    _state = _state.copyWith(isRemoteJoined: true);
+    notifyListeners();
+  }
+
+  void handleRemoteDecline() {
+    // Show a toast or notification if we were waiting
+    if (_state.status == CallStatus.active && !_state.isRemoteJoined) {
+      // Remote declined while we were waiting in the room
+      _ref.read(buzzLogProvider.notifier).addLog(BuzzLogEntry(
+        id: _state.buzzId ?? DateTime.now().toString(),
+        callerName: _state.remoteUserName ?? 'Unknown',
+        timestamp: DateTime.now(),
+        isMissed: false,
+        isIncoming: false,
+      ));
+    }
+    leaveCall();
   }
 
   /// Activates an org buzz session after createOrgBuzz() or joinBuzzByCode().

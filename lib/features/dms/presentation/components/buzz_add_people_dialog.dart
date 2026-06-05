@@ -21,6 +21,7 @@ class _BuzzAddPeopleDialogState extends ConsumerState<BuzzAddPeopleDialog> {
     super.initState();
     // Seed suggestions from org people on open
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(orgBuzzProvider.notifier).clearSelection();
       ref.read(orgBuzzProvider.notifier).searchMembers('');
     });
   }
@@ -29,7 +30,6 @@ class _BuzzAddPeopleDialogState extends ConsumerState<BuzzAddPeopleDialog> {
   void dispose() {
     _searchController.dispose();
     _debounce?.cancel();
-    ref.read(orgBuzzProvider.notifier).clearSelection();
     super.dispose();
   }
 
