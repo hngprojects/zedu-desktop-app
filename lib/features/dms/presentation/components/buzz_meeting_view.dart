@@ -53,13 +53,9 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
       return;
     }
 
-    _engine = createAgoraRtcEngine();
-    await _engine.initialize(
-      RtcEngineContext(
-        appId: appId,
-        channelProfile: ChannelProfileType.channelProfileCommunication,
-      ),
-    );
+    final engineService = ref.read(buzzEngineProvider);
+    await engineService.initEngine(appId);
+    _engine = engineService.engine;
 
     // Setup Video Controllers immediately
     _localVideoController = VideoViewController(
@@ -201,7 +197,6 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
     }
     if (_isEngineInitialized) {
       _engine.leaveChannel();
-      _engine.release();
     }
     super.dispose();
   }
@@ -808,124 +803,6 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
     );
   }
 
-  // ── Legacy video feed (kept for PiP fallback compatibility) ────────────────
-
-  Widget _buildVideoFeed(
-    Color bgColor,
-    String name,
-    String? avatarUrl,
-    double height, {
-    required bool isLocal,
-    int? uid,
-  }) {
-    final isSpeaker = uid != null && _activeSpeakers.contains(uid);
-    final isUserMuted =
-        (isLocal && _isMuted) ||
-        (!isLocal && uid != null && _mutedUsers.contains(uid));
-    final hasHandRaised = uid != null && _raisedHands.contains(uid);
-    final activeEmoji = uid != null ? _activeEmojis[uid] : null;
-
-    Widget? videoView;
-    if (_isEngineInitialized) {
-      if (isLocal && !_isVideoOff && _localVideoController != null) {
-        videoView = AgoraVideoView(controller: _localVideoController!);
-      } else if (!isLocal && uid != null && _remoteControllers.containsKey(uid)) {
-        videoView = AgoraVideoView(controller: _remoteControllers[uid]!);
-      }
-    }
-
-    return Container(
-      height: height,
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(12),
-        border: isSpeaker && !isUserMuted
-            ? Border.all(color: Colors.green, width: 3)
-            : Border.all(color: Colors.transparent, width: 3),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (videoView != null)
-            videoView
-          else
-            Center(
-              child: CircleAvatar(
-                radius: 24,
-                backgroundColor: const Color(0xFF6458F5),
-                backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                    ? NetworkImage(avatarUrl)
-                    : null,
-                child: avatarUrl == null || avatarUrl.isEmpty
-                    ? const Icon(Icons.person, size: 24, color: Colors.white)
-                    : null,
-              ),
-            ),
-          Positioned(
-            top: 12,
-            left: 12,
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    name,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                if (hasHandRaised) ...[
-                  const SizedBox(width: 4),
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.8),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.back_hand,
-                      size: 10,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          if (isUserMuted)
-            Positioned(
-              top: 12,
-              right: 12,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.mic_off, size: 14, color: Colors.red),
-              ),
-            ),
-          if (activeEmoji != null)
-            Positioned(
-              top: 40,
-              left: 12,
-              child: Text(activeEmoji, style: const TextStyle(fontSize: 32)),
-            ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildControlButton({
     required IconData icon,

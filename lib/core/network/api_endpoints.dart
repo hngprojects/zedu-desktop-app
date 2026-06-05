@@ -33,11 +33,18 @@ class ApiEndpoints {
       '/dms/channels/$channelId/threads';
 
   // --- Buzz (Group Video/Voice Calls) ---
-  static const String createOrgBuzz = '/buzz/create-org-buzz';
-  static const String getOrgBuzzList = '/buzz/org-buzz-list';
-  static const String searchBuzzMembers = '/buzz/search-channel-members';
+  static const String createOrgBuzz = '/buzz/org/create';
+  static const String getOrgBuzzList = '/buzz/org';
+  static const String searchBuzzMembers = '/buzz/search-members';
   static const String inviteUsersToBuzz = '/buzz/invite';
-  static const String respondBuzzInvitation = '/buzz/respond-invitation';
-  static const String getPendingBuzzInvitations = '/buzz/pending-invitations';
+  static const String respondBuzzInvitation = '/buzz/invitation/respond';
+  static const String getPendingBuzzInvitations = '/buzz/invitations/pending';
+  static const String getBuzzToken = '/buzz/token';
+  static String joinBuzz(String buzzId) => '/buzz/$buzzId/join';
+  static String endBuzz(String buzzId) => '/buzz/$buzzId/end';
+  static String endBuzzByChannel(String channelId) =>
+      '/buzz/channel/$channelId/end';
+  // Legacy — used only by DM direct-call flow (BuzzRepository)
   static String joinBuzzByCode(String codeOrId) => '/buzz/$codeOrId/join';
 }
+

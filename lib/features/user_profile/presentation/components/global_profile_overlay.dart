@@ -12,15 +12,18 @@ class GlobalProfileOverlay extends ConsumerStatefulWidget {
 }
 
 class _GlobalProfileOverlayState extends ConsumerState<GlobalProfileOverlay> {
+  GoRouter? _router;
+
   @override
   void initState() {
     super.initState();
-    AppRouter.router.routerDelegate.addListener(_onRouteChanged);
+    _router = ref.read(appRouterProvider);
+    _router?.routerDelegate.addListener(_onRouteChanged);
   }
 
   @override
   void dispose() {
-    AppRouter.router.routerDelegate.removeListener(_onRouteChanged);
+    _router?.routerDelegate.removeListener(_onRouteChanged);
     super.dispose();
   }
 

@@ -25,7 +25,7 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> _restoreSession() async {
     AppLogger.d('Restoring session from storage', tag: _tag);
     final token = await _storage.getAccessToken();
-    if (token == null) {
+    if (token == null || token.trim().isEmpty) {
       AppLogger.i('No stored token — unauthenticated', tag: _tag);
       state = const AuthState(status: AuthStatus.unauthenticated);
       return;

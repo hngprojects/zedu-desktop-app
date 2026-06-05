@@ -1,4 +1,4 @@
-import 'package:flutter/services.dart';
+// import 'package:flutter/services.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -83,19 +83,12 @@ class BuzzReadyCard extends ConsumerWidget {
             const SizedBox(height: 10),
             Row(
               children: [
-                Icon(
-                  Icons.lock_outline,
-                  size: 14,
-                  color: Colors.grey.shade500,
-                ),
+                Icon(Icons.lock_outline, size: 14, color: Colors.grey.shade500),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     'People who use this buzz link must get your permission before they can join.',
-                    style: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 11,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
                   ),
                 ),
               ],
@@ -144,7 +137,7 @@ class _AddOthersButtonState extends ConsumerState<_AddOthersButton> {
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
-        onTap: () => showDialog(
+        onTap: () => showDialog<void>(
           context: context,
           builder: (ctx) => BuzzAddPeopleDialog(buzzId: widget.buzzId),
         ),
@@ -152,9 +145,7 @@ class _AddOthersButtonState extends ConsumerState<_AddOthersButton> {
           duration: const Duration(milliseconds: 120),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
           decoration: BoxDecoration(
-            color: _hovered
-                ? const Color(0xFF5A4DE0)
-                : const Color(0xFF6458F5),
+            color: _hovered ? const Color(0xFF5A4DE0) : const Color(0xFF6458F5),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Row(
@@ -233,9 +224,7 @@ class _MeetingLinkRowState extends State<_MeetingLinkRow> {
                 child: Icon(
                   _copied ? Icons.check_circle_outline : Icons.copy_rounded,
                   size: 18,
-                  color: _copied
-                      ? Colors.green.shade600
-                      : Colors.grey.shade500,
+                  color: _copied ? Colors.green.shade600 : Colors.grey.shade500,
                 ),
               ),
             ),

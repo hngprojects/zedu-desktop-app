@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -113,10 +111,7 @@ class _BuzzAddPeopleDialogState extends ConsumerState<BuzzAddPeopleDialog> {
                     ),
                     decoration: const BoxDecoration(
                       border: Border(
-                        bottom: BorderSide(
-                          color: Color(0xFF6458F5),
-                          width: 2,
-                        ),
+                        bottom: BorderSide(color: Color(0xFF6458F5), width: 2),
                       ),
                     ),
                     child: Row(
@@ -236,30 +231,30 @@ class _BuzzAddPeopleDialogState extends ConsumerState<BuzzAddPeopleDialog> {
                       ),
                     )
                   : results.isEmpty
-                      ? Center(
-                          child: Text(
-                            'No members found',
-                            style: TextStyle(
-                              color: Colors.grey.shade400,
-                              fontSize: 13,
-                            ),
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          itemCount: results.length,
-                          itemBuilder: (ctx, i) {
-                            final m = results[i];
-                            final isSelected = selectedIds.contains(m.id);
-                            return _MemberRow(
-                              member: m,
-                              isSelected: isSelected,
-                              onTap: () => ref
-                                  .read(orgBuzzProvider.notifier)
-                                  .toggleMemberSelection(m.id),
-                            );
-                          },
+                  ? Center(
+                      child: Text(
+                        'No members found',
+                        style: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 13,
                         ),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      itemCount: results.length,
+                      itemBuilder: (ctx, i) {
+                        final m = results[i];
+                        final isSelected = selectedIds.contains(m.id);
+                        return _MemberRow(
+                          member: m,
+                          isSelected: isSelected,
+                          onTap: () => ref
+                              .read(orgBuzzProvider.notifier)
+                              .toggleMemberSelection(m.id),
+                        );
+                      },
+                    ),
             ),
 
             // ── Footer: Send invitation ──────────────────────────────────
@@ -499,10 +494,8 @@ class _SendButtonState extends State<_SendButton> {
             color: widget.sent
                 ? Colors.green.shade600
                 : active
-                    ? (_hovered
-                          ? const Color(0xFF5A4DE0)
-                          : const Color(0xFF6458F5))
-                    : Colors.grey.shade300,
+                ? (_hovered ? const Color(0xFF5A4DE0) : const Color(0xFF6458F5))
+                : Colors.grey.shade300,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Center(

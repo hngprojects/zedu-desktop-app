@@ -117,13 +117,8 @@ class _BuzzRailItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final call = ref.watch(activeCallProvider).state;
-    final tooltip = call.lastCallAt == null
-        ? 'Buzz'
-        : 'Last Buzz: ${_formatDateTime(call.lastCallAt!)}';
-
     return Tooltip(
-      message: tooltip,
+      message: 'Buzz',
       waitDuration: const Duration(milliseconds: 350),
       child: _RailNavItem(
         icon: Icons.phone_outlined,
@@ -132,11 +127,6 @@ class _BuzzRailItem extends ConsumerWidget {
         onTap: onTap,
       ),
     );
-  }
-
-  String _formatDateTime(DateTime value) {
-    final timeString = DateFormatter.formatTime12h(value);
-    return '${value.day}/${value.month}/${value.year} $timeString';
   }
 }
 

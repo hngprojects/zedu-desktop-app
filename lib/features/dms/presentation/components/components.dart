@@ -1,7 +1,7 @@
 export 'buzz_meeting_view.dart';
 export 'composer/composer.dart';
 export 'buzz_preparation_view.dart';
-export 'buzz_sidebar_list.dart';
+
 export 'dm_chat_area.dart';
 export 'dm_emoji_picker.dart';
 export 'dm_list_tile.dart';

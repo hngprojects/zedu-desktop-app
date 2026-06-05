@@ -1,8 +1,7 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
-import '../providers/org_people_provider.dart';
+// import '../providers/org_people_provider.dart';
 import '../widgets/people_sidebar_list.dart';
-import 'package:zedu/features/dms/presentation/views/general_buzz_view.dart';
 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
@@ -145,14 +144,47 @@ class _ChatAreaSwitcher extends ConsumerWidget {
     // ── Buzz tab: full-width meeting hub ───────────────────────────────────
     if (sidebar == HomeSidebarType.buzz) {
       final callStatus = ref.watch(activeCallProvider).state.status;
+      final buzzStatus = ref.watch(orgBuzzProvider).status;
+
       if (callStatus == CallStatus.active) {
+        // "Get a link" flow: user is in the meeting AND the ready card should
+        // be shown as a centred overlay on top of the live meeting room.
+        if (buzzStatus == OrgBuzzStatus.readyForLater) {
+          final buzz = ref.watch(orgBuzzProvider);
+          return Stack(
+            children: [
+              const BuzzMeetingView(),
+              Positioned.fill(
+                child: Material(
+                  color: Colors.black.withValues(alpha: 0.40),
+                  child: Center(
+                    child: BuzzReadyCard(
+                      meetingLink: buzz.meetingLink ?? '',
+                      buzzId: buzz.buzzId ?? '',
+                      onJoin: () =>
+                          ref.read(orgBuzzProvider.notifier).dismissReadyCard(),
+                      onDismiss: () =>
+                          ref.read(orgBuzzProvider.notifier).dismissReadyCard(),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
         return const BuzzMeetingView();
       }
       if (callStatus == CallStatus.calling) {
-        return const BuzzPreparationView();
+        final callState = ref.watch(activeCallProvider).state;
+        return BuzzPreparationView(
+          remoteUserName: callState.remoteUserName ?? 'Unknown',
+          onCancel: () => ref.read(activeCallProvider.notifier).cancelCall(),
+          onJoin: () {},
+        );
       }
       return const GeneralBuzzView();
     }
+
 
     // ── DMs / People: if no DM or Group chat is active, show empty state ──
     if (sidebar == HomeSidebarType.dms || sidebar == HomeSidebarType.people) {
@@ -264,7 +296,6 @@ class _MainSidebarState extends ConsumerState<_MainSidebar> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final people = ref.watch(orgPeopleProvider);
 
     return Container(
       width: 320,

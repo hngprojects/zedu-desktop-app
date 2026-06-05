@@ -74,24 +74,7 @@ class _GeneralBuzzViewState extends ConsumerState<GeneralBuzzView> {
                   padding: const EdgeInsets.symmetric(vertical: 32),
                   child: Column(
                     children: [
-                      // Illustration
-                      Image.asset(
-                        'assets/pngs/buzz.png',
-                        width: 320,
-                        height: 220,
-                        fit: BoxFit.contain,
-                        errorBuilder: (ctx, err, st) => SizedBox(
-                          width: 320,
-                          height: 220,
-                          child: Icon(
-                            Icons.videocam_rounded,
-                            size: 80,
-                            color: colors.primary.withValues(alpha: 0.3),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
+                      const SizedBox(height: 12),
                       // Title
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 48),
@@ -120,6 +103,7 @@ class _GeneralBuzzViewState extends ConsumerState<GeneralBuzzView> {
                       // Action row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _NewMeetingButton(
                             isOpen: _showNewMeetingMenu,
@@ -134,7 +118,7 @@ class _GeneralBuzzViewState extends ConsumerState<GeneralBuzzView> {
                                   .read(orgBuzzProvider.notifier)
                                   .startInstantMeeting();
                             },
-                            onForLater: () {
+                            onGetLink: () {
                               setState(() => _showNewMeetingMenu = false);
                               ref
                                   .read(orgBuzzProvider.notifier)
@@ -168,22 +152,26 @@ class _GeneralBuzzViewState extends ConsumerState<GeneralBuzzView> {
                         ),
                       ],
 
-                      // Ready card
-                      if (buzz.status == OrgBuzzStatus.readyForLater) ...[
-                        const SizedBox(height: 24),
-                        BuzzReadyCard(
-                          meetingLink: buzz.meetingLink ?? '',
-                          buzzId: buzz.buzzId ?? '',
-                          onJoin: () =>
-                              ref
-                                  .read(orgBuzzProvider.notifier)
-                                  .joinReadyBuzz(),
-                          onDismiss: () =>
-                              ref.read(orgBuzzProvider.notifier).reset(),
-                        ),
-                      ],
-
                       const SizedBox(height: 40),
+
+                      // Illustration — always at the bottom
+                      Image.asset(
+                        'assets/pngs/buzz.png',
+                        width: 320,
+                        height: 220,
+                        fit: BoxFit.contain,
+                        errorBuilder: (ctx, err, st) => SizedBox(
+                          width: 320,
+                          height: 220,
+                          child: Icon(
+                            Icons.videocam_rounded,
+                            size: 80,
+                            color: colors.primary.withValues(alpha: 0.3),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
                     ],
                   ),
                 ),
@@ -194,15 +182,6 @@ class _GeneralBuzzViewState extends ConsumerState<GeneralBuzzView> {
 
         // Loading overlay
         if (isLoading) const _LoadingOverlay(),
-
-        // Dismiss dropdown on outside tap
-        if (_showNewMeetingMenu)
-          Positioned.fill(
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: () => setState(() => _showNewMeetingMenu = false),
-            ),
-          ),
       ],
     );
   }
@@ -215,14 +194,14 @@ class _NewMeetingButton extends StatefulWidget {
   final bool isLoading;
   final VoidCallback onToggle;
   final VoidCallback onInstant;
-  final VoidCallback onForLater;
+  final VoidCallback onGetLink;
 
   const _NewMeetingButton({
     required this.isOpen,
     required this.isLoading,
     required this.onToggle,
     required this.onInstant,
-    required this.onForLater,
+    required this.onGetLink,
   });
 
   @override
@@ -231,157 +210,117 @@ class _NewMeetingButton extends StatefulWidget {
 
 class _NewMeetingButtonState extends State<_NewMeetingButton> {
   bool _hovered = false;
+  final GlobalKey _buttonKey = GlobalKey();
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        MouseRegion(
-          cursor: SystemMouseCursors.click,
-          onEnter: (_) => setState(() => _hovered = true),
-          onExit: (_) => setState(() => _hovered = false),
-          child: GestureDetector(
-            onTap: widget.isLoading ? null : widget.onToggle,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 120),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 11,
-              ),
-              decoration: BoxDecoration(
-                color: _hovered
-                    ? const Color(0xFF5A4DE0)
-                    : const Color(0xFF6458F5),
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF6458F5).withValues(alpha: 0.28),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.videocam_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'New meeting',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Icon(
-                    widget.isOpen
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+  void _showMenu() async {
+    if (widget.isLoading) return;
+    
+    widget.onToggle();
+    
+    final RenderBox renderBox = _buttonKey.currentContext!.findRenderObject() as RenderBox;
+    final size = renderBox.size;
+    final position = renderBox.localToGlobal(Offset.zero);
 
-        // Dropdown
-        if (widget.isOpen)
-          Container(
-            margin: const EdgeInsets.only(top: 4),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade200),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _DropdownItem(
-                  icon: Icons.link_rounded,
-                  label: 'Create a meeting for later',
-                  onTap: widget.onForLater,
-                ),
-                Divider(height: 1, color: Colors.grey.shade100),
-                _DropdownItem(
-                  icon: Icons.add_circle_outline_rounded,
-                  label: 'Start an instant meeting',
-                  onTap: widget.onInstant,
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _DropdownItem extends StatefulWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _DropdownItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  State<_DropdownItem> createState() => _DropdownItemState();
-}
-
-class _DropdownItemState extends State<_DropdownItem> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 100),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: _hovered ? Colors.grey.shade50 : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
+    final result = await showMenu<int>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy + size.height + 4,
+        position.dx + size.width,
+        position.dy + size.height + 100,
+      ),
+      color: Colors.white,
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      items: [
+        PopupMenuItem<int>(
+          value: 0,
           child: Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                widget.icon,
-                size: 18,
-                color: const Color(0xFF6458F5),
-              ),
+              const Icon(Icons.link_rounded, size: 18, color: Color(0xFF6458F5)),
               const SizedBox(width: 10),
               Text(
-                widget.label,
+                'Get a link',
                 style: TextStyle(
                   color: Colors.grey.shade800,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
+              ),
+            ],
+          ),
+        ),
+        const PopupMenuDivider(),
+        PopupMenuItem<int>(
+          value: 1,
+          child: Row(
+            children: [
+              const Icon(Icons.add_circle_outline_rounded, size: 18, color: Color(0xFF6458F5)),
+              const SizedBox(width: 10),
+              Text(
+                'Start an instant meeting',
+                style: TextStyle(
+                  color: Colors.grey.shade800,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    widget.onToggle();
+
+    if (result == 0) {
+      widget.onGetLink();
+    } else if (result == 1) {
+      widget.onInstant();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: widget.isLoading ? SystemMouseCursors.basic : SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        key: _buttonKey,
+        onTap: _showMenu,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+          decoration: BoxDecoration(
+            color: _hovered ? const Color(0xFF5A4DE0) : const Color(0xFF6458F5),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6458F5).withValues(alpha: 0.28),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.videocam_rounded, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              const Text(
+                'New meeting',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Icon(
+                widget.isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                color: Colors.white,
+                size: 18,
               ),
             ],
           ),

@@ -185,8 +185,10 @@ class NotificationService {
       await windowManager.show();
       await windowManager.focus();
 
-      final router = locator<GoRouter>();
-      router.go('/dms/$channelId');
+      final context = AppRouter.navigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        context.go('/dms/$channelId');
+      }
     };
 
     await notification.show();

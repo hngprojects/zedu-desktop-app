@@ -7,12 +7,13 @@ class App extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(appRouterProvider);
     return DesktopManager(
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         title: 'Zedu',
         theme: AppTheme.light,
-        routerConfig: AppRouter.router,
+        routerConfig: router,
         builder: (context, child) => DesktopManager(
           child: AuthDeepLinkListener(
             child: GlobalProfileOverlay(
