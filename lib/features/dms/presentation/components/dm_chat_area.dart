@@ -186,11 +186,12 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                                         ),
                                       ),
                                     if (!historyState.hasMore)
-                                      SliverToBoxAdapter(
-                                        child: DmProfileCard(
-                                          conversation: widget.conversation,
+                                      if (widget.conversation.channelType == 'dm')
+                                        SliverToBoxAdapter(
+                                          child: DmProfileCard(
+                                            conversation: widget.conversation,
+                                          ),
                                         ),
-                                      ),
                                   ],
                                 ),
                               );
@@ -973,14 +974,38 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
 
     final timeString = DateFormatter.formatTime12h(createdAt);
 
+    String? fallbackName = widget.message['sender_name']?.toString() ??
+        widget.message['username']?.toString() ??
+        widget.message['user_name']?.toString();
+
+    if (fallbackName == null && widget.message['sender'] is Map<String, dynamic>) {
+      final senderMap = widget.message['sender'] as Map<String, dynamic>;
+      fallbackName = senderMap['username']?.toString() ??
+          senderMap['name']?.toString() ??
+          senderMap['user_name']?.toString();
+    }
+
+    if (fallbackName == null) {
+      final userId = widget.message['user_id']?.toString() ?? 
+                     widget.message['userId']?.toString() ?? 
+                     widget.message['sender_id']?.toString();
+      if (userId != null && userId.isNotEmpty) {
+        try {
+          final participant = widget.conversation.participants.firstWhere(
+            (p) => p.userId == userId,
+          );
+          if (participant.username.isNotEmpty) {
+            fallbackName = participant.username;
+          } else if (participant.email.isNotEmpty) {
+            fallbackName = participant.email.split('@').first;
+          }
+        } catch (_) {}
+      }
+    }
+
     final String senderName = isMe
         ? history.currentUserName
-        : ((widget.message['sender_name'] ??
-                      widget.message['username'] ??
-                      widget.message['user_name'] ??
-                      widget.conversation.displayName)
-                  as Object)
-              .toString();
+        : (fallbackName ?? widget.conversation.displayName).toString();
 
     final String? senderAvatarUrl = isMe
         ? history.currentUserAvatarUrl
@@ -1074,12 +1099,37 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                senderName,
-                                style: TextStyle(
-                                  color: colors.textPrimary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                              InkWell(
+                                onTap: () {
+                                  final teamMembers = ref
+                                      .read(userProfileNotifierProvider)
+                                      .teamMembers;
+                                  final found = teamMembers.firstWhere(
+                                    (m) =>
+                                        (m.name ?? '').toLowerCase() ==
+                                        senderName.toLowerCase(),
+                                    orElse: () => TeamMember(
+                                      id: widget.message['sender_id']?.toString() ?? '',
+                                      email: '',
+                                      role: 'Member',
+                                      dateJoined: '',
+                                      status: TeamMemberStatus.active,
+                                      name: senderName,
+                                      avatarUrl: senderAvatarUrl,
+                                    ),
+                                  );
+                                  ref.read(personalProfilePanelProvider.notifier).state = false;
+                                  ref.read(profileDetailsPanelProvider.notifier).state = found;
+                                },
+                                child: Text(
+                                  senderName,
+                                  style: TextStyle(
+                                    color: isMe
+                                        ? colors.primary
+                                        : const Color(0xFF00BFA5), // Teal accent for receiving
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 8),

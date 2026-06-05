@@ -141,6 +141,15 @@ class ChatHistoryNotifier extends ChangeNotifier {
     return groups.any((g) => g.id == channelId);
   }
 
+  bool get _isChannel {
+    try {
+      final state = ref.read(channelProvider);
+      return state.channels.any((c) => c.id == channelId);
+    } catch (_) {
+      return false;
+    }
+  }
+
   String get _currentUserId {
     final authState = ref.read(authNotifierProvider);
     return authState.user?.id ?? '';
@@ -160,11 +169,18 @@ class ChatHistoryNotifier extends ChangeNotifier {
   }
 
   bool isMyMessage(Map<String, dynamic> message) {
-    final senderId =
-        (message['user_id'] ?? message['userId'] ?? message['sender_id'])
-            ?.toString() ??
-        '';
+    var rawSender = message['user_id'] ??
+        message['userId'] ??
+        message['sender_id'] ??
+        message['author_id'];
+    
+    if (rawSender == null && message['sender'] is Map) {
+      rawSender = (message['sender'] as Map)['id'];
+    }
+    
+    final senderId = rawSender?.toString() ?? '';
     final currentId = _currentUserId;
+    
     if (currentId.isEmpty) return false;
     return senderId == currentId || senderId == 'me';
   }
@@ -213,10 +229,12 @@ class ChatHistoryNotifier extends ChangeNotifier {
 
     try {
       final repository = ref.read(dmRepositoryProvider);
+      final cType = _isGroupDm ? 'group_dm' : _isChannel ? 'channel' : 'dm';
       messages = await repository.getMessages(
         channelId,
         page: 1,
         threadId: threadId,
+        channelType: cType,
       );
       hasMore = messages.length >= DmRepository.pageSize;
       page = 1;
@@ -351,10 +369,12 @@ class ChatHistoryNotifier extends ChangeNotifier {
     try {
       final repository = ref.read(dmRepositoryProvider);
       final nextPage = page + 1;
+      final cType = _isGroupDm ? 'group_dm' : _isChannel ? 'channel' : 'dm';
       final newMessages = await repository.getMessages(
         channelId,
         page: nextPage,
         threadId: threadId,
+        channelType: cType,
       );
 
       messages = [...messages, ...newMessages];
@@ -379,6 +399,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
       "channel_id": channelId,
       "user_id": _currentUserId,
       "userId": _currentUserId,
+      "sender_name": currentUserName,
       "type": "user",
       "created_at": DateTime.now().toUtc().toIso8601String(),
       "status": "sending",
@@ -476,6 +497,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
           threadId: threadId,
           media: media,
           mentions: mentions,
+          channelType: isDirectMessage ? 'dm' : 'channel',
         );
       } catch (e) {
         if (e is ApiFailure && (e.statusCode == 400 || e.statusCode == 403)) {
@@ -493,6 +515,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
               threadId: threadId,
               media: media,
               mentions: mentions,
+              channelType: isDirectMessage ? 'dm' : 'channel',
             );
           } else {
             rethrow;
@@ -586,6 +609,9 @@ class ChatHistoryNotifier extends ChangeNotifier {
 
     try {
       final repository = ref.read(dmRepositoryProvider);
+      final activeChat = ref.read(activeChatProvider);
+      final isDirectMessage = activeChat.type == ActiveChatType.directMessage;
+      
       final rawMedia = failedMsg['media'] as List<dynamic>?;
       final mediaFiles = rawMedia?.map((m) {
         final map = m as Map<dynamic, dynamic>;
@@ -602,6 +628,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
           orgId: ref.read(currentOrgIdProvider),
           threadId: threadId,
           media: mediaFiles,
+          channelType: isDirectMessage ? 'dm' : 'channel',
         );
       } catch (e) {
         if (e is ApiFailure && (e.statusCode == 400 || e.statusCode == 403)) {
@@ -618,6 +645,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
               orgId: ref.read(currentOrgIdProvider),
               threadId: threadId,
               media: mediaFiles,
+              channelType: isDirectMessage ? 'dm' : 'channel',
             );
           } else {
             rethrow;

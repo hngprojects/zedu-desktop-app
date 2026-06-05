@@ -45,13 +45,32 @@ class DmRepository {
     String channelId, {
     int page = 1,
     String? threadId,
+    String channelType = 'channel', // 'channel', 'dm', or 'group_dm'
   }) async {
+    String endpointPath;
+    if (threadId != null && threadId.isNotEmpty) {
+      if (channelType == 'dm') {
+        endpointPath = '/dms/thread/$threadId/channels/$channelId';
+      } else if (channelType == 'group_dm') {
+        endpointPath = '/group-dms/thread/$threadId/channels/$channelId';
+      } else {
+        endpointPath = '/threads/$threadId/channels/$channelId';
+      }
+    } else {
+      if (channelType == 'dm') {
+        endpointPath = '/dms/messages/$channelId';
+      } else if (channelType == 'group_dm') {
+        endpointPath = '/group-dms/messages/$channelId';
+      } else {
+        endpointPath = '/channels/$channelId/messages';
+      }
+    }
+
     final response = await _apiClient.get<Map<String, dynamic>>(
-      path: '/channels/$channelId/messages',
+      path: endpointPath,
       queryParameters: {
         'page': page,
         'limit': pageSize,
-        'thread_id': ?threadId,
       },
     );
 
@@ -63,10 +82,20 @@ class DmRepository {
 
     if (messages is! List) return const [];
 
-    return messages
+    var parsedMessages = messages
         .whereType<Map<dynamic, dynamic>>()
         .map((message) => Map<String, dynamic>.from(message))
         .toList();
+
+    if (threadId != null && threadId.isNotEmpty) {
+      parsedMessages = parsedMessages.where((m) {
+        final mThreadId = m['thread_id']?.toString() ?? '';
+        final mId = m['id']?.toString() ?? '';
+        return mThreadId == threadId || mId == threadId;
+      }).toList();
+    }
+
+    return parsedMessages;
   }
 
   Future<Map<String, dynamic>> sendMessage(
@@ -76,20 +105,41 @@ class DmRepository {
     String? threadId,
     List<XFile>? media,
     List<dynamic>? mentions,
+    String channelType = 'channel', // 'channel', 'dm', or 'group_dm'
   }) async {
     final bool isThreadReply = threadId != null && threadId.isNotEmpty;
-    String path = '/channels/$channelId/messages';
+    String path = '';
+    Map<String, dynamic> data = {"content": content};
 
-    final data = <String, dynamic>{
-      "content": content,
-      if (!isThreadReply) "channel_id": channelId,
-      if (isThreadReply) "thread_id": threadId,
-      // ignore: use_null_aware_elements
-      if (orgId != null) "org_id": orgId,
-      if (media != null && media.isNotEmpty)
-        "media": media.map(_mediaPayloadFromFile).toList(),
-      ...?(mentions != null ? {'mentions': mentions} : null),
-    };
+    if (media != null && media.isNotEmpty) {
+      data["media"] = media.map(_mediaPayloadFromFile).toList();
+    }
+
+    if (channelType == 'group_dm') {
+      if (isThreadReply) {
+        path = '/group-dms/messages/$channelId';
+        data["thread_id"] = threadId;
+      } else {
+        path = '/group-dms/channels/$channelId/threads';
+      }
+    } else if (channelType == 'dm') {
+      if (isThreadReply) {
+        path = '/dms/messages/$channelId';
+        data["thread_id"] = threadId;
+      } else {
+        path = '/dms/channels/$channelId/threads';
+      }
+      if (mentions != null && mentions.isNotEmpty) data['mentions'] = mentions;
+    } else {
+      // Default channel handling
+      if (isThreadReply) {
+        path = '/channels/$channelId/messages';
+        data["thread_id"] = threadId;
+      } else {
+        path = '/threads/$channelId';
+      }
+      if (mentions != null && mentions.isNotEmpty) data['mentions'] = mentions;
+    }
 
     final response = await _apiClient.post<Map<String, dynamic>>(
       path: path,

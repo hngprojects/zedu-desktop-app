@@ -40,6 +40,8 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
+				<!-- Custom scheme for deep linking -->
+				<string>zedu</string>
 				<!-- Reversed Client ID -->
 				<string>com.googleusercontent.apps.764182056638-bi8bet0rdoabaeq24bqsdnb5iukn7ko4</string>
 			</array>

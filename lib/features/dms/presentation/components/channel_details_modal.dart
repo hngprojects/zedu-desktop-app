@@ -1,5 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+import 'add_channel_members_modal.dart';
 
 class ChannelDetailsModal extends ConsumerStatefulWidget {
   final DmConversation conversation;
@@ -522,19 +523,58 @@ class _AboutTab extends ConsumerWidget {
   }
 }
 
-class _PeopleTab extends ConsumerWidget {
+class _PeopleTab extends ConsumerStatefulWidget {
   final DmConversation conversation;
 
   const _PeopleTab({required this.conversation});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_PeopleTab> createState() => _PeopleTabState();
+}
+
+class _PeopleTabState extends ConsumerState<_PeopleTab> {
+  String _searchQuery = '';
+
+  void _showUserProfile(DmParticipant participant) {
+    final teamMembers = ref.read(userProfileNotifierProvider).teamMembers;
+    final found = teamMembers.firstWhere(
+      (m) => m.id == participant.userId,
+      orElse: () => TeamMember(
+        id: participant.userId,
+        email: '',
+        role: 'Member',
+        dateJoined: '',
+        status: TeamMemberStatus.active,
+        name: participant.username,
+        avatarUrl: participant.avatarUrl,
+      ),
+    );
+
+    Navigator.pop(context); // Close the modal
+    ref.read(personalProfilePanelProvider.notifier).state = false;
+    ref.read(profileDetailsPanelProvider.notifier).state = found;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.colors;
+    
+    final filteredParticipants = widget.conversation.participants.where((p) {
+      if (_searchQuery.isEmpty) return true;
+      final q = _searchQuery.toLowerCase();
+      return p.username.toLowerCase().contains(q);
+    }).toList();
+
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
           TextField(
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value;
+              });
+            },
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.search),
               hintText: 'Find a user',
@@ -557,22 +597,46 @@ class _PeopleTab extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: CircleAvatar(
-              backgroundColor: colors.primary.withValues(alpha: 0.1),
-              child: Icon(Icons.person_add_alt_1, color: colors.primary),
+          if (widget.conversation.channelType != 'dm') ...[
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: CircleAvatar(
+                backgroundColor: colors.primary.withValues(alpha: 0.1),
+                child: Icon(Icons.person_add_alt_1, color: colors.primary),
+              ),
+              title: const Text('Add people'),
+              onTap: () {
+                // Ensure we are working with a channel before allowing adds
+                final channelState = ref.read(channelProvider);
+                final channel = channelState.channels.firstWhere(
+                  (c) => c.id == widget.conversation.channelId,
+                  orElse: () => Channel(
+                    id: widget.conversation.channelId,
+                    name: widget.conversation.displayName.replaceFirst('#', '').trim(),
+                    description: '',
+                    organisationId: '',
+                    ownerId: '',
+                  ),
+                );
+
+                showDialog(
+                  context: context,
+                  builder: (context) => AddChannelMembersModal(
+                    channel: channel,
+                    conversation: widget.conversation,
+                  ),
+                );
+              },
             ),
-            title: const Text('Add people'),
-            onTap: () {},
-          ),
+          ],
           Expanded(
             child: ListView.builder(
-              itemCount: conversation.participants.length,
+              itemCount: filteredParticipants.length,
               itemBuilder: (context, index) {
-                final participant = conversation.participants[index];
+                final participant = filteredParticipants[index];
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
+                  onTap: () => _showUserProfile(participant),
                   leading: Stack(
                     children: [
                       CircleAvatar(
