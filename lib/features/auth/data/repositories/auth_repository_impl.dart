@@ -23,6 +23,7 @@ class AuthRepositoryImpl implements AuthRepository {
           user: response.user.toEntity(),
           accessToken: response.accessToken,
           accessTokenExpiresIn: response.accessTokenExpiresIn,
+          notificationToken: response.notificationToken,
         ),
       );
     } on ApiFailure catch (failure) {
@@ -38,6 +39,17 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<User>> getCurrentUser() async {
     try {
       final user = await _remote.me();
+      if (user.id.isEmpty) {
+        AppLogger.w('Fetched user has empty ID. Rejecting session.', tag: _tag);
+        return const Failure(
+          ApiFailure(
+            message: 'Invalid user data received from server',
+            statusCode: 401,
+            kind: ApiFailureKind.unauthorized,
+            path: '/users/me',
+          ),
+        );
+      }
       AppLogger.i('Current user fetched — ${user.email}', tag: _tag);
       return Success(user.toEntity());
     } on ApiFailure catch (failure) {
@@ -105,6 +117,7 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       return Success(
         AuthSession(
+          notificationToken: response.notificationToken,
           user: response.user.toEntity(),
           accessToken: response.accessToken,
           accessTokenExpiresIn: response.accessTokenExpiresIn,
@@ -154,6 +167,7 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       return Success(
         AuthSession(
+          notificationToken: response.notificationToken,
           user: response.user.toEntity(),
           accessToken: response.accessToken,
           accessTokenExpiresIn: response.accessTokenExpiresIn,

@@ -8,6 +8,9 @@ class BuzzEngineService {
   late RtcEngine _engine;
   bool _isEngineInit = false;
 
+  RtcEngine get engine => _engine;
+  bool get isInitialized => _isEngineInit;
+
   Future<void> initEngine(String appId) async {
     if (_isEngineInit) return;
     _engine = createAgoraRtcEngine();

@@ -23,6 +23,12 @@ class Validators {
     if (_hasSequentialOrRepeating(value)) {
       return 'Password must not contain sequential or repeating characters';
     }
+    if (!RegExp(r'[^a-zA-Z0-9]').hasMatch(value)) {
+      return 'Password must contain at least one special character';
+    }
+    if (_hasSequentialOrRepeating(value)) {
+      return 'Password must not contain sequential or repeating characters';
+    }
     return null;
   }
 
@@ -33,16 +39,19 @@ class Validators {
       final c2 = value.codeUnitAt(i + 1);
       final c3 = value.codeUnitAt(i + 2);
 
+      // Repeating characters (e.g. "aaa", "111")
       if (c1 == c2 && c2 == c3) {
         return true;
       }
 
+      // Sequential ascending (e.g. "abc", "123")
       if (c2 == c1 + 1 && c3 == c2 + 1) {
         if (_isAlphanumeric(c1) && _isAlphanumeric(c2) && _isAlphanumeric(c3)) {
           return true;
         }
       }
 
+      // Sequential descending (e.g. "cba", "321")
       if (c2 == c1 - 1 && c3 == c2 - 1) {
         if (_isAlphanumeric(c1) && _isAlphanumeric(c2) && _isAlphanumeric(c3)) {
           return true;
@@ -53,9 +62,9 @@ class Validators {
   }
 
   static bool _isAlphanumeric(int codeUnit) {
-    return (codeUnit >= 48 && codeUnit <= 57) ||
-        (codeUnit >= 65 && codeUnit <= 90) ||
-        (codeUnit >= 97 && codeUnit <= 122);
+    return (codeUnit >= 48 && codeUnit <= 57) || // 0-9
+        (codeUnit >= 65 && codeUnit <= 90) || // A-Z
+        (codeUnit >= 97 && codeUnit <= 122); // a-z
   }
 
   static String? validateEmail(BuildContext context, String? value) {

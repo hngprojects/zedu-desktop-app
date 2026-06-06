@@ -1,4 +1,5 @@
-import 'package:zedu/core/core.dart';
+import 'dart:io';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorageService {
   SecureStorageService() : _storage = const FlutterSecureStorage();
@@ -6,7 +7,9 @@ class SecureStorageService {
   final FlutterSecureStorage _storage;
 
   static const _accessTokenKey = 'access_token';
+  static const _notificationTokenKey = 'notification_token';
 
+  // Fallback storage files in user's home/profile directory
   File get _fallbackFile {
     final home =
         Platform.environment['HOME'] ??
@@ -15,6 +18,7 @@ class SecureStorageService {
     return File('$home/.zedu_token');
   }
 
+  // Backup in-memory cache for speed
   static String? _memToken;
 
   Future<void> saveAccessToken(String token) async {
@@ -28,11 +32,18 @@ class SecureStorageService {
     } catch (e) {
       try {
         await _fallbackFile.writeAsString(token);
-      } catch (fallbackError) {
-        AppLogger.e('Failed to save access token to fallback: $fallbackError');
-      }
+      } catch (_) {}
     }
   }
+
+  Future<void> saveNotificationToken(String token) =>
+      _storage.write(key: _notificationTokenKey, value: token);
+
+  Future<String?> getNotificationToken() =>
+      _storage.read(key: _notificationTokenKey);
+
+  Future<void> deleteNotificationToken() =>
+      _storage.delete(key: _notificationTokenKey);
 
   Future<String?> getAccessToken() async {
     if (_memToken != null) return _memToken;
@@ -46,7 +57,7 @@ class SecureStorageService {
         return token;
       }
     } catch (e) {
-      AppLogger.e('Secure storage read access token error: $e');
+      // ignore, fall back to file
     }
 
     try {
@@ -55,9 +66,7 @@ class SecureStorageService {
         _memToken = token;
         return token;
       }
-    } catch (e) {
-      AppLogger.e('Fallback read access token error: $e');
-    }
+    } catch (_) {}
     return null;
   }
 
@@ -68,16 +77,12 @@ class SecureStorageService {
         key: _accessTokenKey,
         mOptions: const MacOsOptions(usesDataProtectionKeychain: false),
       );
-    } catch (e) {
-      AppLogger.e('Secure storage delete access token error: $e');
-    }
+    } catch (_) {}
     try {
       if (await _fallbackFile.exists()) {
         await _fallbackFile.delete();
       }
-    } catch (e) {
-      AppLogger.e('Fallback delete access token error: $e');
-    }
+    } catch (_) {}
   }
 
   Future<void> writeData(String key, String value) async {
@@ -91,9 +96,7 @@ class SecureStorageService {
       try {
         final file = File('${_fallbackFile.parent.path}/.zedu_$key');
         await file.writeAsString(value);
-      } catch (fallbackError) {
-        AppLogger.e('Failed to save data to fallback: $fallbackError');
-      }
+      } catch (_) {}
     }
   }
 
@@ -105,16 +108,14 @@ class SecureStorageService {
       );
       if (val != null) return val;
     } catch (e) {
-      AppLogger.e('Secure storage read data error: $e');
+      // ignore, fall back to file
     }
     try {
       final file = File('${_fallbackFile.parent.path}/.zedu_$key');
       if (await file.exists()) {
         return await file.readAsString();
       }
-    } catch (e) {
-      AppLogger.e('Fallback read data error: $e');
-    }
+    } catch (_) {}
     return null;
   }
 
@@ -124,9 +125,7 @@ class SecureStorageService {
       await _storage.deleteAll(
         mOptions: const MacOsOptions(usesDataProtectionKeychain: false),
       );
-    } catch (e) {
-      AppLogger.e('Secure storage clear all error: $e');
-    }
+    } catch (_) {}
     try {
       final dir = _fallbackFile.parent;
       final entities = dir.listSync();
@@ -138,8 +137,6 @@ class SecureStorageService {
       if (await _fallbackFile.exists()) {
         await _fallbackFile.delete();
       }
-    } catch (e) {
-      AppLogger.e('Fallback clear all error: $e');
-    }
+    } catch (_) {}
   }
 }

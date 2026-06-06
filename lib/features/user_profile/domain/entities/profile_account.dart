@@ -12,11 +12,8 @@ class ProfileAccount {
     this.country = '',
   });
 
-  factory ProfileAccount.empty() => const ProfileAccount(
-    name: 'Anonymous user',
-    email: 'anonymoususer@email.com',
-    timezone: 'Africa/Lagos',
-  );
+  factory ProfileAccount.empty() =>
+      const ProfileAccount(name: '', email: '', timezone: 'Africa/Lagos');
 
   final String name;
   final String email;
@@ -48,13 +45,16 @@ class ProfileAccount {
     String? namePronunciation,
     String? country,
   }) {
+    final e = email ?? this.email;
+    final u = username ?? this.username;
+
     return ProfileAccount(
       name: name ?? this.name,
-      email: email ?? this.email,
+      email: e,
       timezone: timezone ?? this.timezone,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       displayName: displayName ?? this.displayName,
-      username: username ?? this.username,
+      username: u.isNotEmpty ? u : e.split('@').first,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       title: title ?? this.title,
       namePronunciation: namePronunciation ?? this.namePronunciation,

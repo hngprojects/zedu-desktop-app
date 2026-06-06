@@ -2,26 +2,31 @@ import 'package:zedu/core/core.dart';
 
 class GoogleAuthService {
   final String clientId;
+  bool _initialized = false;
 
   GoogleAuthService({required this.clientId});
 
-  late final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId: clientId,
-    serverClientId: clientId,
-    scopes: ['email', 'profile'],
-  );
+  Future<void> _ensureInitialized() async {
+    if (!_initialized) {
+      await GoogleSignIn.instance.initialize(
+        clientId: clientId,
+        serverClientId: clientId,
+      );
+      _initialized = true;
+    }
+  }
 
   Future<String?> getGrantCode() async {
     try {
-      final account = await _googleSignIn.signIn();
-      if (account == null) return null;
-      return account.serverAuthCode;
+      await _ensureInitialized();
+      final account = await GoogleSignIn.instance.authenticate();
+      return account.id;
     } catch (e) {
       return null;
     }
   }
 
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
+    await GoogleSignIn.instance.signOut();
   }
 }

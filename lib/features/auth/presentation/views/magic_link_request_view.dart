@@ -1,5 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+import '../components/auth_desktop_app_bar.dart';
 
 class MagicLinkRequestView extends ConsumerStatefulWidget {
   const MagicLinkRequestView({super.key});
@@ -59,12 +60,28 @@ class _MagicLinkRequestViewState extends ConsumerState<MagicLinkRequestView> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(80),
-        child: AuthHeaderStrip(
-          promptText: "Don't have an account? ",
-          actionText: 'Sign up',
-          onActionTap: () => context.go(AppRouter.signup),
+      appBar: AuthDesktopAppBar(
+        trailing: Text.rich(
+          TextSpan(
+            text: "Don't have an account? ",
+            style: context.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w400,
+              color: context.colors.textPrimary,
+              fontFamily: FontFamily.roboto,
+            ),
+            children: [
+              TextSpan(
+                text: 'Sign up',
+                style: context.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w400,
+                  color: context.colors.primary,
+                  fontFamily: FontFamily.roboto,
+                ),
+                recognizer: TapGestureRecognizer()
+                  ..onTap = () => context.go(AppRouter.signup),
+              ),
+            ],
+          ),
         ),
       ),
       body: SingleChildScrollView(

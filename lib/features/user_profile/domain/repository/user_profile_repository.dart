@@ -4,13 +4,19 @@ import 'package:zedu/features/features.dart';
 abstract interface class UserProfileRepository {
   Future<Result<ProfileAccount>> getAccount();
   Future<Result<ProfileAccount>> updateAccount(ProfileAccount account);
-  Future<Result<void>> deleteAccount();
+  Future<Result<void>> deleteAccount({required String password});
+  Future<Result<void>> uploadAvatar(String filePath);
+  Future<Result<void>> deleteAvatar();
 
   Future<Result<NotificationPreferences>> getNotificationPreferences();
   Future<Result<NotificationPreferences>> updateNotificationPreferences(
     NotificationPreferences preferences,
   );
-
+  Future<Result<void>> addUserDirectly({
+    required String orgId,
+    required String userId,
+    required String roleId,
+  });
   Future<Result<List<SecuritySession>>> getSecuritySessions();
   Future<Result<void>> changePassword({
     required String currentPassword,
@@ -23,10 +29,11 @@ abstract interface class UserProfileRepository {
     required String type,
     required String country,
   });
+
   Future<Result<OrganizationProfile>> updateOrganization(
     OrganizationProfile organization,
   );
-  Future<Result<void>> deleteOrganization();
+  Future<Result<void>> deleteOrganization({required String orgId});
 
   Future<Result<List<TeamMember>>> getTeamMembers({String? orgId});
   Future<Result<TeamMember>> inviteMember({

@@ -1,4 +1,4 @@
-import 'package:zedu/core/core.dart';
+import '../../../../../helpers/helpers.dart';
 
 import 'package:zedu/features/features.dart';
 
@@ -14,7 +14,7 @@ void main() {
 
     test('extracts token from https auth link', () {
       final uri = Uri.parse(
-        'https://api.staging.zedu.chat/auth/magick-link/verify?token=abc123',
+        'https://api.example.com/auth/magick-link/verify?token=abc123',
       );
 
       final token = MagicLinkDeepLinkParser.extractToken(uri);

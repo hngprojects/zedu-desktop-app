@@ -1,3 +1,4 @@
+import '../../../../helpers/helpers.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -54,7 +55,7 @@ void main() {
               },
             ),
           ).thenAnswer(
-            (_) async => ApiResponseModel<Map<String, dynamic>>(
+            (_) async => const ApiResponseModel<Map<String, dynamic>>(
               data: {
                 'status': 'success',
                 'status_code': 200,
@@ -107,7 +108,7 @@ void main() {
             },
           ),
         ).thenAnswer(
-          (_) async => ApiResponseModel<Map<String, dynamic>>(
+          (_) async => const ApiResponseModel<Map<String, dynamic>>(
             data: {
               'data': {
                 'invitations': [

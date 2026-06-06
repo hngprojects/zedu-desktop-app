@@ -11,13 +11,28 @@ class PersonalProfilePanel extends ConsumerWidget {
     final account = profileState.account ?? ProfileAccount.empty();
     final menuState = ref.watch(userMenuStateProvider);
 
+    final authUser = ref.watch(authNotifierProvider).user;
+    final authFullName = authUser != null
+        ? '${authUser.firstName} ${authUser.lastName}'.trim()
+        : '';
+    final fallbackName = authFullName.isNotEmpty
+        ? authFullName
+        : (authUser?.username ?? 'User');
+
     final displayName = account.displayName.isNotEmpty
         ? account.displayName
-        : account.name;
+        : (account.name.isNotEmpty ? account.name : fallbackName);
+
     final roleTitle = account.title.isNotEmpty ? account.title : 'Member';
 
+    final authEmail = ref.watch(authNotifierProvider).user?.email ?? '';
+    final emailDisplay = account.email.isNotEmpty ? account.email : authEmail;
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final panelWidth = (screenWidth * 0.3).clamp(280.0, 420.0);
+
     return Container(
-      width: 360,
+      width: panelWidth,
       decoration: BoxDecoration(
         color: colors.background,
         boxShadow: [
@@ -29,200 +44,211 @@ class PersonalProfilePanel extends ConsumerWidget {
         ],
         border: Border(left: BorderSide(color: colors.divider)),
       ),
-      child: Column(
-        children: [
-          Container(
-            height: 48,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: colors.divider)),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  'Profile',
-                  style: context.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  onPressed: () {
-                    ref.read(personalProfilePanelProvider.notifier).state =
-                        false;
-                  },
-                  icon: Icon(Icons.close, size: 18, color: colors.textHint),
-                  splashRadius: 16,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(
-                    minWidth: 28,
-                    minHeight: 28,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+      child: Material(
+        color: Colors.transparent,
+        child: Column(
+          children: [
+            // Header
+            Container(
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: colors.divider)),
+              ),
+              child: Row(
                 children: [
-                  Container(
-                    width: 160,
-                    height: 160,
-                    decoration: BoxDecoration(
-                      color: colors.accent.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Center(
-                      child: Icon(Icons.person, size: 80, color: colors.accent),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          displayName,
-                          style: context.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: colors.textPrimary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      InkWell(
-                        onTap: () => _openEditDialog(context, ref, account),
-                        borderRadius: BorderRadius.circular(4),
-                        child: Text(
-                          'Edit',
-                          style: context.textTheme.bodySmall?.copyWith(
-                            color: colors.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-
                   Text(
-                    roleTitle,
-                    style: context.textTheme.bodySmall?.copyWith(
-                      color: colors.textSecondary,
+                    'Profile',
+                    style: context.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 8),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        menuState.notificationsPaused
-                            ? Icons.notifications_off_outlined
-                            : Icons.notifications_none,
-                        size: 14,
-                        color: colors.textHint,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        menuState.isAway ? 'Away' : 'Active',
-                        style: context.textTheme.bodySmall?.copyWith(
-                          color: colors.textHint,
-                        ),
-                      ),
-                      if (menuState.notificationsPaused) ...[
-                        Text(
-                          ', Notifications snoozed',
-                          style: context.textTheme.bodySmall?.copyWith(
-                            color: colors.textHint,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-
-                  Icon(Icons.access_time, size: 14, color: colors.textHint),
-                  const SizedBox(height: 16),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _ActionChip(
-                        icon: Icons.star_outline,
-                        label: '',
-                        colors: colors,
-                      ),
-                      const SizedBox(width: 8),
-                      _ActionChip(
-                        icon: Icons.notifications_off_outlined,
-                        label: 'Mute',
-                        colors: colors,
-                      ),
-                      const SizedBox(width: 8),
-                      _ActionChip(
-                        icon: Icons.visibility_off_outlined,
-                        label: 'Hide',
-                        colors: colors,
-                      ),
-                      const SizedBox(width: 8),
-                      _ActionChip(
-                        icon: Icons.description_outlined,
-                        label: 'View Files',
-                        colors: colors,
-                      ),
-                      const SizedBox(width: 8),
-                      _ActionChip(
-                        icon: Icons.copy_outlined,
-                        label: '',
-                        colors: colors,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Contact Information',
-                      style: context.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: colors.textPrimary,
-                      ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () {
+                      ref.read(personalProfilePanelProvider.notifier).state =
+                          false;
+                    },
+                    icon: Icon(Icons.close, size: 18, color: colors.textHint),
+                    splashRadius: 16,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 28,
+                      minHeight: 28,
                     ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  _ContactRow(
-                    icon: Icons.phone_outlined,
-                    label: account.phoneNumber.isNotEmpty
-                        ? account.phoneNumber
-                        : 'Not provided',
-                    colors: colors,
-                    context: context,
-                  ),
-                  const SizedBox(height: 8),
-
-                  _ContactRow(
-                    icon: Icons.email_outlined,
-                    label: account.email,
-                    colors: colors,
-                    context: context,
-                    isLink: true,
                   ),
                 ],
               ),
             ),
-          ),
-        ],
+
+            // Scrollable body
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Avatar — reactive to local preview + server URL
+                    Container(
+                      width: 160,
+                      height: 160,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: const UserAvatar(size: 160, borderRadius: 12),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Name and edit button
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            displayName,
+                            style: context.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: colors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        InkWell(
+                          onTap: () => _openEditDialog(context, ref, account),
+                          borderRadius: BorderRadius.circular(4),
+                          child: Text(
+                            'Edit',
+                            style: context.textTheme.bodySmall?.copyWith(
+                              color: colors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+
+                    // Role/Title
+                    Text(
+                      roleTitle,
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Status row
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Icon(
+                          menuState.notificationsPaused
+                              ? Icons.notifications_off_outlined
+                              : Icons.notifications_none,
+                          size: 14,
+                          color: colors.textHint,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          menuState.isAway ? 'Away' : 'Active',
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: colors.textHint,
+                          ),
+                        ),
+                        if (menuState.notificationsPaused) ...[
+                          Text(
+                            ', Notifications snoozed',
+                            style: context.textTheme.bodySmall?.copyWith(
+                              color: colors.textHint,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+
+                    // Time icon
+                    Icon(Icons.access_time, size: 14, color: colors.textHint),
+                    const SizedBox(height: 16),
+
+                    // Action buttons row
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _ActionChip(
+                          icon: Icons.star_outline,
+                          label: '',
+                          colors: colors,
+                        ),
+                        _ActionChip(
+                          icon: Icons.notifications_off_outlined,
+                          label: 'Mute',
+                          colors: colors,
+                        ),
+                        _ActionChip(
+                          icon: Icons.visibility_off_outlined,
+                          label: 'Hide',
+                          colors: colors,
+                        ),
+                        _ActionChip(
+                          icon: Icons.description_outlined,
+                          label: 'View Files',
+                          colors: colors,
+                        ),
+                        _ActionChip(
+                          icon: Icons.copy_outlined,
+                          label: '',
+                          colors: colors,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Contact Information section
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Contact Information',
+                        style: context.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Phone
+                    _ContactRow(
+                      icon: Icons.phone_outlined,
+                      label: account.phoneNumber.isNotEmpty
+                          ? account.phoneNumber
+                          : 'Not provided',
+                      colors: colors,
+                      context: context,
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Email
+                    _ContactRow(
+                      icon: Icons.email_outlined,
+                      label: emailDisplay,
+                      colors: colors,
+                      context: context,
+                      isLink: true,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -232,7 +258,8 @@ class PersonalProfilePanel extends ConsumerWidget {
     WidgetRef ref,
     ProfileAccount account,
   ) {
-    showEditProfileDialog(context, account, (updated) {
+    final navContext = AppRouter.navigatorKey.currentContext ?? context;
+    showEditProfileDialog(navContext, account, (updated, _) {
       ref.read(userProfileNotifierProvider.notifier).updateAccount(updated);
     });
   }

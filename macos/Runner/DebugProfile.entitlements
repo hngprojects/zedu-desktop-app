@@ -9,7 +9,8 @@
 	<key>com.apple.security.assets.pictures.read-only</key>
 	<true/>
 	<key>com.apple.security.app-sandbox</key>
-	<true/>
+	<false/>
+	<false/>
 	<key>com.apple.security.cs.allow-jit</key>
 	<true/>
 	<key>com.apple.security.network.client</key>

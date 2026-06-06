@@ -1,5 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+// import 'package:zedu/core/services/realtime_service.dart';
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService(ref);
@@ -16,6 +17,115 @@ class NotificationService {
       appName: 'Zedu',
       shortcutPolicy: ShortcutPolicy.requireCreate,
     );
+
+    // Global listener for realtime messages and calls
+    _ref.read(realtimeServiceProvider).dmMessageStream.listen((event) {
+      final channelId = event['channelId']?.toString() ?? '';
+      final rawMessage = event['message'];
+      if (rawMessage is! Map<String, dynamic>) return;
+
+      // Handle Calls
+      if (_handleCallEvent(rawMessage, channelId)) return;
+
+      // Handle standard message
+      final msg = _normalizeMessage(rawMessage);
+      final senderName =
+          msg['username']?.toString() ??
+          msg['sender_name']?.toString() ??
+          'Someone';
+
+      handleIncomingMessage(msg, channelId, senderName);
+    });
+  }
+
+  bool _handleCallEvent(Map<String, dynamic> event, String channelId) {
+    final eventName = event['event']?.toString();
+    final payload = event['payload'];
+    if (payload is! Map<String, dynamic>) return false;
+
+    final authState = _ref.read(authNotifierProvider);
+    final currentUserId = authState.user?.id ?? '';
+
+    // ── Direct 1:1 call ──────────────────────────────────────────────────
+    if (eventName == 'direct_call_initiated') {
+      final callerId = payload['caller_id']?.toString() ?? '';
+      if (callerId == currentUserId) return true;
+
+      final callerName = payload['caller_name']?.toString() ?? 'Incoming call';
+      _ref
+          .read(activeCallProvider)
+          .receiveIncomingCall(
+            buzzId: payload['buzz_id']?.toString() ?? '',
+            remoteUserId: callerId,
+            remoteUserName: callerName,
+            channelId: payload['channel_id']?.toString() ?? channelId,
+          );
+      _showCallNotification(
+        'Incoming Buzz Call',
+        '$callerName is calling you…',
+      );
+      return true;
+    }
+
+    // ── Direct call declined ─────────────────────────────────────────────
+    if (eventName == 'direct_call_declined' || eventName == 'call_declined') {
+      final buzzId = payload['buzz_id']?.toString() ?? '';
+      final currentCall = _ref.read(activeCallProvider).state;
+      if (currentCall.buzzId == buzzId &&
+          currentCall.status != CallStatus.none) {
+        _ref.read(activeCallProvider.notifier).handleRemoteDecline();
+      }
+      return true;
+    }
+
+    // ── Org buzz invitation ───────────────────────────────────────────────
+    if (eventName == 'buzz_invitation') {
+      final inviterId = payload['inviter_id']?.toString() ?? '';
+      if (inviterId == currentUserId) return true;
+
+      final inviterName = payload['inviter_name']?.toString() ?? 'Someone';
+      _ref
+          .read(activeCallProvider)
+          .receiveOrgBuzzInvitation(
+            invitationId: payload['invitation_id']?.toString() ?? '',
+            buzzId: payload['buzz_id']?.toString() ?? '',
+            inviterName: inviterName,
+            channelId: payload['channel_id']?.toString() ?? channelId,
+          );
+      _showCallNotification(
+        'Buzz Meeting Invitation',
+        '$inviterName invited you to a meeting. Tap to join.',
+      );
+      return true;
+    }
+
+    return false;
+  }
+
+  void _showCallNotification(String title, String body) {
+    final notification = LocalNotification(title: title, body: body);
+    notification.onClick = () async {
+      await windowManager.show();
+      await windowManager.focus();
+    };
+    notification.show();
+  }
+
+  Map<String, dynamic> _normalizeMessage(Map<String, dynamic> event) {
+    final payload = event['payload'];
+    Map<String, dynamic> msg;
+    if (payload is Map<String, dynamic>) {
+      final message = payload['message'];
+      msg = message is Map<String, dynamic>
+          ? Map<String, dynamic>.from(message)
+          : Map<String, dynamic>.from(payload);
+    } else {
+      final message = event['message'];
+      msg = message is Map<String, dynamic>
+          ? Map<String, dynamic>.from(message)
+          : Map<String, dynamic>.from(event);
+    }
+    return msg;
   }
 
   Future<void> handleIncomingMessage(
@@ -84,8 +194,10 @@ class NotificationService {
       await windowManager.show();
       await windowManager.focus();
 
-      final router = locator<GoRouter>();
-      router.go('/dms/$channelId');
+      final context = AppRouter.navigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        context.go('/dms/$channelId');
+      }
     };
 
     await notification.show();

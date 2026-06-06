@@ -1,5 +1,7 @@
+import 'dart:math' as math;
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/features.dart';
+
+import '../domain/dm_conversation.dart';
 
 final dmRepositoryProvider = Provider<DmRepository>((ref) {
   final apiClient = locator<ApiBaseService>();
@@ -13,6 +15,10 @@ class DmRepository {
 
   DmRepository(this._apiClient);
 
+  static bool isValidChannelId(String channelId) {
+    return channelId.isNotEmpty;
+  }
+
   Future<List<DmConversation>> getConversations({
     required String orgId,
     int page = 1,
@@ -20,7 +26,7 @@ class DmRepository {
     String? search,
   }) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
-      path: '/organisations/$orgId/dms',
+      path: ApiEndpoints.organizationDms(orgId),
       queryParameters: {
         'page': page,
         'limit': pageSize,
@@ -41,12 +47,72 @@ class DmRepository {
     return list;
   }
 
+  /// Creates a new DM channel with the given [userId] inside [orgId].
+  /// Returns the [DmConversation] with the real server-assigned channelId.
+  Future<DmConversation> createDmChannel({
+    required String orgId,
+    required String userId,
+  }) async {
+    // Generate a UUID v4 to satisfy the backend's required channel_id field.
+    final random = math.Random();
+    const hexDigits = '0123456789abcdef';
+    String randomHex(int length) {
+      return List.generate(length, (_) => hexDigits[random.nextInt(16)]).join();
+    }
+
+    final generatedChannelId =
+        '${randomHex(8)}-${randomHex(4)}-4${randomHex(3)}-a${randomHex(3)}-${randomHex(12)}';
+
+    final response = await _apiClient.post<Map<String, dynamic>>(
+      path: ApiEndpoints.organizationDms(orgId),
+      data: {
+        'participant_id': userId,
+        'chat_type': 'user',
+        'channel_id': generatedChannelId,
+      },
+    );
+
+    final data = response.data;
+    // The API may nest the result under 'data' or return it flat.
+    final payload = data['data'] is Map<String, dynamic>
+        ? data['data'] as Map<String, dynamic>
+        : data;
+
+    AppLogger.d('createDmChannel payload: $payload', tag: 'DmRepository');
+
+    final conv = DmConversation.fromJson(payload);
+
+    AppLogger.d(
+      'createDmChannel returned channelId: "${conv.channelId}"',
+      tag: 'DmRepository',
+    );
+
+    // Fallback: if the server response did not map to a valid channelId,
+    // use the generated one we sent so the conversation is immediately usable.
+    if (!isValidChannelId(conv.channelId)) {
+      AppLogger.w(
+        'Server returned no valid channelId — falling back to generated: "$generatedChannelId"',
+        tag: 'DmRepository',
+      );
+      return conv.copyWith(channelId: generatedChannelId);
+    }
+
+    return conv;
+  }
+
   Future<List<Map<String, dynamic>>> getMessages(
     String channelId, {
     int page = 1,
     String? threadId,
-    String channelType = 'channel', // 'channel', 'dm', or 'group_dm'
+    String channelType = 'dm',
   }) async {
+    if (!isValidChannelId(channelId)) return const [];
+
+    AppLogger.d(
+      'Fetching messages for channel: $channelId (page: $page)',
+      tag: 'DmRepository',
+    );
+
     String endpointPath;
     if (threadId != null && threadId.isNotEmpty) {
       if (channelType == 'dm') {
@@ -58,7 +124,7 @@ class DmRepository {
       }
     } else {
       if (channelType == 'dm') {
-        endpointPath = '/dms/messages/$channelId';
+        endpointPath = ApiEndpoints.dmsMessages(channelId);
       } else if (channelType == 'group_dm') {
         endpointPath = '/group-dms/messages/$channelId';
       } else {
@@ -71,28 +137,63 @@ class DmRepository {
       queryParameters: {'page': page, 'limit': pageSize},
     );
 
+    AppLogger.d(
+      'getMessages response status: ${response.statusCode}',
+      tag: 'DmRepository',
+    );
+
     final data = response.data;
     final rawMessages = data['messages'] ?? data['data'];
+    AppLogger.d(
+      'Raw messages payload for $channelId: ${rawMessages.runtimeType}',
+      tag: 'DmRepository',
+    );
     final messages = rawMessages is Map<String, dynamic>
         ? rawMessages['messages'] ?? rawMessages['data']
         : rawMessages;
 
     if (messages is! List) return const [];
 
-    var parsedMessages = messages
+    final parsed = messages
         .whereType<Map<dynamic, dynamic>>()
         .map((message) => Map<String, dynamic>.from(message))
         .toList();
 
-    if (threadId != null && threadId.isNotEmpty) {
-      parsedMessages = parsedMessages.where((m) {
-        final mThreadId = m['thread_id']?.toString() ?? '';
-        final mId = m['id']?.toString() ?? '';
-        return mThreadId == threadId || mId == threadId;
-      }).toList();
+    // Normalize field names from thread-format to message-format
+    for (final m in parsed) {
+      // Normalize 'thread_id' → 'id' so the UI has a consistent key
+      if ((!m.containsKey('id') || (m['id']?.toString() ?? '').isEmpty) &&
+          m.containsKey('thread_id')) {
+        m['id'] = m['thread_id'];
+      }
+      // Some responses use 'message' for the body instead of 'content'
+      final currentContent = m['content']?.toString() ?? '';
+      if (currentContent.isEmpty &&
+          m.containsKey('message') &&
+          m['message'] is String &&
+          (m['message'] as String).isNotEmpty) {
+        m['content'] = m['message'];
+      }
+      if (!m.containsKey('created_at') && m.containsKey('createdAt')) {
+        m['created_at'] = m['createdAt'];
+      }
+      if (!m.containsKey('user_id') && m.containsKey('userId')) {
+        m['user_id'] = m['userId'];
+      }
     }
 
-    return parsedMessages;
+    try {
+      final sample = parsed
+          .take(5)
+          .map((m) => m['created_at'] ?? m['createdAt'] ?? m['timestamp'])
+          .toList();
+      AppLogger.d(
+        'Message timestamps sample for $channelId: $sample',
+        tag: 'DmRepository',
+      );
+    } catch (_) {}
+
+    return parsed;
   }
 
   Future<Map<String, dynamic>> sendMessage(
@@ -100,38 +201,37 @@ class DmRepository {
     String content, {
     String? orgId,
     String? threadId,
-    List<XFile>? media,
+    List<dynamic>? media,
     List<dynamic>? mentions,
-    String channelType = 'channel', // 'channel', 'dm', or 'group_dm'
+    String channelType = 'dm',
   }) async {
     final bool isThreadReply = threadId != null && threadId.isNotEmpty;
-    String path = '';
-    Map<String, dynamic> data = {"content": content};
+    String path;
+    final Map<String, dynamic> data = {'content': content};
 
     if (media != null && media.isNotEmpty) {
-      data["media"] = media.map(_mediaPayloadFromFile).toList();
+      data['media'] = media;
     }
 
     if (channelType == 'group_dm') {
       if (isThreadReply) {
         path = '/group-dms/messages/$channelId';
-        data["thread_id"] = threadId;
+        data['thread_id'] = threadId;
       } else {
         path = '/group-dms/channels/$channelId/threads';
       }
     } else if (channelType == 'dm') {
       if (isThreadReply) {
         path = '/dms/messages/$channelId';
-        data["thread_id"] = threadId;
+        data['thread_id'] = threadId;
       } else {
         path = '/dms/channels/$channelId/threads';
       }
       if (mentions != null && mentions.isNotEmpty) data['mentions'] = mentions;
     } else {
-      // Default channel handling
       if (isThreadReply) {
         path = '/channels/$channelId/messages';
-        data["thread_id"] = threadId;
+        data['thread_id'] = threadId;
       } else {
         path = '/threads/$channelId';
       }
@@ -153,62 +253,34 @@ class DmRepository {
     return const {};
   }
 
-  String _generateUuid() {
-    final random = Random.secure();
-    final chars = '0123456789abcdef';
-    final buffer = StringBuffer();
-    for (int i = 0; i < 36; i++) {
-      if (i == 8 || i == 13 || i == 18 || i == 23) {
-        buffer.write('-');
-      } else if (i == 14) {
-        buffer.write('4');
-      } else if (i == 19) {
-        buffer.write(chars[random.nextInt(4) + 8]);
-      } else {
-        buffer.write(chars[random.nextInt(16)]);
-      }
-    }
-    return buffer.toString();
-  }
-
-  Map<String, dynamic> _mediaPayloadFromFile(XFile file) {
-    final bool isUrl =
-        file.path.startsWith('http://') || file.path.startsWith('https://');
-    final String serverPath = isUrl
-        ? file.path
-        : '${dotenv.maybeGet('MOCK_UPLOADS_URL') ?? ''}${file.name}';
-    return {
-      'id': _generateUuid(),
-      'name': file.name,
-      'file_name': file.name,
-      'path': serverPath,
-      'file_link': serverPath,
-      'file_type': file.name.split('.').last,
-      if (file.mimeType != null) 'mime_type': file.mimeType,
-    };
-  }
-
   Future<void> editMessage(
     String channelId, {
+    required String messageId, // ← add this
     required String content,
-    String? threadId,
     List<Map<String, dynamic>>? media,
     List<Map<String, dynamic>>? mentions,
   }) async {
+    if (!isValidChannelId(channelId)) {
+      throw const ApiFailure(
+        message: 'Cannot edit message: DM channel has not been created yet.',
+        kind: ApiFailureKind.client,
+      );
+    }
+
     await _apiClient.put<Map<String, dynamic>>(
-      path: '/dms/messages/$channelId',
+      path: '${ApiEndpoints.dmsMessages(channelId)}/$messageId', // ← fixed path
       data: {
         'content': content,
-        ...?(threadId != null ? {'thread_id': threadId} : null),
-        ...?(media != null ? {'media': media} : null),
-        ...?(mentions != null ? {'mentions': mentions} : null),
+        'media': media ?? <Map<String, dynamic>>[],
+        'mentions': mentions ?? <Map<String, dynamic>>[],
       },
     );
   }
 
   Future<void> deleteMessage(String channelId, String messageId) async {
+    if (!isValidChannelId(channelId)) return;
     await _apiClient.delete<Map<String, dynamic>>(
-      path: '/channels/$channelId/messages/$messageId',
+      path: '${ApiEndpoints.dmsMessages(channelId)}/$messageId',
     );
   }
 

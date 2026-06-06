@@ -25,7 +25,7 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> _restoreSession() async {
     AppLogger.d('Restoring session from storage', tag: _tag);
     final token = await _storage.getAccessToken();
-    if (token == null) {
+    if (token == null || token.trim().isEmpty) {
       AppLogger.i('No stored token — unauthenticated', tag: _tag);
       state = const AuthState(status: AuthStatus.unauthenticated);
       return;
@@ -119,6 +119,8 @@ class AuthNotifier extends Notifier<AuthState> {
           status: AuthStatus.authenticated,
           user: result.value.user,
         );
+        ref.invalidate(workspaceProvider);
+      // await _verifyPendingInvite();
       case Failure<AuthSession>():
         AppLogger.w('Login rejected — ${result.error.message}', tag: _tag);
         state = state.copyWith(
@@ -494,9 +496,9 @@ extension _UserStatusSwap on User {
     currentOrganisationSlug: currentOrganisationSlug,
     avatarUrl: avatarUrl,
     defaultAvatarUrl: defaultAvatarUrl,
-    creditBalance: creditBalance,
-    subscriptionPlanId: subscriptionPlanId,
-    aiCreditsPurchasable: aiCreditsPurchasable,
+    // creditBalance: creditBalance,
+    // subscriptionPlanId: subscriptionPlanId,
+    // aiCreditsPurchasable: aiCreditsPurchasable,
     status: newStatus,
   );
 }

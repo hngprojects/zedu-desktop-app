@@ -1,6 +1,5 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
-import 'add_channel_members_modal.dart';
 
 class ChannelDetailsModal extends ConsumerStatefulWidget {
   final DmConversation conversation;
@@ -62,7 +61,10 @@ class _ChannelDetailsModalState extends ConsumerState<ChannelDetailsModal>
                     channel: channel,
                     conversation: widget.conversation,
                   ),
-                  _PeopleTab(conversation: widget.conversation),
+                  _PeopleTab(
+                    channel: channel,
+                    conversation: widget.conversation,
+                  ),
                   const _AgentsTab(),
                   const _FilesTab(),
                 ],
@@ -341,11 +343,11 @@ class _AboutTab extends ConsumerWidget {
                 style: TextStyle(fontSize: 13),
               ),
               const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.only(left: 16.0),
+              const Padding(
+                padding: EdgeInsets.only(left: 16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
                       '• No one will be able to send messages to the channel',
                       style: TextStyle(fontSize: 12),
@@ -523,58 +525,20 @@ class _AboutTab extends ConsumerWidget {
   }
 }
 
-class _PeopleTab extends ConsumerStatefulWidget {
+class _PeopleTab extends ConsumerWidget {
+  final Channel channel;
   final DmConversation conversation;
 
-  const _PeopleTab({required this.conversation});
+  const _PeopleTab({required this.channel, required this.conversation});
 
   @override
-  ConsumerState<_PeopleTab> createState() => _PeopleTabState();
-}
-
-class _PeopleTabState extends ConsumerState<_PeopleTab> {
-  String _searchQuery = '';
-
-  void _showUserProfile(DmParticipant participant) {
-    final teamMembers = ref.read(userProfileNotifierProvider).teamMembers;
-    final found = teamMembers.firstWhere(
-      (m) => m.id == participant.userId,
-      orElse: () => TeamMember(
-        id: participant.userId,
-        email: '',
-        role: 'Member',
-        dateJoined: '',
-        status: TeamMemberStatus.active,
-        name: participant.username,
-        avatarUrl: participant.avatarUrl,
-      ),
-    );
-
-    Navigator.pop(context); // Close the modal
-    ref.read(personalProfilePanelProvider.notifier).state = false;
-    ref.read(profileDetailsPanelProvider.notifier).state = found;
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-
-    final filteredParticipants = widget.conversation.participants.where((p) {
-      if (_searchQuery.isEmpty) return true;
-      final q = _searchQuery.toLowerCase();
-      return p.username.toLowerCase().contains(q);
-    }).toList();
-
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
           TextField(
-            onChanged: (value) {
-              setState(() {
-                _searchQuery = value;
-              });
-            },
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.search),
               hintText: 'Find a user',
@@ -597,48 +561,30 @@ class _PeopleTabState extends ConsumerState<_PeopleTab> {
             ),
           ),
           const SizedBox(height: 16),
-          if (widget.conversation.channelType != 'dm') ...[
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(
-                backgroundColor: colors.primary.withValues(alpha: 0.1),
-                child: Icon(Icons.person_add_alt_1, color: colors.primary),
-              ),
-              title: const Text('Add people'),
-              onTap: () {
-                // Ensure we are working with a channel before allowing adds
-                final channelState = ref.read(channelProvider);
-                final channel = channelState.channels.firstWhere(
-                  (c) => c.id == widget.conversation.channelId,
-                  orElse: () => Channel(
-                    id: widget.conversation.channelId,
-                    name: widget.conversation.displayName
-                        .replaceFirst('#', '')
-                        .trim(),
-                    description: '',
-                    organisationId: '',
-                    ownerId: '',
-                  ),
-                );
-
-                showDialog<void>(
-                  context: context,
-                  builder: (context) => AddChannelMembersModal(
-                    channel: channel,
-                    conversation: widget.conversation,
-                  ),
-                );
-              },
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: CircleAvatar(
+              backgroundColor: colors.primary.withValues(alpha: 0.1),
+              child: Icon(Icons.person_add_alt_1, color: colors.primary),
             ),
-          ],
+            title: const Text('Add people'),
+            onTap: () {
+              showDialog<void>(
+                context: context,
+                builder: (ctx) => AddChannelMembersModal(
+                  channel: channel,
+                  conversation: conversation,
+                ),
+              );
+            },
+          ),
           Expanded(
             child: ListView.builder(
-              itemCount: filteredParticipants.length,
+              itemCount: conversation.participants.length,
               itemBuilder: (context, index) {
-                final participant = filteredParticipants[index];
+                final participant = conversation.participants[index];
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
-                  onTap: () => _showUserProfile(participant),
                   leading: Stack(
                     children: [
                       CircleAvatar(

@@ -217,103 +217,7 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                       ],
                     ),
 
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final activeCall = ref.watch(activeCallProvider);
-                      if (activeCall.state.status == CallStatus.active &&
-                          activeCall.state.isFullPage) {
-                        return const Positioned.fill(child: BuzzMeetingView());
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final activeCall = ref.watch(activeCallProvider);
-                      if (activeCall.state.status == CallStatus.active &&
-                          !activeCall.state.isFullPage) {
-                        return const BuzzMeetingView();
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
-
                   const IncomingCallModal(),
-
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final activeCall = ref.watch(activeCallProvider);
-                      if (activeCall.state.status == CallStatus.calling) {
-                        return Positioned(
-                          top: 24,
-                          right: 24,
-                          child: Material(
-                            color: Colors.transparent,
-                            elevation: 8,
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              width: 320,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: colors.background,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: colors.divider),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    blurRadius: 16,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  const CircularProgressIndicator(),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          'Calling...',
-                                          style: TextStyle(
-                                            color: colors.textHint,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                        Text(
-                                          activeCall.state.remoteUserName ??
-                                              'Unknown',
-                                          style: TextStyle(
-                                            color: colors.textPrimary,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.call_end),
-                                    color: colors.error,
-                                    onPressed: () {
-                                      ref
-                                          .read(activeCallProvider.notifier)
-                                          .cancelCall();
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    },
-                  ),
 
                   if (_isDragging)
                     Positioned.fill(
@@ -963,7 +867,8 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
     final colors = context.colors;
     final history = ref.watch(chatHistoryProvider(widget.channelId));
     final isMe = history.isMyMessage(widget.message);
-    final content = widget.message['content'] as String? ?? '';
+    final rawContent = widget.message['content'] as String? ?? '';
+    final content = parseHtmlToMarkdown(rawContent);
     final createdAt = DateFormatter.parseUtcString(
       widget.message['created_at']?.toString() ?? '',
     );
@@ -1031,127 +936,80 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
       onEnter: (_) => setState(() => _isHovering = true),
       onExit: (_) => setState(() => _isHovering = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 150),
         color: widget.isHighlighted
             ? colors.primary.withValues(alpha: 0.15)
+            : _isHovering
+            ? colors.onPrimary.withValues(alpha: 0.04)
             : Colors.transparent,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: isMe
-                    ? MainAxisAlignment.end
-                    : MainAxisAlignment.start,
                 children: [
-                  if (!isMe) ...[
-                    InkWell(
-                      onTap: () {
-                        final teamMembers = ref
-                            .read(userProfileNotifierProvider)
-                            .teamMembers;
-                        final found = teamMembers.firstWhere(
-                          (m) =>
-                              (m.name ?? '').toLowerCase() ==
-                              senderName.toLowerCase(),
-                          orElse: () => TeamMember(
-                            id: widget.message['sender_id']?.toString() ?? '',
-                            email: '',
-                            role: 'Member',
-                            dateJoined: '',
-                            status: TeamMemberStatus.active,
-                            name: senderName,
-                            avatarUrl: senderAvatarUrl,
-                          ),
-                        );
-                        ref.read(personalProfilePanelProvider.notifier).state =
-                            false;
-                        ref.read(profileDetailsPanelProvider.notifier).state =
-                            found;
-                      },
-                      child: CircleAvatar(
-                        radius: 15,
-                        backgroundColor: colors.primary,
-                        backgroundImage:
-                            senderAvatarUrl != null &&
-                                senderAvatarUrl.isNotEmpty
-                            ? NetworkImage(senderAvatarUrl)
-                            : null,
-                        child:
-                            senderAvatarUrl == null || senderAvatarUrl.isEmpty
-                            ? Text(
-                                senderInitial,
-                                style: context.textTheme.bodySmall?.copyWith(
-                                  color: colors.onPrimary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              )
-                            : null,
-                      ),
+                  InkWell(
+                    onTap: () {
+                      final teamMembers = ref
+                          .read(userProfileNotifierProvider)
+                          .teamMembers;
+                      final found = teamMembers.firstWhere(
+                        (m) =>
+                            (m.name ?? '').toLowerCase() ==
+                            senderName.toLowerCase(),
+                        orElse: () => TeamMember(
+                          id: widget.message['sender_id']?.toString() ?? '',
+                          email: '',
+                          role: 'Member',
+                          dateJoined: '',
+                          status: TeamMemberStatus.active,
+                          name: senderName,
+                          avatarUrl: senderAvatarUrl,
+                        ),
+                      );
+                      ref.read(personalProfilePanelProvider.notifier).state =
+                          false;
+                      ref.read(profileDetailsPanelProvider.notifier).state =
+                          found;
+                    },
+                    child: CircleAvatar(
+                      radius: 20,
+                      backgroundColor: colors.primary,
+                      backgroundImage:
+                          senderAvatarUrl != null && senderAvatarUrl.isNotEmpty
+                          ? NetworkImage(senderAvatarUrl)
+                          : null,
+                      child: senderAvatarUrl == null || senderAvatarUrl.isEmpty
+                          ? Text(
+                              senderInitial,
+                              style: context.textTheme.bodyMedium?.copyWith(
+                                color: colors.onPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            )
+                          : null,
                     ),
-                    const SizedBox(width: 12),
-                  ],
-                  Flexible(
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
                     child: Column(
-                      crossAxisAlignment: isMe
-                          ? CrossAxisAlignment.end
-                          : CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
+                          padding: const EdgeInsets.only(bottom: 2),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              InkWell(
-                                onTap: () {
-                                  final teamMembers = ref
-                                      .read(userProfileNotifierProvider)
-                                      .teamMembers;
-                                  final found = teamMembers.firstWhere(
-                                    (m) =>
-                                        (m.name ?? '').toLowerCase() ==
-                                        senderName.toLowerCase(),
-                                    orElse: () => TeamMember(
-                                      id:
-                                          widget.message['sender_id']
-                                              ?.toString() ??
-                                          '',
-                                      email: '',
-                                      role: 'Member',
-                                      dateJoined: '',
-                                      status: TeamMemberStatus.active,
-                                      name: senderName,
-                                      avatarUrl: senderAvatarUrl,
-                                    ),
-                                  );
-                                  ref
-                                          .read(
-                                            personalProfilePanelProvider
-                                                .notifier,
-                                          )
-                                          .state =
-                                      false;
-                                  ref
-                                          .read(
-                                            profileDetailsPanelProvider
-                                                .notifier,
-                                          )
-                                          .state =
-                                      found;
-                                },
-                                child: Text(
-                                  senderName,
-                                  style: TextStyle(
-                                    color: isMe
-                                        ? colors.primary
-                                        : const Color(
-                                            0xFF00BFA5,
-                                          ), // Teal accent for receiving
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                              Text(
+                                senderName,
+                                style: TextStyle(
+                                  color: isMe
+                                      ? colors.primary
+                                      : const Color(0xFF00BFA5),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -1190,24 +1048,13 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                             audioSource: _getAudioSource(widget.message),
                           )
                         else if (content.isNotEmpty)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isMe
-                                  ? colors.primary
-                                  : colors.onPrimary.withValues(alpha: 0.05),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
                             child: RichText(
                               text: _parseRichText(
                                 content,
                                 context.textTheme.bodyMedium?.copyWith(
-                                      color: isMe
-                                          ? colors.onPrimary
-                                          : colors.textPrimary,
+                                      color: colors.textPrimary,
                                     ) ??
                                     const TextStyle(),
                               ),
@@ -1436,8 +1283,7 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
             if (_isHovering && history.editingMessageId != messageId)
               Positioned(
                 top: -12,
-                right: isMe ? null : 16,
-                left: isMe ? 16 : null,
+                right: 8,
                 child: Container(
                   decoration: BoxDecoration(
                     color: colors.background,
@@ -1498,7 +1344,7 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                         ),
                       PopupMenuButton<String>(
                         icon: Icon(
-                          Icons.more_vert,
+                          Icons.more_horiz,
                           size: 18,
                           color: colors.textHint,
                         ),

@@ -48,6 +48,42 @@ class DmConversation {
     return lastReadAt ?? DateTime.fromMillisecondsSinceEpoch(0);
   }
 
+  DmConversation copyWith({
+    String? channelId,
+    String? username,
+    String? participantId,
+    String? participantEmail,
+    String? avatarUrl,
+    String? defaultAvatarUrl,
+    String? channelType,
+    bool? isFavourite,
+    int? threadCount,
+    String? lastThreadId,
+    DateTime? lastReadAt,
+    String? previewMessage,
+    List<DmPreviewThread>? previewThreads,
+    List<DmParticipant>? participants,
+    int? unreadCount,
+  }) {
+    return DmConversation(
+      channelId: channelId ?? this.channelId,
+      username: username ?? this.username,
+      participantId: participantId ?? this.participantId,
+      participantEmail: participantEmail ?? this.participantEmail,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      defaultAvatarUrl: defaultAvatarUrl ?? this.defaultAvatarUrl,
+      channelType: channelType ?? this.channelType,
+      isFavourite: isFavourite ?? this.isFavourite,
+      threadCount: threadCount ?? this.threadCount,
+      lastThreadId: lastThreadId ?? this.lastThreadId,
+      lastReadAt: lastReadAt ?? this.lastReadAt,
+      previewMessage: previewMessage ?? this.previewMessage,
+      previewThreads: previewThreads ?? this.previewThreads,
+      participants: participants ?? this.participants,
+      unreadCount: unreadCount ?? this.unreadCount,
+    );
+  }
+
   factory DmConversation.fromJson(Map<String, dynamic> json) {
     final rawThreads = json['preview_thread'];
     final threads = (rawThreads is List ? rawThreads : const <dynamic>[])
@@ -63,7 +99,7 @@ class DmConversation {
             .toList();
 
     return DmConversation(
-      channelId: json['channel_id'] as String? ?? '',
+      channelId: json['channel_id'] as String? ?? json['id'] as String? ?? '',
       username: json['username'] as String? ?? '',
       participantId: json['participant_id'] as String? ?? '',
       participantEmail: json['participant_email'] as String?,

@@ -22,12 +22,27 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       );
       final data = response.data['data'] as List<dynamic>? ?? [];
 
+      final currentUserId = authState.user?.id;
       final List<Workspace> workspaces = [];
       for (var item in data) {
         if (item is Map<String, dynamic>) {
           final ownerId =
               item['owner_id'] as String? ?? item['creator_id'] as String?;
           final usersList = item['Users'] as List? ?? item['users'] as List?;
+
+          bool isMember = false;
+          if (ownerId == currentUserId) isMember = true;
+          if (usersList != null) {
+            for (var u in usersList) {
+              final uId = u['id'] ?? u['user_id'];
+              if (uId == currentUserId) {
+                isMember = true;
+                break;
+              }
+            }
+          }
+          if (!isMember) continue;
+
           final parsedMembersCount =
               (item['members_count'] as num?)?.toInt() ??
               (item['users_count'] as num?)?.toInt() ??

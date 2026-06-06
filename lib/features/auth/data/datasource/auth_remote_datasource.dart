@@ -57,20 +57,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String password,
   }) async {
     try {
+      AppLogger.d('POST /auth/login — $email', tag: _tag);
       if (_config.usesMockData) {
-        AppLogger.d('Using mock data for POST /auth/login', tag: _tag);
-        if (password != mockPassword) {
-          throw const ApiFailure(
-            message: 'Invalid credentials',
-            kind: ApiFailureKind.client,
-          );
-        }
         return LoginResponseModel.fromJson(
           LoginResponseModel.mockLoginResponse,
         );
       }
 
-      AppLogger.d('POST /auth/login — $email', tag: _tag);
       final response = await _apiBaseService.post<Map<String, dynamic>>(
         path: '/auth/login',
         data: {'email': email, 'password': password},
@@ -93,15 +86,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel> me() async {
     try {
+      AppLogger.d('GET /auth/me', tag: _tag);
       if (_config.usesMockData) {
-        AppLogger.d('Using mock data for GET /auth/me', tag: _tag);
-        final loginResponse = LoginResponseModel.fromJson(
-          LoginResponseModel.mockLoginResponse,
+        return UserModel.fromJson(
+          LoginResponseModel.mockLoginResponse['user'] as Map<String, dynamic>,
         );
-        return loginResponse.user;
       }
 
-      AppLogger.d('GET /auth/me', tag: _tag);
       final response = await _apiBaseService.get<Map<String, dynamic>>(
         path: '/auth/me',
       );
@@ -159,9 +150,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         path: '/auth/password-reset',
         data: {
           'email': email,
-          'client_url': dotenv.maybeGet('RESET_PASSWORD_URL') ?? '',
-          'redirect_url': dotenv.maybeGet('RESET_PASSWORD_URL') ?? '',
-          'redirect_uri': dotenv.maybeGet('RESET_PASSWORD_URL') ?? '',
+          'client_url': 'https://zedu.chat/reset-password',
+          'redirect_url': 'https://zedu.chat/reset-password',
+          'redirect_uri': 'https://zedu.chat/reset-password',
         },
         headers: {
           'Origin': 'https://zedu.chat',

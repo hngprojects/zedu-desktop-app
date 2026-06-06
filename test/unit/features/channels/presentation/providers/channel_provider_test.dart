@@ -1,3 +1,4 @@
+import '../../../../../helpers/helpers.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -59,8 +60,8 @@ void main() {
         LoginResponseModel.mockLoginResponse,
       ).user.toEntity();
 
-      workspaceState = WorkspaceState(
-        selectedWorkspace: const Workspace(
+      workspaceState = const WorkspaceState(
+        selectedWorkspace: Workspace(
           id: 'org-123',
           name: 'Test Org',
           avatar: '',
@@ -97,7 +98,7 @@ void main() {
     test('initial state is default empty state', () async {
       when(
         () => mockChannelRepository.fetchChannels('org-123'),
-      ).thenAnswer((_) async => Success(<Channel>[]));
+      ).thenAnswer((_) async => const Success(<Channel>[]));
       final container = createContainer();
 
       container.read(channelProvider);
@@ -111,7 +112,7 @@ void main() {
 
     test('fetchChannels success updates channels list', () async {
       final mockChannels = [
-        Channel(
+        const Channel(
           id: 'c-1',
           name: 'general',
           description: 'General channel',
@@ -157,7 +158,7 @@ void main() {
     });
 
     test('createChannel success adds new channel to local state', () async {
-      final newChannel = Channel(
+      const newChannel = Channel(
         id: 'c-2',
         name: 'random',
         description: 'Random stuff',
@@ -167,7 +168,7 @@ void main() {
 
       when(
         () => mockChannelRepository.fetchChannels('org-123'),
-      ).thenAnswer((_) async => Success(<Channel>[]));
+      ).thenAnswer((_) async => const Success(<Channel>[]));
 
       when(
         () => mockChannelRepository.createChannel(
@@ -178,7 +179,7 @@ void main() {
           isPrivate: false,
           topic: any(named: 'topic'),
         ),
-      ).thenAnswer((_) async => Success(newChannel));
+      ).thenAnswer((_) async => const Success(newChannel));
 
       final container = createContainer();
 
@@ -199,7 +200,7 @@ void main() {
     test(
       'updateChannelTopicOrDescription updates local channel info',
       () async {
-        final originalChannel = Channel(
+        const originalChannel = Channel(
           id: 'c-1',
           name: 'general',
           description: 'Old description',
@@ -210,7 +211,7 @@ void main() {
 
         when(
           () => mockChannelRepository.fetchChannels('org-123'),
-        ).thenAnswer((_) async => Success([originalChannel]));
+        ).thenAnswer((_) async => const Success([originalChannel]));
 
         when(
           () => mockChannelRepository.updateChannelTopicOrDescription(
@@ -240,7 +241,7 @@ void main() {
     );
 
     test('archiveChannel removes channel if archived = true', () async {
-      final originalChannel = Channel(
+      const originalChannel = Channel(
         id: 'c-1',
         name: 'general',
         description: 'General channel',
@@ -250,7 +251,7 @@ void main() {
 
       when(
         () => mockChannelRepository.fetchChannels('org-123'),
-      ).thenAnswer((_) async => Success([originalChannel]));
+      ).thenAnswer((_) async => const Success([originalChannel]));
 
       when(
         () => mockChannelRepository.archiveChannel('c-1', true),
@@ -269,7 +270,7 @@ void main() {
     });
 
     test('toggleChannelPrivacy updates local channel isPrivate flag', () async {
-      final originalChannel = Channel(
+      const originalChannel = Channel(
         id: 'c-1',
         name: 'general',
         description: 'General channel',
@@ -280,7 +281,7 @@ void main() {
 
       when(
         () => mockChannelRepository.fetchChannels('org-123'),
-      ).thenAnswer((_) async => Success([originalChannel]));
+      ).thenAnswer((_) async => const Success([originalChannel]));
 
       when(
         () => mockChannelRepository.toggleChannelPrivacy('c-1', true),
@@ -298,7 +299,7 @@ void main() {
     });
 
     test('leaveChannel removes channel from local list', () async {
-      final originalChannel = Channel(
+      const originalChannel = Channel(
         id: 'c-1',
         name: 'general',
         description: 'General channel',
@@ -308,7 +309,7 @@ void main() {
 
       when(
         () => mockChannelRepository.fetchChannels('org-123'),
-      ).thenAnswer((_) async => Success([originalChannel]));
+      ).thenAnswer((_) async => const Success([originalChannel]));
 
       when(
         () => mockChannelRepository.leaveChannel('c-1'),
@@ -326,7 +327,7 @@ void main() {
     });
 
     test('joinChannel triggers fetchChannels and updates list', () async {
-      final newChannel = Channel(
+      const newChannel = Channel(
         id: 'c-2',
         name: 'random',
         description: 'Random channel',
@@ -336,7 +337,7 @@ void main() {
 
       when(
         () => mockChannelRepository.fetchChannels('org-123'),
-      ).thenAnswer((_) async => Success([newChannel]));
+      ).thenAnswer((_) async => const Success([newChannel]));
 
       when(
         () => mockChannelRepository.joinChannel('c-2'),
@@ -356,7 +357,7 @@ void main() {
     });
 
     test('addChannelMembers increments membersCount locally', () async {
-      final originalChannel = Channel(
+      const originalChannel = Channel(
         id: 'c-1',
         name: 'general',
         description: 'General channel',
@@ -367,7 +368,7 @@ void main() {
 
       when(
         () => mockChannelRepository.fetchChannels('org-123'),
-      ).thenAnswer((_) async => Success([originalChannel]));
+      ).thenAnswer((_) async => const Success([originalChannel]));
 
       when(
         () => mockChannelRepository.addChannelMembers('c-1', ['u-1', 'u-2']),

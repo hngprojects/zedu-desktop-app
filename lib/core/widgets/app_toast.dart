@@ -103,8 +103,18 @@ class _AppToastWidgetState extends State<_AppToastWidget>
         const Color(0xFFD4F7D4),
         Icons.check_circle,
       ),
-      AppToastType.error => (colors.error, colors.errorBg, Icons.error),
-      AppToastType.info => (colors.primary, colors.primaryBg, Icons.info),
+      AppToastType.error => (
+        colors.error,
+        colors.errorBg,
+        Icons.error_outline_rounded,
+        // 'Error',
+      ),
+      AppToastType.info => (
+        colors.primary,
+        colors.primaryBg,
+        Icons.info_outline_rounded,
+        // 'Info',
+      ),
     };
 
     return FadeTransition(
@@ -118,10 +128,14 @@ class _AppToastWidgetState extends State<_AppToastWidget>
             decoration: BoxDecoration(
               color: bgColor,
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: accentColor.withValues(alpha: 0.25),
+                width: 1,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
+                  color: colors.textPrimary.withValues(alpha: 0.08),
+                  blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
               ],

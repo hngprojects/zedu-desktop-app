@@ -11,31 +11,50 @@ class DmProfileCard extends StatelessWidget {
     final colors = context.colors;
     final name = conversation.displayName;
     final nameParts = name.trim().split(RegExp(r'\s+'));
-    final handle = nameParts.length > 1
-        ? '@${nameParts.first}_${nameParts.last}'
-        : '@${nameParts.first}';
+    String handle = nameParts.length > 1
+        ? '${nameParts.first}_${nameParts.last}'
+        : nameParts.first;
+    handle = handle.replaceAll('@', '');
+    final finalHandle = '@$handle';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 76, 40, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 39,
-            backgroundColor: colors.primary,
-            backgroundImage: conversation.effectiveAvatarUrl != null
-                ? NetworkImage(conversation.effectiveAvatarUrl!)
-                : null,
-            child: conversation.effectiveAvatarUrl == null
-                ? Text(
-                    name.isNotEmpty ? name[0].toUpperCase() : '?',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 28,
+          Container(
+            width: 78,
+            height: 78,
+            decoration: BoxDecoration(
+              color: colors.primary,
+              shape: BoxShape.circle,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: conversation.effectiveAvatarUrl != null
+                ? Image.network(
+                    conversation.effectiveAvatarUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Center(
+                      child: Text(
+                        name.isNotEmpty ? name[0].toUpperCase() : '?',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 28,
+                        ),
+                      ),
                     ),
                   )
-                : null,
+                : Center(
+                    child: Text(
+                      name.isNotEmpty ? name[0].toUpperCase() : '?',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 28,
+                      ),
+                    ),
+                  ),
           ),
           const SizedBox(height: 12),
           Text(
@@ -55,7 +74,7 @@ class DmProfileCard extends StatelessWidget {
                   text: 'This conversation is just between you and ',
                 ),
                 TextSpan(
-                  text: handle,
+                  text: finalHandle,
                   style: TextStyle(
                     color: colors.primary,
                     fontWeight: FontWeight.w500,

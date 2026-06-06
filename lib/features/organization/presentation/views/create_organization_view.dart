@@ -75,8 +75,8 @@ class _CreateOrganizationViewState
     } else if (state.organization != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Row(
-            children: const [
+          content: const Row(
+            children: [
               Icon(Icons.check_circle_outline, color: Colors.white),
               SizedBox(width: 8),
               Text('Organization created!'),

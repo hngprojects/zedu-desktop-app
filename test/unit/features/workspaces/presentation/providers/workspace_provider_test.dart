@@ -1,3 +1,4 @@
+import '../../../../../helpers/helpers.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -54,7 +55,7 @@ void main() {
     test(
       'fetchWorkspaces filters out workspaces that the user is not a member of',
       () async {
-        final apiResponse = ApiResponseModel<Map<String, dynamic>>(
+        const apiResponse = ApiResponseModel<Map<String, dynamic>>(
           statusCode: 200,
           data: {
             'data': [

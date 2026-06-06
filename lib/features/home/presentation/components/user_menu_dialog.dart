@@ -8,8 +8,18 @@ class UserMenuDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final authUser = ref.watch(authNotifierProvider).user;
-    final balance = ref.watch(orgCreditBalanceProvider);
-    final displayName = authUser?.fullname ?? 'AnonymousUser';
+    final profileState = ref.watch(userProfileNotifierProvider);
+    final account = profileState.account;
+
+    // Prefer profile data; fall back to auth data, then generic fallback
+    final displayName = account?.displayName.isNotEmpty == true
+        ? account!.displayName
+        : account?.name.isNotEmpty == true
+        ? account!.name
+        : authUser?.fullname ?? 'Zedu User';
+    final email = account?.email.isNotEmpty == true
+        ? account!.email
+        : authUser?.email ?? '';
     final status = authUser?.status ?? UserStatus.empty;
     final isOnline = status.online;
 
@@ -43,25 +53,12 @@ class UserMenuDialog extends ConsumerWidget {
                 child: Row(
                   children: [
                     Stack(
+                      clipBehavior: Clip.none,
                       children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: colors.sidebar,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Center(
-                            child: Icon(
-                              Icons.person,
-                              color: Colors.white,
-                              size: 32,
-                            ),
-                          ),
-                        ),
+                        const UserAvatar(size: 48, borderRadius: 8),
                         Positioned(
-                          bottom: 2,
-                          right: 2,
+                          bottom: -2,
+                          right: -2,
                           child: PresenceDot(online: isOnline, size: 12),
                         ),
                       ],
@@ -78,8 +75,20 @@ class UserMenuDialog extends ConsumerWidget {
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-
+                          if (email.isNotEmpty)
+                            Text(
+                              email,
+                              style: TextStyle(
+                                color: colors.textHint,
+                                fontSize: 11,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          const SizedBox(height: 2),
                           Text(
                             isOnline ? 'Active' : 'Away',
                             style: TextStyle(
@@ -99,7 +108,7 @@ class UserMenuDialog extends ConsumerWidget {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '$balance AI credits',
+                                ' AI credits',
                                 style: TextStyle(
                                   color: colors.primary,
                                   fontSize: 12,
@@ -231,28 +240,19 @@ class UserMenuDialog extends ConsumerWidget {
                   if (context.mounted) context.go(AppRouter.profile);
                 },
               ),
-              _MenuItemButton(
-                icon: Icons.shopping_cart_outlined,
-                label: 'Buy AI credits',
-                isHighlight: true,
-                onTap: () {
-                  Navigator.pop(context);
-                  if (context.mounted) context.go(AppRouter.buyCredits);
-                },
-              ),
               const SizedBox(height: 8),
               Divider(height: 0, color: colors.divider),
               const SizedBox(height: 8),
 
               _MenuItemButton(
                 icon: Icons.logout_rounded,
-                label:
-                    'Sign out of ${authUser?.currentOrganisationSlug ?? 'Zedu'}',
+                label: 'Sign out of Zedu Desktop',
                 isError: true,
                 onTap: () async {
+                  final router = GoRouter.of(context);
                   Navigator.pop(context);
                   await ref.read(authNotifierProvider.notifier).logout();
-                  if (context.mounted) context.go(AppRouter.login);
+                  router.go(AppRouter.login);
                 },
               ),
               const SizedBox(height: 8),
@@ -269,7 +269,6 @@ class _MenuItemButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   final Color? iconColor;
-  final bool isHighlight;
   final bool isError;
 
   const _MenuItemButton({
@@ -277,16 +276,13 @@ class _MenuItemButton extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.iconColor,
-    this.isHighlight = false,
     this.isError = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final itemColor = isError
-        ? colors.error
-        : (isHighlight ? colors.accent : colors.textPrimary);
+    final itemColor = isError ? colors.error : colors.textPrimary;
     final resolvedIconColor = iconColor ?? itemColor;
 
     return InkWell(
@@ -303,9 +299,7 @@ class _MenuItemButton extends StatelessWidget {
                 style: TextStyle(
                   color: itemColor,
                   fontSize: 13,
-                  fontWeight: isHighlight || isError
-                      ? FontWeight.w500
-                      : FontWeight.normal,
+                  fontWeight: isError ? FontWeight.w500 : FontWeight.normal,
                 ),
               ),
             ),

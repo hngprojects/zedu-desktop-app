@@ -7,6 +7,7 @@ enum ActiveChatType {
   newGroupChat,
   directMessage,
   channelDirectory,
+  none,
 }
 
 class ActiveChatState {

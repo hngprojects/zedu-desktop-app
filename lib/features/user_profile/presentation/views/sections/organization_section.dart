@@ -36,7 +36,10 @@ class OrganizationSection extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _OrganizationAvatar(initials: organization.initials),
+                    _OrganizationAvatar(
+                      initials: organization.initials,
+                      logoUrl: organization.logoUrl,
+                    ),
                     const SizedBox(height: 24),
                     const ProfileFieldLabel('Name'),
                     const SizedBox(height: 4),
@@ -144,9 +147,10 @@ class OrganizationSection extends StatelessWidget {
 }
 
 class _OrganizationAvatar extends StatelessWidget {
-  const _OrganizationAvatar({required this.initials});
+  const _OrganizationAvatar({required this.initials, this.logoUrl});
 
   final String initials;
+  final String? logoUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -156,6 +160,9 @@ class _OrganizationAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(8),
+        image: logoUrl != null && logoUrl!.isNotEmpty
+            ? DecorationImage(image: NetworkImage(logoUrl!), fit: BoxFit.cover)
+            : null,
       ),
       child: Center(
         child: Text(

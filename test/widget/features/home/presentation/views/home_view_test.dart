@@ -1,3 +1,4 @@
+import '../../../../../helpers/helpers.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -88,27 +89,24 @@ void main() {
         createdAt: DateTime.now(),
         avatarUrl: '',
         defaultAvatarUrl: '',
-        creditBalance: 100,
         currentOrg: 'org-123',
         currentOrganisationSlug: '',
       );
 
       authState = AuthState(status: AuthStatus.authenticated, user: mockUser);
 
-      workspaceState = WorkspaceState(
-        selectedWorkspace: const Workspace(
+      workspaceState = const WorkspaceState(
+        selectedWorkspace: Workspace(
           id: 'org-123',
           name: 'Test Org',
           avatar: '',
         ),
-        workspaces: [
-          const Workspace(id: 'org-123', name: 'Test Org', avatar: ''),
-        ],
+        workspaces: [Workspace(id: 'org-123', name: 'Test Org', avatar: '')],
       );
 
       userProfileState = const UserProfileState(teamMembers: []);
 
-      channelState = ChannelState(
+      channelState = const ChannelState(
         channels: [
           Channel(
             id: 'chan-general',

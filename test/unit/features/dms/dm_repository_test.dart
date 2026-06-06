@@ -1,3 +1,4 @@
+import '../../../helpers/helpers.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -27,7 +28,7 @@ void main() {
               },
             ),
           ).thenAnswer(
-            (_) async => ApiResponseModel<Map<String, dynamic>>(
+            (_) async => const ApiResponseModel<Map<String, dynamic>>(
               data: {
                 'messages': [
                   {
@@ -76,7 +77,7 @@ void main() {
               data: {'content': 'Hello thread', 'thread_id': 'thread-456'},
             ),
           ).thenAnswer(
-            (_) async => ApiResponseModel<Map<String, dynamic>>(
+            (_) async => const ApiResponseModel<Map<String, dynamic>>(
               data: {
                 'data': {
                   'id': 'msg-new',

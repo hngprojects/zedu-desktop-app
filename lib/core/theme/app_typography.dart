@@ -8,7 +8,7 @@ class FontFamily {
 
 class AppTypography {
   static TextTheme get textTheme {
-    return TextTheme(
+    return const TextTheme(
       headlineLarge: TextStyle(
         fontFamily: FontFamily.lato,
         fontSize: 32,

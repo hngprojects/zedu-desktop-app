@@ -60,7 +60,7 @@ class _ProfileContent extends StatelessWidget {
               account: state.account ?? ProfileAccount.empty(),
               isSaving: state.isSaving,
               onSave: notifier.updateAccount,
-              onDelete: notifier.deleteAccount,
+              onDelete: (pwd) => notifier.deleteAccount(password: pwd),
             ),
             UserProfileSection.notifications => NotificationsSection(
               preferences:
@@ -87,6 +87,8 @@ class _ProfileContent extends StatelessWidget {
               onInvite: notifier.inviteMember,
               onUpdate: notifier.updateMember,
               onRemove: notifier.removeMember,
+              onAddUser: notifier.addUserDirectly,
+              onFetchUsers: notifier.fetchRegisteredUsers,
             ),
             UserProfileSection.rolesAndPermissions =>
               RolesAndPermissionsSection(roles: state.rolesAndPermissions),

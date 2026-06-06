@@ -1,5 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
+// import 'package:zedu/core/services/realtime_service.dart'; // Adjust path if needed
 
 class UserProfileNotifier extends Notifier<UserProfileState> {
   late UserProfileRepository _repository;
@@ -9,8 +10,30 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     final authStatus = ref.watch(authNotifierProvider.select((s) => s.status));
     final orgId = ref.watch(currentOrgIdProvider);
     _repository = ref.read(userProfileRepositoryProvider);
+
+    final realtimeService = ref.read(realtimeServiceProvider);
+
     if (authStatus == AuthStatus.authenticated) {
       Future.microtask(() => load(orgId: orgId.isNotEmpty ? orgId : null));
+      if (orgId.isNotEmpty) {
+        realtimeService.subscribeToOrg(orgId);
+      }
+    }
+
+    final subscription = realtimeService.profileUpdateStream.listen((
+      payload,
+    ) async {
+      final accountResult = await _repository.getAccount();
+      if (accountResult is Success<ProfileAccount>) {
+        state = state.copyWith(account: accountResult.value);
+      }
+    });
+
+    ref.onDispose(() {
+      subscription.cancel();
+    });
+
+    if (authStatus == AuthStatus.authenticated) {
       try {
         return state.copyWith(isLoading: true);
       } catch (_) {
@@ -42,6 +65,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           isSaving: false,
           successMessage: 'Account information saved successfully.',
         );
+        ref.read(authNotifierProvider.notifier).refreshCurrentUser();
       case Failure<ProfileAccount>():
         state = state.copyWith(
           isSaving: false,
@@ -50,19 +74,81 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     }
   }
 
-  Future<void> deleteAccount() async {
+  Future<void> previewAndUploadAvatar(String filePath) async {
+    state = state.copyWith(localAvatarPath: filePath);
+
+    state = state.copyWith(isSaving: true, clearError: true);
+    final result = await _repository.uploadAvatar(filePath);
+
+    switch (result) {
+      case Success<void>():
+        final accountResult = await _repository.getAccount();
+        if (accountResult is Success<ProfileAccount>) {
+          ref.read(authNotifierProvider.notifier).refreshCurrentUser();
+          state = state.copyWith(
+            account: accountResult.value,
+            isSaving: false,
+            clearLocalAvatar: true,
+            successMessage: 'Avatar updated successfully.',
+          );
+        } else {
+          state = state.copyWith(isSaving: false);
+        }
+      case Failure<void>():
+        state = state.copyWith(
+          isSaving: false,
+          error: result.error.friendlyMessage,
+        );
+    }
+  }
+
+  Future<void> deleteAccount({required String password}) async {
     state = state.copyWith(
       isSaving: true,
       clearError: true,
       clearSuccess: true,
     );
-    final result = await _repository.deleteAccount();
+    final result = await _repository.deleteAccount(password: password);
     switch (result) {
       case Success<void>():
         state = state.copyWith(
           isSaving: false,
           successMessage: 'Account deleted successfully.',
         );
+      case Failure<void>():
+        state = state.copyWith(
+          isSaving: false,
+          error: result.error.friendlyMessage,
+        );
+    }
+  }
+
+  Future<void> uploadAvatar(String filePath) async {
+    await previewAndUploadAvatar(filePath);
+  }
+
+  Future<void> deleteAvatar() async {
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
+    final result = await _repository.deleteAvatar();
+    switch (result) {
+      case Success<void>():
+        final currentAccount = state.account;
+        state = state.copyWith(
+          isSaving: false,
+          successMessage: 'Avatar removed successfully.',
+          clearLocalAvatar: true,
+          account: currentAccount?.copyWith(avatarUrl: ''),
+        );
+        // Reload account
+        final accountResult = await _repository.getAccount();
+        if (accountResult is Success<ProfileAccount>) {
+          ref.read(authNotifierProvider.notifier).refreshCurrentUser();
+          state = state.copyWith(account: accountResult.value);
+        }
       case Failure<void>():
         state = state.copyWith(
           isSaving: false,
@@ -119,7 +205,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     }
   }
 
-  Future<void> changePassword({
+  Future<bool> changePassword({
     required String currentPassword,
     required String newPassword,
   }) async {
@@ -138,11 +224,13 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           isSaving: false,
           successMessage: 'Password updated successfully.',
         );
+        return true;
       case Failure<void>():
         state = state.copyWith(
           isSaving: false,
           error: result.error.friendlyMessage,
         );
+        return false;
     }
   }
 
@@ -203,6 +291,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
                 ownerId: userId,
               ),
             );
+
       case Failure<OrganizationProfile>():
         state = state.copyWith(
           isSaving: false,
@@ -217,13 +306,23 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       clearError: true,
       clearSuccess: true,
     );
-    final result = await _repository.deleteOrganization();
+    final orgId = ref.read(workspaceProvider).selectedWorkspace?.id;
+    if (orgId == null) {
+      state = state.copyWith(
+        isSaving: false,
+        error: 'No organization selected.',
+      );
+      return;
+    }
+    final result = await _repository.deleteOrganization(orgId: orgId);
     switch (result) {
       case Success<void>():
         state = state.copyWith(
           isSaving: false,
           successMessage: 'Organization deleted successfully.',
         );
+        // Log out the user because the organization they were tied to is gone.
+        await ref.read(authNotifierProvider.notifier).logout();
       case Failure<void>():
         state = state.copyWith(
           isSaving: false,
@@ -271,9 +370,30 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       final response = await api.get<Map<String, dynamic>>(
         path: '/organisations/$orgId/roles',
       );
-      final data = response.data['data'] as List<dynamic>?;
+      final rawData = response.data['data'];
+      final List<dynamic>? data;
+      if (rawData is List<dynamic>) {
+        data = rawData;
+      } else if (rawData is Map<String, dynamic>) {
+        // Backend may wrap roles in a paginated response
+        final candidate = rawData['roles'] ?? rawData['data'];
+        data = candidate is List<dynamic> ? candidate : null;
+      } else {
+        data = null;
+      }
       if (data != null && data.isNotEmpty) {
-        return data.last['id'] as String;
+        final last = data.last;
+        if (last is Map) {
+          final id =
+              last['id'] ?? last['role_id'] ?? last['roleId'] ?? last['_id'];
+          if (id != null) return id.toString();
+          for (final value in last.values) {
+            final str = value.toString();
+            if (str.length == 36 && str.contains('-')) {
+              return str;
+            }
+          }
+        }
       }
     } catch (e) {
       // ignore
@@ -326,7 +446,17 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     try {
       final api = locator<ApiBaseService>();
       final response = await api.get<Map<String, dynamic>>(path: '/users');
-      final data = response.data['data'] as List<dynamic>?;
+      final rawData = response.data['data'];
+      final List<dynamic>? data;
+      if (rawData is List<dynamic>) {
+        data = rawData;
+      } else if (rawData is Map<String, dynamic>) {
+        // Backend may wrap users in a paginated response
+        final candidate = rawData['users'] ?? rawData['data'];
+        data = candidate is List<dynamic> ? candidate : null;
+      } else {
+        data = null;
+      }
       if (data != null) {
         return data.cast<Map<String, dynamic>>();
       }
@@ -399,6 +529,27 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           );
         }
 
+      // if (config.usesMockData) {
+      //   final storage = locator<SecureStorageService>();
+      //   final jsonList = newTeamMembers
+      //       .map(
+      //         (m) => {
+      //           'id': m.id,
+      //           'email': m.email,
+      //           'role': m.role,
+      //           'name': m.name,
+      //           'avatar_url': m.avatarUrl,
+      //           'date_joined': m.dateJoined,
+      //           'status': m.status.name,
+      //         },
+      //       )
+      //       .toList();
+      //   await storage.writeData(
+      //     'mock_team_members_$orgId',
+      //     jsonEncode(jsonList),
+      //   );
+      // }
+
       case Failure<TeamMember>():
         if (userId == null) {
           final errStr = result.error.friendlyMessage.toLowerCase();
@@ -435,6 +586,59 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
             }
           }
         }
+        state = state.copyWith(
+          isSaving: false,
+          error: result.error.friendlyMessage,
+        );
+    }
+  }
+
+  Future<void> addUserDirectly({
+    required String userId,
+    required String email,
+  }) async {
+    state = state.copyWith(
+      isSaving: true,
+      clearError: true,
+      clearSuccess: true,
+    );
+    var orgId = ref.read(workspaceProvider).selectedWorkspace?.id;
+    if (locator<AppConfig>().usesMockData &&
+        (orgId == null || orgId.length < 36)) {
+      orgId = '019700db-4e22-7f90-a20e-f9116291ef24';
+    }
+
+    if (orgId == null || orgId.isEmpty) {
+      state = state.copyWith(
+        isSaving: false,
+        error: 'No active workspace selected.',
+      );
+      return;
+    }
+
+    final roleId = await _getRoleId(orgId);
+    final result = await _repository.addUserDirectly(
+      orgId: orgId,
+      userId: userId,
+      roleId: roleId,
+    );
+    switch (result) {
+      case Success<void>():
+        // Add the user to the local team members list immediately
+        final newMember = TeamMember(
+          id: userId,
+          email: email,
+          role: 'User',
+          dateJoined: DateTime.now().toIso8601String(),
+          status: TeamMemberStatus.active,
+          name: email.split('@').first,
+        );
+        state = state.copyWith(
+          teamMembers: [...state.teamMembers, newMember],
+          isSaving: false,
+          successMessage: 'User added to organization successfully.',
+        );
+      case Failure<void>():
         state = state.copyWith(
           isSaving: false,
           error: result.error.friendlyMessage,

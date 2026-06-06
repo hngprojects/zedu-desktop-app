@@ -349,7 +349,7 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
           name: name,
           members: members,
           unreadCount: 0,
-          messages: ['Group DM created.'],
+          messages: [],
         );
 
         if (!state.any((g) => g.id == channelId)) {
@@ -360,7 +360,7 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
 
         return Success(newGroup);
       }
-      return Failure(ApiFailure(message: 'Invalid response from server'));
+      return const Failure(ApiFailure(message: 'Invalid response from server'));
     } catch (e) {
       final selectedIds = selectedMembers.map((m) => m.id).toSet();
       for (final group in state) {
@@ -380,7 +380,7 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
         name: name,
         members: selectedMembers,
         unreadCount: 0,
-        messages: ['Group DM created with $name.'],
+        messages: [],
       );
 
       state = [...state, newGroup];

@@ -127,7 +127,7 @@ Future<void> showEditAccountDialog(
 
 Future<void> showChangePasswordDialog(
   BuildContext context,
-  Future<void> Function({
+  Future<bool> Function({
     required String currentPassword,
     required String newPassword,
   })
@@ -137,76 +137,96 @@ Future<void> showChangePasswordDialog(
   final newCtrl = TextEditingController();
   final confirmCtrl = TextEditingController();
   final formKey = GlobalKey<FormState>();
+  bool isLoading = false;
 
   await showDialog<void>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: Text(
-        'Change Password',
-        style: ctx.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-      ),
-      content: SizedBox(
-        width: 480,
-        child: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppTextField(
-                label: 'Current Password',
-                controller: currentCtrl,
-                hint: 'Enter current password',
-                isPassword: true,
-                validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'New Password',
-                controller: newCtrl,
-                hint: 'Enter new password',
-                isPassword: true,
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Required';
-                  if (v.length < 8) {
-                    return 'Password must be at least 8 characters';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'Confirm New Password',
-                controller: confirmCtrl,
-                hint: 'Re-enter new password',
-                isPassword: true,
-                validator: (v) =>
-                    v != newCtrl.text ? 'Passwords do not match' : null,
-              ),
-            ],
+    barrierDismissible: !isLoading,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setState) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Text(
+          'Change Password',
+          style: ctx.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
           ),
         ),
+        content: SizedBox(
+          width: 480,
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppTextField(
+                  label: 'Current Password',
+                  controller: currentCtrl,
+                  hint: 'Enter current password',
+                  isPassword: true,
+                  readOnly: isLoading,
+                  validator: (v) =>
+                      (v == null || v.isEmpty) ? 'Required' : null,
+                ),
+                const SizedBox(height: 16),
+                AppTextField(
+                  label: 'New Password',
+                  controller: newCtrl,
+                  hint: 'Enter new password',
+                  isPassword: true,
+                  readOnly: isLoading,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return 'Required';
+                    if (v.length < 8) {
+                      return 'Password must be at least 8 characters';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                AppTextField(
+                  label: 'Confirm New Password',
+                  controller: confirmCtrl,
+                  hint: 'Re-enter new password',
+                  isPassword: true,
+                  readOnly: isLoading,
+                  validator: (v) =>
+                      v != newCtrl.text ? 'Passwords do not match' : null,
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: isLoading ? null : () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          AppButton(
+            label: 'Update Password',
+            expand: false,
+            height: 40,
+            loading: isLoading,
+            onPressed: isLoading
+                ? null
+                : () async {
+                    if (formKey.currentState?.validate() ?? false) {
+                      setState(() => isLoading = true);
+                      final success = await onSave(
+                        currentPassword: currentCtrl.text,
+                        newPassword: newCtrl.text,
+                      );
+                      if (ctx.mounted) {
+                        if (success) {
+                          Navigator.pop(ctx);
+                        } else {
+                          setState(() => isLoading = false);
+                        }
+                      }
+                    }
+                  },
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx),
-          child: const Text('Cancel'),
-        ),
-        AppButton(
-          label: 'Update Password',
-          expand: false,
-          height: 40,
-          onPressed: () async {
-            if (formKey.currentState?.validate() ?? false) {
-              Navigator.pop(ctx);
-              await onSave(
-                currentPassword: currentCtrl.text,
-                newPassword: newCtrl.text,
-              );
-            }
-          },
-        ),
-      ],
     ),
   );
 
@@ -220,46 +240,291 @@ Future<void> showEditOrganizationDialog(
   OrganizationProfile organization,
   ValueChanged<OrganizationProfile> onSave,
 ) async {
-  final nameCtrl = TextEditingController(text: organization.name);
-  final businessCtrl = TextEditingController(
-    text: organization.natureOfBusiness,
-  );
-  final countryCtrl = TextEditingController(text: organization.country);
-  final formKey = GlobalKey<FormState>();
-
   await showDialog<void>(
     context: context,
-    builder: (ctx) => AlertDialog(
+    builder: (context) =>
+        _EditOrganizationDialog(organization: organization, onSave: onSave),
+  );
+}
+
+class _EditOrganizationDialog extends ConsumerStatefulWidget {
+  const _EditOrganizationDialog({
+    required this.organization,
+    required this.onSave,
+  });
+
+  final OrganizationProfile organization;
+  final ValueChanged<OrganizationProfile> onSave;
+
+  @override
+  ConsumerState<_EditOrganizationDialog> createState() =>
+      _EditOrganizationDialogState();
+}
+
+class _EditOrganizationDialogState
+    extends ConsumerState<_EditOrganizationDialog> {
+  late final TextEditingController nameCtrl;
+  late final TextEditingController businessCtrl;
+  late final TextEditingController countryCtrl;
+  late final FocusNode countryFocusNode;
+  final formKey = GlobalKey<FormState>();
+
+  String? localImagePath;
+  String? remoteImageUrl;
+  bool isUploading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    nameCtrl = TextEditingController(text: widget.organization.name);
+    businessCtrl = TextEditingController(
+      text: widget.organization.natureOfBusiness,
+    );
+    countryCtrl = TextEditingController(text: widget.organization.country);
+    countryFocusNode = FocusNode();
+    remoteImageUrl = widget.organization.logoUrl;
+  }
+
+  @override
+  void dispose() {
+    nameCtrl.dispose();
+    businessCtrl.dispose();
+    countryCtrl.dispose();
+    countryFocusNode.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickAvatar() async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
+    );
+    if (result != null && result.files.single.path != null) {
+      final path = result.files.single.path!;
+      setState(() {
+        localImagePath = path;
+        isUploading = true;
+      });
+
+      try {
+        final xfile = XFile(path);
+        final fileRepo = ref.read(mediaUploadRepositoryProvider);
+        final uploadedFiles = await fileRepo.uploadFiles([xfile]);
+        if (uploadedFiles.isNotEmpty) {
+          final fileUrl =
+              uploadedFiles.first['file_url'] as String? ??
+              uploadedFiles.first['url'] as String? ??
+              uploadedFiles.first['file_link'] as String?;
+
+          if (fileUrl != null && mounted) {
+            setState(() {
+              remoteImageUrl = fileUrl;
+              isUploading = false;
+            });
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            isUploading = false;
+          });
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to upload logo: $e')));
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       title: Text(
-        'Edit Organisation',
-        style: ctx.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        'Update organisation details',
+        style: context.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+        ),
       ),
       content: SizedBox(
-        width: 480,
+        width: 600,
         child: Form(
           key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppTextField(
-                label: 'Organisation Name',
-                controller: nameCtrl,
-                hint: 'Enter organisation name',
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+              // Left Column
+              Expanded(
+                flex: 3,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppTextField(
+                      label: 'Organisation Name',
+                      controller: nameCtrl,
+                      hint: 'Enter organisation name',
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Name is required'
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    AppTextField(
+                      label: 'Nature of Business',
+                      controller: businessCtrl,
+                      hint: 'e.g. Design agency',
+                    ),
+                    const SizedBox(height: 16),
+                    const ProfileFieldLabel('Country'),
+                    const SizedBox(height: 6),
+                    RawAutocomplete<String>(
+                      textEditingController: countryCtrl,
+                      focusNode: countryFocusNode,
+                      optionsBuilder: (value) {
+                        final query = value.text.trim().toLowerCase();
+                        if (query.isEmpty) return kCountries;
+                        return kCountries.where(
+                          (country) => country.toLowerCase().contains(query),
+                        );
+                      },
+                      fieldViewBuilder:
+                          (context, controller, focusNode, onFieldSubmitted) {
+                            return TextFormField(
+                              controller: controller,
+                              focusNode: focusNode,
+                              decoration: InputDecoration(
+                                hintText: 'Search country',
+                                suffixIcon: const Icon(Icons.expand_more),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 14,
+                                ),
+                              ),
+                              validator: (value) {
+                                final country = value?.trim() ?? '';
+                                if (country.isEmpty) {
+                                  return 'Country is required';
+                                }
+                                if (!kCountries.contains(country)) {
+                                  return 'Select a country from the list';
+                                }
+                                return null;
+                              },
+                            );
+                          },
+                      optionsViewBuilder: (context, onSelected, options) {
+                        return Align(
+                          alignment: Alignment.topLeft,
+                          child: Material(
+                            elevation: 4,
+                            borderRadius: BorderRadius.circular(8),
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxHeight: 240,
+                                maxWidth: 340,
+                              ),
+                              child: ListView.builder(
+                                padding: EdgeInsets.zero,
+                                itemCount: options.length,
+                                itemBuilder: (context, index) {
+                                  final option = options.elementAt(index);
+                                  return ListTile(
+                                    dense: true,
+                                    title: Text(option),
+                                    onTap: () => onSelected(option),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'Nature of Business',
-                controller: businessCtrl,
-                hint: 'e.g. Design agency',
-              ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'Country',
-                controller: countryCtrl,
-                hint: 'e.g. Nigeria',
+              const SizedBox(width: 32),
+              // Right Column
+              Expanded(
+                flex: 2,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 24),
+                    Text(
+                      'Organisation Logo',
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: colors.background,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: colors.divider),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: isUploading
+                          ? const Center(child: CircularProgressIndicator())
+                          : (localImagePath != null
+                                ? Image.file(
+                                    File(localImagePath!),
+                                    fit: BoxFit.cover,
+                                  )
+                                : (remoteImageUrl != null &&
+                                          remoteImageUrl!.isNotEmpty
+                                      ? Image.network(
+                                          remoteImageUrl!,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, _, _) =>
+                                              const Icon(Icons.error),
+                                        )
+                                      : Center(
+                                          child: Text(
+                                            widget.organization.initials,
+                                            style: context
+                                                .textTheme
+                                                .displaySmall
+                                                ?.copyWith(
+                                                  color: colors.primary,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                          ),
+                                        ))),
+                    ),
+                    const SizedBox(height: 16),
+                    AppButton.outlined(
+                      label: 'Upload photo',
+                      onPressed: _pickAvatar,
+                      expand: true,
+                    ),
+                    if (localImagePath != null ||
+                        (remoteImageUrl != null && remoteImageUrl!.isNotEmpty))
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: TextButton(
+                          onPressed: () {
+                            setState(() {
+                              localImagePath = null;
+                              remoteImageUrl = '';
+                            });
+                          },
+                          child: Text(
+                            'Remove photo',
+                            style: TextStyle(color: colors.primary),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -267,33 +532,33 @@ Future<void> showEditOrganizationDialog(
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(ctx),
+          onPressed: () => Navigator.pop(context),
           child: const Text('Cancel'),
         ),
         AppButton(
-          label: 'Save changes',
+          label: 'Save Changes',
           expand: false,
           height: 40,
-          onPressed: () {
-            if (formKey.currentState?.validate() ?? false) {
-              onSave(
-                organization.copyWith(
-                  name: nameCtrl.text.trim(),
-                  natureOfBusiness: businessCtrl.text.trim(),
-                  country: countryCtrl.text.trim(),
-                ),
-              );
-              Navigator.pop(ctx);
-            }
-          },
+          loading: isUploading,
+          onPressed: isUploading
+              ? null
+              : () {
+                  if (formKey.currentState?.validate() ?? false) {
+                    widget.onSave(
+                      widget.organization.copyWith(
+                        name: nameCtrl.text.trim(),
+                        natureOfBusiness: businessCtrl.text.trim(),
+                        country: countryCtrl.text.trim(),
+                        logoUrl: remoteImageUrl,
+                      ),
+                    );
+                    Navigator.pop(context);
+                  }
+                },
         ),
       ],
-    ),
-  );
-
-  nameCtrl.dispose();
-  businessCtrl.dispose();
-  countryCtrl.dispose();
+    );
+  }
 }
 
 Future<void> showInviteMemberDialog(
@@ -337,7 +602,7 @@ Future<void> showInviteMemberDialog(
                   },
                 ),
                 const SizedBox(height: 16),
-                ProfileFieldLabel('Role'),
+                const ProfileFieldLabel('Role'),
                 const SizedBox(height: 6),
                 DropdownButtonFormField<String>(
                   initialValue: role,
@@ -419,7 +684,7 @@ Future<void> showEditMemberDialog(
                 ),
               ),
               const SizedBox(height: 16),
-              ProfileFieldLabel('Role'),
+              const ProfileFieldLabel('Role'),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
                 initialValue: role,
