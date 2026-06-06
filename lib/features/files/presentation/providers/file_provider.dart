@@ -65,7 +65,7 @@ class UploadProgressNotifier extends Notifier<UploadProgressState> {
       );
       state = state.copyWith(isUploading: false, progress: 1.0, result: file);
       // Add a short delay to account for potential backend replication/indexing delay
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
       ref.invalidate(filesProvider); // Refresh the files list
     } catch (e) {
       state = state.copyWith(isUploading: false, error: e.toString());

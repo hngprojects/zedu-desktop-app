@@ -97,7 +97,7 @@ class _FilesMainViewState extends ConsumerState<FilesMainView> {
                       onPressed: () async {
                         final folderName = await CreateFolderModal.show(context);
                         if (folderName != null) {
-                          await Future.delayed(const Duration(milliseconds: 500));
+                          await Future<void>.delayed(const Duration(milliseconds: 500));
                           ref.invalidate(filesProvider);
                           ref.invalidate(foldersProvider);
                         }

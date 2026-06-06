@@ -90,7 +90,7 @@ class _FolderTableRowState extends ConsumerState<_FolderTableRow> {
         final newName = await RenameModal.show(context, currentName: widget.folder.name, title: 'Rename Folder');
         if (newName != null) {
           await repo.renameFolder(widget.folder.id, newName);
-          await Future.delayed(const Duration(milliseconds: 500));
+          await Future<void>.delayed(const Duration(milliseconds: 500));
           ref.invalidate(foldersProvider);
         }
       } else if (action == 'delete') {
@@ -111,7 +111,7 @@ class _FolderTableRowState extends ConsumerState<_FolderTableRow> {
         );
         if (confirm == true) {
           await repo.deleteFolder(widget.folder.id);
-          await Future.delayed(const Duration(milliseconds: 500));
+          await Future<void>.delayed(const Duration(milliseconds: 500));
           ref.invalidate(foldersProvider);
         }
       }

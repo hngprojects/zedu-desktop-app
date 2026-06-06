@@ -155,14 +155,14 @@ class _FileTableRowState extends ConsumerState<_FileTableRow> {
         final newName = await RenameModal.show(context, currentName: widget.file.fileName, title: 'Rename File');
         if (newName != null) {
           await repo.renameFile(widget.file.id, newName);
-          await Future.delayed(const Duration(milliseconds: 500));
+          await Future<void>.delayed(const Duration(milliseconds: 500));
           ref.invalidate(filesProvider);
         }
       } else if (action == 'move') {
         final folderId = await MoveFileModal.show(context, file: widget.file);
         if (folderId != null) {
           await repo.moveFile(widget.file.id, folderId);
-          await Future.delayed(const Duration(milliseconds: 500));
+          await Future<void>.delayed(const Duration(milliseconds: 500));
           ref.invalidate(filesProvider);
         }
       } else if (action == 'delete') {
@@ -182,7 +182,7 @@ class _FileTableRowState extends ConsumerState<_FileTableRow> {
         );
         if (confirm == true) {
           await repo.deleteFiles([widget.file.id]);
-          await Future.delayed(const Duration(milliseconds: 500));
+          await Future<void>.delayed(const Duration(milliseconds: 500));
           ref.invalidate(filesProvider);
         }
       }
