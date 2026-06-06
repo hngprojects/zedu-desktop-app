@@ -48,7 +48,10 @@ class RealtimeService {
           ? (response.data['data'] as Map<String, dynamic>)['token'] as String?
           : response.data['token'] as String?;
       if (token == null || token.isEmpty) {
-        AppLogger.w('Centrifugo: no connection token received', tag: 'RealtimeService');
+        AppLogger.w(
+          'Centrifugo: no connection token received',
+          tag: 'RealtimeService',
+        );
         _connectCompleter = null;
         completer.complete();
         return;
