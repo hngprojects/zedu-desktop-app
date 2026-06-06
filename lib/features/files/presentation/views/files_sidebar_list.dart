@@ -1,5 +1,5 @@
 import 'package:zedu/core/core.dart';
-import '../providers/files_filter_provider.dart';
+import 'package:zedu/features/features.dart';
 
 class FilesSidebarList extends ConsumerWidget {
   const FilesSidebarList({super.key});

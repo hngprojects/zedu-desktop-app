@@ -1,6 +1,5 @@
 import 'package:zedu/core/core.dart';
-import '../../domain/models/file_models.dart';
-import 'file_provider.dart';
+import 'package:zedu/features/features.dart';
 
 class FilesFilterState {
   final String category; // 'all', 'my_files', 'shared', 'deleted'

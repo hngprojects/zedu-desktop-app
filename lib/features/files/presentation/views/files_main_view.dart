@@ -1,12 +1,6 @@
 
 import 'package:zedu/core/core.dart';
-import '../providers/file_provider.dart';
-import '../providers/files_filter_provider.dart';
-import '../widgets/upload_confirm_modal.dart';
-import '../widgets/create_folder_modal.dart';
-import '../widgets/upload_progress_overlay.dart';
-import 'files_list_view.dart';
-import '../widgets/folders_list_view.dart';
+import 'package:zedu/features/features.dart';
 
 class FilesMainView extends ConsumerStatefulWidget {
   const FilesMainView({super.key});

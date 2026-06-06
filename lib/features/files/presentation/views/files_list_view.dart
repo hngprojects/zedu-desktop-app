@@ -1,10 +1,5 @@
-import 'package:url_launcher/url_launcher.dart';
 import 'package:zedu/core/core.dart';
-import '../../domain/models/file_models.dart';
-import '../../data/repositories/file_repository.dart';
-import '../providers/file_provider.dart';
-import '../widgets/rename_modal.dart';
-import '../widgets/move_file_modal.dart';
+import 'package:zedu/features/features.dart';
 
 class FilesListView extends StatelessWidget {
   final List<WorkspaceFile> files;

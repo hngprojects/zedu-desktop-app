@@ -1,5 +1,5 @@
 import 'package:zedu/core/core.dart';
-import '../providers/file_provider.dart';
+import 'package:zedu/features/features.dart';
 
 class UploadProgressOverlay extends ConsumerWidget {
   const UploadProgressOverlay({super.key});

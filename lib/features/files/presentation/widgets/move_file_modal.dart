@@ -1,6 +1,5 @@
 import 'package:zedu/core/core.dart';
-import '../../domain/models/file_models.dart';
-import '../providers/file_provider.dart';
+import 'package:zedu/features/features.dart';
 
 class MoveFileModal extends ConsumerWidget {
   final WorkspaceFile file;

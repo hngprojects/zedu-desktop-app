@@ -1,6 +1,5 @@
-import 'dart:io' as dart_io;
 import 'package:zedu/core/core.dart';
-import '../../domain/models/file_models.dart';
+import 'package:zedu/features/features.dart';
 
 final fileRepositoryProvider = Provider<FileRepository>((ref) {
   final apiClient = locator<ApiBaseService>();
@@ -63,7 +62,7 @@ class FileRepository {
     );
 
     try {
-      await dart_io.File('/tmp/zedu_files_response.txt').writeAsString(response.data.toString());
+      await File('/tmp/zedu_files_response.txt').writeAsString(response.data.toString());
     } catch (_) {}
 
     final data = response.data['data'];

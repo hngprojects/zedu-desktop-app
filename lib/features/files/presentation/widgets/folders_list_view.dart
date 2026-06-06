@@ -1,8 +1,5 @@
 import 'package:zedu/core/core.dart';
-import '../../domain/models/file_models.dart';
-import '../../data/repositories/file_repository.dart';
-import '../providers/file_provider.dart';
-import 'rename_modal.dart';
+import 'package:zedu/features/features.dart';
 
 class FoldersListView extends ConsumerWidget {
   final List<WorkspaceFolder> folders;

@@ -1,6 +1,5 @@
 import 'package:zedu/core/core.dart';
-import '../../domain/models/file_models.dart';
-import '../../data/repositories/file_repository.dart';
+import 'package:zedu/features/features.dart';
 
 // Provides the list of files
 final filesProvider = FutureProvider.autoDispose<List<WorkspaceFile>>((ref) async {
