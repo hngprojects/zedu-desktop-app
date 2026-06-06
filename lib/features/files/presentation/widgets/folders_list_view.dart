@@ -19,7 +19,11 @@ class FoldersListView extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               'No folders yet',
-              style: TextStyle(color: colors.textSecondary, fontSize: 16, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                color: colors.textSecondary,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
@@ -40,26 +44,51 @@ class FoldersListView extends ConsumerWidget {
             children: [
               Expanded(
                 flex: 4,
-                child: Text('Name', style: TextStyle(color: colors.textHint, fontSize: 13, fontWeight: FontWeight.w500)),
+                child: Text(
+                  'Name',
+                  style: TextStyle(
+                    color: colors.textHint,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
               Expanded(
                 flex: 2,
-                child: Text('Items', style: TextStyle(color: colors.textHint, fontSize: 13, fontWeight: FontWeight.w500)),
+                child: Text(
+                  'Items',
+                  style: TextStyle(
+                    color: colors.textHint,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
               SizedBox(
                 width: 80,
-                child: Text('Actions', textAlign: TextAlign.center, style: TextStyle(color: colors.textHint, fontSize: 13, fontWeight: FontWeight.w500)),
+                child: Text(
+                  'Actions',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: colors.textHint,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
             ],
           ),
         ),
-        
+
         // Table Body
         Expanded(
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: folders.length,
-            separatorBuilder: (context, index) => Divider(height: 1, color: colors.borderOutline.withValues(alpha: 0.5)),
+            separatorBuilder: (context, index) => Divider(
+              height: 1,
+              color: colors.borderOutline.withValues(alpha: 0.5),
+            ),
             itemBuilder: (context, index) {
               final folder = folders[index];
               return _FolderTableRow(folder: folder);
@@ -87,7 +116,11 @@ class _FolderTableRowState extends ConsumerState<_FolderTableRow> {
     final repo = ref.read(fileRepositoryProvider);
     try {
       if (action == 'rename') {
-        final newName = await RenameModal.show(context, currentName: widget.folder.name, title: 'Rename Folder');
+        final newName = await RenameModal.show(
+          context,
+          currentName: widget.folder.name,
+          title: 'Rename Folder',
+        );
         if (newName != null) {
           await repo.renameFolder(widget.folder.id, newName);
           await Future<void>.delayed(const Duration(milliseconds: 500));
@@ -99,12 +132,20 @@ class _FolderTableRowState extends ConsumerState<_FolderTableRow> {
           context: context,
           builder: (c) => AlertDialog(
             title: const Text('Delete Folder'),
-            content: Text('Are you sure you want to delete "${widget.folder.name}"?'),
+            content: Text(
+              'Are you sure you want to delete "${widget.folder.name}"?',
+            ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+              TextButton(
+                onPressed: () => Navigator.pop(c, false),
+                child: const Text('Cancel'),
+              ),
               TextButton(
                 onPressed: () => Navigator.pop(c, true),
-                child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red),
+                ),
               ),
             ],
           ),
@@ -128,7 +169,9 @@ class _FolderTableRowState extends ConsumerState<_FolderTableRow> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: Container(
-        color: _isHovered ? colors.primary.withValues(alpha: 0.05) : Colors.transparent,
+        color: _isHovered
+            ? colors.primary.withValues(alpha: 0.05)
+            : Colors.transparent,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         child: Row(
           children: [
@@ -141,7 +184,11 @@ class _FolderTableRowState extends ConsumerState<_FolderTableRow> {
                   Expanded(
                     child: Text(
                       widget.folder.name,
-                      style: TextStyle(color: colors.textPrimary, fontSize: 14, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -162,17 +209,25 @@ class _FolderTableRowState extends ConsumerState<_FolderTableRow> {
                 children: [
                   PopupMenuButton<String>(
                     onSelected: _handleAction,
-                    icon: Icon(Icons.more_vert, size: 20, color: colors.textPrimary),
-                    itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                      const PopupMenuItem<String>(
-                        value: 'rename',
-                        child: Text('Rename'),
-                      ),
-                      const PopupMenuItem<String>(
-                        value: 'delete',
-                        child: Text('Delete', style: TextStyle(color: Colors.red)),
-                      ),
-                    ],
+                    icon: Icon(
+                      Icons.more_vert,
+                      size: 20,
+                      color: colors.textPrimary,
+                    ),
+                    itemBuilder: (BuildContext context) =>
+                        <PopupMenuEntry<String>>[
+                          const PopupMenuItem<String>(
+                            value: 'rename',
+                            child: Text('Rename'),
+                          ),
+                          const PopupMenuItem<String>(
+                            value: 'delete',
+                            child: Text(
+                              'Delete',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
                   ),
                 ],
               ),

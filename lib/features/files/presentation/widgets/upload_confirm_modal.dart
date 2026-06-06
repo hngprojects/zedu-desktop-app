@@ -3,10 +3,10 @@ import 'package:zedu/core/core.dart';
 class UploadConfirmModal extends StatelessWidget {
   final List<PlatformFile> files;
   final VoidCallback onConfirm;
-  
+
   const UploadConfirmModal({
-    super.key, 
-    required this.files, 
+    super.key,
+    required this.files,
     required this.onConfirm,
   });
 
@@ -45,28 +45,33 @@ class UploadConfirmModal extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               '${files.length} file${files.length == 1 ? '' : 's'} selected',
-              style: TextStyle(
-                color: colors.textSecondary,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: colors.textSecondary, fontSize: 14),
             ),
             const SizedBox(height: 24),
             Flexible(
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: files.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final file = files[index];
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       border: Border.all(color: colors.borderOutline),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.insert_drive_file_outlined, color: colors.textSecondary, size: 20),
+                        Icon(
+                          Icons.insert_drive_file_outlined,
+                          color: colors.textSecondary,
+                          size: 20,
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -103,8 +108,13 @@ class UploadConfirmModal extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: colors.textPrimary,
                     side: BorderSide(color: colors.borderOutline),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                   ),
                   child: const Text('Cancel'),
                 ),
@@ -114,11 +124,19 @@ class UploadConfirmModal extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colors.primary,
                     foregroundColor: colors.onPrimary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
                     elevation: 0,
                   ),
-                  child: const Text('Upload Files', style: TextStyle(fontWeight: FontWeight.w500)),
+                  child: const Text(
+                    'Upload Files',
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
                 ),
               ],
             ),

@@ -6,7 +6,10 @@ class MoveFileModal extends ConsumerWidget {
 
   const MoveFileModal({super.key, required this.file});
 
-  static Future<String?> show(BuildContext context, {required WorkspaceFile file}) {
+  static Future<String?> show(
+    BuildContext context, {
+    required WorkspaceFile file,
+  }) {
     return showDialog<String>(
       context: context,
       builder: (context) => MoveFileModal(file: file),
@@ -33,12 +36,20 @@ class MoveFileModal extends ConsumerWidget {
               children: [
                 Text(
                   'Move "${file.fileName}"',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colors.textPrimary),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: colors.textPrimary,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: Icon(Icons.close, color: colors.textSecondary, size: 20),
+                  icon: Icon(
+                    Icons.close,
+                    color: colors.textSecondary,
+                    size: 20,
+                  ),
                   splashRadius: 20,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -70,7 +81,8 @@ class MoveFileModal extends ConsumerWidget {
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, st) => Center(child: Text('Error loading folders: $e')),
+                error: (e, st) =>
+                    Center(child: Text('Error loading folders: $e')),
               ),
             ),
             const SizedBox(height: 16),
@@ -81,7 +93,10 @@ class MoveFileModal extends ConsumerWidget {
                   onPressed: () => Navigator.of(context).pop(),
                   style: TextButton.styleFrom(
                     foregroundColor: colors.textSecondary,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                   child: const Text('Cancel'),
                 ),

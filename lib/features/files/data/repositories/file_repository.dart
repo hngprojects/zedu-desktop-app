@@ -17,9 +17,7 @@ class FileRepository {
     ProgressCallback? onSendProgress,
   }) async {
     final formData = FormData.fromMap({
-      'files': [
-        await MultipartFile.fromFile(filePath, filename: fileName),
-      ],
+      'files': [await MultipartFile.fromFile(filePath, filename: fileName)],
     });
 
     final response = await _apiClient.post<Map<String, dynamic>>(
@@ -46,10 +44,7 @@ class FileRepository {
     int limit = 20,
   }) async {
     String path = '/files';
-    final Map<String, dynamic> queryParameters = {
-      'page': page,
-      'limit': limit,
-    };
+    final Map<String, dynamic> queryParameters = {'page': page, 'limit': limit};
     if (channelId != null) {
       path = '/channels/$channelId/files';
     } else if (folderId != null) {
@@ -62,18 +57,26 @@ class FileRepository {
     );
 
     try {
-      await File('/tmp/zedu_files_response.txt').writeAsString(response.data.toString());
+      await File(
+        '/tmp/zedu_files_response.txt',
+      ).writeAsString(response.data.toString());
     } catch (_) {}
 
     final data = response.data['data'];
     if (data is List) {
-      return data.map((json) => WorkspaceFile.fromJson(json as Map<String, dynamic>)).toList();
+      return data
+          .map((json) => WorkspaceFile.fromJson(json as Map<String, dynamic>))
+          .toList();
     } else if (data is Map<String, dynamic> && data['files'] is List) {
       final filesList = data['files'] as List;
-      return filesList.map((json) => WorkspaceFile.fromJson(json as Map<String, dynamic>)).toList();
+      return filesList
+          .map((json) => WorkspaceFile.fromJson(json as Map<String, dynamic>))
+          .toList();
     } else if (data is Map<String, dynamic> && data['data'] is List) {
       final filesList = data['data'] as List;
-      return filesList.map((json) => WorkspaceFile.fromJson(json as Map<String, dynamic>)).toList();
+      return filesList
+          .map((json) => WorkspaceFile.fromJson(json as Map<String, dynamic>))
+          .toList();
     }
     return [];
   }
@@ -84,15 +87,14 @@ class FileRepository {
   }) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
       path: '/files/folders',
-      queryParameters: {
-        'page': page,
-        'limit': limit,
-      },
+      queryParameters: {'page': page, 'limit': limit},
     );
 
     final data = response.data['data'];
     if (data is List) {
-      return data.map((json) => WorkspaceFolder.fromJson(json as Map<String, dynamic>)).toList();
+      return data
+          .map((json) => WorkspaceFolder.fromJson(json as Map<String, dynamic>))
+          .toList();
     }
     return [];
   }
@@ -110,10 +112,7 @@ class FileRepository {
   Future<void> deleteFiles(List<String> ids, {bool permanent = false}) async {
     await _apiClient.delete<Map<String, dynamic>>(
       path: '/files',
-      data: {
-        'ids': ids,
-        'permanent': permanent,
-      },
+      data: {'ids': ids, 'permanent': permanent},
     );
   }
 
@@ -125,9 +124,7 @@ class FileRepository {
   }
 
   Future<void> deleteFolder(String id) async {
-    await _apiClient.delete<Map<String, dynamic>>(
-      path: '/files/folders/$id',
-    );
+    await _apiClient.delete<Map<String, dynamic>>(path: '/files/folders/$id');
   }
 
   Future<void> renameFile(String id, String newName) async {

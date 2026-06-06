@@ -15,28 +15,34 @@ class FilesSidebarList extends ConsumerWidget {
       child: Column(
         children: [
           _SidebarItem(
-            icon: Icons.copy, 
-            label: 'All files', 
+            icon: Icons.copy,
+            label: 'All files',
             isSelected: filterState.category == 'all',
-            onTap: () => ref.read(filesFilterProvider.notifier).updateCategory('all'),
+            onTap: () =>
+                ref.read(filesFilterProvider.notifier).updateCategory('all'),
           ),
           _SidebarItem(
-            icon: Icons.insert_drive_file_outlined, 
-            label: 'My files', 
+            icon: Icons.insert_drive_file_outlined,
+            label: 'My files',
             isSelected: filterState.category == 'my_files',
-            onTap: () => ref.read(filesFilterProvider.notifier).updateCategory('my_files'),
+            onTap: () => ref
+                .read(filesFilterProvider.notifier)
+                .updateCategory('my_files'),
           ),
           _SidebarItem(
-            icon: Icons.people_outline, 
-            label: 'Shared with me', 
+            icon: Icons.people_outline,
+            label: 'Shared with me',
             isSelected: filterState.category == 'shared',
-            onTap: () => ref.read(filesFilterProvider.notifier).updateCategory('shared'),
+            onTap: () =>
+                ref.read(filesFilterProvider.notifier).updateCategory('shared'),
           ),
           _SidebarItem(
-            icon: Icons.delete_outline, 
-            label: 'Deleted files', 
+            icon: Icons.delete_outline,
+            label: 'Deleted files',
             isSelected: filterState.category == 'deleted',
-            onTap: () => ref.read(filesFilterProvider.notifier).updateCategory('deleted'),
+            onTap: () => ref
+                .read(filesFilterProvider.notifier)
+                .updateCategory('deleted'),
           ),
         ],
       ),
@@ -67,11 +73,13 @@ class _SidebarItemState extends State<_SidebarItem> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    
+
     final bgColor = widget.isSelected
         ? colors.primary.withValues(alpha: 0.1)
-        : (_isHovered ? colors.divider.withValues(alpha: 0.5) : Colors.transparent);
-        
+        : (_isHovered
+              ? colors.divider.withValues(alpha: 0.5)
+              : Colors.transparent);
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -88,16 +96,20 @@ class _SidebarItemState extends State<_SidebarItem> {
           child: Row(
             children: [
               Icon(
-                widget.icon, 
-                color: widget.isSelected ? colors.primary : colors.textHint, 
+                widget.icon,
+                color: widget.isSelected ? colors.primary : colors.textHint,
                 size: 20,
               ),
               const SizedBox(width: 14),
               Text(
                 widget.label,
                 style: TextStyle(
-                  color: widget.isSelected ? colors.primary : colors.textPrimary,
-                  fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: widget.isSelected
+                      ? colors.primary
+                      : colors.textPrimary,
+                  fontWeight: widget.isSelected
+                      ? FontWeight.w600
+                      : FontWeight.w500,
                   fontSize: 14,
                 ),
               ),

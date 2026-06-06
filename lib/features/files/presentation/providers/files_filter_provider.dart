@@ -58,11 +58,14 @@ class FilesFilterNotifier extends Notifier<FilesFilterState> {
   }
 }
 
-final filesFilterProvider = NotifierProvider<FilesFilterNotifier, FilesFilterState>(
-  FilesFilterNotifier.new,
-);
+final filesFilterProvider =
+    NotifierProvider<FilesFilterNotifier, FilesFilterState>(
+      FilesFilterNotifier.new,
+    );
 
-final filteredFilesProvider = Provider.autoDispose<AsyncValue<List<WorkspaceFile>>>((ref) {
+final filteredFilesProvider = Provider.autoDispose<AsyncValue<List<WorkspaceFile>>>((
+  ref,
+) {
   final filesAsync = ref.watch(filesProvider);
   final filter = ref.watch(filesFilterProvider);
 
@@ -84,11 +87,15 @@ final filteredFilesProvider = Provider.autoDispose<AsyncValue<List<WorkspaceFile
     // Filter by Search Query
     if (filter.searchQuery != null && filter.searchQuery!.isNotEmpty) {
       final q = filter.searchQuery!.toLowerCase();
-      result = result.where((f) => f.fileName.toLowerCase().contains(q)).toList();
+      result = result
+          .where((f) => f.fileName.toLowerCase().contains(q))
+          .toList();
     }
 
     // Filter by File Type
-    if (filter.fileType != null && filter.fileType!.isNotEmpty && filter.fileType != 'All') {
+    if (filter.fileType != null &&
+        filter.fileType!.isNotEmpty &&
+        filter.fileType != 'All') {
       final type = filter.fileType!.toLowerCase();
       result = result.where((f) {
         if (type == 'image') return f.isImage;
@@ -110,12 +117,18 @@ final filteredFilesProvider = Provider.autoDispose<AsyncValue<List<WorkspaceFile
           result.sort((a, b) => b.fileName.compareTo(a.fileName));
           break;
         case 'date_desc':
-          result.sort((a, b) => (b.updatedAt ?? b.createdAt ?? DateTime(0))
-              .compareTo(a.updatedAt ?? a.createdAt ?? DateTime(0)));
+          result.sort(
+            (a, b) => (b.updatedAt ?? b.createdAt ?? DateTime(0)).compareTo(
+              a.updatedAt ?? a.createdAt ?? DateTime(0),
+            ),
+          );
           break;
         case 'date_asc':
-          result.sort((a, b) => (a.updatedAt ?? a.createdAt ?? DateTime(0))
-              .compareTo(b.updatedAt ?? b.createdAt ?? DateTime(0)));
+          result.sort(
+            (a, b) => (a.updatedAt ?? a.createdAt ?? DateTime(0)).compareTo(
+              b.updatedAt ?? b.createdAt ?? DateTime(0),
+            ),
+          );
           break;
         case 'size_desc':
           result.sort((a, b) => b.size.compareTo(a.size));
@@ -126,8 +139,11 @@ final filteredFilesProvider = Provider.autoDispose<AsyncValue<List<WorkspaceFile
       }
     } else {
       // Default sort by date desc
-      result.sort((a, b) => (b.updatedAt ?? b.createdAt ?? DateTime(0))
-          .compareTo(a.updatedAt ?? a.createdAt ?? DateTime(0)));
+      result.sort(
+        (a, b) => (b.updatedAt ?? b.createdAt ?? DateTime(0)).compareTo(
+          a.updatedAt ?? a.createdAt ?? DateTime(0),
+        ),
+      );
     }
 
     return result;

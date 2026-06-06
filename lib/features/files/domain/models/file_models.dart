@@ -42,9 +42,15 @@ class WorkspaceFile {
       organisationId: json['organisation_id'] as String?,
       userId: json['user_id'] as String?,
       folderId: json['folder_id'] as String?,
-      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'] as String) : null,
-      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at'] as String) : null,
-      lastAccessedAt: json['last_accessed_at'] != null ? DateTime.tryParse(json['last_accessed_at'] as String) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'] as String)
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'] as String)
+          : null,
+      lastAccessedAt: json['last_accessed_at'] != null
+          ? DateTime.tryParse(json['last_accessed_at'] as String)
+          : null,
       accessType: json['access_type'] as String?,
       isShareable: json['is_shareable'] as bool?,
     );
@@ -70,10 +76,26 @@ class WorkspaceFile {
   }
 
   // Type Helpers
-  bool get isImage => mimeType?.startsWith('image/') == true || _hasExtension(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp']);
-  bool get isVideo => mimeType?.startsWith('video/') == true || _hasExtension(['mp4', 'mov', 'avi', 'mkv', 'webm']);
-  bool get isAudio => mimeType?.startsWith('audio/') == true || _hasExtension(['mp3', 'wav', 'ogg', 'm4a']);
-  bool get isDocument => _hasExtension(['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv']);
+  bool get isImage =>
+      mimeType?.startsWith('image/') == true ||
+      _hasExtension(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp']);
+  bool get isVideo =>
+      mimeType?.startsWith('video/') == true ||
+      _hasExtension(['mp4', 'mov', 'avi', 'mkv', 'webm']);
+  bool get isAudio =>
+      mimeType?.startsWith('audio/') == true ||
+      _hasExtension(['mp3', 'wav', 'ogg', 'm4a']);
+  bool get isDocument => _hasExtension([
+    'pdf',
+    'doc',
+    'docx',
+    'xls',
+    'xlsx',
+    'ppt',
+    'pptx',
+    'txt',
+    'csv',
+  ]);
   bool get isArchive => _hasExtension(['zip', 'rar', '7z', 'tar', 'gz']);
 
   bool _hasExtension(List<String> extensions) {
@@ -109,8 +131,12 @@ class WorkspaceFolder {
       itemCount: json['item_count'] as int? ?? 0,
       organisationId: json['organisation_id'] as String?,
       userId: json['user_id'] as String?,
-      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'] as String) : null,
-      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at'] as String) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'] as String)
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'] as String)
+          : null,
     );
   }
 

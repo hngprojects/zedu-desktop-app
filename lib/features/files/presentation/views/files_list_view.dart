@@ -24,7 +24,20 @@ class FilesListView extends StatelessWidget {
   }
 
   String _monthName(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     if (month >= 1 && month <= 12) return months[month - 1];
     return '';
   }
@@ -35,8 +48,14 @@ class FilesListView extends StatelessWidget {
     if (mimeType.startsWith('video/')) return Icons.video_file_outlined;
     if (mimeType.startsWith('audio/')) return Icons.audio_file_outlined;
     if (mimeType.contains('pdf')) return Icons.picture_as_pdf_outlined;
-    if (mimeType.contains('zip') || mimeType.contains('tar') || mimeType.contains('compressed')) return Icons.folder_zip_outlined;
-    if (mimeType.contains('spreadsheet') || mimeType.contains('excel') || mimeType.contains('csv')) return Icons.table_chart_outlined;
+    if (mimeType.contains('zip') ||
+        mimeType.contains('tar') ||
+        mimeType.contains('compressed'))
+      return Icons.folder_zip_outlined;
+    if (mimeType.contains('spreadsheet') ||
+        mimeType.contains('excel') ||
+        mimeType.contains('csv'))
+      return Icons.table_chart_outlined;
     return Icons.insert_drive_file_outlined;
   }
 
@@ -60,28 +79,44 @@ class FilesListView extends StatelessWidget {
                 flex: 4,
                 child: Text(
                   'Name',
-                  style: TextStyle(color: colors.textHint, fontSize: 13, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    color: colors.textHint,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               Expanded(
                 flex: 2,
                 child: Text(
                   'Owner',
-                  style: TextStyle(color: colors.textHint, fontSize: 13, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    color: colors.textHint,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               Expanded(
                 flex: 2,
                 child: Text(
                   'Access',
-                  style: TextStyle(color: colors.textHint, fontSize: 13, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    color: colors.textHint,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               Expanded(
                 flex: 1,
                 child: Text(
                   'Size',
-                  style: TextStyle(color: colors.textHint, fontSize: 13, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    color: colors.textHint,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               SizedBox(
@@ -89,19 +124,26 @@ class FilesListView extends StatelessWidget {
                 child: Text(
                   'Actions',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: colors.textHint, fontSize: 13, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    color: colors.textHint,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        
+
         // Table Body
         Expanded(
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(vertical: 8),
             itemCount: files.length,
-            separatorBuilder: (context, index) => Divider(height: 1, color: colors.borderOutline.withValues(alpha: 0.5)),
+            separatorBuilder: (context, index) => Divider(
+              height: 1,
+              color: colors.borderOutline.withValues(alpha: 0.5),
+            ),
             itemBuilder: (context, index) {
               final file = files[index];
               return _FileTableRow(
@@ -152,7 +194,11 @@ class _FileTableRowState extends ConsumerState<_FileTableRow> {
     final repo = ref.read(fileRepositoryProvider);
     try {
       if (action == 'rename') {
-        final newName = await RenameModal.show(context, currentName: widget.file.fileName, title: 'Rename File');
+        final newName = await RenameModal.show(
+          context,
+          currentName: widget.file.fileName,
+          title: 'Rename File',
+        );
         if (newName != null) {
           await repo.renameFile(widget.file.id, newName);
           await Future<void>.delayed(const Duration(milliseconds: 500));
@@ -170,12 +216,20 @@ class _FileTableRowState extends ConsumerState<_FileTableRow> {
           context: context,
           builder: (c) => AlertDialog(
             title: const Text('Delete File'),
-            content: Text('Are you sure you want to delete "${widget.file.fileName}"?'),
+            content: Text(
+              'Are you sure you want to delete "${widget.file.fileName}"?',
+            ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+              TextButton(
+                onPressed: () => Navigator.pop(c, false),
+                child: const Text('Cancel'),
+              ),
               TextButton(
                 onPressed: () => Navigator.pop(c, true),
-                child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red),
+                ),
               ),
             ],
           ),
@@ -199,7 +253,9 @@ class _FileTableRowState extends ConsumerState<_FileTableRow> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: Container(
-        color: _isHovered ? colors.primary.withValues(alpha: 0.05) : Colors.transparent,
+        color: _isHovered
+            ? colors.primary.withValues(alpha: 0.05)
+            : Colors.transparent,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         child: Row(
           children: [
@@ -218,10 +274,14 @@ class _FileTableRowState extends ConsumerState<_FileTableRow> {
                         child: Text(
                           widget.file.fileName,
                           style: TextStyle(
-                            color: _isHovered ? colors.primary : colors.textPrimary,
+                            color: _isHovered
+                                ? colors.primary
+                                : colors.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            decoration: _isHovered ? TextDecoration.underline : null,
+                            decoration: _isHovered
+                                ? TextDecoration.underline
+                                : null,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -240,7 +300,11 @@ class _FileTableRowState extends ConsumerState<_FileTableRow> {
                     backgroundColor: colors.borderOutline,
                     child: Text(
                       'AU',
-                      style: TextStyle(fontSize: 10, color: colors.textPrimary, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: colors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -255,20 +319,14 @@ class _FileTableRowState extends ConsumerState<_FileTableRow> {
               flex: 2,
               child: Text(
                 'Public',
-                style: TextStyle(
-                  color: colors.textPrimary,
-                  fontSize: 13,
-                ),
+                style: TextStyle(color: colors.textPrimary, fontSize: 13),
               ),
             ),
             Expanded(
               flex: 1,
               child: Text(
                 widget.formattedSize,
-                style: TextStyle(
-                  color: colors.textPrimary,
-                  fontSize: 13,
-                ),
+                style: TextStyle(color: colors.textPrimary, fontSize: 13),
               ),
             ),
             SizedBox(
@@ -278,21 +336,29 @@ class _FileTableRowState extends ConsumerState<_FileTableRow> {
                 children: [
                   PopupMenuButton<String>(
                     onSelected: _handleAction,
-                    icon: Icon(Icons.more_vert, size: 20, color: colors.textPrimary),
-                    itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                      const PopupMenuItem<String>(
-                        value: 'rename',
-                        child: Text('Rename'),
-                      ),
-                      const PopupMenuItem<String>(
-                        value: 'move',
-                        child: Text('Move to Folder'),
-                      ),
-                      const PopupMenuItem<String>(
-                        value: 'delete',
-                        child: Text('Delete', style: TextStyle(color: Colors.red)),
-                      ),
-                    ],
+                    icon: Icon(
+                      Icons.more_vert,
+                      size: 20,
+                      color: colors.textPrimary,
+                    ),
+                    itemBuilder: (BuildContext context) =>
+                        <PopupMenuEntry<String>>[
+                          const PopupMenuItem<String>(
+                            value: 'rename',
+                            child: Text('Rename'),
+                          ),
+                          const PopupMenuItem<String>(
+                            value: 'move',
+                            child: Text('Move to Folder'),
+                          ),
+                          const PopupMenuItem<String>(
+                            value: 'delete',
+                            child: Text(
+                              'Delete',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
                   ),
                 ],
               ),

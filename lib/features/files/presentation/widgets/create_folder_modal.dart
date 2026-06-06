@@ -69,7 +69,11 @@ class _CreateFolderModalState extends ConsumerState<CreateFolderModal> {
                 ),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: Icon(Icons.close, color: colors.textSecondary, size: 20),
+                  icon: Icon(
+                    Icons.close,
+                    color: colors.textSecondary,
+                    size: 20,
+                  ),
                   splashRadius: 20,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -104,7 +108,10 @@ class _CreateFolderModalState extends ConsumerState<CreateFolderModal> {
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: colors.primary),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
               onSubmitted: (_) => _createFolder(),
             ),
@@ -116,7 +123,10 @@ class _CreateFolderModalState extends ConsumerState<CreateFolderModal> {
                   onPressed: () => Navigator.of(context).pop(),
                   style: TextButton.styleFrom(
                     foregroundColor: colors.textSecondary,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                   child: const Text('Cancel'),
                 ),
@@ -126,15 +136,23 @@ class _CreateFolderModalState extends ConsumerState<CreateFolderModal> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colors.primary,
                     foregroundColor: colors.onPrimary,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     elevation: 0,
                   ),
                   child: _isLoading
                       ? SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: colors.onPrimary),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: colors.onPrimary,
+                          ),
                         )
                       : const Text('Create Folder'),
                 ),
