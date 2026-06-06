@@ -22,7 +22,8 @@ class BuzzMember {
   });
 
   factory BuzzMember.fromJson(Map<String, dynamic> json) {
-    var name = (json['full_name'] ?? json['username'] ?? json['name'] ?? '').toString();
+    var name = (json['full_name'] ?? json['username'] ?? json['name'] ?? '')
+        .toString();
     if (name.trim().isEmpty) {
       name = '${json['first_name'] ?? ''} ${json['last_name'] ?? ''}'.trim();
     }
@@ -63,7 +64,8 @@ class BuzzInvitation {
       inviterId: (json['inviter_id'] ?? '').toString(),
       inviterName: (json['inviter_name'] ?? '').toString(),
       status: (json['status'] ?? 'pending').toString(),
-      invitedAt: DateTime.tryParse(json['invited_at'] as String? ?? '') ??
+      invitedAt:
+          DateTime.tryParse(json['invited_at'] as String? ?? '') ??
           DateTime.now(),
     );
   }
@@ -154,21 +156,31 @@ class OrgBuzzRepository {
         path: ApiEndpoints.organizationUsers(orgId),
       );
       final raw = response.data;
-      final list = (raw['data'] ?? raw['users'] ?? raw['members'] ?? <dynamic>[]) as List<dynamic>;
-      
+      final list =
+          (raw['data'] ?? raw['users'] ?? raw['members'] ?? <dynamic>[])
+              as List<dynamic>;
+
       final lowerQuery = query.toLowerCase();
-      
-      final members = list
-          .whereType<Map<dynamic, dynamic>>()
-          .map((e) => BuzzMember.fromJson(Map<String, dynamic>.from(e)));
-          
+
+      final members = list.whereType<Map<dynamic, dynamic>>().map(
+        (e) => BuzzMember.fromJson(Map<String, dynamic>.from(e)),
+      );
+
       if (lowerQuery.isEmpty) return members.toList();
-      
+
       return members
-          .where((m) => m.name.toLowerCase().contains(lowerQuery) || m.email.toLowerCase().contains(lowerQuery))
+          .where(
+            (m) =>
+                m.name.toLowerCase().contains(lowerQuery) ||
+                m.email.toLowerCase().contains(lowerQuery),
+          )
           .toList();
     } catch (e) {
-      AppLogger.e('searchOrgMembers failed', tag: 'OrgBuzzRepository', error: e);
+      AppLogger.e(
+        'searchOrgMembers failed',
+        tag: 'OrgBuzzRepository',
+        error: e,
+      );
       return [];
     }
   }
@@ -192,13 +204,19 @@ class OrgBuzzRepository {
         },
       );
       final raw = response.data;
-      final list = (raw['data'] ?? raw['members'] ?? raw['results'] ?? <dynamic>[]) as List<dynamic>;
+      final list =
+          (raw['data'] ?? raw['members'] ?? raw['results'] ?? <dynamic>[])
+              as List<dynamic>;
       return list
           .whereType<Map<dynamic, dynamic>>()
           .map((e) => BuzzMember.fromJson(Map<String, dynamic>.from(e)))
           .toList();
     } catch (e) {
-      AppLogger.e('searchChannelMembers failed', tag: 'OrgBuzzRepository', error: e);
+      AppLogger.e(
+        'searchChannelMembers failed',
+        tag: 'OrgBuzzRepository',
+        error: e,
+      );
       return [];
     }
   }
@@ -213,14 +231,21 @@ class OrgBuzzRepository {
       );
       return true;
     } catch (e) {
-      AppLogger.e('inviteUsersToBuzz failed', tag: 'OrgBuzzRepository', error: e);
+      AppLogger.e(
+        'inviteUsersToBuzz failed',
+        tag: 'OrgBuzzRepository',
+        error: e,
+      );
       return false;
     }
   }
 
   /// Accepts or declines an org buzz invitation.
   /// POST /buzz/invitation/respond
-  Future<bool> respondToOrgBuzzInvitation(String invitationId, bool accept) async {
+  Future<bool> respondToOrgBuzzInvitation(
+    String invitationId,
+    bool accept,
+  ) async {
     try {
       await _api.post<Map<String, dynamic>>(
         path: ApiEndpoints.respondBuzzInvitation,
@@ -228,7 +253,11 @@ class OrgBuzzRepository {
       );
       return true;
     } catch (e) {
-      AppLogger.e('respondToOrgBuzzInvitation failed', tag: 'OrgBuzzRepository', error: e);
+      AppLogger.e(
+        'respondToOrgBuzzInvitation failed',
+        tag: 'OrgBuzzRepository',
+        error: e,
+      );
       return false;
     }
   }
@@ -248,7 +277,11 @@ class OrgBuzzRepository {
           .map((e) => BuzzInvitation.fromJson(Map<String, dynamic>.from(e)))
           .toList();
     } catch (e) {
-      AppLogger.e('getPendingInvitations failed', tag: 'OrgBuzzRepository', error: e);
+      AppLogger.e(
+        'getPendingInvitations failed',
+        tag: 'OrgBuzzRepository',
+        error: e,
+      );
       return [];
     }
   }
@@ -257,9 +290,7 @@ class OrgBuzzRepository {
   /// POST /buzz/{id}/end
   Future<bool> endBuzz(String buzzId) async {
     try {
-      await _api.post<Map<String, dynamic>>(
-        path: ApiEndpoints.endBuzz(buzzId),
-      );
+      await _api.post<Map<String, dynamic>>(path: ApiEndpoints.endBuzz(buzzId));
       return true;
     } catch (e) {
       AppLogger.e('endBuzz failed', tag: 'OrgBuzzRepository', error: e);
@@ -276,7 +307,11 @@ class OrgBuzzRepository {
       );
       return true;
     } catch (e) {
-      AppLogger.e('endBuzzByChannel failed', tag: 'OrgBuzzRepository', error: e);
+      AppLogger.e(
+        'endBuzzByChannel failed',
+        tag: 'OrgBuzzRepository',
+        error: e,
+      );
       return false;
     }
   }

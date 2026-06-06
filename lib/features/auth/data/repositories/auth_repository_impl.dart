@@ -41,12 +41,14 @@ class AuthRepositoryImpl implements AuthRepository {
       final user = await _remote.me();
       if (user.id.isEmpty) {
         AppLogger.w('Fetched user has empty ID. Rejecting session.', tag: _tag);
-        return const Failure(ApiFailure(
-          message: 'Invalid user data received from server',
-          statusCode: 401,
-          kind: ApiFailureKind.unauthorized,
-          path: '/users/me',
-        ));
+        return const Failure(
+          ApiFailure(
+            message: 'Invalid user data received from server',
+            statusCode: 401,
+            kind: ApiFailureKind.unauthorized,
+            path: '/users/me',
+          ),
+        );
       }
       AppLogger.i('Current user fetched — ${user.email}', tag: _tag);
       return Success(user.toEntity());

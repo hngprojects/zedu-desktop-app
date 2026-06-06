@@ -60,7 +60,10 @@ class NotificationService {
             remoteUserName: callerName,
             channelId: payload['channel_id']?.toString() ?? channelId,
           );
-      _showCallNotification('Incoming Buzz Call', '$callerName is calling you…');
+      _showCallNotification(
+        'Incoming Buzz Call',
+        '$callerName is calling you…',
+      );
       return true;
     }
 
@@ -68,7 +71,8 @@ class NotificationService {
     if (eventName == 'direct_call_declined' || eventName == 'call_declined') {
       final buzzId = payload['buzz_id']?.toString() ?? '';
       final currentCall = _ref.read(activeCallProvider).state;
-      if (currentCall.buzzId == buzzId && currentCall.status != CallStatus.none) {
+      if (currentCall.buzzId == buzzId &&
+          currentCall.status != CallStatus.none) {
         _ref.read(activeCallProvider.notifier).handleRemoteDecline();
       }
       return true;

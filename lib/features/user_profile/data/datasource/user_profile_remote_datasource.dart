@@ -508,11 +508,13 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
       final response = await _apiBaseService.get<Map<String, dynamic>>(
         path: '/organisations/$orgId/users',
       );
-      
+
       final raw = response.data['data'];
       // The API might wrap the array in 'users' or 'data', or just return the array directly.
-      final data = raw is List ? raw : (raw is Map ? raw['users'] ?? raw['data'] : null);
-      
+      final data = raw is List
+          ? raw
+          : (raw is Map ? raw['users'] ?? raw['data'] : null);
+
       if (data is! List) return [];
 
       return data.whereType<Map<String, dynamic>>().map((user) {

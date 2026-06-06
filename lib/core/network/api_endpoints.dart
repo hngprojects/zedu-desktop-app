@@ -47,4 +47,3 @@ class ApiEndpoints {
   // Legacy — used only by DM direct-call flow (BuzzRepository)
   static String joinBuzzByCode(String codeOrId) => '/buzz/$codeOrId/join';
 }
-

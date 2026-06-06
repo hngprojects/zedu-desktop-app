@@ -940,8 +940,8 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
         color: widget.isHighlighted
             ? colors.primary.withValues(alpha: 0.15)
             : _isHovering
-                ? colors.onPrimary.withValues(alpha: 0.04)
-                : Colors.transparent,
+            ? colors.onPrimary.withValues(alpha: 0.04)
+            : Colors.transparent,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
@@ -981,8 +981,7 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                           senderAvatarUrl != null && senderAvatarUrl.isNotEmpty
                           ? NetworkImage(senderAvatarUrl)
                           : null,
-                      child:
-                          senderAvatarUrl == null || senderAvatarUrl.isEmpty
+                      child: senderAvatarUrl == null || senderAvatarUrl.isEmpty
                           ? Text(
                               senderInitial,
                               style: context.textTheme.bodySmall?.copyWith(

@@ -63,11 +63,7 @@ void main() {
           Workspace(id: 'org-1', name: 'Org 1', avatar: ''),
           Workspace(id: 'org-2', name: 'Org 2', avatar: ''),
         ],
-        selectedWorkspace: Workspace(
-          id: 'org-1',
-          name: 'Org 1',
-          avatar: '',
-        ),
+        selectedWorkspace: Workspace(id: 'org-1', name: 'Org 1', avatar: ''),
       );
 
       registerFallbackValue(

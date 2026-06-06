@@ -282,9 +282,7 @@ class _MenuItemButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final itemColor = isError
-        ? colors.error
-        : colors.textPrimary;
+    final itemColor = isError ? colors.error : colors.textPrimary;
     final resolvedIconColor = iconColor ?? itemColor;
 
     return InkWell(
@@ -301,9 +299,7 @@ class _MenuItemButton extends StatelessWidget {
                 style: TextStyle(
                   color: itemColor,
                   fontSize: 13,
-                  fontWeight: isError
-                      ? FontWeight.w500
-                      : FontWeight.normal,
+                  fontWeight: isError ? FontWeight.w500 : FontWeight.normal,
                 ),
               ),
             ),

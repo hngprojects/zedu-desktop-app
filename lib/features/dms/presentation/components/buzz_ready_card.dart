@@ -151,11 +151,7 @@ class _AddOthersButtonState extends ConsumerState<_AddOthersButton> {
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.person_add_outlined,
-                color: Colors.white,
-                size: 16,
-              ),
+              Icon(Icons.person_add_outlined, color: Colors.white, size: 16),
               SizedBox(width: 6),
               Text(
                 'Add Others',

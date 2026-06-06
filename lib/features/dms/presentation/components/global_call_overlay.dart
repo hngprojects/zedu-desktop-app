@@ -17,11 +17,13 @@ class GlobalCallOverlay extends ConsumerWidget {
     return Stack(
       children: [
         // ── Full-page call view ────────────────────────────────────────
-        if (activeCall.state.status == CallStatus.active && activeCall.state.isFullPage)
+        if (activeCall.state.status == CallStatus.active &&
+            activeCall.state.isFullPage)
           const Positioned.fill(child: BuzzMeetingView()),
 
         // ── Floating / PIP call view ───────────────────────────────────
-        if (activeCall.state.status == CallStatus.active && !activeCall.state.isFullPage)
+        if (activeCall.state.status == CallStatus.active &&
+            !activeCall.state.isFullPage)
           const BuzzMeetingView(),
 
         // ── Incoming call modal ────────────────────────────────────────

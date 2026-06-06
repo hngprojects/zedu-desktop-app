@@ -415,10 +415,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: SizedBox(
-                    height: 80,
-                    child: _buildPipGrid(),
-                  ),
+                  child: SizedBox(height: 80, child: _buildPipGrid()),
                 ),
                 const SizedBox(height: 16),
                 _buildInlineEmojiPicker(),
@@ -514,8 +511,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                     if (buzzId.isNotEmpty) {
                       showDialog<void>(
                         context: context,
-                        builder: (_) =>
-                            BuzzAddPeopleDialog(buzzId: buzzId),
+                        builder: (_) => BuzzAddPeopleDialog(buzzId: buzzId),
                       );
                     }
                   },
@@ -615,11 +611,15 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
     final remoteUids = _remoteControllers.keys.toList();
 
     // If no one else is here AND we are waiting for them
-    if (remoteUids.isEmpty && !activeCall.state.isRemoteJoined && !activeCall.state.isOrgBuzz) {
+    if (remoteUids.isEmpty &&
+        !activeCall.state.isRemoteJoined &&
+        !activeCall.state.isOrgBuzz) {
       return Column(
         children: [
           Expanded(
-            child: _buildWaitingTile(name: activeCall.state.remoteUserName ?? 'Participant'),
+            child: _buildWaitingTile(
+              name: activeCall.state.remoteUserName ?? 'Participant',
+            ),
           ),
           const SizedBox(height: 8),
           Expanded(
@@ -660,7 +660,11 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
     final allEntries = [
       {'isLocal': true, 'uid': 0, 'name': 'You'},
       for (final uid in remoteUids)
-        {'isLocal': false, 'uid': uid, 'name': activeCall.state.remoteUserName ?? 'Participant'},
+        {
+          'isLocal': false,
+          'uid': uid,
+          'name': activeCall.state.remoteUserName ?? 'Participant',
+        },
     ];
 
     final crossAxisCount = totalCount <= 4 ? 2 : 3;
@@ -689,8 +693,10 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
   Widget _buildPipGrid() {
     final activeCall = ref.read(activeCallProvider);
     final remoteUids = _remoteControllers.keys.toList();
-    
-    if (remoteUids.isEmpty && !activeCall.state.isRemoteJoined && !activeCall.state.isOrgBuzz) {
+
+    if (remoteUids.isEmpty &&
+        !activeCall.state.isRemoteJoined &&
+        !activeCall.state.isOrgBuzz) {
       return Row(
         children: [
           Expanded(
@@ -698,7 +704,9 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
           ),
           const SizedBox(width: 6),
           Expanded(
-            child: _buildWaitingTile(name: activeCall.state.remoteUserName ?? 'Participant'),
+            child: _buildWaitingTile(
+              name: activeCall.state.remoteUserName ?? 'Participant',
+            ),
           ),
         ],
       );
@@ -743,10 +751,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
             top: 8,
             left: 8,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 6,
-                vertical: 3,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(4),
@@ -774,9 +779,7 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
     required int flex,
   }) {
     final isSpeaker = _activeSpeakers.contains(uid);
-    final isMuted = isLocal
-        ? _isMuted
-        : _mutedUsers.contains(uid);
+    final isMuted = isLocal ? _isMuted : _mutedUsers.contains(uid);
     final hasHandRaised = _raisedHands.contains(uid);
     final activeEmoji = _activeEmojis[uid];
 
@@ -863,27 +866,19 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
                   color: Colors.black.withValues(alpha: 0.5),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.mic_off,
-                  size: 12,
-                  color: Colors.red,
-                ),
+                child: const Icon(Icons.mic_off, size: 12, color: Colors.red),
               ),
             ),
           if (activeEmoji != null)
             Positioned(
               top: 36,
               left: 8,
-              child: Text(
-                activeEmoji,
-                style: const TextStyle(fontSize: 28),
-              ),
+              child: Text(activeEmoji, style: const TextStyle(fontSize: 28)),
             ),
         ],
       ),
     );
   }
-
 
   Widget _buildControlButton({
     required IconData icon,

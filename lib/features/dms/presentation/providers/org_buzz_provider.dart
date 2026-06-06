@@ -87,7 +87,10 @@ class OrgBuzzNotifier extends ChangeNotifier {
 
   /// Creates a buzz and immediately activates the Agora session.
   Future<void> startInstantMeeting() async {
-    _state = _state.copyWith(status: OrgBuzzStatus.creating, errorMessage: null);
+    _state = _state.copyWith(
+      status: OrgBuzzStatus.creating,
+      errorMessage: null,
+    );
     notifyListeners();
 
     try {
@@ -116,7 +119,10 @@ class OrgBuzzNotifier extends ChangeNotifier {
   /// Creates a buzz, immediately joins the Agora session, and sets status
   /// to [readyForLater] so the UI can show the shareable link overlay.
   Future<void> createForLater() async {
-    _state = _state.copyWith(status: OrgBuzzStatus.creating, errorMessage: null);
+    _state = _state.copyWith(
+      status: OrgBuzzStatus.creating,
+      errorMessage: null,
+    );
     notifyListeners();
 
     try {
@@ -202,13 +208,10 @@ class OrgBuzzNotifier extends ChangeNotifier {
 
     final orgId = _ref.read(currentOrgIdProvider);
     final channelId = _state.channelId ?? '';
-    
+
     List<BuzzMember> results;
     if (orgId.isNotEmpty) {
-      results = await _repo.searchOrgMembers(
-        orgId: orgId,
-        query: query.trim(),
-      );
+      results = await _repo.searchOrgMembers(orgId: orgId, query: query.trim());
     } else if (channelId.isNotEmpty) {
       results = await _repo.searchChannelMembers(
         channelId: channelId,
@@ -235,10 +238,7 @@ class OrgBuzzNotifier extends ChangeNotifier {
   }
 
   void clearSelection() {
-    _state = _state.copyWith(
-      selectedMemberIds: {},
-      searchResults: [],
-    );
+    _state = _state.copyWith(selectedMemberIds: {}, searchResults: []);
     notifyListeners();
   }
 
@@ -283,7 +283,11 @@ class OrgBuzzNotifier extends ChangeNotifier {
       _state = _state.copyWith(pendingInvitations: invitations);
       notifyListeners();
     } catch (e) {
-      AppLogger.e('fetchPendingInvitations failed', tag: 'OrgBuzzNotifier', error: e);
+      AppLogger.e(
+        'fetchPendingInvitations failed',
+        tag: 'OrgBuzzNotifier',
+        error: e,
+      );
     }
   }
 

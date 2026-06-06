@@ -139,14 +139,18 @@ class ActiveCallNotifier extends ChangeNotifier {
           isRemoteJoined: false, // Caller enters, waiting for remote
         );
         notifyListeners();
-        
-        _ref.read(buzzLogProvider.notifier).addLog(BuzzLogEntry(
-          id: buzzId,
-          callerName: remoteUserName,
-          timestamp: DateTime.now(),
-          isMissed: false,
-          isIncoming: false,
-        ));
+
+        _ref
+            .read(buzzLogProvider.notifier)
+            .addLog(
+              BuzzLogEntry(
+                id: buzzId,
+                callerName: remoteUserName,
+                timestamp: DateTime.now(),
+                isMissed: false,
+                isIncoming: false,
+              ),
+            );
       } else {
         await leaveCall();
       }
@@ -201,14 +205,18 @@ class ActiveCallNotifier extends ChangeNotifier {
           channelName: res['channelName'] as String?,
         );
         notifyListeners();
-        
-        _ref.read(buzzLogProvider.notifier).addLog(BuzzLogEntry(
-          id: _state.buzzId ?? DateTime.now().toString(),
-          callerName: _state.remoteUserName ?? 'Unknown',
-          timestamp: DateTime.now(),
-          isMissed: false,
-          isIncoming: true,
-        ));
+
+        _ref
+            .read(buzzLogProvider.notifier)
+            .addLog(
+              BuzzLogEntry(
+                id: _state.buzzId ?? DateTime.now().toString(),
+                callerName: _state.remoteUserName ?? 'Unknown',
+                timestamp: DateTime.now(),
+                isMissed: false,
+                isIncoming: true,
+              ),
+            );
       } else {
         await leaveCall();
       }
@@ -222,14 +230,18 @@ class ActiveCallNotifier extends ChangeNotifier {
       await _ref
           .read(buzzRepositoryProvider)
           .respondToInvitation(_state.buzzId!, false);
-          
-      _ref.read(buzzLogProvider.notifier).addLog(BuzzLogEntry(
-        id: _state.buzzId!,
-        callerName: _state.remoteUserName ?? 'Unknown',
-        timestamp: DateTime.now(),
-        isMissed: true,
-        isIncoming: true,
-      ));
+
+      _ref
+          .read(buzzLogProvider.notifier)
+          .addLog(
+            BuzzLogEntry(
+              id: _state.buzzId!,
+              callerName: _state.remoteUserName ?? 'Unknown',
+              timestamp: DateTime.now(),
+              isMissed: true,
+              isIncoming: true,
+            ),
+          );
     }
     await leaveCall();
   }
@@ -276,13 +288,17 @@ class ActiveCallNotifier extends ChangeNotifier {
     // Show a toast or notification if we were waiting
     if (_state.status == CallStatus.active && !_state.isRemoteJoined) {
       // Remote declined while we were waiting in the room
-      _ref.read(buzzLogProvider.notifier).addLog(BuzzLogEntry(
-        id: _state.buzzId ?? DateTime.now().toString(),
-        callerName: _state.remoteUserName ?? 'Unknown',
-        timestamp: DateTime.now(),
-        isMissed: false,
-        isIncoming: false,
-      ));
+      _ref
+          .read(buzzLogProvider.notifier)
+          .addLog(
+            BuzzLogEntry(
+              id: _state.buzzId ?? DateTime.now().toString(),
+              callerName: _state.remoteUserName ?? 'Unknown',
+              timestamp: DateTime.now(),
+              isMissed: false,
+              isIncoming: false,
+            ),
+          );
     }
     leaveCall();
   }
@@ -351,13 +367,17 @@ class ActiveCallNotifier extends ChangeNotifier {
           .read(buzzRepositoryProvider)
           .respondToInvitation(buzzId, false);
     }
-    _ref.read(buzzLogProvider.notifier).addLog(BuzzLogEntry(
-      id: buzzId ?? DateTime.now().toString(),
-      callerName: _state.remoteUserName ?? 'Unknown',
-      timestamp: DateTime.now(),
-      isMissed: true,
-      isIncoming: true,
-    ));
+    _ref
+        .read(buzzLogProvider.notifier)
+        .addLog(
+          BuzzLogEntry(
+            id: buzzId ?? DateTime.now().toString(),
+            callerName: _state.remoteUserName ?? 'Unknown',
+            timestamp: DateTime.now(),
+            isMissed: true,
+            isIncoming: true,
+          ),
+        );
     _state = ActiveCallState(lastCallAt: _state.lastCallAt);
     notifyListeners();
   }

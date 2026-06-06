@@ -109,8 +109,7 @@ class _GeneralBuzzViewState extends ConsumerState<GeneralBuzzView> {
                             isOpen: _showNewMeetingMenu,
                             isLoading: isLoading,
                             onToggle: () => setState(
-                              () =>
-                                  _showNewMeetingMenu = !_showNewMeetingMenu,
+                              () => _showNewMeetingMenu = !_showNewMeetingMenu,
                             ),
                             onInstant: () {
                               setState(() => _showNewMeetingMenu = false);
@@ -132,8 +131,7 @@ class _GeneralBuzzViewState extends ConsumerState<GeneralBuzzView> {
                           ),
                           const SizedBox(width: 8),
                           _JoinButton(
-                            isLoading:
-                                buzz.status == OrgBuzzStatus.joining,
+                            isLoading: buzz.status == OrgBuzzStatus.joining,
                             onPressed: _handleJoin,
                           ),
                         ],
@@ -146,9 +144,7 @@ class _GeneralBuzzViewState extends ConsumerState<GeneralBuzzView> {
                         _ErrorBanner(
                           message: buzz.errorMessage!,
                           onDismiss: () =>
-                              ref
-                                  .read(orgBuzzProvider.notifier)
-                                  .dismissError(),
+                              ref.read(orgBuzzProvider.notifier).dismissError(),
                         ),
                       ],
 
@@ -171,7 +167,6 @@ class _GeneralBuzzViewState extends ConsumerState<GeneralBuzzView> {
                         ),
                       ),
                       const SizedBox(height: 24),
-
                     ],
                   ),
                 ),
@@ -214,10 +209,11 @@ class _NewMeetingButtonState extends State<_NewMeetingButton> {
 
   void _showMenu() async {
     if (widget.isLoading) return;
-    
+
     widget.onToggle();
-    
-    final RenderBox renderBox = _buttonKey.currentContext!.findRenderObject() as RenderBox;
+
+    final RenderBox renderBox =
+        _buttonKey.currentContext!.findRenderObject() as RenderBox;
     final size = renderBox.size;
     final position = renderBox.localToGlobal(Offset.zero);
 
@@ -237,7 +233,11 @@ class _NewMeetingButtonState extends State<_NewMeetingButton> {
           value: 0,
           child: Row(
             children: [
-              const Icon(Icons.link_rounded, size: 18, color: Color(0xFF6458F5)),
+              const Icon(
+                Icons.link_rounded,
+                size: 18,
+                color: Color(0xFF6458F5),
+              ),
               const SizedBox(width: 10),
               Text(
                 'Get a link',
@@ -255,7 +255,11 @@ class _NewMeetingButtonState extends State<_NewMeetingButton> {
           value: 1,
           child: Row(
             children: [
-              const Icon(Icons.add_circle_outline_rounded, size: 18, color: Color(0xFF6458F5)),
+              const Icon(
+                Icons.add_circle_outline_rounded,
+                size: 18,
+                color: Color(0xFF6458F5),
+              ),
               const SizedBox(width: 10),
               Text(
                 'Start an instant meeting',
@@ -283,7 +287,9 @@ class _NewMeetingButtonState extends State<_NewMeetingButton> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      cursor: widget.isLoading ? SystemMouseCursors.basic : SystemMouseCursors.click,
+      cursor: widget.isLoading
+          ? SystemMouseCursors.basic
+          : SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
@@ -318,7 +324,9 @@ class _NewMeetingButtonState extends State<_NewMeetingButton> {
               ),
               const SizedBox(width: 6),
               Icon(
-                widget.isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                widget.isOpen
+                    ? Icons.keyboard_arrow_up
+                    : Icons.keyboard_arrow_down,
                 color: Colors.white,
                 size: 18,
               ),
@@ -370,10 +378,7 @@ class _CodeInput extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(
-              color: Color(0xFF6458F5),
-              width: 1.5,
-            ),
+            borderSide: const BorderSide(color: Color(0xFF6458F5), width: 1.5),
           ),
         ),
         onSubmitted: (_) => onSubmit(),

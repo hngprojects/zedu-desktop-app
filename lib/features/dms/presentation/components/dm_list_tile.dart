@@ -27,7 +27,7 @@ class DmListTile extends ConsumerWidget {
     final activeChat = ref.watch(activeChatProvider);
     final isSelected = activeChat.id == conversation.channelId;
     final hasUnread = conversation.unreadCount > 0;
-    
+
     final currentUserId = ref.watch(authNotifierProvider).user?.id;
     String displayPrefix = '';
     if (conversation.previewThreads.isNotEmpty) {

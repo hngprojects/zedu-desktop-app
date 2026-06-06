@@ -27,7 +27,8 @@ class ChatHistoryNotifier extends ChangeNotifier {
     _listenToWebsocket();
 
     _loadInitial();
-    if (!(channelId.startsWith('group-dm-') || channelId.contains('group-dm'))) {
+    if (!(channelId.startsWith('group-dm-') ||
+        channelId.contains('group-dm'))) {
       _listenToCentrifugo();
     }
   }
@@ -50,9 +51,10 @@ class ChatHistoryNotifier extends ChangeNotifier {
           // Try to reconcile with an existing optimistic message first.
           bool foundMatch = false;
           final content = (msg['content'] ?? msg['text'] ?? '').toString();
-          final authorId = (msg['user_id'] ?? msg['sender_id'] ?? '').toString();
-          final authorName =
-              (msg['sender_name'] ?? msg['username'] ?? '').toString();
+          final authorId = (msg['user_id'] ?? msg['sender_id'] ?? '')
+              .toString();
+          final authorName = (msg['sender_name'] ?? msg['username'] ?? '')
+              .toString();
 
           messages = messages.map((m) {
             if (m['id'] == id) {
@@ -155,7 +157,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
         });
   }
 
-Map<String, dynamic> _mapGroupDmMessageToHistoryMap(String msg) {
+  Map<String, dynamic> _mapGroupDmMessageToHistoryMap(String msg) {
     final isPending = msg.endsWith('(Pending...)');
     final isSimulated = msg.contains('simulated real-time');
 
@@ -277,7 +279,11 @@ Map<String, dynamic> _mapGroupDmMessageToHistoryMap(String msg) {
 
     try {
       final repository = ref.read(dmRepositoryProvider);
-      final cType = _isGroupDm ? 'group_dm' : _isChannel ? 'channel' : 'dm';
+      final cType = _isGroupDm
+          ? 'group_dm'
+          : _isChannel
+          ? 'channel'
+          : 'dm';
       messages = await repository.getMessages(
         channelId,
         page: 1,
@@ -418,7 +424,11 @@ Map<String, dynamic> _mapGroupDmMessageToHistoryMap(String msg) {
     try {
       final repository = ref.read(dmRepositoryProvider);
       final nextPage = page + 1;
-      final cType = _isGroupDm ? 'group_dm' : _isChannel ? 'channel' : 'dm';
+      final cType = _isGroupDm
+          ? 'group_dm'
+          : _isChannel
+          ? 'channel'
+          : 'dm';
       final newMessages = await repository.getMessages(
         channelId,
         page: nextPage,
@@ -535,7 +545,11 @@ Map<String, dynamic> _mapGroupDmMessageToHistoryMap(String msg) {
         }
       }
 
-      final cType = isDirectMessage ? 'dm' : _isChannel ? 'channel' : 'group_dm';
+      final cType = isDirectMessage
+          ? 'dm'
+          : _isChannel
+          ? 'channel'
+          : 'group_dm';
 
       var responseData = <String, dynamic>{};
 
@@ -676,7 +690,11 @@ Map<String, dynamic> _mapGroupDmMessageToHistoryMap(String msg) {
 
       final activeChat = ref.read(activeChatProvider);
       final isDirectMessage = activeChat.type == ActiveChatType.directMessage;
-      final cType = isDirectMessage ? 'dm' : _isChannel ? 'channel' : 'group_dm';
+      final cType = isDirectMessage
+          ? 'dm'
+          : _isChannel
+          ? 'channel'
+          : 'group_dm';
 
       var responseData = <String, dynamic>{};
 

@@ -1,4 +1,4 @@
-﻿import '../helpers/helpers.dart';
+import '../helpers/helpers.dart';
 import 'package:zedu/core/core.dart';
 
 class MockBuildContext extends Mock implements BuildContext {}

@@ -101,9 +101,7 @@ void main() {
           name: 'Test Org',
           avatar: '',
         ),
-        workspaces: [
-          Workspace(id: 'org-123', name: 'Test Org', avatar: ''),
-        ],
+        workspaces: [Workspace(id: 'org-123', name: 'Test Org', avatar: '')],
       );
 
       userProfileState = const UserProfileState(teamMembers: []);
