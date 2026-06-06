@@ -254,29 +254,6 @@ class ChatHistoryNotifier extends ChangeNotifier {
   }
 
   Future<void> _loadInitial() async {
-    if (channelId.startsWith('group-dm-') || channelId.contains('group-dm')) {
-      try {
-        final groups = ref.read(groupDmProvider);
-        final group = groups.firstWhere(
-          (g) => g.id == channelId,
-          orElse: () => GroupDM(id: channelId, name: '', members: []),
-        );
-        messages = group.messages.reversed
-            .map(_mapGroupDmMessageToHistoryMap)
-            .toList();
-      } catch (e, stack) {
-        AppLogger.e(
-          'Error loading initial Group DM messages',
-          error: e,
-          stackTrace: stack,
-        );
-      } finally {
-        isLoading = false;
-        notifyListeners();
-      }
-      return;
-    }
-
     try {
       final repository = ref.read(dmRepositoryProvider);
       final cType = _isGroupDm

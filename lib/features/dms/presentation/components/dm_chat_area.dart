@@ -975,7 +975,7 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                           found;
                     },
                     child: CircleAvatar(
-                      radius: 15,
+                      radius: 20,
                       backgroundColor: colors.primary,
                       backgroundImage:
                           senderAvatarUrl != null && senderAvatarUrl.isNotEmpty
@@ -984,7 +984,7 @@ class _MessageBubbleState extends ConsumerState<_MessageBubble> {
                       child: senderAvatarUrl == null || senderAvatarUrl.isEmpty
                           ? Text(
                               senderInitial,
-                              style: context.textTheme.bodySmall?.copyWith(
+                              style: context.textTheme.bodyMedium?.copyWith(
                                 color: colors.onPrimary,
                                 fontWeight: FontWeight.w600,
                               ),

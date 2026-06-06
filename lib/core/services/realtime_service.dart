@@ -30,11 +30,12 @@ class RealtimeService {
       _dmMessageController.stream;
 
   Future<void> connect() async {
-    if (_connectCompleter != null) {
+    if (_client != null) return;
+
+    if (_connectCompleter != null && !_connectCompleter!.isCompleted) {
       await _connectCompleter!.future;
       return;
     }
-    if (_client != null) return;
 
     final completer = Completer<void>();
     _connectCompleter = completer;
@@ -47,6 +48,8 @@ class RealtimeService {
           ? (response.data['data'] as Map<String, dynamic>)['token'] as String?
           : response.data['token'] as String?;
       if (token == null || token.isEmpty) {
+        AppLogger.w('Centrifugo: no connection token received', tag: 'RealtimeService');
+        _connectCompleter = null;
         completer.complete();
         return;
       }
@@ -59,6 +62,7 @@ class RealtimeService {
           '$websocketScheme://$host/centrifugo/connection/websocket';
 
       final url = dotenv.env['CENTRIFUGO_WEBSOCKET_URL'] ?? defaultUrl;
+      AppLogger.i('Centrifugo connecting to $url', tag: 'RealtimeService');
 
       _client = centrifuge.createClient(url);
       _client?.setToken(token);
@@ -77,7 +81,7 @@ class RealtimeService {
       _connectCompleter = null;
       _client = null;
       completer.completeError(e);
-      rethrow;
+      AppLogger.e('Centrifugo connect failed: $e', tag: 'RealtimeService');
     }
   }
 
