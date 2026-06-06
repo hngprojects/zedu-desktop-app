@@ -42,7 +42,7 @@ class RealtimeService {
     try {
       final api = locator<ApiBaseService>();
       final response = await api.get<Map<String, dynamic>>(
-        path: '/token/connection',
+        path: '/centrifugo/connection',
       );
       final token = response.data['data'] is Map<String, dynamic>
           ? (response.data['data'] as Map<String, dynamic>)['token'] as String?
@@ -109,7 +109,7 @@ class RealtimeService {
     try {
       // Get subscription token from backend
       final response = await api.post<Map<String, dynamic>>(
-        path: '/token/subscription',
+        path: '/centrifugo/subscription',
         data: {'channel': channelId},
       );
 
@@ -204,7 +204,7 @@ class RealtimeService {
     try {
       final api = locator<ApiBaseService>();
       final response = await api.post<Map<String, dynamic>>(
-        path: '/token/subscription',
+        path: '/centrifugo/subscription',
         data: {'channel': channelName},
       );
       final subToken = response.data['data'] is Map<String, dynamic>
