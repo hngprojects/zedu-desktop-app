@@ -7,3 +7,4 @@ export 'organization/organization.dart';
 export 'channels/channels.dart';
 export 'dms/dms.dart';
 export '../app/app.dart';
+export 'files/files.dart';

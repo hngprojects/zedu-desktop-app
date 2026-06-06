@@ -1,14 +1,14 @@
 import 'package:zedu/core/core.dart';
 
-final fileRepositoryProvider = Provider<FileRepository>((ref) {
+final mediaUploadRepositoryProvider = Provider<MediaUploadRepository>((ref) {
   final apiClient = locator<ApiBaseService>();
-  return FileRepository(apiClient);
+  return MediaUploadRepository(apiClient);
 });
 
-class FileRepository {
+class MediaUploadRepository {
   final ApiBaseService _apiClient;
 
-  FileRepository(this._apiClient);
+  MediaUploadRepository(this._apiClient);
 
   Future<List<Map<String, dynamic>>> uploadFiles(List<XFile> files) async {
     if (files.isEmpty) return [];

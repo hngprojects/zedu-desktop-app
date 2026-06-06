@@ -308,7 +308,7 @@ class _EditOrganizationDialogState
 
       try {
         final xfile = XFile(path);
-        final fileRepo = ref.read(fileRepositoryProvider);
+        final fileRepo = ref.read(mediaUploadRepositoryProvider);
         final uploadedFiles = await fileRepo.uploadFiles([xfile]);
         if (uploadedFiles.isNotEmpty) {
           final fileUrl =
