@@ -50,12 +50,14 @@ class FilesListView extends StatelessWidget {
     if (mimeType.contains('pdf')) return Icons.picture_as_pdf_outlined;
     if (mimeType.contains('zip') ||
         mimeType.contains('tar') ||
-        mimeType.contains('compressed'))
+        mimeType.contains('compressed')) {
       return Icons.folder_zip_outlined;
+    }
     if (mimeType.contains('spreadsheet') ||
         mimeType.contains('excel') ||
-        mimeType.contains('csv'))
+        mimeType.contains('csv')) {
       return Icons.table_chart_outlined;
+    }
     return Icons.insert_drive_file_outlined;
   }
 
