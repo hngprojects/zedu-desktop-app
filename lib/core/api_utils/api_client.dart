@@ -24,6 +24,7 @@ class ApiBaseService {
     Object? data,
     Map<String, dynamic>? queryParameters,
     Map<String, String>? headers,
+    ProgressCallback? onSendProgress,
   }) {
     return _request<T>(
       path: path,
@@ -31,6 +32,7 @@ class ApiBaseService {
       data: data,
       queryParameters: queryParameters,
       headers: headers,
+      onSendProgress: onSendProgress,
     );
   }
 
@@ -96,12 +98,14 @@ class ApiBaseService {
     Object? data,
     Map<String, dynamic>? queryParameters,
     Map<String, String>? headers,
+    ProgressCallback? onSendProgress,
   }) async {
     try {
       final response = await _dio.request<T>(
         path,
         data: data,
         queryParameters: queryParameters,
+        onSendProgress: onSendProgress,
         options: Options(
           method: method,
           headers: headersForPath(path, headers: headers),

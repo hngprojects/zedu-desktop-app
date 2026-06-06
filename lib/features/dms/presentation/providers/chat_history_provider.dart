@@ -496,6 +496,36 @@ class ChatHistoryNotifier extends ChangeNotifier {
         }
       }
 
+      final fileRepository = ref.read(fileRepositoryProvider);
+      List<XFile>? finalMedia = media;
+
+      // Upload media files if necessary
+      if (media != null && media.isNotEmpty) {
+        final uploadedMedia = <XFile>[];
+        for (final file in media) {
+          if (file.path.isNotEmpty && !file.path.startsWith('http')) {
+            try {
+              final workspaceFile = await fileRepository.uploadFile(
+                filePath: file.path,
+                fileName: file.name,
+              );
+              uploadedMedia.add(
+                XFile(
+                  workspaceFile.fileLink ?? file.path,
+                  name: workspaceFile.fileName,
+                  mimeType: workspaceFile.mimeType,
+                ),
+              );
+            } catch (e) {
+              uploadedMedia.add(file); // fallback
+            }
+          } else {
+            uploadedMedia.add(file);
+          }
+        }
+        finalMedia = uploadedMedia;
+      }
+
       var responseData = <String, dynamic>{};
       try {
         final orgId = ref.read(currentOrgIdProvider);
@@ -504,7 +534,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
           content,
           orgId: orgId,
           threadId: threadId,
-          media: media,
+          media: finalMedia,
           mentions: mentions,
           channelType: isDirectMessage ? 'dm' : 'channel',
         );
@@ -522,7 +552,7 @@ class ChatHistoryNotifier extends ChangeNotifier {
               content,
               orgId: ref.read(currentOrgIdProvider),
               threadId: threadId,
-              media: media,
+              media: finalMedia,
               mentions: mentions,
               channelType: isDirectMessage ? 'dm' : 'channel',
             );
