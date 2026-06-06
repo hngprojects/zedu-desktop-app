@@ -137,6 +137,8 @@ class _MainSidebarSwitcher extends ConsumerWidget {
     final state = ref.watch(homeSidebarProvider);
     if (state == HomeSidebarType.dms) {
       return const DmSidebarList();
+    } else if (state == HomeSidebarType.files) {
+      return const FilesSidebarList();
     }
     return const _MainSidebar();
   }
@@ -154,6 +156,11 @@ class _ChatAreaSwitcher extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(homeSidebarProvider);
+    if (state == HomeSidebarType.files) {
+      return const FilesMainView();
+    }
+
     final activeChat = ref.watch(activeChatProvider);
 
     switch (activeChat.type) {
