@@ -5,6 +5,7 @@ class AppRouter {
   const AppRouter._();
 
   static const splash = '/';
+  // static const splash = '/';
   static const home = '/home';
   static const login = '/login';
   static const magicLinkRequest = '/magic-link';

@@ -1,7 +1,7 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
-import 'package:window_manager/window_manager.dart';
+// import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+// import 'package:window_manager/window_manager.dart';
 // import '../providers/org_people_provider.dart';
 import '../widgets/people_sidebar_list.dart';
 import '../../../dms/presentation/components/global_call_overlay.dart';
@@ -221,7 +221,6 @@ class _ChatAreaSwitcher extends ConsumerWidget {
       }
       return const GeneralBuzzView();
     }
-
 
     // ── DMs / People: if no DM or Group chat is active, show empty state ──
     if (sidebar == HomeSidebarType.dms || sidebar == HomeSidebarType.people) {
