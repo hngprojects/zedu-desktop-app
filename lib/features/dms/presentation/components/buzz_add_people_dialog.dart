@@ -114,15 +114,15 @@ class _BuzzAddPeopleDialogState extends ConsumerState<BuzzAddPeopleDialog> {
                         bottom: BorderSide(color: Color(0xFF6458F5), width: 2),
                       ),
                     ),
-                    child: Row(
+                    child: const Row(
                       children: [
                         Icon(
                           Icons.person_add_outlined,
                           size: 15,
-                          color: const Color(0xFF6458F5),
+                          color: Color(0xFF6458F5),
                         ),
-                        const SizedBox(width: 6),
-                        const Text(
+                        SizedBox(width: 6),
+                        Text(
                           'Invite',
                           style: TextStyle(
                             color: Color(0xFF6458F5),
@@ -210,8 +210,8 @@ class _BuzzAddPeopleDialogState extends ConsumerState<BuzzAddPeopleDialog> {
                     const Spacer(),
                     Text(
                       'Selected ${selectedIds.length}',
-                      style: TextStyle(
-                        color: const Color(0xFF6458F5),
+                      style: const TextStyle(
+                        color: Color(0xFF6458F5),
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),

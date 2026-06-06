@@ -377,7 +377,7 @@ class _EditOrganizationDialogState
                       hint: 'e.g. Design agency',
                     ),
                     const SizedBox(height: 16),
-                    ProfileFieldLabel('Country'),
+                    const ProfileFieldLabel('Country'),
                     const SizedBox(height: 6),
                     RawAutocomplete<String>(
                       textEditingController: countryCtrl,
@@ -602,7 +602,7 @@ Future<void> showInviteMemberDialog(
                   },
                 ),
                 const SizedBox(height: 16),
-                ProfileFieldLabel('Role'),
+                const ProfileFieldLabel('Role'),
                 const SizedBox(height: 6),
                 DropdownButtonFormField<String>(
                   initialValue: role,
@@ -684,7 +684,7 @@ Future<void> showEditMemberDialog(
                 ),
               ),
               const SizedBox(height: 16),
-              ProfileFieldLabel('Role'),
+              const ProfileFieldLabel('Role'),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
                 initialValue: role,

@@ -1,5 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
+import '../../../../helpers/helpers.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -17,6 +16,7 @@ void main() {
       test('returns mock response when usesMockData is true', () async {
         final datasource = UserProfileRemoteDataSourceImpl(
           config: const AppConfig(
+            googleClientId: 'test-client-id',
             apiBaseUrl: 'https://api.example.com',
             usesMockData: true,
           ),
@@ -27,6 +27,7 @@ void main() {
           email: 'test@example.com',
           role: '01910544-d1e1-7ada-bdac-c761e527ec92',
           orgId: 'org-123',
+          userId: 'user-456',
         );
 
         expect(result.id, 'user-456');
@@ -54,7 +55,7 @@ void main() {
               },
             ),
           ).thenAnswer(
-            (_) async => ApiResponseModel<Map<String, dynamic>>(
+            (_) async => const ApiResponseModel<Map<String, dynamic>>(
               data: {
                 'status': 'success',
                 'status_code': 200,
@@ -66,6 +67,7 @@ void main() {
 
           final datasource = UserProfileRemoteDataSourceImpl(
             config: const AppConfig(
+              googleClientId: 'test-client-id',
               apiBaseUrl: 'https://api.example.com',
               usesMockData: false,
             ),
@@ -76,6 +78,7 @@ void main() {
             email: 'test@example.com',
             role: '01910544-d1e1-7ada-bdac-c761e527ec92',
             orgId: 'org-123',
+            userId: 'user-456',
           );
 
           expect(result.id, 'user-456');
@@ -105,7 +108,7 @@ void main() {
             },
           ),
         ).thenAnswer(
-          (_) async => ApiResponseModel<Map<String, dynamic>>(
+          (_) async => const ApiResponseModel<Map<String, dynamic>>(
             data: {
               'data': {
                 'invitations': [
@@ -123,6 +126,7 @@ void main() {
 
         final datasource = UserProfileRemoteDataSourceImpl(
           config: const AppConfig(
+            googleClientId: 'test-client-id',
             apiBaseUrl: 'https://api.example.com',
             usesMockData: false,
           ),

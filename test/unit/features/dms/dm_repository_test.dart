@@ -28,7 +28,7 @@ void main() {
               },
             ),
           ).thenAnswer(
-            (_) async => ApiResponseModel<Map<String, dynamic>>(
+            (_) async => const ApiResponseModel<Map<String, dynamic>>(
               data: {
                 'messages': [
                   {
@@ -43,7 +43,11 @@ void main() {
             ),
           );
 
-          final result = await repository.getMessages('channel-123', page: 1);
+          final result = await repository.getMessages(
+            'channel-123',
+            page: 1,
+            threadId: 'thread-456',
+          );
 
           expect(result, isNotEmpty);
           expect(result.first['id'], 'msg-1');
@@ -73,7 +77,7 @@ void main() {
               data: {'content': 'Hello thread', 'thread_id': 'thread-456'},
             ),
           ).thenAnswer(
-            (_) async => ApiResponseModel<Map<String, dynamic>>(
+            (_) async => const ApiResponseModel<Map<String, dynamic>>(
               data: {
                 'data': {
                   'id': 'msg-new',
@@ -94,7 +98,7 @@ void main() {
           );
 
           expect(result, isNotEmpty);
-          expect(result!['id'], 'msg-new');
+          expect(result['id'], 'msg-new');
           expect(result['threadId'], 'thread-456');
 
           verify(

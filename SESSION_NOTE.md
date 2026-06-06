@@ -1,7 +1,7 @@
 # Zedu Desktop — Session Note
-**Developer:** Babajide James (`james-clean` / `james-mini`)  
-**Session Date:** 2026-06-06  
-**Status:** Pre-merge planning — no conflicts resolved yet
+**Developer:** Babajide James (`james-mini`)  
+**Last Updated:** 2026-06-06  
+**Status:** Merge COMPLETE — all conflicts resolved, `flutter analyze lib/` clean (0 errors)
 
 ---
 
@@ -13,9 +13,9 @@ A Flutter desktop application for real-time team communication. Think Slack-like
 
 ---
 
-## Features YOU Built (james-clean branch)
+## Features YOU Built (james-mini branch)
 
-These are implemented and functional. During any merge, your version wins for these.
+These are implemented and functional. During any future merge, your version wins for these.
 
 ### 1. General Buzz — Group Call Hub
 - Full Agora SDK integration for video/voice calls
@@ -32,7 +32,7 @@ These are implemented and functional. During any merge, your version wins for th
 - Centrifugo WebSocket integration directly in providers (not a core service)
 - Voice note recording and playback (`voice_note_player.dart`, uses `record` package)
 - Image display and upload in chat
-- `chat_history_provider` — message history per conversation
+- `chat_history_provider` — message history per conversation, with pre-upload file flow
 - `pinned_messages_provider` — pinned messages per channel
 - `notification_settings_provider` — per-chat notification preferences
 - Message deduplication (prevents double messages from WebSocket + REST)
@@ -69,7 +69,6 @@ These are implemented and functional. During any merge, your version wins for th
   - Auth redirect guards (unauthenticated → `/login`, unknown → `/`)
   - Splash route `/` as initial location
   - Protected routes: `/home`, `/profile`, `/create-organization`
-- Note: credits route `/credits/buy` is **commented out** intentionally
 
 ### 7. Desktop Window Controls
 - Minimize, maximize (toggle), and close buttons in `_HomeAppBar`
@@ -85,125 +84,73 @@ These are implemented and functional. During any merge, your version wins for th
 
 ---
 
-## Features the Other Developer Built (origin/dev branch)
+## Completed Merge: `origin/dev-test` → `james-mini`
 
-These exist in `dev` but are either absent or stripped from your branch. Receive these during merge.
+### What was REMOVED from the merge (credits feature — fully deleted)
+- `lib/features/credits/` — entire folder deleted
+- Credits menu items removed from `top_user_menu.dart` and `user_menu_dialog.dart`
+- Credits provider init removed from home view
+- Credits route `/credits/buy` not included in router
 
-### 1. Credits Feature (complete, full-stack)
-- `lib/features/credits/` — entire feature directory
-- `BuyCreditsView` at route `/credits/buy`
-- Credit packages, checkout session, transaction history, usage reports
-- Payment deep link listener + parser
-- `creditsNotifierProvider` — loaded in `HomeView.initState` with `orgId`
-- Was removed from your branch with `// ref.read(creditsNotifierProvider.notifier).load(...)` comment
+### What was RECEIVED from `origin/dev-test`
 
-### 2. Personal Profile Panel in Home
-- `PersonalProfilePanel` — slides in from the right side of home
-- `personalProfilePanelProvider` — show/hide state
-- dev's `home_view.dart` wraps `_ChatAreaSwitcher` in a `Stack` with `PersonalProfilePanel` positioned on the right
+| Feature | Files |
+|---------|-------|
+| Thread replies panel | `dm_chat_area.dart` — dev's full ~2400-line version taken (includes `_ThreadRepliesPanel`, `_PinnedMessagesPanel`) |
+| Group DM API | `group_dm_provider.dart` — added `fetchGroupDms()` from server + `sendMessage` with channelType routing |
+| Profile panels | `PersonalProfilePanel` + `ProfileDetailsPanel` — wired into `home_view.dart` as right-side overlays |
+| DM list tile routing | `dm_list_tile.dart` — dev's `onTap` dispatches correctly to group_dm vs dm |
+| Add channel members | `create_channel_modal.dart` + `components.dart` barrel updated |
+| Group DM create | `create_channel_modal.dart` — dev's full implementation |
+| Workspace header/switcher | `workspace_header.dart`, `workspace_switcher_list.dart` |
+| Profile action/contact rows | `action_button.dart`, `contact_info_row.dart` in user_profile components |
 
-### 3. Additional Home Widgets (dev has, check if missing from yours)
-- `thread_panel.dart` — message thread side panel
-- `search_panel.dart` — search panel UI
-- `group_details_panel.dart` — group DM details
+### What was KEPT from `james-mini` (your branch wins)
 
-### 4. User Profile Improvements
-- `profile_details_panel.dart` — detailed profile view panel
-- `global_profile_overlay.dart` — profile overlay component
-- Changes to `user_profile_notifier.dart` — may have new update flows
-- `delete_account_dialog.dart` — account deletion flow
-
-### 5. Workspace Switcher
-- `workspace_header.dart`, `workspace_switcher_list.dart` — in sidebar
-- `workspace_provider.dart` — improved workspace switching logic
-- `WorkspaceSwitcherHeader` referenced from your `_MainSidebar`
-
-### 6. InviteTeammatesModal
-- `invite_teammates_modal.dart` — referenced in your `_InviteCard` via `showDialog`
-
-### 7. Chat Infrastructure
-- `home/data/services/chat_websocket_service.dart`
-- `home/data/services/chat_storage_service.dart`
+| Concern | Decision |
+|---------|----------|
+| `dm_chat_area.dart` | Took dev's version (strictly superset — has thread + pinned panels absent in ours) |
+| `home_view.dart` | Restored our HEAD (GlobalCallOverlay + 3-column structure), then added dev's profile panel Stack layer |
+| `dm_sidebar_list.dart` | Kept ours (has search + `_GroupDmsSection` class) |
+| `dm_repository.dart` | Kept our structure + added channelType routing; `sendMessage` uses `List<dynamic>?` (pre-uploaded) not `List<XFile>?` |
+| `chat_history_provider.dart` | Kept our file pre-upload flow; added channelType routing + `_isChannel` getter + nested sender normalization |
+| `user_profile_notifier.dart` | Kept our Centrifugo subscription; added dev's auth guard; kept our robust role ID extraction |
+| `secure_storage_service.dart` | Kept ours (critical for session restore) |
+| `api_failure.dart` | Kept ours (more complete error kinds + `friendlyMessage`) |
+| `app_config.dart` | Kept ours (env-based config, websocket URL builder) |
+| `app_router.dart` | Kept ours (Riverpod auth guards, splash route, no credits route) |
+| `channel_provider.dart` | Kept ours (Centrifugo subscription + channel state machine) |
+| `core.dart` | Union merge (ours + dev exports, excluding test packages flutter_test/mocktail from barrel) |
 
 ---
 
-## Files With Conflicts (Both Developers Modified These)
+## Post-Merge Analysis Results
 
-These are the critical files to resolve carefully. Your version is the base, but you will need to selectively integrate from dev.
+### `flutter analyze lib/` result: **0 errors, 1 warning, 2 infos**
+- Warning: `isHighlight` param in `user_menu_dialog.dart` never passed `true` (harmless — credits items removed)
+- Info: redundant imports in `global_call_overlay.dart` (already re-exported via `core.dart`)
 
-| File | Your Change | Dev Change | Strategy |
-|------|-------------|------------|----------|
-| `lib/core/navigator/app_router.dart` | Riverpod auth guards, splash route, no credits route | Static router, `buyCredits` route, no splash | **Keep yours** + add `/credits/buy` route from dev |
-| `lib/core/api_utils/api_failure.dart` | Extended error kinds, `friendlyMessage` | Different error structure | **Keep yours** — more complete |
-| `lib/core/config/app_config.dart` | env-based config, websocket URL builder | Slightly different structure | **Keep yours** — more robust |
-| `lib/core/core.dart` | More exports (agora, desktop_drop, etc) | Different export set | **Merge both** — take union |
-| `lib/core/secure_storage/secure_storage_service.dart` | Extended storage (cached user, token ops) | Rewritten version | **Keep yours** — critical for session restore |
-| `lib/features/auth/data/datasource/auth_remote_datasource.dart` | Your implementation | Their implementation | **Compare carefully** — may have different endpoints |
-| `lib/features/channels/presentation/providers/channel_provider.dart` | Your channel state | Their channel state | **Compare** — may have different APIs |
-| `lib/features/channels/presentation/widgets/create_channel_modal.dart` | Your modal | Their modal | **Compare UI + logic** |
-| `lib/features/home/presentation/views/home_view.dart` | GlobalCallOverlay, Window controls, no credits init | PersonalProfilePanel overlay, credits init | **Keep yours** + add `PersonalProfilePanel` overlay + wire credits init |
-
----
-
-## Merge Strategy Summary
-
-### Receive FROM incoming (dev branch)
-- `lib/features/credits/` — entire folder, this is completely theirs
-- `lib/features/home/presentation/widgets/thread_panel.dart` — if absent in yours
-- `lib/features/home/presentation/widgets/search_panel.dart` — if absent in yours
-- `lib/features/home/presentation/widgets/group_details_panel.dart` — if absent in yours
-- `lib/features/user_profile/presentation/components/profile_details_panel.dart` — verify
-- `lib/features/user_profile/presentation/components/global_profile_overlay.dart` — verify
-- `PersonalProfilePanel` reference in `home_view.dart`
-- `creditsNotifierProvider.load(orgId: orgId)` call in `HomeView.initState`
-- `/credits/buy` GoRoute in `app_router.dart`
-
-### Keep FROM current (your james-clean branch)
-- All buzz/call system (active_call_provider, org_buzz_provider, buzz_log_provider, all buzz UI)
-- `global_call_overlay.dart` + Stack wrapper in home scaffold
-- Window caption buttons in `_HomeAppBar`
-- Splash route + Riverpod auth guards in `app_router.dart`
-- Extended `active_call_provider` state fields
-- `pinned_messages_provider`, `notification_settings_provider`
-- `people_sidebar_list.dart`, `voice_note_player.dart`
-- `channel_suggestion_list.dart`
-- Your `auth_notifier.dart` session fallback logic
-- Your `api_failure.dart` extended error types
-- Your `secure_storage_service.dart`
-- `api_endpoints.dart`, `file_repository.dart`, `network_status_provider.dart`
-- Assets: `buzz.png`, `default_avatar.png`, `recent_message.png`
-
-### Merge carefully (both modified)
-These need line-level review — don't blindly accept either side:
-- `auth_remote_datasource.dart` — check endpoint paths, ensure all auth flows (login, signup, magic link, google, status, forgot/reset password) are present
-- `channel_provider.dart` — ensure channel create/join/leave + real-time subscription coexist
-- `create_channel_modal.dart` — UI parity check
-- `core.dart` — take union of exports, eliminate duplicates
-- `app_config.dart` — keep your env parsing logic, add any missing config fields from dev
-- `home_view.dart` — surgical merge: keep your scaffold structure, add PersonalProfilePanel Stack layer
+### Fixes applied after analysis
+- Removed duplicate recording methods in `dm_message_composer.dart` (lines 77-148 were dead code from merge)
+- Removed non-existent `presentation/presentation.dart` export from `sidebar.dart`
+- Removed unused `_generateUuid` + `_mediaPayloadFromFile` helpers from `dm_repository.dart`
 
 ---
 
 ## Current Branch State
 
-- **Active branch:** `james-clean`
-- **Uncommitted changes:** `app_router.dart` and `home_view.dart` (2 files, unstaged)
-- **WIP stash:** `james-mini` has a broken-merge-state backup stash (`ee5d32d`)
-- **Before merging:** Commit or stash your current 2 unstaged changes first
+- **Active branch:** `james-mini`
+- **Merge source:** `origin/dev-test`
+- **All conflict files staged** — ready to commit
+- **Next step:** commit the resolved merge, then run a full build test
+
+## Remaining To-Do
+
+- [ ] Commit the merge resolution
+- [ ] `flutter build windows` — confirm release build succeeds
+- [ ] Smoke test: splash → login → home → DM → group DM → Buzz → profile panel
+- [ ] Push `james-mini` when build is confirmed
 
 ---
 
-## Pre-Merge Checklist
-
-- [ ] Commit/stash the 2 unstaged files (`app_router.dart`, `home_view.dart`)
-- [ ] Confirm which remote branch to merge (likely `origin/dev`)
-- [ ] Run `git merge origin/dev` — expect conflicts in the "both modified" files above
-- [ ] Resolve each conflict file using this document as the decision guide
-- [ ] Re-check barrel exports: `core.dart`, `features.dart`, `dms.dart`, `auth.dart`
-- [ ] Verify `flutter pub get` succeeds (pubspec.yaml may conflict)
-- [ ] Run `flutter analyze` until clean
-- [ ] Smoke test: splash → login → home → DM → Buzz → Credits
-
----
-
-*This note is a living document. Update it after the merge is complete.*
+*Updated after merge completion on 2026-06-06.*

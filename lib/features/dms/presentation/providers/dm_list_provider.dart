@@ -106,7 +106,7 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
           if (channelsResult is Success<List<Channel>>) {
             final selfChannel = channelsResult.value.firstWhere(
               (c) => c.name == user.username,
-              orElse: () => Channel(
+              orElse: () => const Channel(
                 id: '',
                 name: '',
                 description: '',
@@ -225,6 +225,20 @@ class DmListNotifier extends AsyncNotifier<List<DmConversation>> {
     _hasMore = true;
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => _fetchPage(orgId, 1));
+  }
+
+  /// Moves a conversation to position 0 in the list (most recent).
+  void bringToTop(String channelId) {
+    final current = state.value;
+    if (current == null) return;
+
+    final idx = current.indexWhere((c) => c.channelId == channelId);
+    if (idx <= 0) return; // already at top or not found
+
+    final updated = List<DmConversation>.from(current);
+    final conv = updated.removeAt(idx);
+    updated.insert(0, conv);
+    state = AsyncValue.data(updated);
   }
 }
 

@@ -61,7 +61,10 @@ class _ChannelDetailsModalState extends ConsumerState<ChannelDetailsModal>
                     channel: channel,
                     conversation: widget.conversation,
                   ),
-                  _PeopleTab(conversation: widget.conversation),
+                  _PeopleTab(
+                    channel: channel,
+                    conversation: widget.conversation,
+                  ),
                   const _AgentsTab(),
                   const _FilesTab(),
                 ],
@@ -340,11 +343,11 @@ class _AboutTab extends ConsumerWidget {
                 style: TextStyle(fontSize: 13),
               ),
               const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.only(left: 16.0),
+              const Padding(
+                padding: EdgeInsets.only(left: 16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
                       '• No one will be able to send messages to the channel',
                       style: TextStyle(fontSize: 12),
@@ -523,9 +526,10 @@ class _AboutTab extends ConsumerWidget {
 }
 
 class _PeopleTab extends ConsumerWidget {
+  final Channel channel;
   final DmConversation conversation;
 
-  const _PeopleTab({required this.conversation});
+  const _PeopleTab({required this.channel, required this.conversation});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -564,7 +568,15 @@ class _PeopleTab extends ConsumerWidget {
               child: Icon(Icons.person_add_alt_1, color: colors.primary),
             ),
             title: const Text('Add people'),
-            onTap: () {},
+            onTap: () {
+              showDialog<void>(
+                context: context,
+                builder: (ctx) => AddChannelMembersModal(
+                  channel: channel,
+                  conversation: conversation,
+                ),
+              );
+            },
           ),
           Expanded(
             child: ListView.builder(

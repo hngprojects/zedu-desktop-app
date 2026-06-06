@@ -217,7 +217,7 @@ class UserProfileRemoteDataSourceImpl implements UserProfileRemoteDataSource {
         data.first as Map<String, dynamic>,
       );
     }
-    throw ApiFailure(
+    throw const ApiFailure(
       message: 'user not a member of organisation',
       kind: ApiFailureKind.client,
     );

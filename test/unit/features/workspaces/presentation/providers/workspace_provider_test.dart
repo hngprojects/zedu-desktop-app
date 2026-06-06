@@ -20,7 +20,6 @@ void main() {
     setUp(() {
       mockApiBaseService = MockApiBaseService();
 
-      // Register mockApiBaseService in locator
       if (locator.isRegistered<ApiBaseService>()) {
         locator.unregister<ApiBaseService>();
       }
@@ -53,58 +52,62 @@ void main() {
       return container;
     }
 
-    test('fetchWorkspaces filters workspaces created by other users', () async {
-      final apiResponse = ApiResponseModel<Map<String, dynamic>>(
-        statusCode: 200,
-        data: {
-          'data': [
-            {
-              'id': 'org-owner-123',
-              'name': 'My Organization',
-              'owner_id': 'user-123',
-              'channels_count': 5,
-            },
-            {
-              'id': 'org-creator-123',
-              'name': 'My Created Org',
-              'creator_id': 'user-123',
-              'channels_count': 3,
-            },
-            {
-              'id': 'org-other-user',
-              'name': 'Other Org',
-              'owner_id': 'user-999',
-              'channels_count': 10,
-            },
-            {'id': 'org-no-owner', 'name': 'No Owner Org', 'channels_count': 1},
-          ],
-        },
-      );
+    test(
+      'fetchWorkspaces filters out workspaces that the user is not a member of',
+      () async {
+        const apiResponse = ApiResponseModel<Map<String, dynamic>>(
+          statusCode: 200,
+          data: {
+            'data': [
+              {
+                'id': 'org-owner-123',
+                'name': 'My Organization',
+                'owner_id': 'user-123',
+                'channels_count': 5,
+              },
+              {
+                'id': 'org-creator-123',
+                'name': 'My Created Org',
+                'creator_id': 'user-123',
+                'channels_count': 3,
+              },
+              {
+                'id': 'org-other-user',
+                'name': 'Other Org',
+                'owner_id': 'user-999',
+                'channels_count': 10,
+              },
+              {
+                'id': 'org-no-owner',
+                'name': 'No Owner Org',
+                'channels_count': 1,
+              },
+            ],
+          },
+        );
 
-      when(
-        () => mockApiBaseService.get<Map<String, dynamic>>(
-          path: '/users/organisations',
-        ),
-      ).thenAnswer((_) async => apiResponse);
+        when(
+          () => mockApiBaseService.get<Map<String, dynamic>>(
+            path: '/users/organisations',
+          ),
+        ).thenAnswer((_) async => apiResponse);
 
-      final container = createContainer();
+        final container = createContainer();
 
-      // Trigger workspace provider build and wait for fetchWorkspaces to finish
-      container.read(workspaceProvider);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
+        container.read(workspaceProvider);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      final state = container.read(workspaceProvider);
+        final state = container.read(workspaceProvider);
 
-      // Should filter out the organisation created by user-999 (Other Org)
-      // but keep My Organization, My Created Org, and No Owner Org.
-      final workspaceIds = state.workspaces.map((w) => w.id).toList();
+        final workspaceIds = state.workspaces.map((w) => w.id).toList();
 
-      expect(workspaceIds, contains('org-owner-123'));
-      expect(workspaceIds, contains('org-creator-123'));
-      expect(workspaceIds, contains('org-no-owner'));
-      expect(workspaceIds, isNot(contains('org-other-user')));
+        expect(workspaceIds, contains('org-owner-123'));
+        expect(workspaceIds, contains('org-creator-123'));
+        expect(workspaceIds.contains('org-no-owner'), isFalse);
+        expect(workspaceIds.contains('org-other-user'), isFalse);
 
-      expect(state.workspaces.length, equals(3));
-    });
+        expect(state.workspaces.length, equals(2));
+      },
+    );
   });
 }

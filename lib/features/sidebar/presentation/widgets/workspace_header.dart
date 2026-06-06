@@ -9,8 +9,7 @@ class WorkspaceSwitcherHeader extends ConsumerWidget {
     final colors = context.colors;
     final workspaceState = ref.watch(workspaceProvider);
     final selectedWorkspace = workspaceState.selectedWorkspace;
-
-    if (selectedWorkspace == null) return const SizedBox.shrink();
+    final workspaceName = selectedWorkspace?.name ?? 'My Workspace';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -23,7 +22,7 @@ class WorkspaceSwitcherHeader extends ConsumerWidget {
                 children: [
                   Flexible(
                     child: Text(
-                      selectedWorkspace.name,
+                      workspaceName,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

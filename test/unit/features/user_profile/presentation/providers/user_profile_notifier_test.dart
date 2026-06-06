@@ -58,12 +58,12 @@ void main() {
       locator.registerSingleton<AppConfig>(mockAppConfig);
 
       authState = AuthState(status: AuthStatus.authenticated, user: mockUser);
-      workspaceState = WorkspaceState(
-        workspaces: const [
+      workspaceState = const WorkspaceState(
+        workspaces: [
           Workspace(id: 'org-1', name: 'Org 1', avatar: ''),
           Workspace(id: 'org-2', name: 'Org 2', avatar: ''),
         ],
-        selectedWorkspace: const Workspace(
+        selectedWorkspace: Workspace(
           id: 'org-1',
           name: 'Org 1',
           avatar: '',

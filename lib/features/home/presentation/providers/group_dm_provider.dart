@@ -179,6 +179,97 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
         stackTrace: stack,
       );
     }
+
+    // Now fetch from server to get new group DMs
+    await fetchGroupDms();
+  }
+
+  Future<void> fetchGroupDms() async {
+    final orgId = ref.read(currentOrgIdProvider);
+    if (orgId.isEmpty) return;
+
+    try {
+      final api = locator<ApiBaseService>();
+      final response = await api.get<Map<String, dynamic>>(
+        path: '/organisations/$orgId/group-dms',
+      );
+
+      final data = response.data['data'] as List<dynamic>? ?? [];
+      final List<GroupDM> fetchedGroups = [];
+
+      for (final item in data) {
+        if (item is Map<String, dynamic>) {
+          final channelId =
+              item['channel_id'] as String? ?? item['id'] as String? ?? '';
+          final rawParticipants = item['participants'] as List<dynamic>? ?? [];
+          final List<TeamMember> members = [];
+
+          for (final p in rawParticipants) {
+            if (p is Map<String, dynamic>) {
+              members.add(
+                TeamMember(
+                  id: p['user_id'] as String? ?? '',
+                  email: p['email'] as String? ?? '',
+                  name:
+                      p['username'] as String? ??
+                      p['email']?.toString().split('@').first,
+                  role: 'User',
+                  dateJoined: DateTime.now().toString(),
+                  status: TeamMemberStatus.active,
+                  avatarUrl: p['avatar_url'] as String?,
+                ),
+              );
+            }
+          }
+
+          final name =
+              item['name'] as String? ??
+              members.map((m) => m.name ?? m.email.split('@').first).join(', ');
+
+          fetchedGroups.add(
+            GroupDM(
+              id: channelId,
+              name: name.isEmpty ? 'Group DM' : name,
+              members: members,
+              unreadCount: 0,
+              messages: [], // Real messages loaded via ChatHistoryProvider
+            ),
+          );
+        }
+      }
+
+      if (fetchedGroups.isNotEmpty) {
+        // Merge with existing state to preserve unreadCounts and local messages
+        final currentMap = {for (var g in state) g.id: g};
+        final List<GroupDM> merged = [];
+
+        for (final fetchedGroup in fetchedGroups) {
+          if (currentMap.containsKey(fetchedGroup.id)) {
+            final existing = currentMap[fetchedGroup.id]!;
+            merged.add(
+              existing.copyWith(
+                name: fetchedGroup.name,
+                members: fetchedGroup.members,
+              ),
+            );
+          } else {
+            merged.add(fetchedGroup);
+          }
+        }
+
+        state = merged;
+        _saveCachedGroupDms();
+
+        final activeIds = state.map((g) => g.id).toList();
+        ref.read(chatWebsocketProvider).connect(activeIds);
+      }
+    } catch (e, stack) {
+      AppLogger.e(
+        'Error fetching group DMs from server',
+        error: e,
+        stackTrace: stack,
+      );
+    }
   }
 
   Future<void> _saveCachedGroupDms() async {
@@ -258,7 +349,7 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
           name: name,
           members: members,
           unreadCount: 0,
-          messages: ['Group DM created.'],
+          messages: [],
         );
 
         if (!state.any((g) => g.id == channelId)) {
@@ -269,7 +360,7 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
 
         return Success(newGroup);
       }
-      return Failure(ApiFailure(message: 'Invalid response from server'));
+      return const Failure(ApiFailure(message: 'Invalid response from server'));
     } catch (e) {
       final selectedIds = selectedMembers.map((m) => m.id).toSet();
       for (final group in state) {
@@ -289,7 +380,7 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
         name: name,
         members: selectedMembers,
         unreadCount: 0,
-        messages: ['Group DM created with $name.'],
+        messages: [],
       );
 
       state = [...state, newGroup];
@@ -333,7 +424,13 @@ class GroupDmNotifier extends Notifier<List<GroupDM>> {
 
     try {
       final repository = ref.read(dmRepositoryProvider);
-      await repository.sendMessage(groupDmId, messageText);
+      final orgId = ref.read(currentOrgIdProvider);
+      await repository.sendMessage(
+        groupDmId,
+        messageText,
+        orgId: orgId,
+        channelType: 'group_dm',
+      );
     } catch (e, stack) {
       AppLogger.e(
         'Error sending Group DM message to server',

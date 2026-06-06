@@ -13,6 +13,7 @@ class RealtimeService {
   RealtimeService(Ref ref);
 
   centrifuge.Client? _client;
+  Completer<void>? _connectCompleter;
   centrifuge.Subscription? _orgSubscription;
   final Map<String, centrifuge.Subscription?> _dmSubscriptions = {};
 
@@ -29,38 +30,55 @@ class RealtimeService {
       _dmMessageController.stream;
 
   Future<void> connect() async {
-    if (_client != null) return; // already connected or connecting
+    if (_connectCompleter != null) {
+      await _connectCompleter!.future;
+      return;
+    }
+    if (_client != null) return;
 
-    final api = locator<ApiBaseService>();
-    final response = await api.get<Map<String, dynamic>>(
-      path: '/token/connection',
-    );
-    final token = response.data['data'] is Map<String, dynamic>
-        ? (response.data['data'] as Map<String, dynamic>)['token'] as String?
-        : response.data['token'] as String?;
-    if (token == null || token.isEmpty) return;
+    final completer = Completer<void>();
+    _connectCompleter = completer;
+    try {
+      final api = locator<ApiBaseService>();
+      final response = await api.get<Map<String, dynamic>>(
+        path: '/token/connection',
+      );
+      final token = response.data['data'] is Map<String, dynamic>
+          ? (response.data['data'] as Map<String, dynamic>)['token'] as String?
+          : response.data['token'] as String?;
+      if (token == null || token.isEmpty) {
+        completer.complete();
+        return;
+      }
 
-    final config = locator<AppConfig>();
-    final baseUri = Uri.tryParse(config.apiBaseUrl);
-    final host = baseUri?.host ?? 'api.staging.zedu.chat';
-    final websocketScheme = baseUri?.scheme == 'https' ? 'wss' : 'ws';
-    final defaultUrl =
-        '$websocketScheme://$host/centrifugo/connection/websocket';
+      final config = locator<AppConfig>();
+      final baseUri = Uri.tryParse(config.apiBaseUrl);
+      final host = baseUri?.host ?? 'api.example.com';
+      final websocketScheme = baseUri?.scheme == 'https' ? 'wss' : 'ws';
+      final defaultUrl =
+          '$websocketScheme://$host/centrifugo/connection/websocket';
 
-    final url = dotenv.env['CENTRIFUGO_WEBSOCKET_URL'] ?? defaultUrl;
+      final url = dotenv.env['CENTRIFUGO_WEBSOCKET_URL'] ?? defaultUrl;
 
-    _client = centrifuge.createClient(url);
-    _client?.setToken(token);
+      _client = centrifuge.createClient(url);
+      _client?.setToken(token);
 
-    _client?.connected.listen((event) {
-      AppLogger.i('Centrifugo connected', tag: 'RealtimeService');
-    });
+      _client?.connected.listen((event) {
+        AppLogger.i('Centrifugo connected', tag: 'RealtimeService');
+      });
 
-    _client?.disconnected.listen((event) {
-      AppLogger.w('Centrifugo disconnected', tag: 'RealtimeService');
-    });
+      _client?.disconnected.listen((event) {
+        AppLogger.w('Centrifugo disconnected', tag: 'RealtimeService');
+      });
 
-    await _client?.connect();
+      await _client?.connect();
+      completer.complete();
+    } catch (e) {
+      _connectCompleter = null;
+      _client = null;
+      completer.completeError(e);
+      rethrow;
+    }
   }
 
   /// Subscribe to a DM channel for real-time message updates.

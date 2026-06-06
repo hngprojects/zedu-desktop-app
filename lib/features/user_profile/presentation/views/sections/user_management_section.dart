@@ -228,7 +228,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    AppButton.outlined(
+                    const AppButton.outlined(
                       label: 'Previous',
                       expand: false,
                       height: 36,
@@ -237,7 +237,7 @@ class _UserManagementSectionState extends State<UserManagementSection> {
                     const Spacer(),
                     Text('1', style: context.textTheme.bodySmall),
                     const Spacer(),
-                    AppButton.outlined(
+                    const AppButton.outlined(
                       label: 'Next',
                       expand: false,
                       height: 36,

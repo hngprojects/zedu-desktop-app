@@ -15,60 +15,20 @@ class TopUserMenu extends ConsumerWidget {
     return PopupMenuButton<String>(
       offset: const Offset(0, 40),
       onSelected: (value) async {
-        if (value == 'buy_credits') {
-          if (value == 'profile') {
-            // Toggle the personal profile panel overlay
-            ref.read(personalProfilePanelProvider.notifier).state = true;
-          } else if (value == 'preferences') {
-            if (context.mounted) {
-              context.go(AppRouter.profile);
-            }
-          } else if (value == 'logout') {
-            await ref.read(authNotifierProvider.notifier).logout();
-            if (context.mounted) {
-              context.go(AppRouter.login);
-            }
+        if (value == 'profile') {
+          ref.read(personalProfilePanelProvider.notifier).state = true;
+        } else if (value == 'preferences') {
+          if (context.mounted) {
+            context.go(AppRouter.profile);
+          }
+        } else if (value == 'logout') {
+          await ref.read(authNotifierProvider.notifier).logout();
+          if (context.mounted) {
+            context.go(AppRouter.login);
           }
         }
       },
       itemBuilder: (context) => [
-        PopupMenuItem(
-          enabled: false,
-          child: Row(
-            children: [
-              Icon(Icons.auto_awesome, size: 20, color: colors.primary),
-              const SizedBox(width: 8),
-              Text(
-                'AI Credits: ',
-                style: TextStyle(
-                  color: colors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: 'buy_credits',
-          child: Row(
-            children: [
-              Icon(
-                Icons.shopping_cart_outlined,
-                size: 20,
-                color: colors.primary,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Buy AI credits',
-                style: TextStyle(
-                  color: colors.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const PopupMenuDivider(),
         PopupMenuItem(
           value: 'profile',
           child: Row(

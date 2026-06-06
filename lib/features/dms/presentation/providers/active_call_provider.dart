@@ -7,6 +7,7 @@ class ActiveCallState {
   final CallStatus status;
   final String? buzzId;
   final String? channelId;
+  final String? orgId;
   final String? remoteUserName;
   final String? remoteUserId;
   final String? remoteAvatarUrl;
@@ -24,6 +25,7 @@ class ActiveCallState {
     this.status = CallStatus.none,
     this.buzzId,
     this.channelId,
+    this.orgId,
     this.remoteUserName,
     this.remoteUserId,
     this.remoteAvatarUrl,
@@ -42,6 +44,7 @@ class ActiveCallState {
     CallStatus? status,
     String? buzzId,
     String? channelId,
+    String? orgId,
     String? remoteUserName,
     String? remoteUserId,
     String? remoteAvatarUrl,
@@ -59,6 +62,7 @@ class ActiveCallState {
       status: status ?? this.status,
       buzzId: buzzId ?? this.buzzId,
       channelId: channelId ?? this.channelId,
+      orgId: orgId ?? this.orgId,
       remoteUserName: remoteUserName ?? this.remoteUserName,
       remoteUserId: remoteUserId ?? this.remoteUserId,
       remoteAvatarUrl: remoteAvatarUrl ?? this.remoteAvatarUrl,
@@ -94,9 +98,11 @@ class ActiveCallNotifier extends ChangeNotifier {
     required String channelId,
     String? remoteAvatarUrl,
   }) async {
+    final orgId = _ref.read(currentOrgIdProvider);
     _state = ActiveCallState(
       status: CallStatus.calling,
       channelId: channelId,
+      orgId: orgId,
       remoteUserId: remoteUserId,
       remoteUserName: remoteUserName,
       remoteAvatarUrl: remoteAvatarUrl,
@@ -155,6 +161,7 @@ class ActiveCallNotifier extends ChangeNotifier {
     required String remoteUserName,
     required String channelId,
     String? remoteAvatarUrl,
+    String? orgId,
   }) {
     if (_state.status != CallStatus.none) {
       _ref.read(buzzRepositoryProvider).respondToInvitation(buzzId, false);
@@ -165,6 +172,7 @@ class ActiveCallNotifier extends ChangeNotifier {
       status: CallStatus.incoming,
       buzzId: buzzId,
       channelId: channelId,
+      orgId: orgId ?? _ref.read(currentOrgIdProvider),
       remoteUserId: remoteUserId,
       remoteUserName: remoteUserName,
       remoteAvatarUrl: remoteAvatarUrl,
@@ -252,6 +260,9 @@ class ActiveCallNotifier extends ChangeNotifier {
             );
       }
     }
+    // Release the Agora engine so the OS camera indicator turns off
+    await _ref.read(buzzEngineProvider).dispose();
+
     _state = ActiveCallState(lastCallAt: _state.lastCallAt);
     notifyListeners();
   }
@@ -287,10 +298,12 @@ class ActiveCallNotifier extends ChangeNotifier {
     String? buzzCode,
     String? hostName,
   }) {
+    final orgId = _ref.read(currentOrgIdProvider);
     _state = ActiveCallState(
       status: CallStatus.active,
       buzzId: buzzId,
       channelId: channelId,
+      orgId: orgId,
       token: token,
       appId: appId,
       channelName: channelName,
@@ -309,12 +322,14 @@ class ActiveCallNotifier extends ChangeNotifier {
     required String buzzId,
     required String inviterName,
     required String channelId,
+    String? orgId,
   }) {
     if (_state.status != CallStatus.none) return;
     _state = ActiveCallState(
       status: CallStatus.incoming,
       buzzId: buzzId,
       channelId: channelId,
+      orgId: orgId ?? _ref.read(currentOrgIdProvider),
       remoteUserName: inviterName,
       invitationId: invitationId,
       isOrgBuzz: true,

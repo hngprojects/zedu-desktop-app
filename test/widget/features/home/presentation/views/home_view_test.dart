@@ -1,5 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
+import '../../../../../helpers/helpers.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -67,6 +66,7 @@ void main() {
       if (!locator.isRegistered<AppConfig>()) {
         locator.registerSingleton<AppConfig>(
           const AppConfig(
+            googleClientId: 'test-client-id',
             apiBaseUrl: 'https://api.example.com',
             usesMockData: false,
           ),
@@ -89,27 +89,26 @@ void main() {
         createdAt: DateTime.now(),
         avatarUrl: '',
         defaultAvatarUrl: '',
-        // creditBalance: 100,
         currentOrg: 'org-123',
         currentOrganisationSlug: '',
       );
 
       authState = AuthState(status: AuthStatus.authenticated, user: mockUser);
 
-      workspaceState = WorkspaceState(
-        selectedWorkspace: const Workspace(
+      workspaceState = const WorkspaceState(
+        selectedWorkspace: Workspace(
           id: 'org-123',
           name: 'Test Org',
           avatar: '',
         ),
         workspaces: [
-          const Workspace(id: 'org-123', name: 'Test Org', avatar: ''),
+          Workspace(id: 'org-123', name: 'Test Org', avatar: ''),
         ],
       );
 
       userProfileState = const UserProfileState(teamMembers: []);
 
-      channelState = ChannelState(
+      channelState = const ChannelState(
         channels: [
           Channel(
             id: 'chan-general',
@@ -135,7 +134,7 @@ void main() {
         () => mockDmRepository.getMessages(
           any(),
           page: any(named: 'page'),
-          // threadId: any(named: 'threadId'),
+          threadId: any(named: 'threadId'),
         ),
       ).thenAnswer((_) async => []);
     });

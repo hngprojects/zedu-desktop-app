@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:window_manager/window_manager.dart';
 
 class AuthDesktopAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -20,16 +21,9 @@ class AuthDesktopAppBar extends StatelessWidget implements PreferredSizeWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/pngs/zedu_logo.png',
-              width: 83,
-              height: 31,
-            ),
+            Image.asset('assets/pngs/zedu_logo.png', width: 83, height: 31),
             const Spacer(),
-            if (trailing != null) ...[
-              trailing!,
-              const SizedBox(width: 24),
-            ],
+            if (trailing != null) ...[trailing!, const SizedBox(width: 24)],
             if (!kIsWeb &&
                 (defaultTargetPlatform == TargetPlatform.windows ||
                     defaultTargetPlatform == TargetPlatform.macOS ||
@@ -38,7 +32,7 @@ class AuthDesktopAppBar extends StatelessWidget implements PreferredSizeWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   WindowCaptionButton.minimize(
-                    brightness: Brightness.light, // Dark icons for white background
+                    brightness: Brightness.light,
                     onPressed: () async => await windowManager.minimize(),
                   ),
                   WindowCaptionButton.maximize(

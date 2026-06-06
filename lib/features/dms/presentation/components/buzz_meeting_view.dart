@@ -199,6 +199,12 @@ class _BuzzMeetingViewState extends ConsumerState<BuzzMeetingView> {
     if (_isEngineInitialized) {
       _engine.leaveChannel();
     }
+    // Dispose video controllers to free native resources
+    _localVideoController?.dispose();
+    for (final controller in _remoteControllers.values) {
+      controller.dispose();
+    }
+    _remoteControllers.clear();
     super.dispose();
   }
 

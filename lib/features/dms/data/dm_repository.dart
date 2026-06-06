@@ -104,6 +104,7 @@ class DmRepository {
     String channelId, {
     int page = 1,
     String? threadId,
+    String channelType = 'dm',
   }) async {
     if (!isValidChannelId(channelId)) return const [];
 
@@ -111,8 +112,28 @@ class DmRepository {
       'Fetching messages for channel: $channelId (page: $page)',
       tag: 'DmRepository',
     );
+
+    String endpointPath;
+    if (threadId != null && threadId.isNotEmpty) {
+      if (channelType == 'dm') {
+        endpointPath = '/dms/thread/$threadId/channels/$channelId';
+      } else if (channelType == 'group_dm') {
+        endpointPath = '/group-dms/thread/$threadId/channels/$channelId';
+      } else {
+        endpointPath = '/threads/$threadId/channels/$channelId';
+      }
+    } else {
+      if (channelType == 'dm') {
+        endpointPath = ApiEndpoints.dmsMessages(channelId);
+      } else if (channelType == 'group_dm') {
+        endpointPath = '/group-dms/messages/$channelId';
+      } else {
+        endpointPath = '/channels/$channelId/messages';
+      }
+    }
+
     final response = await _apiClient.get<Map<String, dynamic>>(
-      path: ApiEndpoints.dmsMessages(channelId),
+      path: endpointPath,
       queryParameters: {'page': page, 'limit': pageSize},
     );
 
@@ -175,56 +196,61 @@ class DmRepository {
     return parsed;
   }
 
-  Future<Map<String, dynamic>?> sendMessage(
+  Future<Map<String, dynamic>> sendMessage(
     String channelId,
     String content, {
     String? orgId,
     String? threadId,
     List<dynamic>? media,
     List<dynamic>? mentions,
+    String channelType = 'dm',
   }) async {
-    if (!isValidChannelId(channelId)) {
-      throw const ApiFailure(
-        message:
-            'Cannot send message: DM channel has not been created yet. '
-            'Please wait for the conversation to be established.',
-        kind: ApiFailureKind.client,
-      );
-    }
-    final payload = {
-      'content': content,
-      'media': media ?? <Map<String, dynamic>>[],
-      'mentions': mentions ?? <dynamic>[],
-    };
+    final bool isThreadReply = threadId != null && threadId.isNotEmpty;
+    String path;
+    final Map<String, dynamic> data = {'content': content};
 
-    AppLogger.d(
-      'Sending message to $channelId payload: $payload',
-      tag: 'DmRepository',
-    );
+    if (media != null && media.isNotEmpty) {
+      data['media'] = media;
+    }
+
+    if (channelType == 'group_dm') {
+      if (isThreadReply) {
+        path = '/group-dms/messages/$channelId';
+        data['thread_id'] = threadId;
+      } else {
+        path = '/group-dms/channels/$channelId/threads';
+      }
+    } else if (channelType == 'dm') {
+      if (isThreadReply) {
+        path = '/dms/messages/$channelId';
+        data['thread_id'] = threadId;
+      } else {
+        path = '/dms/channels/$channelId/threads';
+      }
+      if (mentions != null && mentions.isNotEmpty) data['mentions'] = mentions;
+    } else {
+      if (isThreadReply) {
+        path = '/channels/$channelId/messages';
+        data['thread_id'] = threadId;
+      } else {
+        path = '/threads/$channelId';
+      }
+      if (mentions != null && mentions.isNotEmpty) data['mentions'] = mentions;
+    }
+
     final response = await _apiClient.post<Map<String, dynamic>>(
-      path: ApiEndpoints.dmsMessages(channelId),
-      data: payload,
+      path: path,
+      data: data,
     );
 
-    AppLogger.d(
-      'sendMessage response status: ${response.statusCode}',
-      tag: 'DmRepository',
-    );
-    try {
-      AppLogger.d(
-        'sendMessage response data: ${response.data}',
-        tag: 'DmRepository',
-      );
-    } catch (_) {}
-
-    // Try to extract the created message from the response if present.
-    final respData = response.data;
-    // Some APIs return the created resource under 'data' or 'message'.
-    final responseData = respData['data'] ?? respData['message'] ?? respData;
-    if (responseData is Map<String, dynamic>) {
-      return Map<String, dynamic>.from(responseData);
+    final responseData = response.data['data'];
+    if (responseData is List && responseData.isNotEmpty) {
+      return (responseData.first as Map<dynamic, dynamic>)
+          .cast<String, dynamic>();
+    } else if (responseData is Map) {
+      return responseData.cast<String, dynamic>();
     }
-    return null;
+    return const {};
   }
 
   Future<void> editMessage(
@@ -259,9 +285,26 @@ class DmRepository {
   }
 
   Future<Map<String, dynamic>> addGroupDmParticipants(
-    String groupId,
+    String channelId,
     List<String> userIds,
   ) async {
-    return <String, dynamic>{};
+    final response = await _apiClient.post<Map<String, dynamic>>(
+      path: '/organisations/group-dms/$channelId/participants',
+      data: {'user_ids': userIds},
+    );
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> createDmRoom({
+    required String orgId,
+    required String participantId,
+  }) async {
+    final response = await _apiClient.post<Map<String, dynamic>>(
+      path: '/organisations/$orgId/dms',
+      data: {'chat_type': 'user', 'participant_id': participantId},
+    );
+    return (response.data['data'] as Map<dynamic, dynamic>?)
+            ?.cast<String, dynamic>() ??
+        const {};
   }
 }

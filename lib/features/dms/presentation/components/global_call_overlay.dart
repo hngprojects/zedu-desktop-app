@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -9,6 +7,7 @@ class GlobalCallOverlay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activeCall = ref.watch(activeCallProvider);
+    final sidebar = ref.watch(homeSidebarProvider);
     final colors = context.colors;
 
     if (activeCall.state.status == CallStatus.none) {
@@ -29,12 +28,8 @@ class GlobalCallOverlay extends ConsumerWidget {
         if (activeCall.state.status == CallStatus.incoming)
           const IncomingCallModal(),
 
-        // ── Ringing overlay (caller side) ──────────────────────────────
-        // In Option 2, the caller enters the Meeting Room (CallStatus.active) immediately
-        // and sees "Inviting..." there. However, if we still want a "Calling..." popup
-        // before they join, we can leave this here. But per Option 2, they go straight
-        // to Active, so CallStatus.calling is very briefly flashed.
-        if (activeCall.state.status == CallStatus.calling)
+        if (activeCall.state.status == CallStatus.calling &&
+            sidebar != HomeSidebarType.buzz)
           Positioned(
             top: 60, // Avoid overlapping with top app bar
             right: 24,

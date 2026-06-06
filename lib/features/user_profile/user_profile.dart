@@ -20,6 +20,8 @@ export 'presentation/components/profile_settings_shell.dart';
 export 'presentation/components/profile_widgets.dart';
 export 'presentation/components/user_avatar.dart';
 export 'presentation/components/delete_account_dialog.dart';
+export 'presentation/components/action_button.dart';
+export 'presentation/components/contact_info_row.dart';
 
 export 'presentation/providers/user_profile_notifier.dart';
 export 'presentation/providers/user_profile_providers_di.dart';

@@ -20,9 +20,25 @@ String parseHtmlToMarkdown(String input) {
   );
 
   result = result.replaceAll(RegExp(r'</p>', caseSensitive: false), '\n');
-  result = result.replaceAll(RegExp(r'<p>', caseSensitive: false), '');
+  result = result.replaceAll(RegExp(r'<p[^>]*>', caseSensitive: false), '');
 
+  // Strip any remaining HTML tags
   result = result.replaceAll(RegExp(r'<[^>]*>'), '');
+
+  // Decode common HTML entities
+  result = result
+      .replaceAll('&amp;', '&')
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>')
+      .replaceAll('&quot;', '"')
+      .replaceAll('&#39;', "'")
+      .replaceAll('&apos;', "'")
+      .replaceAll('&nbsp;', ' ')
+      .replaceAll('&ndash;', '–')
+      .replaceAll('&mdash;', '—')
+      .replaceAll('&hellip;', '…')
+      .replaceAll('&laquo;', '«')
+      .replaceAll('&raquo;', '»');
 
   result = result.replaceAll(RegExp(r'\n{3,}'), '\n\n');
 

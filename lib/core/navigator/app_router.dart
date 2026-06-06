@@ -5,7 +5,6 @@ class AppRouter {
   const AppRouter._();
 
   static const splash = '/';
-  // static const splash = '/';
   static const home = '/home';
   static const login = '/login';
   static const magicLinkRequest = '/magic-link';
@@ -16,7 +15,6 @@ class AppRouter {
   static const changePassword = '/change-password';
   static const profile = '/profile';
   static const createOrganization = '/create-organization';
-  // static const buyCredits = '/credits/buy';
 
   static final navigatorKey = GlobalKey<NavigatorState>();
 }
@@ -28,13 +26,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final authState = ref.read(authNotifierProvider);
 
-      // If auth state is unknown (e.g. on refresh while restoring session), go to splash
       if (authState.status == AuthStatus.unknown &&
           state.uri.path != AppRouter.splash) {
         return AppRouter.splash;
       }
 
-      // List of routes that require authentication
       final protectedRoutes = [
         AppRouter.home,
         AppRouter.profile,
@@ -105,10 +101,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRouter.createOrganization,
         builder: (context, state) => const CreateOrganizationView(),
       ),
-      // GoRoute(
-      //   path: AppRouter.buyCredits,
-      //   builder: (context, state) => const BuyCreditsView(),
-      // ),
     ],
   );
 });

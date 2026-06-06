@@ -9,3 +9,4 @@ export 'dm_message_composer.dart';
 export 'dm_profile_card.dart';
 export 'dm_sidebar_list.dart';
 export 'incoming_call_modal.dart';
+export 'add_channel_members_modal.dart';

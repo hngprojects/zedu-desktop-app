@@ -86,7 +86,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel> me() async {
     try {
-      AppLogger.d('GET /users/me', tag: _tag);
+      AppLogger.d('GET /auth/me', tag: _tag);
       if (_config.usesMockData) {
         return UserModel.fromJson(
           LoginResponseModel.mockLoginResponse['user'] as Map<String, dynamic>,
@@ -94,7 +94,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
 
       final response = await _apiBaseService.get<Map<String, dynamic>>(
-        path: '/users/me',
+        path: '/auth/me',
       );
 
       final data = response.data['data'] as Map<String, dynamic>;

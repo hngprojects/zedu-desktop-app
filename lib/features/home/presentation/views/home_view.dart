@@ -28,6 +28,10 @@ class _HomeViewState extends ConsumerState<HomeView> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final showPersonalProfile = ref.watch(personalProfilePanelProvider);
+    final otherProfile = ref.watch(profileDetailsPanelProvider);
+    final showOtherProfile = otherProfile != null;
+
     return Scaffold(
       backgroundColor: colors.background,
       body: Stack(
@@ -40,7 +44,27 @@ class _HomeViewState extends ConsumerState<HomeView> {
                   children: [
                     AppSidebarRail(activeType: ref.watch(homeSidebarProvider)),
                     const _MainSidebarSwitcher(),
-                    const Expanded(child: _ChatAreaSwitcher()),
+                    Expanded(
+                      child: Stack(
+                        children: [
+                          const Positioned.fill(child: _ChatAreaSwitcher()),
+                          if (showPersonalProfile)
+                            const Positioned(
+                              right: 0,
+                              top: 0,
+                              bottom: 0,
+                              child: PersonalProfilePanel(),
+                            )
+                          else if (showOtherProfile)
+                            const Positioned(
+                              right: 0,
+                              top: 0,
+                              bottom: 0,
+                              child: ProfileDetailsPanel(),
+                            ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -511,6 +535,10 @@ class _MainSidebarState extends ConsumerState<_MainSidebar> {
                         ref
                             .read(activeChatProvider.notifier)
                             .selectDirectMessage(conv.channelId);
+                        // Bring the conversation to the top of the DM list
+                        ref
+                            .read(dmListProvider.notifier)
+                            .bringToTop(conv.channelId);
                       },
                       child: Padding(
                         padding: const EdgeInsets.symmetric(

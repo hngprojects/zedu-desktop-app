@@ -6,6 +6,7 @@ class DmMessageComposer extends ConsumerStatefulWidget {
   final String channelId;
   final List<DmParticipant> participants;
   final ValueChanged<String>? onSend;
+  final bool isMember;
 
   const DmMessageComposer({
     super.key,
@@ -13,6 +14,7 @@ class DmMessageComposer extends ConsumerStatefulWidget {
     required this.channelId,
     this.participants = const [],
     this.onSend,
+    this.isMember = true,
   });
 
   @override
@@ -38,6 +40,9 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
   List<DmParticipant> _mentionSuggestions = [];
   String _mentionQuery = '';
 
+  List<Channel> _channelSuggestions = [];
+  String _channelQuery = '';
+
   bool _isRecording = false;
   final AudioRecorder _audioRecorder = AudioRecorder();
   Timer? _recordingTimer;
@@ -49,6 +54,7 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
     super.initState();
     _controller = RichTextController();
     _controller.addListener(_onTextChanged);
+    _focusNode.onKeyEvent = _handleKeyEvent;
   }
 
   @override
@@ -65,6 +71,7 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
   void _onTextChanged() {
     _updateFormattingState();
     _updateMentionSuggestions();
+    _updateChannelSuggestions();
   }
 
   Future<void> _startRecording() async {
@@ -179,18 +186,31 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
     }
     final query = atMatch.group(1)!.toLowerCase();
     _mentionQuery = query;
-    
-    final allMembers = ref.read(userProfileNotifierProvider).teamMembers;
-    
-    final suggestions = allMembers.where((m) {
-      return (m.name ?? '').toLowerCase().contains(query) ||
-          m.email.toLowerCase().contains(query);
-    }).map((m) => DmParticipant(
-      username: m.name ?? m.email.split('@').first,
-      email: m.email,
-      userId: m.id,
-    )).toList();
-    
+
+    final teamMembers = ref.read(userProfileNotifierProvider).teamMembers;
+    final allParticipants = teamMembers
+        .map(
+          (m) => DmParticipant(
+            userId: m.id,
+            username: m.name ?? m.email.split('@').first,
+            email: m.email,
+            avatarUrl: m.avatarUrl,
+          ),
+        )
+        .toList();
+
+    final uniqueParticipants = <String, DmParticipant>{};
+    for (final p in widget.participants) {
+      uniqueParticipants[p.userId] = p;
+    }
+    for (final p in allParticipants) {
+      uniqueParticipants[p.userId] = p;
+    }
+
+    final suggestions = uniqueParticipants.values.where((p) {
+      return p.username.toLowerCase().contains(query) ||
+          p.email.toLowerCase().contains(query);
+    }).toList();
     setState(() => _mentionSuggestions = suggestions);
   }
 
@@ -209,6 +229,51 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
       selection: TextSelection.collapsed(offset: atIndex + replacement.length),
     );
     setState(() => _mentionSuggestions = []);
+    _focusNode.requestFocus();
+  }
+
+  void _updateChannelSuggestions() {
+    final text = _controller.text;
+    final sel = _controller.selection;
+    if (!sel.isValid || !sel.isCollapsed) {
+      setState(() => _channelSuggestions = []);
+      return;
+    }
+    final before = text.substring(0, sel.baseOffset);
+    final hashMatch = RegExp(r'#(\w*)$').firstMatch(before);
+    if (hashMatch == null) {
+      setState(() {
+        _channelSuggestions = [];
+        _channelQuery = '';
+      });
+      return;
+    }
+    final query = hashMatch.group(1)!.toLowerCase();
+    _channelQuery = query;
+    final channelState = ref.read(channelProvider);
+    final suggestions = channelState.channels.where((c) {
+      return !c.archived && c.name.toLowerCase().contains(query);
+    }).toList();
+    setState(() => _channelSuggestions = suggestions);
+  }
+
+  void _insertChannel(Channel channel) {
+    final text = _controller.text;
+    final sel = _controller.selection;
+    final before = text.substring(0, sel.baseOffset);
+    final hashIndex = before.lastIndexOf('#');
+    if (hashIndex == -1) return;
+
+    final after = text.substring(sel.baseOffset);
+    final replacement = '#${channel.name} ';
+    final newText = text.substring(0, hashIndex) + replacement + after;
+    _controller.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(
+        offset: hashIndex + replacement.length,
+      ),
+    );
+    setState(() => _channelSuggestions = []);
     _focusNode.requestFocus();
   }
 
@@ -257,11 +322,25 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
 
     final key = event.logicalKey;
 
-    if (key == LogicalKeyboardKey.enter &&
-        (HardwareKeyboard.instance.isControlPressed ||
-            HardwareKeyboard.instance.isMetaPressed)) {
-      _handleSend();
-      return KeyEventResult.handled;
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
+      if (HardwareKeyboard.instance.isShiftPressed ||
+          HardwareKeyboard.instance.isControlPressed ||
+          HardwareKeyboard.instance.isMetaPressed) {
+        final text = _controller.text;
+        final sel = _controller.selection;
+        final offset = sel.isValid ? sel.baseOffset : text.length;
+        final newText =
+            '${text.substring(0, offset)}\n${text.substring(offset)}';
+        _controller.value = TextEditingValue(
+          text: newText,
+          selection: TextSelection.collapsed(offset: offset + 1),
+        );
+        return KeyEventResult.handled;
+      } else {
+        _handleSend();
+        return KeyEventResult.handled;
+      }
     }
 
     if (key == LogicalKeyboardKey.escape) {
@@ -450,19 +529,30 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
   }
 
   Future<void> _pickFiles() async {
-    final result = await FilePicker.pickFiles(
-      allowMultiple: true,
-      type: FileType.any,
-    );
-    if (result == null) return;
-    final picked = result.files
-        .where((PlatformFile f) => f.path != null)
-        .map(
-          (PlatformFile f) =>
-              XFile(f.path!, name: f.name, mimeType: f.extension),
-        )
-        .toList();
-    await addFiles(picked);
+    try {
+      final result = await FilePicker.pickFiles(
+        allowMultiple: true,
+        type: FileType.any,
+      );
+      if (result == null) return;
+      final picked = result.files
+          .where((PlatformFile f) => f.path != null)
+          .map(
+            (PlatformFile f) =>
+                XFile(f.path!, name: f.name, mimeType: f.extension),
+          )
+          .toList();
+      await addFiles(picked);
+    } catch (e, stack) {
+      debugPrint('Error picking files: $e\n$stack');
+      if (mounted) {
+        AppToastService.show(
+          context,
+          type: AppToastType.error,
+          message: 'Could not open file picker: $e',
+        );
+      }
+    }
   }
 
   void _removeFile(int index) {
@@ -528,6 +618,51 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
     final canSend =
         _controller.text.trim().isNotEmpty || _pendingFiles.isNotEmpty;
 
+    if (!widget.isMember) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        color: colors.primary.withValues(alpha: 0.02),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              widget.recipientName.startsWith('#')
+                  ? widget.recipientName
+                  : '#${widget.recipientName}',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'You are not a member of this channel',
+              style: TextStyle(
+                color: colors.textPrimary.withValues(alpha: 0.7),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                ref
+                    .read(channelProvider.notifier)
+                    .joinChannel(widget.channelId);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: colors.sidebar,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text('Join channel'),
+            ),
+          ],
+        ),
+      );
+    }
+
     final mainColumn = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -537,6 +672,14 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
             query: _mentionQuery,
             colors: colors,
             onSelect: _insertMention,
+          ),
+
+        if (_channelSuggestions.isNotEmpty)
+          ChannelSuggestionList(
+            suggestions: _channelSuggestions,
+            query: _channelQuery,
+            colors: colors,
+            onSelect: _insertChannel,
           ),
 
         if (_showEmojiPicker)
@@ -556,7 +699,7 @@ class DmMessageComposerState extends ConsumerState<DmMessageComposer> {
             files: _pendingFiles
                 .where((f) => f.name != 'voice_note.m4a')
                 .toList(),
-            onRemove: (int index) {
+            onRemove: (index) {
               final nonVoiceFiles = _pendingFiles
                   .where((f) => f.name != 'voice_note.m4a')
                   .toList();

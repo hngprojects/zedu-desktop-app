@@ -260,7 +260,7 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                             const SizedBox(height: 16),
 
                             // Timezone dropdown
-                            ProfileFieldLabel('Timezone'),
+                            const ProfileFieldLabel('Timezone'),
                             const SizedBox(height: 6),
                             DropdownButtonFormField<String>(
                               initialValue:
@@ -301,7 +301,7 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
                             const SizedBox(height: 16),
 
                             // Country dropdown (searchable)
-                            ProfileFieldLabel('Country'),
+                            const ProfileFieldLabel('Country'),
                             const SizedBox(height: 6),
                             Autocomplete<String>(
                               initialValue: TextEditingValue(

@@ -45,7 +45,6 @@ class UserMenuDialog extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ── Profile header ─────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -53,7 +52,6 @@ class UserMenuDialog extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    // Avatar — reactive to local preview + server URL
                     Stack(
                       clipBehavior: Clip.none,
                       children: [
@@ -91,7 +89,6 @@ class UserMenuDialog extends ConsumerWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           const SizedBox(height: 2),
-                          // Presence label
                           Text(
                             isOnline ? 'Active' : 'Away',
                             style: TextStyle(
@@ -130,7 +127,6 @@ class UserMenuDialog extends ConsumerWidget {
               Divider(height: 0, color: colors.divider),
               const SizedBox(height: 8),
 
-              // ── Custom status row ──────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: InkWell(
@@ -188,7 +184,6 @@ class UserMenuDialog extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
 
-              // ── Clear status (only visible when status is set) ─────────────
               if (status.hasCustomStatus)
                 _MenuItemButton(
                   icon: Icons.clear_all_outlined,
@@ -199,7 +194,6 @@ class UserMenuDialog extends ConsumerWidget {
                   },
                 ),
 
-              // ── Set yourself as active / away toggle ──────────────────────
               _MenuItemButton(
                 icon: isOnline
                     ? Icons.radio_button_checked
@@ -216,7 +210,6 @@ class UserMenuDialog extends ConsumerWidget {
                 },
               ),
 
-              // ── Pause notifications ────────────────────────────────────────
               _MenuItemButton(
                 icon: Icons.notifications_off_outlined,
                 label: 'Pause notifications',
@@ -231,7 +224,6 @@ class UserMenuDialog extends ConsumerWidget {
               Divider(height: 0, color: colors.divider),
               const SizedBox(height: 8),
 
-              // ── Settings shortcuts ─────────────────────────────────────────
               _MenuItemButton(
                 icon: Icons.person_outline,
                 label: 'Profile…',
@@ -246,15 +238,6 @@ class UserMenuDialog extends ConsumerWidget {
                 onTap: () {
                   Navigator.pop(context);
                   if (context.mounted) context.go(AppRouter.profile);
-                },
-              ),
-              _MenuItemButton(
-                icon: Icons.shopping_cart_outlined,
-                label: 'Buy AI credits',
-                isHighlight: true,
-                onTap: () {
-                  Navigator.pop(context);
-                  // if (context.mounted) context.go(AppRouter.buyCredits);
                 },
               ),
               const SizedBox(height: 8),
@@ -281,14 +264,11 @@ class UserMenuDialog extends ConsumerWidget {
   }
 }
 
-// ── Internal helper widget ─────────────────────────────────────────────────────
-
 class _MenuItemButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
   final Color? iconColor;
-  final bool isHighlight;
   final bool isError;
 
   const _MenuItemButton({
@@ -296,7 +276,6 @@ class _MenuItemButton extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.iconColor,
-    this.isHighlight = false,
     this.isError = false,
   });
 
@@ -305,7 +284,7 @@ class _MenuItemButton extends StatelessWidget {
     final colors = context.colors;
     final itemColor = isError
         ? colors.error
-        : (isHighlight ? colors.accent : colors.textPrimary);
+        : colors.textPrimary;
     final resolvedIconColor = iconColor ?? itemColor;
 
     return InkWell(
@@ -322,7 +301,7 @@ class _MenuItemButton extends StatelessWidget {
                 style: TextStyle(
                   color: itemColor,
                   fontSize: 13,
-                  fontWeight: isHighlight || isError
+                  fontWeight: isError
                       ? FontWeight.w500
                       : FontWeight.normal,
                 ),

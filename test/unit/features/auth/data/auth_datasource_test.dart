@@ -16,6 +16,7 @@ void main() {
       test('returns mock response when usesMockData is true', () async {
         final datasource = AuthRemoteDataSourceImpl(
           config: const AppConfig(
+            googleClientId: 'test-client-id',
             apiBaseUrl: 'https://api.example.com',
             usesMockData: true,
           ),
@@ -53,6 +54,7 @@ void main() {
 
         final datasource = AuthRemoteDataSourceImpl(
           config: const AppConfig(
+            googleClientId: 'test-client-id',
             apiBaseUrl: 'https://api.example.com',
             usesMockData: false,
           ),
@@ -84,6 +86,7 @@ void main() {
 
         final datasource = AuthRemoteDataSourceImpl(
           config: const AppConfig(
+            googleClientId: 'test-client-id',
             apiBaseUrl: 'https://api.example.com',
             usesMockData: false,
           ),
@@ -101,6 +104,7 @@ void main() {
       test('returns user from mock data when usesMockData is true', () async {
         final datasource = AuthRemoteDataSourceImpl(
           config: const AppConfig(
+            googleClientId: 'test-client-id',
             apiBaseUrl: 'https://api.example.com',
             usesMockData: true,
           ),
@@ -131,6 +135,7 @@ void main() {
 
         final datasource = AuthRemoteDataSourceImpl(
           config: const AppConfig(
+            googleClientId: 'test-client-id',
             apiBaseUrl: 'https://api.example.com',
             usesMockData: false,
           ),
@@ -154,7 +159,7 @@ void main() {
             data: {'email': 'magic@example.com'},
           ),
         ).thenAnswer(
-          (_) async => ApiResponseModel<Map<String, dynamic>>(
+          (_) async => const ApiResponseModel<Map<String, dynamic>>(
             data: {'status': 'success'},
             statusCode: 200,
           ),
@@ -162,6 +167,7 @@ void main() {
 
         final datasource = AuthRemoteDataSourceImpl(
           config: const AppConfig(
+            googleClientId: 'test-client-id',
             apiBaseUrl: 'https://api.example.com',
             usesMockData: false,
           ),
@@ -195,6 +201,7 @@ void main() {
 
         final datasource = AuthRemoteDataSourceImpl(
           config: const AppConfig(
+            googleClientId: 'test-client-id',
             apiBaseUrl: 'https://api.example.com',
             usesMockData: false,
           ),

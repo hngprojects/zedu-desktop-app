@@ -148,16 +148,16 @@ class _AddOthersButtonState extends ConsumerState<_AddOthersButton> {
             color: _hovered ? const Color(0xFF5A4DE0) : const Color(0xFF6458F5),
             borderRadius: BorderRadius.circular(6),
           ),
-          child: Row(
+          child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.person_add_outlined,
                 color: Colors.white,
                 size: 16,
               ),
-              const SizedBox(width: 6),
-              const Text(
+              SizedBox(width: 6),
+              Text(
                 'Add Others',
                 style: TextStyle(
                   color: Colors.white,
