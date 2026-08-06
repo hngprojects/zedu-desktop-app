@@ -89,9 +89,15 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     required String email,
     required String role,
     required String orgId,
+    String? userId,
   }) {
     return _guard(
-      () => _remote.inviteMember(email: email, role: role, orgId: orgId),
+      () => _remote.inviteMember(
+        email: email,
+        role: role,
+        orgId: orgId,
+        userId: userId,
+      ),
     );
   }
 
@@ -113,6 +119,11 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   @override
   Future<Result<BillingInfo>> getBillingInfo() {
     return _guard(_remote.getBillingInfo);
+  }
+
+  @override
+  Future<Result<void>> acceptInvitation(String token) {
+    return _guard(() => _remote.acceptInvitation(token));
   }
 
   Future<Result<T>> _guard<T>(Future<T> Function() operation) async {

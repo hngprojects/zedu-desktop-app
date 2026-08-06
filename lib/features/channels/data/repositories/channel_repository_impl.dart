@@ -75,4 +75,58 @@ class ChannelRepositoryImpl implements ChannelRepository {
       return Failure(ApiFailure(message: e.toString()));
     }
   }
+
+  @override
+  Future<Result<void>> toggleChannelPrivacy(
+    String channelId,
+    bool isPrivate,
+  ) async {
+    try {
+      await remoteDataSource.toggleChannelPrivacy(channelId, isPrivate);
+      return const Success(null);
+    } on ApiFailure catch (e) {
+      return Failure(e);
+    } catch (e) {
+      return Failure(ApiFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> leaveChannel(String channelId) async {
+    try {
+      await remoteDataSource.leaveChannel(channelId);
+      return const Success(null);
+    } on ApiFailure catch (e) {
+      return Failure(e);
+    } catch (e) {
+      return Failure(ApiFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> joinChannel(String channelId) async {
+    try {
+      await remoteDataSource.joinChannel(channelId);
+      return const Success(null);
+    } on ApiFailure catch (e) {
+      return Failure(e);
+    } catch (e) {
+      return Failure(ApiFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<void>> addChannelMembers(
+    String channelId,
+    List<String> userIds,
+  ) async {
+    try {
+      await remoteDataSource.addChannelMembers(channelId, userIds);
+      return const Success(null);
+    } on ApiFailure catch (e) {
+      return Failure(e);
+    } catch (e) {
+      return Failure(ApiFailure(message: e.toString()));
+    }
+  }
 }

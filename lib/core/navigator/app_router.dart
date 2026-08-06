@@ -4,6 +4,7 @@ import 'package:zedu/features/features.dart';
 class AppRouter {
   const AppRouter._();
 
+  static const splash = '/';
   static const home = '/home';
   static const login = '/login';
   static const magicLinkRequest = '/magic-link';
@@ -17,8 +18,9 @@ class AppRouter {
   static const buyCredits = '/credits/buy';
 
   static final router = GoRouter(
-    initialLocation: login,
+    initialLocation: splash,
     routes: [
+      GoRoute(path: splash, builder: (context, state) => const SplashView()),
       GoRoute(path: login, builder: (context, state) => const LoginView()),
       GoRoute(
         path: magicLinkRequest,

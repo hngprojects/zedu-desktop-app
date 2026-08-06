@@ -1,3 +1,5 @@
+import 'package:zedu/core/core.dart';
+
 class DmConversation {
   final String channelId;
   final String username;
@@ -72,7 +74,7 @@ class DmConversation {
       threadCount: json['thread_count'] as int? ?? 0,
       lastThreadId: json['last_thread_id'] as String?,
       lastReadAt: json['last_read_at'] != null
-          ? DateTime.tryParse(json['last_read_at'] as String)?.toLocal()
+          ? DateFormatter.parseUtcString(json['last_read_at'] as String)
           : null,
       previewMessage: json['preview_message'] as String? ?? '',
       previewThreads: threads,
@@ -113,7 +115,7 @@ class DmPreviewThread {
       userId: json['user_id'] as String? ?? '',
       username: json['username'] as String? ?? '',
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String).toLocal()
+          ? DateFormatter.parseUtcString(json['created_at'] as String)
           : DateTime.now(),
       messageCount: json['message_count'] as int? ?? 0,
     );

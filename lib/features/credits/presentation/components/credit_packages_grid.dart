@@ -117,7 +117,6 @@ class CreditPackagesGrid extends StatelessWidget {
     ];
 
     return defaultPackages.map((uiPkg) {
-      // Find matching package from API to get the correct real ID for purchases
       final apiMatch = packages.where((p) {
         final slug = p.planSlug?.toLowerCase() ?? p.name.toLowerCase();
         if (uiPkg.name == 'Pro Plus') {
@@ -161,7 +160,7 @@ class CreditPackagesGrid extends StatelessWidget {
         crossAxisCount: 3,
         crossAxisSpacing: 20,
         mainAxisSpacing: 20,
-        mainAxisExtent: 520, // Increased to fit the longest benefits list
+        mainAxisExtent: 520,
       ),
       itemBuilder: (context, index) {
         final package = items[index];

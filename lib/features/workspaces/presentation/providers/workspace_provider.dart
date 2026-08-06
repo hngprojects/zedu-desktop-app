@@ -1,16 +1,20 @@
 import 'package:zedu/core/core.dart';
-
-import '../../data/models/workspace.dart';
-import 'workspace_state.dart';
+import 'package:zedu/features/features.dart';
 
 class WorkspaceNotifier extends Notifier<WorkspaceState> {
   @override
   WorkspaceState build() {
-    Future.microtask(_fetchWorkspaces);
+    final authStatus = ref.watch(authNotifierProvider.select((s) => s.status));
+    if (authStatus == AuthStatus.authenticated) {
+      Future.microtask(fetchWorkspaces);
+    }
     return _getInitialState();
   }
 
-  Future<void> _fetchWorkspaces() async {
+  Future<void> fetchWorkspaces() async {
+    final authState = ref.read(authNotifierProvider);
+    if (authState.status != AuthStatus.authenticated) return;
+
     try {
       final api = locator<ApiBaseService>();
       final response = await api.get<Map<String, dynamic>>(
@@ -18,33 +22,75 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       );
       final data = response.data['data'] as List<dynamic>? ?? [];
 
-      if (data.isNotEmpty) {
-        final List<Workspace> workspaces = [];
-        for (var item in data) {
-          if (item is Map<String, dynamic>) {
-            workspaces.add(
-              Workspace(
-                id: item['id'] as String? ?? '1',
-                name: item['name'] as String? ?? 'Workspace',
-                avatar: item['logo_url'] as String? ?? '',
-                membersCount: (item['channels_count'] as num?)?.toInt() ?? 0,
-              ),
-            );
-          }
-        }
-        if (workspaces.isNotEmpty) {
-          state = state.copyWith(
-            workspaces: workspaces,
-            selectedWorkspace: workspaces.first,
+      final List<Workspace> workspaces = [];
+      for (var item in data) {
+        if (item is Map<String, dynamic>) {
+          final ownerId =
+              item['owner_id'] as String? ?? item['creator_id'] as String?;
+          final usersList = item['Users'] as List? ?? item['users'] as List?;
+          final parsedMembersCount =
+              (item['members_count'] as num?)?.toInt() ??
+              (item['users_count'] as num?)?.toInt() ??
+              usersList?.length ??
+              (item['channels_count'] as num?)?.toInt() ??
+              0;
+
+          workspaces.add(
+            Workspace(
+              id: item['id'] as String? ?? '1',
+              name: item['name'] as String? ?? 'Workspace',
+              avatar: item['logo_url'] as String? ?? '',
+              membersCount: parsedMembersCount,
+              ownerId: ownerId,
+            ),
           );
         }
       }
+
+      Workspace? selected;
+      String? previousId;
+      try {
+        previousId = state.selectedWorkspace?.id;
+      } catch (_) {}
+
+      if (previousId != null) {
+        for (final ws in workspaces) {
+          if (ws.id == previousId) {
+            selected = ws;
+            break;
+          }
+        }
+      }
+      selected ??= workspaces.isNotEmpty ? workspaces.first : null;
+
+      state = WorkspaceState(
+        workspaces: workspaces,
+        selectedWorkspace: selected,
+        isLoading: false,
+      );
     } catch (e) {
-      // Ignore API errors and fallback to mock data implicitly
+      AppConfig? config;
+      try {
+        config = locator<AppConfig>();
+      } catch (_) {}
+      if ((config?.usesMockData ?? false) && state.workspaces.isEmpty) {
+        state = _getInitialState();
+      }
     }
   }
 
   WorkspaceState _getInitialState() {
+    AppConfig? config;
+    try {
+      config = locator<AppConfig>();
+    } catch (_) {}
+    final usesMockData = config?.usesMockData ?? false;
+    final authState = ref.read(authNotifierProvider);
+
+    if (!usesMockData || authState.status != AuthStatus.authenticated) {
+      return const WorkspaceState(workspaces: [], selectedWorkspace: null);
+    }
+
     final workspaces = [
       const Workspace(
         id: '1',
@@ -76,7 +122,6 @@ class WorkspaceNotifier extends Notifier<WorkspaceState> {
       ),
     ];
 
-    // We use the mock workspaces defined above for initial state
     String? previousId;
     try {
       previousId = state.selectedWorkspace?.id;

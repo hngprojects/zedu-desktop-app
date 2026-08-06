@@ -1,7 +1,5 @@
 import 'package:zedu/core/core.dart';
 
-// core/network/api_failure.dart
-
 class ApiFailure implements Exception {
   const ApiFailure({
     required this.message,
@@ -36,21 +34,58 @@ class ApiFailure implements Exception {
   final String? path;
   final ApiFailureKind kind;
 
-  String get friendlyMessage => switch (kind) {
-    ApiFailureKind.network =>
-      'No internet connection. Check your network and try again.',
-    ApiFailureKind.timeout => 'The request timed out. Please try again.',
-    ApiFailureKind.unauthorized =>
-      'Your session has expired. Please log in again.',
-    ApiFailureKind.forbidden => 'You don\'t have permission to do that.',
-    ApiFailureKind.notFound => 'The resource was not found.',
-    ApiFailureKind.server =>
-      'Something went wrong on our end. Please try again later.',
-    ApiFailureKind.parsing => 'Parsing error: $message',
-    ApiFailureKind.unknown => 'Unknown error: $message',
-    // 4xx client errors carry a structured server message safe to show (e.g. "Invalid credentials")
-    ApiFailureKind.client => message,
-  };
+  String get friendlyMessage {
+    final messageLower = message.toLowerCase();
+
+    if (kind == ApiFailureKind.network) {
+      return 'no internet connection check your network and try again';
+    }
+
+    if (statusCode == 409 ||
+        messageLower.contains('already exists') ||
+        messageLower.contains('duplicate') ||
+        messageLower.contains('already registered')) {
+      if (path != null &&
+          (path!.contains('organisations') || path!.contains('invite'))) {
+        if (messageLower.contains('member') ||
+            messageLower.contains('already') ||
+            messageLower.contains('exist')) {
+          return 'This user is already a member of the organization.';
+        }
+        return 'The user has already been invited or is already a member.';
+      }
+      return 'email address already exists, use another email to sign in';
+    }
+
+    if (kind == ApiFailureKind.notFound ||
+        statusCode == 404 ||
+        messageLower.contains('resource not found')) {
+      final isAuthPath =
+          path == null ||
+          path!.contains('auth') ||
+          path!.contains('login') ||
+          path!.contains('password') ||
+          path!.contains('register');
+      if (isAuthPath) {
+        return 'This email address could not be found.';
+      }
+    }
+
+    return switch (kind) {
+      ApiFailureKind.network =>
+        'no internet connection check your network and try again',
+      ApiFailureKind.timeout => 'The request timed out. Please try again.',
+      ApiFailureKind.unauthorized =>
+        'Your session has expired. Please log in again.',
+      ApiFailureKind.forbidden => 'You don\'t have permission to do that.',
+      ApiFailureKind.notFound => 'The resource was not found.',
+      ApiFailureKind.server =>
+        'Something went wrong on our end. Please try again later.',
+      ApiFailureKind.parsing => 'Parsing error: $message',
+      ApiFailureKind.unknown => 'Unknown error: $message',
+      ApiFailureKind.client => message,
+    };
+  }
 
   @override
   String toString() => message;
@@ -58,30 +93,41 @@ class ApiFailure implements Exception {
   static String _resolveMessage(DioException error) {
     final data = error.response?.data;
     if (data is Map) {
-      if (data['errors'] is List) {
-        final errorsList = data['errors'] as List;
+      if (data['errors'] != null) {
         final details = <String>[];
-        for (final err in errorsList) {
-          if (err is Map) {
-            final field = err['field'] ?? err['key'];
-            final msg = err['message'] ?? err['value'] ?? err['error'];
-            if (field != null && msg != null) {
-              details.add('$field: $msg');
-            } else if (msg != null) {
-              details.add(msg.toString());
-            } else if (field != null) {
-              details.add('$field is invalid');
+        if (data['errors'] is List) {
+          final errorsList = data['errors'] as List;
+          for (final err in errorsList) {
+            if (err is Map) {
+              final field = err['field'] ?? err['key'];
+              final msg = err['message'] ?? err['value'] ?? err['error'];
+              if (field != null && msg != null) {
+                details.add('$field: $msg');
+              } else if (msg != null) {
+                details.add(msg.toString());
+              } else if (field != null) {
+                details.add('$field is invalid');
+              }
+            } else {
+              details.add(err.toString());
             }
-          } else {
-            details.add(err.toString());
+          }
+        } else if (data['errors'] is Map) {
+          final errorsMap = data['errors'] as Map;
+          for (final entry in errorsMap.entries) {
+            details.add('${entry.key}: ${entry.value}');
           }
         }
         if (details.isNotEmpty) {
           return details.join('\n');
         }
       }
-      if (data['message'] is String) return data['message'] as String;
-      if (data['error'] is String) return data['error'] as String;
+      if (data['message'] is String) {
+        return '${data['message']}\nRaw data: $data';
+      }
+      if (data['error'] is String) {
+        return '${data['error']}\nRaw data: $data';
+      }
     }
     if (data is String) {
       return data;
@@ -114,8 +160,8 @@ enum ApiFailureKind {
   unauthorized,
   forbidden,
   notFound,
-  client, // 4xx other than the named ones
-  server, // 5xx
-  parsing, // response shape didn't match
+  client,
+  server,
+  parsing,
   unknown,
 }

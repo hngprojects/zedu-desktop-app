@@ -7,7 +7,6 @@ class FontFamily {
 }
 
 class AppTypography {
-  // Default TextTheme with Lato as default
   static TextTheme get textTheme {
     return TextTheme(
       headlineLarge: TextStyle(
@@ -46,7 +45,7 @@ class AppTypography {
         fontWeight: FontWeight.w400,
         height: 1.33,
       ),
-      // Labels use Roboto
+
       labelLarge: TextStyle(
         fontFamily: FontFamily.lato,
         fontSize: 14,
@@ -65,7 +64,7 @@ class AppTypography {
         fontWeight: FontWeight.w500,
         height: 1.45,
       ),
-      // Titles use Lato
+
       titleLarge: TextStyle(
         fontFamily: FontFamily.lato,
         fontSize: 22,
@@ -84,7 +83,7 @@ class AppTypography {
         fontWeight: FontWeight.w500,
         height: 1.43,
       ),
-      // Display uses Lato
+
       displayLarge: TextStyle(
         fontFamily: FontFamily.lato,
         fontSize: 57,

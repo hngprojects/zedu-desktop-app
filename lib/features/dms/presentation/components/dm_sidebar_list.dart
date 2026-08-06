@@ -66,16 +66,30 @@ class DmSidebarList extends ConsumerWidget {
                     ),
                   ),
                   data: (conversations) {
-                    if (conversations.isEmpty) {
-                      return Center(
-                        child: Text(
-                          'No recent chats',
-                          style: TextStyle(
-                            color: colors.onPrimary.withValues(alpha: 0.5),
-                          ),
-                        ),
+                    final groupDms = ref.watch(groupDmProvider);
+                    final groupConversations = groupDms.map((g) {
+                      return DmConversation(
+                        channelId: g.id,
+                        username: g.name,
+                        participantId: 'group-dm',
+                        previewMessage: g.messages.isEmpty
+                            ? ''
+                            : g.messages.last,
+                        unreadCount: g.unreadCount,
+                        channelType: 'group_dm',
+                        participants: g.members
+                            .map(
+                              (m) => DmParticipant(
+                                userId: m.id,
+                                username: m.name ?? m.email.split('@').first,
+                                email: m.email,
+                                avatarUrl: m.avatarUrl,
+                              ),
+                            )
+                            .toList(),
                       );
-                    }
+                    }).toList();
+
                     return NotificationListener<ScrollNotification>(
                       onNotification: (scrollInfo) {
                         if (scrollInfo is ScrollEndNotification &&
@@ -88,12 +102,140 @@ class DmSidebarList extends ConsumerWidget {
                         }
                         return false;
                       },
-                      child: ListView.builder(
-                        padding: EdgeInsets.zero,
-                        itemCount: conversations.length,
-                        itemBuilder: (context, index) {
-                          return DmListTile(conversation: conversations[index]);
-                        },
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.arrow_drop_down,
+                                    color: colors.onPrimary,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Direct Messages',
+                                    style: TextStyle(
+                                      color: colors.onPrimary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (conversations.isEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 8,
+                                ),
+                                child: Text(
+                                  'No recent direct messages',
+                                  style: TextStyle(
+                                    color: colors.onPrimary.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              )
+                            else
+                              ListView.builder(
+                                padding: EdgeInsets.zero,
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: conversations.length,
+                                itemBuilder: (context, index) {
+                                  return DmListTile(
+                                    conversation: conversations[index],
+                                  );
+                                },
+                              ),
+
+                            const SizedBox(height: 20),
+
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.arrow_drop_down,
+                                    color: colors.onPrimary,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Group DMs',
+                                      style: TextStyle(
+                                        color: colors.onPrimary,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ),
+                                  InkWell(
+                                    onTap: () {
+                                      ref
+                                          .read(activeChatProvider.notifier)
+                                          .selectNewGroupChat();
+                                    },
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: colors.onPrimary.withValues(
+                                            alpha: 0.38,
+                                          ),
+                                        ),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Icon(
+                                        Icons.add,
+                                        color: colors.onPrimary,
+                                        size: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (groupConversations.isEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 8,
+                                ),
+                                child: Text(
+                                  'No recent group DMs',
+                                  style: TextStyle(
+                                    color: colors.onPrimary.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              )
+                            else
+                              ListView.builder(
+                                padding: EdgeInsets.zero,
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: groupConversations.length,
+                                itemBuilder: (context, index) {
+                                  return DmListTile(
+                                    conversation: groupConversations[index],
+                                  );
+                                },
+                              ),
+                            const SizedBox(height: 20),
+                          ],
+                        ),
                       ),
                     );
                   },

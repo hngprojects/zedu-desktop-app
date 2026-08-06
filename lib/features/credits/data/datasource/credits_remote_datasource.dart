@@ -147,7 +147,6 @@ const _mockTransactions = <Map<String, dynamic>>[
   },
 ];
 
-/// Five AI credit packages matching billing screenshots (Free → Enterprise).
 const _mockPackages = <Map<String, dynamic>>[
   {
     'id': 'pkg-free',

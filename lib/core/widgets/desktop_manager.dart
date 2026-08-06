@@ -1,7 +1,5 @@
-import 'dart:io';
-
 import 'package:zedu/core/core.dart';
-import 'package:zedu/features/dms/domain/notification_service.dart';
+import 'package:zedu/features/features.dart';
 
 class DesktopManager extends ConsumerStatefulWidget {
   final Widget child;
@@ -30,7 +28,6 @@ class _DesktopManagerState extends ConsumerState<DesktopManager>
   }
 
   Future<void> _initDesktop() async {
-    // Make sure window doesn't close completely when clicking X
     try {
       await windowManager.setPreventClose(true);
     } catch (e) {

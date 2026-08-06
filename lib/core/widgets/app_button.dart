@@ -1,34 +1,5 @@
 import 'package:zedu/core/core.dart';
 
-// ============================================================
-// AppButton — Reusable button for Zedu
-// ============================================================
-//
-// Usage:
-//
-//   AppButton(
-//     label: 'Save Client',
-//     onPressed: () => ...,
-//   )
-//
-//   AppButton(
-//     label: 'Next Step',
-//     onPressed: _handleSubmit,
-//     loading: isSubmitting,
-//     trailing: Icons.arrow_forward,
-//   )
-//
-//   AppButton.outlined(
-//     label: 'Cancel',
-//     onPressed: () => Navigator.pop(context),
-//   )
-//
-//   AppButton.ghost(
-//     label: 'Skip for now',
-//     onPressed: () => ...,
-//   )
-// ============================================================
-
 enum _AppButtonVariant { filled, outlined, ghost }
 
 class AppButton extends StatelessWidget {

@@ -1,8 +1,5 @@
-import 'dart:developer' as dev;
-
 import 'package:zedu/core/core.dart';
 
-/// Log level severity, aligned with java.util.logging integers used by dart:developer.
 enum LogLevel {
   verbose(300),
   debug(500),
@@ -15,16 +12,6 @@ enum LogLevel {
   final int value;
 }
 
-/// Project-wide static logger backed by dart:developer.
-///
-/// In release builds, levels below [LogLevel.warning] are suppressed.
-/// ANSI color formatting is applied only in debug builds.
-///
-/// Output appears in the Flutter DevTools "Logging" tab (not the Debug Console).
-///
-/// Usage:
-///   AppLogger.d('Fetching tasks');
-///   AppLogger.e('Login failed', tag: 'AuthNotifier', error: e, stackTrace: st);
 abstract final class AppLogger {
   AppLogger._();
 
@@ -85,7 +72,7 @@ abstract final class AppLogger {
   }) {
     if (kReleaseMode && level.value < LogLevel.warning.value) return;
 
-    dev.log(
+    log(
       kDebugMode ? '${_prefix(level)}$message\x1B[0m' : message,
       name: tag ?? 'AppLogger',
       level: level.value,
@@ -96,11 +83,11 @@ abstract final class AppLogger {
   }
 
   static String _prefix(LogLevel level) => switch (level) {
-    LogLevel.verbose => '\x1B[37m[V] ', // grey
-    LogLevel.debug => '\x1B[36m[D] ', // cyan
-    LogLevel.info => '\x1B[32m[I] ', // green
-    LogLevel.warning => '\x1B[33m[W] ', // yellow
-    LogLevel.error => '\x1B[31m[E] ', // red
-    LogLevel.fatal => '\x1B[1;31m[F] ', // bold bright red
+    LogLevel.verbose => '\x1B[37m[V] ',
+    LogLevel.debug => '\x1B[36m[D] ',
+    LogLevel.info => '\x1B[32m[I] ',
+    LogLevel.warning => '\x1B[33m[W] ',
+    LogLevel.error => '\x1B[31m[E] ',
+    LogLevel.fatal => '\x1B[1;31m[F] ',
   };
 }

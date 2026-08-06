@@ -12,10 +12,7 @@ class DmListTile extends ConsumerWidget {
     final messageDay = DateTime(dt.year, dt.month, dt.day);
 
     if (messageDay == today) {
-      final hour = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
-      final minute = dt.minute.toString().padLeft(2, '0');
-      final period = dt.hour >= 12 ? 'PM' : 'AM';
-      return '$hour:$minute $period';
+      return DateFormatter.formatTime12h(dt);
     }
 
     final yesterday = today.subtract(const Duration(days: 1));
@@ -29,13 +26,22 @@ class DmListTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    final selected = ref.watch(selectedDmProvider);
-    final isSelected = selected?.channelId == conversation.channelId;
+    final activeChat = ref.watch(activeChatProvider);
+    final isSelected = activeChat.id == conversation.channelId;
     final hasUnread = conversation.unreadCount > 0;
 
     return InkWell(
       onTap: () {
-        ref.read(selectedDmProvider.notifier).select(conversation);
+        if (conversation.channelType == 'group_dm') {
+          ref
+              .read(activeChatProvider.notifier)
+              .selectGroupDm(conversation.channelId);
+        } else {
+          ref.read(selectedDmProvider.notifier).select(conversation);
+          ref
+              .read(activeChatProvider.notifier)
+              .selectDirectMessage(conversation.channelId);
+        }
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),

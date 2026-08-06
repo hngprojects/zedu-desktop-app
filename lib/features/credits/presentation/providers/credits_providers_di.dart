@@ -18,11 +18,15 @@ final creditsNotifierProvider = NotifierProvider<CreditsNotifier, CreditsState>(
 );
 
 final orgCreditBalanceProvider = Provider<int>((ref) {
-  final creditsState = ref.watch(creditsNotifierProvider);
-  if (creditsState.status == CreditsStatus.ready ||
-      creditsState.status == CreditsStatus.purchasing ||
-      creditsState.status == CreditsStatus.verifying) {
-    return creditsState.usage.balance;
+  try {
+    final creditsState = ref.watch(creditsNotifierProvider);
+    if (creditsState.status == CreditsStatus.ready ||
+        creditsState.status == CreditsStatus.purchasing ||
+        creditsState.status == CreditsStatus.verifying) {
+      return creditsState.usage.balance;
+    }
+    return ref.watch(authNotifierProvider).user?.creditBalance ?? 0;
+  } catch (e) {
+    return 0;
   }
-  return ref.watch(authNotifierProvider).user?.creditBalance ?? 0;
 });

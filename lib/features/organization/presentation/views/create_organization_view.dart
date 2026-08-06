@@ -16,7 +16,6 @@ class _CreateOrganizationViewState
   final _typeController = TextEditingController();
   String? _selectedCountry;
 
-  // Predefined list of countries
   final List<String> _countries = [
     'United States',
     'United Kingdom',
@@ -55,10 +54,8 @@ class _CreateOrganizationViewState
 
     final notifier = ref.read(userProfileNotifierProvider.notifier);
 
-    // Simulate loading state locally before notifying the user
-    setState(() {}); // trigger rebuild if we had a local loading state
+    setState(() {});
 
-    // The creation method will update the state
     await notifier.createOrganization(
       name: _nameController.text.trim(),
       type: _typeController.text.trim(),
@@ -100,6 +97,20 @@ class _CreateOrganizationViewState
 
     return Scaffold(
       backgroundColor: colors.background,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: colors.textPrimary),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(AppRouter.home);
+            }
+          },
+        ),
+      ),
       body: Center(
         child: SingleChildScrollView(
           child: Container(
@@ -128,7 +139,6 @@ class _CreateOrganizationViewState
                   ),
                   const SizedBox(height: 48),
 
-                  // Organization Name
                   Text(
                     'Organization Name',
                     style: TextStyle(
@@ -172,7 +182,6 @@ class _CreateOrganizationViewState
                   ),
                   const SizedBox(height: 24),
 
-                  // Organization Type
                   Text(
                     'Organization Type',
                     style: TextStyle(
@@ -219,7 +228,6 @@ class _CreateOrganizationViewState
                   ),
                   const SizedBox(height: 24),
 
-                  // Country
                   Text(
                     'Country',
                     style: TextStyle(
@@ -275,7 +283,6 @@ class _CreateOrganizationViewState
                   ),
                   const SizedBox(height: 48),
 
-                  // Submit Button
                   ElevatedButton(
                     onPressed: isLoading ? null : _submit,
                     style: ElevatedButton.styleFrom(

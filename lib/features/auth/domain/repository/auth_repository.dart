@@ -1,8 +1,6 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
-// domain/repositories/auth_repository.dart
-
 abstract interface class AuthRepository {
   Future<Result<AuthSession>> login({
     required String email,

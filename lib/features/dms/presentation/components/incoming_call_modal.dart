@@ -8,7 +8,6 @@ class IncomingCallModal extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final activeCall = ref.watch(activeCallProvider);
 
-    // Only show if incoming
     if (activeCall.state.status != CallStatus.incoming) {
       return const SizedBox.shrink();
     }

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
@@ -93,7 +91,6 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
   Future<void> _onResendCodePressed() async {
     if (_secondsLeft > 0) return;
 
-    // Trigger forgot password again to resend code
     final success = await ref
         .read(authNotifierProvider.notifier)
         .forgotPassword(email: widget.email);
@@ -168,7 +165,6 @@ class _ResetPasswordViewState extends ConsumerState<ResetPasswordView> {
 
     final authState = ref.watch(authNotifierProvider);
 
-    // Format the email to mask it like pl***@gmail.com
     String maskedEmail = widget.email;
     if (maskedEmail.contains('@')) {
       final parts = maskedEmail.split('@');

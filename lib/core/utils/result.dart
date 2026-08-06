@@ -1,7 +1,5 @@
 import 'package:zedu/core/core.dart';
 
-// core/utils/result.dart
-
 sealed class Result<T> {
   const Result();
 }

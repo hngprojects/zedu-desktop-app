@@ -154,15 +154,24 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         return;
       }
 
-      AppLogger.d('POST auth/password-reset — $email', tag: _tag);
+      AppLogger.d('POST /auth/password-reset — $email', tag: _tag);
       await _apiBaseService.post<dynamic>(
         path: '/auth/password-reset',
-        data: {'email': email},
+        data: {
+          'email': email,
+          'client_url': dotenv.maybeGet('RESET_PASSWORD_URL') ?? '',
+          'redirect_url': dotenv.maybeGet('RESET_PASSWORD_URL') ?? '',
+          'redirect_uri': dotenv.maybeGet('RESET_PASSWORD_URL') ?? '',
+        },
+        headers: {
+          'Origin': 'https://zedu.chat',
+          'Referer': 'https://zedu.chat/',
+        },
       );
     } on ApiFailure {
       rethrow;
     } catch (error) {
-      AppLogger.e('Failed auth/password-reset', tag: _tag, error: error);
+      AppLogger.e('Failed /auth/password-reset', tag: _tag, error: error);
       throw ApiFailure.unknown(error);
     }
   }
@@ -294,9 +303,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       AppLogger.d('POST /auth/google', tag: _tag);
       final data = <String, dynamic>{'grant_code': grantCode};
-      if (redirectUri != null) {
-        data['redirect_uri'] = redirectUri;
-      }
 
       final response = await _apiBaseService.post<Map<String, dynamic>>(
         path: '/auth/google',

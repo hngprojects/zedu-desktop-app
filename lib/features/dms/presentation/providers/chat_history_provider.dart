@@ -2,7 +2,8 @@ import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
 class ChatHistoryNotifier extends ChangeNotifier {
-  final String channelId;
+  String channelId;
+  final String? threadId;
   final Ref ref;
 
   List<Map<String, dynamic>> messages = [];
@@ -12,9 +13,141 @@ class ChatHistoryNotifier extends ChangeNotifier {
 
   String? editingMessageId;
   String? _editingOriginalContent;
+  StreamSubscription<ChatWebsocketMessage>? _websocketSubscription;
 
-  ChatHistoryNotifier(this.channelId, this.ref) {
-    _loadInitial();
+  ChatHistoryNotifier(String channelOrThreadId, this.ref)
+    : channelId = channelOrThreadId.contains(':')
+          ? channelOrThreadId.split(':').first
+          : channelOrThreadId,
+      threadId = channelOrThreadId.contains(':')
+          ? channelOrThreadId.split(':').last
+          : null {
+    ref.read(chatWebsocketProvider).connect([channelId]);
+    _listenToWebsocket();
+
+    if (channelId.startsWith('group-dm-') || channelId.contains('group-dm')) {
+      _loadInitial();
+      _listenToGroupDmChanges();
+    } else {
+      _loadInitial();
+    }
+  }
+
+  void _listenToWebsocket() {
+    _websocketSubscription = ref
+        .read(chatWebsocketProvider)
+        .messageStream
+        .listen((msg) {
+          if (msg.groupDmId == channelId) {
+            final authState = ref.read(authNotifierProvider);
+            final currentUser = authState.user;
+            final currentUsername = currentUser?.username;
+            final isMe =
+                msg.authorName == currentUserName ||
+                (currentUsername != null && msg.authorName == currentUsername);
+
+            bool foundMatch = false;
+            messages = messages.map((m) {
+              if (m['id'] == msg.id) {
+                foundMatch = true;
+                return m;
+              }
+              // Match optimistic messages
+              if (!foundMatch &&
+                  m['content'] == msg.text &&
+                  (m['sender_name'] == msg.authorName ||
+                      m['username'] == msg.authorName)) {
+                // Update optimistic message with real ID
+                final updated = Map<String, dynamic>.from(m);
+                updated['id'] = msg.id;
+                if (msg.userId.isNotEmpty) {
+                  updated['user_id'] = msg.userId;
+                  updated['userId'] = msg.userId;
+                }
+                foundMatch = true;
+                return updated;
+              }
+              return m;
+            }).toList();
+
+            if (!foundMatch) {
+              final newMsg = {
+                "id": msg.id,
+                "content": msg.text,
+                "channel_id": channelId,
+                "user_id": msg.userId.isNotEmpty
+                    ? msg.userId
+                    : (isMe ? _currentUserId : 'other'),
+                "userId": msg.userId.isNotEmpty
+                    ? msg.userId
+                    : (isMe ? _currentUserId : 'other'),
+                "sender_name": msg.authorName,
+                "username": msg.authorName,
+                "type": "user",
+                "created_at": msg.timestamp.toUtc().toIso8601String(),
+              };
+              messages = [newMsg, ...messages];
+              _seenIds.add(msg.id);
+            }
+            notifyListeners();
+          }
+        });
+  }
+
+  void _listenToGroupDmChanges() {
+    ref.listen<List<GroupDM>>(groupDmProvider, (previous, next) {
+      final group = next.firstWhere(
+        (g) => g.id == channelId,
+        orElse: () => GroupDM(id: channelId, name: '', members: []),
+      );
+      messages = group.messages.reversed
+          .map(_mapGroupDmMessageToHistoryMap)
+          .toList();
+      notifyListeners();
+    });
+  }
+
+  Map<String, dynamic> _mapGroupDmMessageToHistoryMap(String msg) {
+    final isPending = msg.endsWith('(Pending...)');
+    final isSimulated = msg.contains('simulated real-time');
+
+    final senderId = isSimulated ? 'mock-member' : _currentUserId;
+    final senderName = isSimulated ? 'Mock Member' : currentUserName;
+    final content = isPending ? msg.substring(0, msg.length - 13) : msg;
+
+    return {
+      "id": msg.hashCode.toString(),
+      "content": content,
+      "channel_id": channelId,
+      "user_id": senderId,
+      "userId": senderId,
+      "sender_name": senderName,
+      "type": "user",
+      "created_at": DateTime.now().toUtc().toIso8601String(),
+      if (isPending) "status": "sending",
+    };
+  }
+
+  bool get _isGroupDm {
+    final activeChat = ref.read(activeChatProvider);
+    if (activeChat.type == ActiveChatType.groupDm &&
+        activeChat.id == channelId) {
+      return true;
+    }
+    if (channelId.startsWith('group-dm-') || channelId.contains('group-dm')) {
+      return true;
+    }
+    final groups = ref.read(groupDmProvider);
+    return groups.any((g) => g.id == channelId);
+  }
+
+  bool get _isChannel {
+    try {
+      final state = ref.read(channelProvider);
+      return state.channels.any((c) => c.id == channelId);
+    } catch (_) {
+      return false;
+    }
   }
 
   String get _currentUserId {
@@ -36,8 +169,21 @@ class ChatHistoryNotifier extends ChangeNotifier {
   }
 
   bool isMyMessage(Map<String, dynamic> message) {
-    final senderId = message['user_id'] ?? message['userId'];
-    return senderId == _currentUserId || senderId == 'me';
+    var rawSender =
+        message['user_id'] ??
+        message['userId'] ??
+        message['sender_id'] ??
+        message['author_id'];
+
+    if (rawSender == null && message['sender'] is Map) {
+      rawSender = (message['sender'] as Map)['id'];
+    }
+
+    final senderId = rawSender?.toString() ?? '';
+    final currentId = _currentUserId;
+
+    if (currentId.isEmpty) return false;
+    return senderId == currentId || senderId == 'me';
   }
 
   String? get lastSentMessageContent {
@@ -59,50 +205,128 @@ class ChatHistoryNotifier extends ChangeNotifier {
   }
 
   Future<void> _loadInitial() async {
+    if (channelId.startsWith('group-dm-') || channelId.contains('group-dm')) {
+      try {
+        final groups = ref.read(groupDmProvider);
+        final group = groups.firstWhere(
+          (g) => g.id == channelId,
+          orElse: () => GroupDM(id: channelId, name: '', members: []),
+        );
+        messages = group.messages.reversed
+            .map(_mapGroupDmMessageToHistoryMap)
+            .toList();
+      } catch (e, stack) {
+        AppLogger.e(
+          'Error loading initial Group DM messages',
+          error: e,
+          stackTrace: stack,
+        );
+      } finally {
+        isLoading = false;
+        notifyListeners();
+      }
+      return;
+    }
+
     try {
       final repository = ref.read(dmRepositoryProvider);
-      messages = await repository.getMessages(channelId, page: 1);
+      final cType = _isGroupDm
+          ? 'group_dm'
+          : _isChannel
+          ? 'channel'
+          : 'dm';
+      messages = await repository.getMessages(
+        channelId,
+        page: 1,
+        threadId: threadId,
+        channelType: cType,
+      );
       hasMore = messages.length >= DmRepository.pageSize;
       page = 1;
-    } catch (_) {
+    } catch (e, stack) {
+      AppLogger.e(
+        'Error loading initial DM/channel messages',
+        error: e,
+        stackTrace: stack,
+      );
+
+      if (_isGroupDm) {
+        try {
+          final groups = ref.read(groupDmProvider);
+          final group = groups.firstWhere(
+            (g) => g.id == channelId,
+            orElse: () => GroupDM(id: channelId, name: '', members: []),
+          );
+          if (group.messages.isNotEmpty) {
+            messages = group.messages.reversed
+                .map(_mapGroupDmMessageToHistoryMap)
+                .toList();
+          }
+        } catch (localError) {
+          AppLogger.e(
+            'Error loading fallback Group DM messages',
+            error: localError,
+          );
+        }
+      }
+
+      if (e is ApiFailure && (e.statusCode == 400 || e.statusCode == 403)) {
+        AppLogger.i(
+          'Not a member of channel $channelId. Attempting auto-join.',
+        );
+        try {
+          final joined = await ref
+              .read(channelProvider.notifier)
+              .joinChannel(channelId);
+          if (joined) {
+            final repository = ref.read(dmRepositoryProvider);
+            messages = await repository.getMessages(
+              channelId,
+              page: 1,
+              threadId: threadId,
+            );
+            hasMore = messages.length >= DmRepository.pageSize;
+            page = 1;
+          }
+        } catch (joinError) {
+          AppLogger.e(
+            'Failed to auto-join channel $channelId',
+            error: joinError,
+          );
+        }
+      }
     } finally {
       isLoading = false;
       notifyListeners();
     }
-    // Start polling for new messages now that the initial load is done.
+
     _startPolling();
   }
 
-  // ── Realtime notification polling ────────────────────────────────────────────
-
-  /// Set of message IDs we have already seen. Used to detect truly-new messages
-  /// so we don't re-fire a notification on every poll cycle.
   final Set<String> _seenIds = {};
 
-  /// Keep track of the polling timer so we can cancel it on dispose.
-  // ignore: cancel_subscriptions
   dynamic _pollingTimer;
 
   void _startPolling() {
-    // Record all initially-loaded IDs as "already seen" so we only notify
-    // about messages that arrive AFTER the initial load.
     for (final m in messages) {
       final id = m['id']?.toString();
       if (id != null) _seenIds.add(id);
     }
 
-    // Poll every 10 seconds for new messages.
-    _pollingTimer = Stream<int>.periodic(const Duration(seconds: 10)).listen((
-      _,
-    ) {
-      _pollForNewMessages();
-    });
+    _pollingTimer = Stream<int>.periodic(const Duration(seconds: 10), (i) => i)
+        .listen((_) {
+          _pollForNewMessages();
+        });
   }
 
   Future<void> _pollForNewMessages() async {
     try {
       final repository = ref.read(dmRepositoryProvider);
-      final fresh = await repository.getMessages(channelId, page: 1);
+      final fresh = await repository.getMessages(
+        channelId,
+        page: 1,
+        threadId: threadId,
+      );
 
       bool hadNew = false;
       for (final msg in fresh) {
@@ -112,7 +336,6 @@ class ChatHistoryNotifier extends ChangeNotifier {
         _seenIds.add(id);
         hadNew = true;
 
-        // Only notify for messages from other users.
         if (!isMyMessage(msg)) {
           final senderName =
               (msg['sender_name'] ?? msg['username'] ?? 'Someone').toString();
@@ -123,7 +346,6 @@ class ChatHistoryNotifier extends ChangeNotifier {
       }
 
       if (hadNew) {
-        // Prepend only the genuinely new messages at the top.
         final existingIds = messages.map((m) => m['id']?.toString()).toSet();
         final newOnly = fresh
             .where((m) => !existingIds.contains(m['id']?.toString()))
@@ -133,14 +355,13 @@ class ChatHistoryNotifier extends ChangeNotifier {
           notifyListeners();
         }
       }
-    } catch (_) {
-      // Silent — polling failures should not surface to the UI.
-    }
+    } catch (_) {}
   }
 
   @override
   void dispose() {
     (_pollingTimer as dynamic)?.cancel();
+    _websocketSubscription?.cancel();
     super.dispose();
   }
 
@@ -153,9 +374,16 @@ class ChatHistoryNotifier extends ChangeNotifier {
     try {
       final repository = ref.read(dmRepositoryProvider);
       final nextPage = page + 1;
+      final cType = _isGroupDm
+          ? 'group_dm'
+          : _isChannel
+          ? 'channel'
+          : 'dm';
       final newMessages = await repository.getMessages(
         channelId,
         page: nextPage,
+        threadId: threadId,
+        channelType: cType,
       );
 
       messages = [...messages, ...newMessages];
@@ -180,36 +408,160 @@ class ChatHistoryNotifier extends ChangeNotifier {
       "channel_id": channelId,
       "user_id": _currentUserId,
       "userId": _currentUserId,
+      "sender_name": currentUserName,
       "type": "user",
-      "created_at": DateTime.now().toIso8601String(),
+      "created_at": DateTime.now().toUtc().toIso8601String(),
       "status": "sending",
+      if (media != null && media.isNotEmpty)
+        "media": media
+            .map(
+              (file) => {
+                "file_name": file.name,
+                "file_link": file.path,
+                "file_type": file.name.split('.').last,
+              },
+            )
+            .toList(),
     };
 
     messages = [optimisticMessage, ...messages];
     notifyListeners();
 
+    if (_isGroupDm) {
+      try {
+        final notifier = ref.read(groupDmProvider.notifier);
+        await notifier.sendMessage(channelId, content);
+
+        messages = messages.map((m) {
+          if (m['id'] == tempId) {
+            final newMsg = Map<String, dynamic>.from(m);
+            newMsg.remove('status');
+            return newMsg;
+          }
+          return m;
+        }).toList();
+      } catch (e, stack) {
+        AppLogger.e(
+          'Error sending Group DM message',
+          error: e,
+          stackTrace: stack,
+        );
+        messages = messages.map((m) {
+          if (m['id'] == tempId) {
+            final newMsg = Map<String, dynamic>.from(m);
+            newMsg['status'] = 'failed: $e';
+            return newMsg;
+          }
+          return m;
+        }).toList();
+      } finally {
+        notifyListeners();
+      }
+      return;
+    }
+
     try {
       final repository = ref.read(dmRepositoryProvider);
-      await repository.sendMessage(
-        channelId,
-        content,
-        media: media,
-        mentions: mentions,
-      );
+      String activeChannelId = channelId;
+
+      final selectedDm = ref.read(selectedDmProvider);
+      final activeChat = ref.read(activeChatProvider);
+      final isDirectMessage = activeChat.type == ActiveChatType.directMessage;
+
+      if (isDirectMessage &&
+          selectedDm != null &&
+          selectedDm.channelId == selectedDm.participantId) {
+        final orgId = ref.read(currentOrgIdProvider);
+        final roomData = await repository.createDmRoom(
+          orgId: orgId,
+          participantId: selectedDm.participantId,
+        );
+        final newChannelId = roomData['channel_id'] as String?;
+        if (newChannelId != null && newChannelId.isNotEmpty) {
+          activeChannelId = newChannelId;
+          channelId = newChannelId;
+          final updatedDm = DmConversation(
+            channelId: newChannelId,
+            username: selectedDm.username,
+            participantId: selectedDm.participantId,
+            participantEmail: selectedDm.participantEmail,
+            avatarUrl: selectedDm.avatarUrl,
+            defaultAvatarUrl: selectedDm.defaultAvatarUrl,
+            channelType: 'dm',
+            previewMessage: content,
+            unreadCount: 0,
+          );
+          ref.read(selectedDmProvider.notifier).select(updatedDm);
+          ref.read(dmListProvider.notifier).refresh();
+        }
+      }
+
+      var responseData = <String, dynamic>{};
+      try {
+        final orgId = ref.read(currentOrgIdProvider);
+        responseData = await repository.sendMessage(
+          activeChannelId,
+          content,
+          orgId: orgId,
+          threadId: threadId,
+          media: media,
+          mentions: mentions,
+          channelType: isDirectMessage ? 'dm' : 'channel',
+        );
+      } catch (e) {
+        if (e is ApiFailure && (e.statusCode == 400 || e.statusCode == 403)) {
+          AppLogger.i(
+            'Not a member of channel $activeChannelId on sendMessage. Auto-joining.',
+          );
+          final joined = await ref
+              .read(channelProvider.notifier)
+              .joinChannel(activeChannelId);
+          if (joined) {
+            responseData = await repository.sendMessage(
+              activeChannelId,
+              content,
+              orgId: ref.read(currentOrgIdProvider),
+              threadId: threadId,
+              media: media,
+              mentions: mentions,
+              channelType: isDirectMessage ? 'dm' : 'channel',
+            );
+          } else {
+            rethrow;
+          }
+        } else {
+          rethrow;
+        }
+      }
 
       messages = messages.map((m) {
         if (m['id'] == tempId) {
           final newMsg = Map<String, dynamic>.from(m);
           newMsg.remove('status');
+          if (responseData.isNotEmpty) {
+            for (final entry in responseData.entries) {
+              if (entry.value != null && entry.value.toString().isNotEmpty) {
+                newMsg[entry.key] = entry.value;
+              }
+            }
+            if (responseData.containsKey('id')) {
+              newMsg['id'] = responseData['id'];
+            }
+          }
           return newMsg;
         }
         return m;
       }).toList();
-    } catch (_) {
+    } catch (e, stack) {
+      AppLogger.e(
+        'Error sending DM/channel message',
+        error: e,
+        stackTrace: stack,
+      );
       messages = messages.map((m) {
         if (m['id'] == tempId) {
           final newMsg = Map<String, dynamic>.from(m);
-          newMsg['status'] = 'failed';
+          newMsg['status'] = 'failed: $e';
           return newMsg;
         }
         return m;
@@ -231,23 +583,115 @@ class ChatHistoryNotifier extends ChangeNotifier {
     messages[idx] = failedMsg;
     notifyListeners();
 
+    if (_isGroupDm) {
+      try {
+        final notifier = ref.read(groupDmProvider.notifier);
+        await notifier.sendMessage(channelId, content);
+
+        messages = messages.map((m) {
+          if (m['id'] == messageId) {
+            final newMsg = Map<String, dynamic>.from(m);
+            newMsg.remove('status');
+            return newMsg;
+          }
+          return m;
+        }).toList();
+      } catch (e, stack) {
+        AppLogger.e(
+          'Error retrying Group DM message',
+          error: e,
+          stackTrace: stack,
+        );
+        messages = messages.map((m) {
+          if (m['id'] == messageId) {
+            final newMsg = Map<String, dynamic>.from(m);
+            newMsg['status'] = 'failed: $e';
+            return newMsg;
+          }
+          return m;
+        }).toList();
+      } finally {
+        notifyListeners();
+      }
+      return;
+    }
+
     try {
       final repository = ref.read(dmRepositoryProvider);
-      await repository.sendMessage(channelId, content);
+      final activeChat = ref.read(activeChatProvider);
+      final isDirectMessage = activeChat.type == ActiveChatType.directMessage;
+
+      final rawMedia = failedMsg['media'] as List<dynamic>?;
+      final mediaFiles = rawMedia?.map((m) {
+        final map = m as Map<dynamic, dynamic>;
+        final path = (map['file_link'] ?? map['path'] ?? '').toString();
+        final name = (map['file_name'] ?? map['name'] ?? 'file').toString();
+        return XFile(path, name: name);
+      }).toList();
+
+      var responseData = <String, dynamic>{};
+      try {
+        responseData = await repository.sendMessage(
+          channelId,
+          content,
+          orgId: ref.read(currentOrgIdProvider),
+          threadId: threadId,
+          media: mediaFiles,
+          channelType: isDirectMessage ? 'dm' : 'channel',
+        );
+      } catch (e) {
+        if (e is ApiFailure && (e.statusCode == 400 || e.statusCode == 403)) {
+          AppLogger.i(
+            'Not a member of channel $channelId on retryMessage. Auto-joining.',
+          );
+          final joined = await ref
+              .read(channelProvider.notifier)
+              .joinChannel(channelId);
+          if (joined) {
+            responseData = await repository.sendMessage(
+              channelId,
+              content,
+              orgId: ref.read(currentOrgIdProvider),
+              threadId: threadId,
+              media: mediaFiles,
+              channelType: isDirectMessage ? 'dm' : 'channel',
+            );
+          } else {
+            rethrow;
+          }
+        } else {
+          rethrow;
+        }
+      }
 
       messages = messages.map((m) {
         if (m['id'] == messageId) {
           final newMsg = Map<String, dynamic>.from(m);
           newMsg.remove('status');
+          if (responseData.isNotEmpty) {
+            for (final entry in responseData.entries) {
+              if (entry.value != null && entry.value.toString().isNotEmpty) {
+                newMsg[entry.key] = entry.value;
+              }
+            }
+            if (responseData.containsKey('id')) {
+              newMsg['id'] = responseData['id'];
+            }
+          }
           return newMsg;
         }
         return m;
       }).toList();
-    } catch (_) {
+    } catch (e, stack) {
+      AppLogger.e(
+        'Error retrying DM/channel message',
+        error: e,
+        stackTrace: stack,
+      );
       messages = messages.map((m) {
         if (m['id'] == messageId) {
           final newMsg = Map<String, dynamic>.from(m);
-          newMsg['status'] = 'failed';
+          newMsg['status'] = 'failed: $e';
           return newMsg;
         }
         return m;
@@ -285,6 +729,8 @@ class ChatHistoryNotifier extends ChangeNotifier {
       if (m['id'] == messageId) {
         final updated = Map<String, dynamic>.from(m);
         updated['content'] = newContent;
+        updated['is_edited'] = true;
+        updated['edited'] = true;
         return updated;
       }
       return m;
@@ -302,6 +748,8 @@ class ChatHistoryNotifier extends ChangeNotifier {
           if (m['id'] == messageId) {
             final reverted = Map<String, dynamic>.from(m);
             reverted['content'] = _editingOriginalContent;
+            reverted.remove('is_edited');
+            reverted.remove('edited');
             return reverted;
           }
           return m;
@@ -309,6 +757,49 @@ class ChatHistoryNotifier extends ChangeNotifier {
         notifyListeners();
       }
     }
+  }
+
+  Future<void> deleteMessage(String messageId) async {
+    messages = messages.where((m) => m['id'] != messageId).toList();
+    notifyListeners();
+
+    try {
+      final repository = ref.read(dmRepositoryProvider);
+      await repository.deleteMessage(channelId, messageId);
+      ref
+          .read(pinnedMessagesProvider.notifier)
+          .unpinMessage(channelId, messageId);
+    } catch (e, stack) {
+      AppLogger.e('Error deleting message', error: e, stackTrace: stack);
+    }
+  }
+
+  void toggleReaction(String messageId, String emoji, String userId) {
+    messages = messages.map((m) {
+      if (m['id'] == messageId) {
+        final updated = Map<String, dynamic>.from(m);
+        final reactions = Map<String, dynamic>.from(
+          (updated['reactions'] as Map?) ?? <String, dynamic>{},
+        );
+        final userList = List<String>.from(
+          (reactions[emoji] as Iterable?) ?? <String>[],
+        );
+        if (userList.contains(userId)) {
+          userList.remove(userId);
+        } else {
+          userList.add(userId);
+        }
+        if (userList.isEmpty) {
+          reactions.remove(emoji);
+        } else {
+          reactions[emoji] = userList;
+        }
+        updated['reactions'] = reactions;
+        return updated;
+      }
+      return m;
+    }).toList();
+    notifyListeners();
   }
 }
 

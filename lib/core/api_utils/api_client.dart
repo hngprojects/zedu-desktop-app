@@ -111,8 +111,10 @@ class ApiBaseService {
       final responseData = response.data;
       if (responseData is Map<String, dynamic> &&
           responseData['status'] == 'error') {
+        String errMsg = responseData['message'] as String? ?? 'Request failed.';
+        errMsg += '\nFull Response: $responseData';
         throw ApiFailure(
-          message: responseData['message'] as String? ?? 'Request failed.',
+          message: errMsg,
           statusCode: responseData['status_code'] as int?,
           path: path,
           kind: ApiFailureKind.client,

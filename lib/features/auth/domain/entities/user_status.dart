@@ -1,4 +1,3 @@
-/// Represents the user's custom status and online presence.
 class UserStatus {
   const UserStatus({
     this.emoji,
@@ -13,7 +12,6 @@ class UserStatus {
   final DateTime? expiresAt;
   final bool pauseNotifications;
 
-  /// true = Active (green dot), false = Away (grey dot).
   final bool online;
 
   bool get hasCustomStatus =>
@@ -41,9 +39,26 @@ class UserStatus {
   UserStatus cleared() => UserStatus(online: online);
 
   static const empty = UserStatus();
+
+  Map<String, dynamic> toJson() => {
+    'emoji': emoji,
+    'text': text,
+    'expiresAt': expiresAt?.toIso8601String(),
+    'pauseNotifications': pauseNotifications,
+    'online': online,
+  };
+
+  factory UserStatus.fromJson(Map<String, dynamic> json) => UserStatus(
+    emoji: json['emoji'] as String?,
+    text: json['text'] as String?,
+    expiresAt: json['expiresAt'] != null
+        ? DateTime.parse(json['expiresAt'] as String)
+        : null,
+    pauseNotifications: json['pauseNotifications'] as bool? ?? false,
+    online: json['online'] as bool? ?? true,
+  );
 }
 
-/// Duration options for status expiry, matching the Zedu API strings.
 enum StatusTimeout {
   thirtyMinutes('30 minutes'),
   oneHour('1 hour'),
@@ -53,10 +68,8 @@ enum StatusTimeout {
 
   const StatusTimeout(this.apiValue);
 
-  /// The exact string value expected by `profile/change-status` → status_timeout.
   final String apiValue;
 
-  /// Human-readable label shown in the dropdown.
   String get label => switch (this) {
     StatusTimeout.thirtyMinutes => '30 minutes',
     StatusTimeout.oneHour => '1 hour',

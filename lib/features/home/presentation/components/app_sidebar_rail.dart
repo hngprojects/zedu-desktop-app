@@ -71,7 +71,6 @@ class AppSidebarRail extends ConsumerWidget {
             icon: Icons.notifications_none_outlined,
             hasNotification: true,
             onTap: () {
-              // Fire a test notification replicating DM notification
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Notification will fire in 5 seconds.'),
@@ -136,13 +135,8 @@ class _BuzzRailItem extends ConsumerWidget {
   }
 
   String _formatDateTime(DateTime value) {
-    final local = value.toLocal();
-    final hour = local.hour > 12
-        ? local.hour - 12
-        : (local.hour == 0 ? 12 : local.hour);
-    final minute = local.minute.toString().padLeft(2, '0');
-    final period = local.hour >= 12 ? 'PM' : 'AM';
-    return '${local.day}/${local.month}/${local.year} $hour:$minute $period';
+    final timeString = DateFormatter.formatTime12h(value);
+    return '${value.day}/${value.month}/${value.year} $timeString';
   }
 }
 
