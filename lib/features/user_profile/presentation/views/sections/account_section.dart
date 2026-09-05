@@ -1,7 +1,7 @@
 import 'package:zedu/core/core.dart';
 import 'package:zedu/features/features.dart';
 
-class AccountSection extends StatelessWidget {
+class AccountSection extends ConsumerWidget {
   const AccountSection({
     super.key,
     required this.account,
@@ -13,10 +13,10 @@ class AccountSection extends StatelessWidget {
   final ProfileAccount account;
   final bool isSaving;
   final ValueChanged<ProfileAccount> onSave;
-  final Future<void> Function() onDelete;
+  final Future<void> Function(String password) onDelete;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -33,7 +33,8 @@ class AccountSection extends StatelessWidget {
               children: [
                 Stack(
                   children: [
-                    _AvatarBlock(initials: account.initials),
+                    // Reactive avatar — shows local preview + server URL
+                    const UserAvatar(size: 160, borderRadius: 8),
                     Positioned(
                       top: 8,
                       right: 8,
@@ -55,7 +56,11 @@ class AccountSection extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '@${account.name.replaceAll(' ', '').toLowerCase()}',
+                  account.username.isNotEmpty
+                      ? (account.username.startsWith('@')
+                            ? account.username
+                            : '@${account.username}')
+                      : '@${account.name.replaceAll(' ', '').toLowerCase()}',
                   style: context.textTheme.bodySmall?.copyWith(
                     color: const Color(0xFF6B7280),
                   ),
@@ -89,49 +94,25 @@ class AccountSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 18),
           ),
           loading: isSaving,
-          onPressed: () => _confirmDelete(context, onDelete),
+          onPressed: () =>
+              showDeleteAccountDialog(context, account.email, (password) async {
+                await onDelete(password);
+                if (context.mounted) {
+                  final hasError =
+                      ref.read(userProfileNotifierProvider).error != null;
+                  if (!hasError) {
+                    ref.read(authNotifierProvider.notifier).logout();
+                  }
+                }
+              }),
         ),
       ],
     );
   }
-
-  Future<void> _confirmDelete(
-    BuildContext context,
-    Future<void> Function() onConfirm,
-  ) => showProfileConfirmDialog(
-    context,
-    title: 'Delete account?',
-    message:
-        'This action cannot be undone. Your account information will be removed.',
-    confirmLabel: 'Delete account',
-    onConfirm: onConfirm,
-    destructive: true,
-  );
 
   void _showAccountDialog(
     BuildContext context,
     ProfileAccount account,
     ValueChanged<ProfileAccount> onSave,
   ) => showEditAccountDialog(context, account, onSave);
-}
-
-class _AvatarBlock extends StatelessWidget {
-  const _AvatarBlock({required this.initials});
-
-  final String initials;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 160,
-      height: 144,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE9FBFA),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: const Center(
-        child: Icon(Icons.person, size: 96, color: Color(0xFF17C9BD)),
-      ),
-    );
-  }
 }

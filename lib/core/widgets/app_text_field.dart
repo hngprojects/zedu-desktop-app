@@ -19,6 +19,7 @@ class AppTextField extends StatefulWidget {
   final int? maxLength;
   final void Function(String)? onChanged;
   final VoidCallback? onFocusLostOrSubmitted;
+  final bool readOnly;
 
   const AppTextField({
     super.key,
@@ -40,6 +41,7 @@ class AppTextField extends StatefulWidget {
     this.onChanged,
     this.maxLength,
     this.onFocusLostOrSubmitted,
+    this.readOnly = false,
   });
 
   @override
@@ -88,6 +90,7 @@ class _AppTextFieldState extends State<AppTextField> {
             controller: widget.controller,
             keyboardType: widget.keyboardType,
             obscureText: widget.isPassword ? obscureText : false,
+            readOnly: widget.readOnly,
             textInputAction: widget.textInputAction,
             onFieldSubmitted: widget.onFieldSubmitted,
             maxLength: widget.maxLength,

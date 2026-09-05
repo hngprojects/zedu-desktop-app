@@ -2,6 +2,8 @@ import 'package:zedu/core/core.dart';
 
 // core/network/api_failure.dart
 
+// core/network/api_failure.dart
+
 class ApiFailure implements Exception {
   const ApiFailure({
     required this.message,
@@ -36,21 +38,52 @@ class ApiFailure implements Exception {
   final String? path;
   final ApiFailureKind kind;
 
-  String get friendlyMessage => switch (kind) {
-    ApiFailureKind.network =>
-      'No internet connection. Check your network and try again.',
-    ApiFailureKind.timeout => 'The request timed out. Please try again.',
-    ApiFailureKind.unauthorized =>
-      'Your session has expired. Please log in again.',
-    ApiFailureKind.forbidden => 'You don\'t have permission to do that.',
-    ApiFailureKind.notFound => 'The resource was not found.',
-    ApiFailureKind.server =>
-      'Something went wrong on our end. Please try again later.',
-    ApiFailureKind.parsing => 'Parsing error: $message',
-    ApiFailureKind.unknown => 'Unknown error: $message',
-    // 4xx client errors carry a structured server message safe to show (e.g. "Invalid credentials")
-    ApiFailureKind.client => message,
-  };
+  String get friendlyMessage {
+    final messageLower = message.toLowerCase();
+
+    // 1. Network / offline error
+    if (kind == ApiFailureKind.network) {
+      return 'no internet connection check your network and try again';
+    }
+
+    // 2. Duplicate registration email
+    if (statusCode == 409 ||
+        messageLower.contains('already exists') ||
+        messageLower.contains('duplicate') ||
+        messageLower.contains('already registered')) {
+      return 'email address already exists, use another email to sign in';
+    }
+
+    // 3. Unregistered email (404 / resource not found) on auth endpoints
+    if (kind == ApiFailureKind.notFound ||
+        statusCode == 404 ||
+        messageLower.contains('resource not found')) {
+      final isAuthPath =
+          path == null ||
+          path!.contains('auth') ||
+          path!.contains('login') ||
+          path!.contains('password') ||
+          path!.contains('register');
+      if (isAuthPath) {
+        return 'This email address could not be found.';
+      }
+    }
+
+    return switch (kind) {
+      ApiFailureKind.network =>
+        'no internet connection check your network and try again',
+      ApiFailureKind.timeout => 'The request timed out. Please try again.',
+      ApiFailureKind.unauthorized =>
+        'Your session has expired. Please log in again.',
+      ApiFailureKind.forbidden => 'You don\'t have permission to do that.',
+      ApiFailureKind.notFound => 'The resource was not found.',
+      ApiFailureKind.server =>
+        'Something went wrong on our end. Please try again later.',
+      ApiFailureKind.parsing => 'Parsing error: $message',
+      ApiFailureKind.unknown => 'Unknown error: $message',
+      ApiFailureKind.client => message,
+    };
+  }
 
   @override
   String toString() => message;
@@ -79,12 +112,37 @@ class ApiFailure implements Exception {
         if (details.isNotEmpty) {
           return details.join('\n');
         }
+      } else if (data['errors'] is Map) {
+        final errorsMap = data['errors'] as Map;
+        final details = <String>[];
+        for (final entry in errorsMap.entries) {
+          final field = entry.key;
+          final msgs = entry.value;
+          if (msgs is List && msgs.isNotEmpty) {
+            details.add('$field: ${msgs.first}');
+          } else {
+            details.add('$field: $msgs');
+          }
+        }
+        if (details.isNotEmpty) {
+          return details.join('\n');
+        }
       }
-      if (data['message'] is String) return data['message'] as String;
+      if (data['message'] is String) {
+        final msg = data['message'] as String;
+        if (msg == 'Validation failed' || msg == 'error') {
+          return '$msg. Raw data: $data';
+        }
+        return msg;
+      }
       if (data['error'] is String) return data['error'] as String;
     }
     if (data is String) {
       return data;
+    }
+    if (error.response?.statusCode == 307) {
+      final redirectUrl = error.response?.headers.value('location');
+      return '307 Redirect! Server wants us to use this exact URL: $redirectUrl';
     }
     if (error.message case final message?) return message;
     return 'Request failed. Raw data: $data';
@@ -114,8 +172,8 @@ enum ApiFailureKind {
   unauthorized,
   forbidden,
   notFound,
-  client, // 4xx other than the named ones
-  server, // 5xx
-  parsing, // response shape didn't match
+  client,
+  server,
+  parsing,
   unknown,
 }

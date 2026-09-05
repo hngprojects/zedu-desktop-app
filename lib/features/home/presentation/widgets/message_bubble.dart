@@ -149,7 +149,7 @@ class _MessageBubbleState extends State<MessageBubble> {
                                     100,
                                     0,
                                     0,
-                                  ), // Adjust this or use a button's render box
+                                  ),
                                   items: const [
                                     PopupMenuItem(
                                       value: '👍',
@@ -259,7 +259,9 @@ class _MessageBody extends StatelessWidget {
 
     final attachmentRegex = RegExp(r'\[Attachment: (.*?)\]');
     final matches = attachmentRegex.allMatches(text);
-    final cleanText = text.replaceAll(attachmentRegex, '').trim();
+    final cleanText = parseHtmlToMarkdown(
+      text,
+    ).replaceAll(attachmentRegex, '').trim();
 
     Widget markdownWidget = cleanText.isNotEmpty
         ? MarkdownBody(

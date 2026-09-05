@@ -45,6 +45,16 @@ class _MagicLinkRequestViewState extends ConsumerState<MagicLinkRequestView> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authNotifierProvider);
+    if (authState.status == AuthStatus.authenticated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          context.go(AppRouter.home);
+        }
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     final isLoading = ref.watch(magicLinkNotifierProvider).isLoading;
 
     return Scaffold(
@@ -52,9 +62,9 @@ class _MagicLinkRequestViewState extends ConsumerState<MagicLinkRequestView> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(80),
         child: AuthHeaderStrip(
-          promptText: 'Already have an account? ',
-          actionText: 'Sign in',
-          onActionTap: () => context.go(AppRouter.login),
+          promptText: "Don't have an account? ",
+          actionText: 'Sign up',
+          onActionTap: () => context.go(AppRouter.signup),
         ),
       ),
       body: SingleChildScrollView(

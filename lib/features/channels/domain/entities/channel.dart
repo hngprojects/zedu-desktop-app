@@ -10,7 +10,7 @@ class Channel {
   final int membersCount;
   final String? topic;
 
-  Channel({
+  const Channel({
     required this.id,
     required this.name,
     required this.description,
@@ -25,7 +25,12 @@ class Channel {
 
   factory Channel.fromJson(Map<String, dynamic> json) {
     return Channel(
-      id: json['id'] as String? ?? '',
+      id:
+          json['id'] as String? ??
+          json['channels_id'] as String? ??
+          json['channel_id'] as String? ??
+          json['channelId'] as String? ??
+          '',
       name: json['name'] as String? ?? '',
       description: json['description'] as String? ?? '',
       organisationId: json['organisation_id'] as String? ?? '',

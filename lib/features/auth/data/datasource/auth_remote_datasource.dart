@@ -57,20 +57,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String password,
   }) async {
     try {
+      AppLogger.d('POST /auth/login — $email', tag: _tag);
       if (_config.usesMockData) {
-        AppLogger.d('Using mock data for POST /auth/login', tag: _tag);
-        if (password != mockPassword) {
-          throw const ApiFailure(
-            message: 'Invalid credentials',
-            kind: ApiFailureKind.client,
-          );
-        }
         return LoginResponseModel.fromJson(
           LoginResponseModel.mockLoginResponse,
         );
       }
 
-      AppLogger.d('POST /auth/login — $email', tag: _tag);
       final response = await _apiBaseService.post<Map<String, dynamic>>(
         path: '/auth/login',
         data: {'email': email, 'password': password},
@@ -93,17 +86,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel> me() async {
     try {
+      AppLogger.d('GET /users/me', tag: _tag);
       if (_config.usesMockData) {
-        AppLogger.d('Using mock data for GET /auth/me', tag: _tag);
-        final loginResponse = LoginResponseModel.fromJson(
-          LoginResponseModel.mockLoginResponse,
+        return UserModel.fromJson(
+          LoginResponseModel.mockLoginResponse['user'] as Map<String, dynamic>,
         );
-        return loginResponse.user;
       }
 
-      AppLogger.d('GET /auth/me', tag: _tag);
       final response = await _apiBaseService.get<Map<String, dynamic>>(
-        path: '/auth/me',
+        path: '/users/me',
       );
 
       final data = response.data['data'] as Map<String, dynamic>;
@@ -154,15 +145,24 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         return;
       }
 
-      AppLogger.d('POST auth/password-reset — $email', tag: _tag);
+      AppLogger.d('POST /auth/password-reset — $email', tag: _tag);
       await _apiBaseService.post<dynamic>(
         path: '/auth/password-reset',
-        data: {'email': email},
+        data: {
+          'email': email,
+          'client_url': 'https://zedu.chat/reset-password',
+          'redirect_url': 'https://zedu.chat/reset-password',
+          'redirect_uri': 'https://zedu.chat/reset-password',
+        },
+        headers: {
+          'Origin': 'https://zedu.chat',
+          'Referer': 'https://zedu.chat/',
+        },
       );
     } on ApiFailure {
       rethrow;
     } catch (error) {
-      AppLogger.e('Failed auth/password-reset', tag: _tag, error: error);
+      AppLogger.e('Failed /auth/password-reset', tag: _tag, error: error);
       throw ApiFailure.unknown(error);
     }
   }
@@ -294,9 +294,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       AppLogger.d('POST /auth/google', tag: _tag);
       final data = <String, dynamic>{'grant_code': grantCode};
-      if (redirectUri != null) {
-        data['redirect_uri'] = redirectUri;
-      }
 
       final response = await _apiBaseService.post<Map<String, dynamic>>(
         path: '/auth/google',

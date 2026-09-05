@@ -19,9 +19,7 @@ class DmListTile extends ConsumerWidget {
     }
 
     final yesterday = today.subtract(const Duration(days: 1));
-    if (messageDay == yesterday) {
-      return 'Yesterday';
-    }
+    if (messageDay == yesterday) return 'Yesterday';
 
     return '${dt.day}/${dt.month}/${dt.year}';
   }
@@ -34,9 +32,14 @@ class DmListTile extends ConsumerWidget {
     final hasUnread = conversation.unreadCount > 0;
 
     return InkWell(
-      onTap: () {
-        ref.read(selectedDmProvider.notifier).select(conversation);
-      },
+      onTap: () => DmSidebarList.openOrCreateDm(
+        context: context,
+        ref: ref,
+        memberId: conversation.participantId,
+        memberName: conversation.displayName,
+        memberEmail: '',
+        memberAvatarUrl: conversation.effectiveAvatarUrl,
+      ),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
@@ -50,24 +53,43 @@ class DmListTile extends ConsumerWidget {
         ),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: colors.primary,
-              backgroundImage: conversation.effectiveAvatarUrl != null
-                  ? NetworkImage(conversation.effectiveAvatarUrl!)
-                  : null,
-              child: conversation.effectiveAvatarUrl == null
-                  ? Text(
-                      conversation.displayName[0].toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+            // Avatar
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: colors.primary,
+                shape: BoxShape.circle,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: conversation.effectiveAvatarUrl != null
+                  ? Image.network(
+                      conversation.effectiveAvatarUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Center(
+                        child: Text(
+                          conversation.displayName[0].toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
                       ),
                     )
-                  : null,
+                  : Center(
+                      child: Text(
+                        conversation.displayName[0].toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
             ),
             const SizedBox(width: 10),
+            // Name + preview
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,6 +118,7 @@ class DmListTile extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 8),
+            // Timestamp + unread badge
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [

@@ -82,12 +82,16 @@ class ApiBaseService {
   Map<String, String> headersForPath(
     String path, {
     Map<String, String>? headers,
+    bool isMultipart = false,
   }) {
-    return <String, String>{
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      ...?headers,
-    };
+    final defaultHeaders = <String, String>{'Accept': 'application/json'};
+    if (!isMultipart) {
+      defaultHeaders['Content-Type'] = 'application/json';
+    }
+    if (headers != null) {
+      defaultHeaders.addAll(headers);
+    }
+    return defaultHeaders;
   }
 
   Future<ApiResponseModel<T>> _request<T>({
@@ -104,15 +108,21 @@ class ApiBaseService {
         queryParameters: queryParameters,
         options: Options(
           method: method,
-          headers: headersForPath(path, headers: headers),
+          headers: headersForPath(
+            path,
+            headers: headers,
+            isMultipart: data is FormData,
+          ),
         ),
       );
 
       final responseData = response.data;
       if (responseData is Map<String, dynamic> &&
           responseData['status'] == 'error') {
+        String errMsg = responseData['message'] as String? ?? 'Request failed.';
+        errMsg += '\nFull Response: $responseData';
         throw ApiFailure(
-          message: responseData['message'] as String? ?? 'Request failed.',
+          message: errMsg,
           statusCode: responseData['status_code'] as int?,
           path: path,
           kind: ApiFailureKind.client,

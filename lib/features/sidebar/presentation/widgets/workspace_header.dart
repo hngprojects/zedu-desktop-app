@@ -44,9 +44,7 @@ class WorkspaceSwitcherHeader extends ConsumerWidget {
             ),
           ),
           IconButton(
-            onPressed: () {
-              // Add action
-            },
+            onPressed: () {},
             icon: Icon(
               Icons.add,
               color: colors.onPrimary.withValues(alpha: 0.7),

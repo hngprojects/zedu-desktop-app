@@ -11,7 +11,7 @@ class SecuritySection extends StatelessWidget {
 
   final List<SecuritySession> sessions;
   final bool isSaving;
-  final Future<void> Function({
+  final Future<bool> Function({
     required String currentPassword,
     required String newPassword,
   })

@@ -34,7 +34,7 @@ const List<String> _kTimezones = [
 Future<void> showEditProfileDialog(
   BuildContext context,
   ProfileAccount account,
-  ValueChanged<ProfileAccount> onSave,
+  void Function(ProfileAccount updated, String? localAvatarPath) onSave,
 ) async {
   await showDialog<void>(
     context: context,
@@ -42,17 +42,17 @@ Future<void> showEditProfileDialog(
   );
 }
 
-class _EditProfileDialog extends StatefulWidget {
+class _EditProfileDialog extends ConsumerStatefulWidget {
   const _EditProfileDialog({required this.account, required this.onSave});
 
   final ProfileAccount account;
-  final ValueChanged<ProfileAccount> onSave;
+  final void Function(ProfileAccount updated, String? localAvatarPath) onSave;
 
   @override
-  State<_EditProfileDialog> createState() => _EditProfileDialogState();
+  ConsumerState<_EditProfileDialog> createState() => _EditProfileDialogState();
 }
 
-class _EditProfileDialogState extends State<_EditProfileDialog> {
+class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
   late final TextEditingController nameCtrl;
   late final TextEditingController displayNameCtrl;
   late final TextEditingController usernameCtrl;
@@ -69,10 +69,26 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
   @override
   void initState() {
     super.initState();
-    nameCtrl = TextEditingController(text: widget.account.name);
+    final authState = ref.read(authNotifierProvider);
+    final fallbackEmail = authState.user?.email ?? '';
+    final authUser = authState.user;
+    final authFullName = authUser != null
+        ? '${authUser.firstName} ${authUser.lastName}'.trim()
+        : '';
+    final fallbackName = authFullName.isNotEmpty
+        ? authFullName
+        : (authUser?.username ?? '');
+
+    nameCtrl = TextEditingController(
+      text: widget.account.name.isNotEmpty ? widget.account.name : fallbackName,
+    );
     displayNameCtrl = TextEditingController(text: widget.account.displayName);
     usernameCtrl = TextEditingController(text: widget.account.username);
-    emailCtrl = TextEditingController(text: widget.account.email);
+    emailCtrl = TextEditingController(
+      text: widget.account.email.isNotEmpty
+          ? widget.account.email
+          : fallbackEmail,
+    );
     phoneCtrl = TextEditingController(text: widget.account.phoneNumber);
     titleCtrl = TextEditingController(text: widget.account.title);
     pronunciationCtrl = TextEditingController(
@@ -97,9 +113,26 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
     super.dispose();
   }
 
+  Future<void> _pickAvatar() async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
+    );
+    if (result != null && result.files.single.path != null) {
+      final path = result.files.single.path!;
+
+      ref
+          .read(userProfileNotifierProvider.notifier)
+          .previewAndUploadAvatar(path);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final isSaving = ref.watch(
+      userProfileNotifierProvider.select((s) => s.isSaving),
+    );
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -185,6 +218,7 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                               controller: emailCtrl,
                               hint: 'Enter your email',
                               keyboardType: TextInputType.emailAddress,
+                              readOnly: true,
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) {
                                   return 'Email is required';
@@ -403,27 +437,28 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            Center(
-                              child: Container(
-                                width: 160,
-                                height: 160,
-                                decoration: BoxDecoration(
-                                  color: colors.accent.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  Icons.person,
-                                  size: 80,
-                                  color: colors.accent,
-                                ),
-                              ),
+                            // UserAvatar reacts immediately to the local file
+                            // preview that previewAndUploadAvatar() sets
+                            const Center(
+                              child: UserAvatar(size: 160, borderRadius: 8),
                             ),
                             const SizedBox(height: 12),
+                            if (isSaving)
+                              const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 8),
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             Center(
                               child: TextButton.icon(
-                                onPressed: () {
-                                  // Upload photo placeholder
-                                },
+                                onPressed: isSaving ? null : _pickAvatar,
                                 icon: Icon(
                                   Icons.upload_outlined,
                                   size: 16,
@@ -440,9 +475,16 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                             ),
                             Center(
                               child: TextButton(
-                                onPressed: () {
-                                  // Remove photo placeholder
-                                },
+                                onPressed: isSaving
+                                    ? null
+                                    : () {
+                                        ref
+                                            .read(
+                                              userProfileNotifierProvider
+                                                  .notifier,
+                                            )
+                                            .deleteAvatar();
+                                      },
                                 child: Text(
                                   'Remove photo',
                                   style: context.textTheme.bodySmall?.copyWith(
@@ -480,24 +522,29 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                     label: 'Save Changes',
                     expand: false,
                     height: 40,
-                    onPressed: () {
-                      if (formKey.currentState?.validate() ?? false) {
-                        widget.onSave(
-                          widget.account.copyWith(
-                            name: nameCtrl.text.trim(),
-                            displayName: displayNameCtrl.text.trim(),
-                            username: usernameCtrl.text.trim(),
-                            email: emailCtrl.text.trim(),
-                            phoneNumber: phoneCtrl.text.trim(),
-                            title: titleCtrl.text.trim(),
-                            namePronunciation: pronunciationCtrl.text.trim(),
-                            timezone: selectedTimezone,
-                            country: selectedCountry,
-                          ),
-                        );
-                        Navigator.pop(context);
-                      }
-                    },
+                    loading: isSaving,
+                    onPressed: isSaving
+                        ? null
+                        : () {
+                            if (formKey.currentState?.validate() ?? false) {
+                              widget.onSave(
+                                widget.account.copyWith(
+                                  name: nameCtrl.text.trim(),
+                                  displayName: displayNameCtrl.text.trim(),
+                                  username: usernameCtrl.text.trim(),
+                                  email: emailCtrl.text.trim(),
+                                  phoneNumber: phoneCtrl.text.trim(),
+                                  title: titleCtrl.text.trim(),
+                                  namePronunciation: pronunciationCtrl.text
+                                      .trim(),
+                                  timezone: selectedTimezone,
+                                  country: selectedCountry,
+                                ),
+                                null, // avatar already uploaded separately
+                              );
+                              Navigator.pop(context);
+                            }
+                          },
                   ),
                 ],
               ),

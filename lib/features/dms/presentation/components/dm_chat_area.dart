@@ -22,8 +22,11 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
         .toList();
 
     if (parts.isEmpty) return '@user';
-    if (parts.length == 1) return '@${parts.first}';
-    return '@${parts.first}_${parts.last}';
+    String handle = parts.length == 1
+        ? parts.first
+        : '${parts.first}_${parts.last}';
+    handle = handle.replaceAll('@', '');
+    return '@$handle';
   }
 
   @override
@@ -35,12 +38,8 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
         _composerKey.currentState?.addFiles(detail.files);
         setState(() => _isDragging = false);
       },
-      onDragEntered: (detail) {
-        setState(() => _isDragging = true);
-      },
-      onDragExited: (detail) {
-        setState(() => _isDragging = false);
-      },
+      onDragEntered: (detail) => setState(() => _isDragging = true),
+      onDragExited: (detail) => setState(() => _isDragging = false),
       child: Container(
         color: colors.onPrimary,
         child: Stack(
@@ -86,10 +85,82 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                                   index,
                                 ) {
                                   final msg = messages[index];
-                                  return _MessageBubble(
-                                    message: msg,
-                                    conversation: widget.conversation,
-                                    channelId: widget.conversation.channelId,
+                                  final msgSenderId =
+                                      (msg['user_id'] ?? msg['userId'] ?? '')
+                                          .toString();
+                                  final msgDate =
+                                      DateTime.tryParse(
+                                        msg['created_at']?.toString() ?? '',
+                                      )?.toLocal() ??
+                                      DateTime.now();
+
+                                  // Determine if sender header should be shown.
+                                  // In reversed list, index+1 is the message
+                                  // ABOVE visually (older). Show header when
+                                  // the sender changes or the day changes.
+                                  bool showHeader = true;
+                                  if (index < messages.length - 1) {
+                                    final prevMsg = messages[index + 1];
+                                    final prevSenderId =
+                                        (prevMsg['user_id'] ??
+                                                prevMsg['userId'] ??
+                                                '')
+                                            .toString();
+                                    final prevDate =
+                                        DateTime.tryParse(
+                                          prevMsg['created_at']?.toString() ??
+                                              '',
+                                        )?.toLocal() ??
+                                        DateTime.now();
+                                    if (msgSenderId == prevSenderId &&
+                                        _isSameDay(msgDate, prevDate)) {
+                                      showHeader = false;
+                                    }
+                                  }
+
+                                  // Determine if a day separator should be
+                                  // shown above this message.
+                                  bool showDaySeparator = false;
+                                  if (index == messages.length - 1) {
+                                    showDaySeparator = true;
+                                  } else {
+                                    final prevMsg = messages[index + 1];
+                                    final prevDate =
+                                        DateTime.tryParse(
+                                          prevMsg['created_at']?.toString() ??
+                                              '',
+                                        )?.toLocal() ??
+                                        DateTime.now();
+                                    if (!_isSameDay(msgDate, prevDate)) {
+                                      showDaySeparator = true;
+                                    }
+                                  }
+
+                                  final content = parseHtmlToMarkdown(
+                                    msg['content']?.toString() ?? '',
+                                  );
+                                  if (content.startsWith('<p>') &&
+                                      content.contains(
+                                        'started a conversation',
+                                      )) {
+                                    return const SizedBox.shrink();
+                                  }
+
+                                  return Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      if (showDaySeparator)
+                                        _DaySeparator(date: msgDate),
+                                      _MessageBubble(
+                                        message: msg,
+                                        conversation: widget.conversation,
+                                        channelId:
+                                            widget.conversation.channelId,
+                                        showHeader: showHeader,
+                                      ),
+                                    ],
                                   );
                                 }, childCount: messages.length),
                               ),
@@ -124,7 +195,7 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
               ],
             ),
 
-            // FULL PAGE MODE INJECTION
+            // ── Full-page call view ────────────────────────────────────────
             Consumer(
               builder: (context, ref, child) {
                 final activeCall = ref.watch(activeCallProvider);
@@ -136,7 +207,7 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
               },
             ),
 
-            // FLOATING / PIP INJECTION
+            // ── Floating / PIP call view ───────────────────────────────────
             Consumer(
               builder: (context, ref, child) {
                 final activeCall = ref.watch(activeCallProvider);
@@ -148,10 +219,10 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
               },
             ),
 
-            // INCOMING CALL MODAL
+            // ── Incoming call modal ────────────────────────────────────────
             const IncomingCallModal(),
 
-            // RINGING STATE OVERLAY (Caller)
+            // ── Ringing overlay (caller side) ──────────────────────────────
             Consumer(
               builder: (context, ref, child) {
                 final activeCall = ref.watch(activeCallProvider);
@@ -209,11 +280,9 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
                             IconButton(
                               icon: const Icon(Icons.call_end),
                               color: Colors.red,
-                              onPressed: () {
-                                ref
-                                    .read(activeCallProvider.notifier)
-                                    .cancelCall();
-                              },
+                              onPressed: () => ref
+                                  .read(activeCallProvider.notifier)
+                                  .cancelCall(),
                             ),
                           ],
                         ),
@@ -225,6 +294,7 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
               },
             ),
 
+            // ── Drag-and-drop overlay ──────────────────────────────────────
             if (_isDragging)
               Positioned.fill(
                 child: Container(
@@ -258,6 +328,96 @@ class _DmChatAreaState extends ConsumerState<DmChatArea> {
   }
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Date helpers
+// ──────────────────────────────────────────────────────────────────────────────
+
+bool _isSameDay(DateTime a, DateTime b) {
+  return a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+String _formatDayLabel(DateTime date) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final messageDay = DateTime(date.year, date.month, date.day);
+
+  if (messageDay == today) return 'Today';
+  if (messageDay == today.subtract(const Duration(days: 1))) {
+    return 'Yesterday';
+  }
+
+  final difference = today.difference(messageDay).inDays;
+  if (difference < 7) {
+    const days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    return days[date.weekday - 1];
+  }
+
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  return '${months[date.month - 1]} ${date.day}, ${date.year}';
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Day separator
+// ──────────────────────────────────────────────────────────────────────────────
+
+class _DaySeparator extends StatelessWidget {
+  final DateTime date;
+
+  const _DaySeparator({required this.date});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final label = _formatDayLabel(date);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Row(
+        children: [
+          Expanded(child: Divider(color: colors.divider, height: 1)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: colors.textHint,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(child: Divider(color: colors.divider, height: 1)),
+        ],
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Header
+// ──────────────────────────────────────────────────────────────────────────────
+
 class _DmChatHeader extends StatelessWidget {
   final DmConversation conversation;
 
@@ -278,22 +438,39 @@ class _DmChatHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: colors.primary,
-            backgroundImage: conversation.effectiveAvatarUrl != null
-                ? NetworkImage(conversation.effectiveAvatarUrl!)
-                : null,
-            child: conversation.effectiveAvatarUrl == null
-                ? Text(
-                    participantInitial,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: colors.primary,
+              shape: BoxShape.circle,
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: conversation.effectiveAvatarUrl != null
+                ? Image.network(
+                    conversation.effectiveAvatarUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Center(
+                      child: Text(
+                        participantInitial,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
                     ),
                   )
-                : null,
+                : Center(
+                    child: Text(
+                      participantInitial,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
           ),
           const SizedBox(width: 12),
           Text(
@@ -314,7 +491,8 @@ class _DmChatHeader extends StatelessWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text(
-                        'Notification will fire in 5 seconds. Minimize the app now!',
+                        'Notification will fire in 5 seconds. '
+                        'Minimize the app now!',
                       ),
                     ),
                   );
@@ -374,16 +552,29 @@ class _DmChatHeader extends StatelessWidget {
   }
 }
 
-class _MessageBubble extends ConsumerWidget {
+// ──────────────────────────────────────────────────────────────────────────────
+// Message bubble
+// ──────────────────────────────────────────────────────────────────────────────
+
+class _MessageBubble extends ConsumerStatefulWidget {
   final Map<String, dynamic> message;
   final DmConversation conversation;
   final String channelId;
+  final bool showHeader;
 
   const _MessageBubble({
     required this.message,
     required this.conversation,
     required this.channelId,
+    this.showHeader = true,
   });
+
+  @override
+  ConsumerState<_MessageBubble> createState() => _MessageBubbleState();
+}
+
+class _MessageBubbleState extends ConsumerState<_MessageBubble> {
+  bool _isHovered = false;
 
   TextSpan _parseRichText(String text, TextStyle defaultStyle) {
     if (text.isEmpty) return TextSpan(style: defaultStyle, text: '');
@@ -393,9 +584,13 @@ class _MessageBubble extends ConsumerWidget {
     final strikeRegex = RegExp(r'~~(.*?)~~', dotAll: true);
     final codeRegex = RegExp(r'`(.*?)`', dotAll: true);
 
-    final allPatterns = [boldRegex, italicRegex, strikeRegex, codeRegex];
     final combined = RegExp(
-      allPatterns.map((r) => r.pattern).join('|'),
+      [
+        boldRegex,
+        italicRegex,
+        strikeRegex,
+        codeRegex,
+      ].map((r) => r.pattern).join('|'),
       dotAll: true,
     );
 
@@ -466,16 +661,20 @@ class _MessageBubble extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final colors = context.colors;
-    final history = ref.watch(chatHistoryProvider(channelId));
-    final isMe = history.isMyMessage(message);
-    final content = message['content'] as String? ?? '';
+    final history = ref.watch(chatHistoryProvider(widget.channelId));
+    final isMe = history.isMyMessage(widget.message);
+    final content = parseHtmlToMarkdown(
+      widget.message['content'] as String? ?? '',
+    );
     final createdAt =
-        DateTime.tryParse(message['created_at']?.toString() ?? '')?.toLocal() ??
+        DateTime.tryParse(
+          widget.message['created_at']?.toString() ?? '',
+        )?.toLocal() ??
         DateTime.now();
-    final status = message['status'] as String?;
-    final messageId = message['id'] as String? ?? '';
+    final status = widget.message['status'] as String?;
+    final messageId = widget.message['id'] as String? ?? '';
 
     final hour = createdAt.hour > 12
         ? createdAt.hour - 12
@@ -484,59 +683,238 @@ class _MessageBubble extends ConsumerWidget {
     final period = createdAt.hour >= 12 ? 'PM' : 'AM';
     final timeString = '$hour:$minute $period';
 
+    // Use username from message if available, fall back to conversation name
     final senderName = isMe
         ? history.currentUserName
-        : conversation.displayName;
-
+        : (widget.message['username'] as String? ??
+              widget.conversation.displayName);
     final senderAvatarUrl = isMe
         ? history.currentUserAvatarUrl
-        : conversation.effectiveAvatarUrl;
-
+        : (widget.message['avatar_url'] as String? ??
+              widget.conversation.effectiveAvatarUrl);
     final senderInitial = senderName.isNotEmpty
         ? senderName[0].toUpperCase()
         : '?';
 
-    final List<dynamic> media = (message['media'] as List<dynamic>?) ?? [];
+    final List<dynamic> media =
+        (widget.message['media'] as List<dynamic>?) ?? [];
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: isMe
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
-        children: [
-          if (!isMe) ...[
-            CircleAvatar(
-              radius: 15,
-              backgroundColor: colors.primary,
-              backgroundImage:
-                  senderAvatarUrl != null && senderAvatarUrl.isNotEmpty
-                  ? NetworkImage(senderAvatarUrl)
-                  : null,
-              child: senderAvatarUrl == null || senderAvatarUrl.isEmpty
-                  ? Text(
-                      senderInitial,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                    )
-                  : null,
+    final type = widget.message['type'] as String?;
+
+    if (type == 'call' || type == 'call_log') {
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colors.primary.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.divider),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colors.background,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.call, color: colors.primary),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Buzz Call',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    content.isNotEmpty ? content : 'Call ended',
+                    style: TextStyle(color: colors.textHint, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              timeString,
+              style: TextStyle(color: colors.textHint, fontSize: 12),
+            ),
           ],
-          Flexible(
-            child: Column(
-              crossAxisAlignment: isMe
-                  ? CrossAxisAlignment.end
-                  : CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+        ),
+      );
+    }
+
+    // ── Content widgets (shared between header and grouped layout) ─────────
+    final contentStyle = TextStyle(color: colors.textPrimary, fontSize: 14);
+
+    final contentWidget = content.isNotEmpty
+        ? Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: RichText(text: _parseRichText(content, contentStyle)),
+          )
+        : null;
+
+    final attachmentWidget = media.isNotEmpty
+        ? Padding(
+            padding: EdgeInsets.only(top: content.isNotEmpty ? 6 : 2),
+            child: _AttachmentBubbleList(media: media, isMe: false),
+          )
+        : null;
+
+    final statusWidget = (isMe && status != null)
+        ? Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: status == 'failed'
+                ? Tooltip(
+                    message:
+                        (widget.message['error'] as String?) ??
+                        'Failed to send message',
+                    child: GestureDetector(
+                      onTap: () => ref
+                          .read(chatHistoryProvider(widget.channelId))
+                          .retryMessage(messageId),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 13,
+                            color: colors.error,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Failed – Tap to retry',
+                            style: TextStyle(
+                              color: colors.error,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : Text(
+                    status == 'sending' ? 'Sending...' : '',
+                    style: TextStyle(color: colors.textHint, fontSize: 11),
+                  ),
+          )
+        : null;
+
+    final hoverActions = _isHovered
+        ? Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.reply, size: 16),
+                onPressed: () {},
+                splashRadius: 16,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                tooltip: 'Reply',
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.copy, size: 16),
+                onPressed: () {},
+                splashRadius: 16,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                tooltip: 'Copy',
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.more_vert, size: 16),
+                onPressed: () {},
+                splashRadius: 16,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          )
+        : const SizedBox.shrink();
+
+    // ── Grouped message (no header) ───────────────────────────────────────
+    if (!widget.showHeader) {
+      return MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: Container(
+          padding: const EdgeInsets.only(left: 42, bottom: 2, right: 8),
+          color: _isHovered
+              ? colors.primary.withValues(alpha: 0.05)
+              : Colors.transparent,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [?contentWidget, ?attachmentWidget, ?statusWidget],
+                ),
+              ),
+              if (_isHovered) hoverActions,
+            ],
+          ),
+        ),
+      );
+    }
+
+    // ── Full message with header ──────────────────────────────────────────
+    final avatar = Container(
+      width: 30,
+      height: 30,
+      decoration: BoxDecoration(color: colors.primary, shape: BoxShape.circle),
+      clipBehavior: Clip.antiAlias,
+      child: senderAvatarUrl != null && senderAvatarUrl.isNotEmpty
+          ? Image.network(
+              senderAvatarUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Center(
+                child: Text(
+                  senderInitial,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            )
+          : Center(
+              child: Text(
+                senderInitial,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+    );
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Container(
+        padding: const EdgeInsets.only(bottom: 4, top: 8, right: 8),
+        color: _isHovered
+            ? colors.primary.withValues(alpha: 0.05)
+            : Colors.transparent,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            avatar,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
                       Text(
                         senderName,
@@ -553,80 +931,23 @@ class _MessageBubble extends ConsumerWidget {
                       ),
                     ],
                   ),
-                ),
-                if (content.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isMe
-                          ? colors.primary
-                          : colors.onPrimary.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: RichText(
-                      text: _parseRichText(
-                        content,
-                        TextStyle(
-                          color: isMe ? Colors.white : colors.textPrimary,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ),
-                if (media.isNotEmpty)
-                  Padding(
-                    padding: EdgeInsets.only(top: content.isNotEmpty ? 8 : 0),
-                    child: _AttachmentBubbleList(media: media, isMe: isMe),
-                  ),
-                if (isMe && status != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: status == 'failed'
-                        ? GestureDetector(
-                            onTap: () {
-                              ref
-                                  .read(chatHistoryProvider(channelId))
-                                  .retryMessage(messageId);
-                            },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.error_outline,
-                                  size: 13,
-                                  color: colors.error,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Failed – Tap to retry',
-                                  style: TextStyle(
-                                    color: colors.error,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : Text(
-                            status == 'sending' ? 'Sending...' : '',
-                            style: TextStyle(
-                              color: colors.textHint,
-                              fontSize: 11,
-                            ),
-                          ),
-                  ),
-              ],
+                  ?contentWidget,
+                  ?attachmentWidget,
+                  ?statusWidget,
+                ],
+              ),
             ),
-          ),
-        ],
+            if (_isHovered) hoverActions,
+          ],
+        ),
       ),
     );
   }
 }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Attachment list
+// ──────────────────────────────────────────────────────────────────────────────
 
 class _AttachmentBubbleList extends StatelessWidget {
   final List<dynamic> media;
@@ -710,7 +1031,6 @@ class _AttachmentBubbleList extends StatelessWidget {
 
         if (isImage && fileLink.isNotEmpty) {
           final isNetwork = fileLink.startsWith('http');
-
           return GestureDetector(
             onTap: () => _launchUrl(fileLink),
             child: Container(

@@ -137,7 +137,6 @@ class _NotificationsSectionState extends State<NotificationsSection> {
               height: 44,
               disabled: !_hasChanges,
               onPressed: () async {
-                // revert to last saved and persist automatically
                 setState(() => _draft = _original);
                 await widget.onRevert(_original);
               },

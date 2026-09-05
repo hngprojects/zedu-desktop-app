@@ -25,6 +25,7 @@ class AuthRepositoryImpl implements AuthRepository {
           user: response.user.toEntity(),
           accessToken: response.accessToken,
           accessTokenExpiresIn: response.accessTokenExpiresIn,
+          notificationToken: response.notificationToken,
         ),
       );
     } on ApiFailure catch (failure) {
@@ -107,6 +108,7 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       return Success(
         AuthSession(
+          notificationToken: response.notificationToken,
           user: response.user.toEntity(),
           accessToken: response.accessToken,
           accessTokenExpiresIn: response.accessTokenExpiresIn,
@@ -156,6 +158,7 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       return Success(
         AuthSession(
+          notificationToken: response.notificationToken,
           user: response.user.toEntity(),
           accessToken: response.accessToken,
           accessTokenExpiresIn: response.accessTokenExpiresIn,

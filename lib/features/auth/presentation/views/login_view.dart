@@ -54,6 +54,15 @@ class _LoginViewState extends ConsumerState<LoginView> {
     });
 
     final authState = ref.watch(authNotifierProvider);
+    if (authState.status == AuthStatus.authenticated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          context.go(AppRouter.home);
+        }
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
@@ -79,7 +88,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
               Image.asset('assets/pngs/zedu_logo.png', width: 83, height: 31),
               Text.rich(
                 TextSpan(
-                  text: 'Already have an account? ',
+                  text: "Don't have an account? ",
                   style: context.textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w400,
                     color: context.colors.textPrimary,
@@ -106,169 +115,184 @@ class _LoginViewState extends ConsumerState<LoginView> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Center(
-          child: SizedBox(
+          child: Container(
             width: 520,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                context.gapV(136),
-                Text('Login to Zedu', style: context.textTheme.headlineMedium),
-                context.gapV(8),
-                Text(
-                  'Welcome back! We’ve missed you!',
-                  style: context.textTheme.bodyMedium?.copyWith(
-                    color: context.colors.textSecondary,
-                  ),
-                ),
-                context.gapV(32),
-                SocialAuthButton(
-                  icon: 'assets/svgs/google_logo.svg',
-                  label: 'Sign up with Google',
-                  onPressed: () =>
-                      ref.read(authNotifierProvider.notifier).loginWithGoogle(),
-                ),
-                context.gapV(12),
-                SocialAuthButton(
-                  icon: 'assets/svgs/apple_logo.svg',
-                  label: 'Sign up with Apple',
-                  onPressed: () => AppToastService.show(
-                    context,
-                    type: AppToastType.info,
-                    message: 'Apple sign in is not available yet.',
-                  ),
-                ),
-                context.gapV(26),
-                Padding(
-                  padding: context.symmetric(horizontal: 100, vertical: 0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Divider(
-                          color: context.colors.divider,
-                          height: 0.67,
-                        ),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Center(
+              child: SizedBox(
+                width: 520,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    context.gapV(136),
+                    Text(
+                      'Login to Zedu',
+                      style: context.textTheme.headlineMedium,
+                    ),
+                    context.gapV(8),
+                    Text(
+                      'Welcome back! We’ve missed you!',
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: context.colors.textSecondary,
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(
-                          'OR',
-                          style: textTheme.bodySmall?.copyWith(
-                            color: Color(
-                              (((theme.colorScheme.onSurface as dynamic).value
-                                          as int) &
-                                      0x00FFFFFF) |
-                                  (((0.72 * 255).round() & 0xFF) << 24),
+                    ),
+                    context.gapV(32),
+                    SocialAuthButton(
+                      icon: 'assets/svgs/google_logo.svg',
+                      label: 'Login with Google',
+                      onPressed: () => ref
+                          .read(authNotifierProvider.notifier)
+                          .loginWithGoogle(),
+                    ),
+                    context.gapV(12),
+                    SocialAuthButton(
+                      icon: 'assets/svgs/apple_logo.svg',
+                      label: 'Login with Apple',
+                      onPressed: () => AppToastService.show(
+                        context,
+                        type: AppToastType.info,
+                        message: 'Apple sign in is not available yet.',
+                      ),
+                    ),
+                    context.gapV(26),
+                    Padding(
+                      padding: context.symmetric(horizontal: 100, vertical: 0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: context.colors.divider,
+                              height: 0.67,
                             ),
                           ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Divider(
-                          color: context.colors.divider,
-                          height: 0.67,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                context.gapV(26),
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      AppTextField(
-                        controller: _emailController,
-                        label: 'Email address',
-                        hint: 'Enter your email address',
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
-                        validator: (value) =>
-                            Validators.validateEmail(context, value),
-                      ),
-                      context.gapV(16),
-                      AppTextField(
-                        isPassword: true,
-                        controller: _passwordController,
-                        label: 'Password',
-                        hint: 'Password',
-                        textInputAction: TextInputAction.done,
-                        validator: (value) =>
-                            Validators.validatePassword(context, value),
-                      ),
-                      context.gapV(8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Checkbox(
-                                value: _rememberMe,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _rememberMe = value ?? false;
-                                  });
-                                },
-                              ),
-                              const Text('Remember me'),
-                            ],
-                          ),
-                          GestureDetector(
-                            onTap: () => context.push(AppRouter.forgotPassword),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: Text(
-                              'Forgot Password?',
-                              style: context.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w400,
-                                color: context.colors.primary,
-                                fontFamily: FontFamily.roboto,
+                              'OR',
+                              style: textTheme.bodySmall?.copyWith(
+                                color: Color(
+                                  (((theme.colorScheme.onSurface as dynamic)
+                                                  .value
+                                              as int) &
+                                          0x00FFFFFF) |
+                                      (((0.72 * 255).round() & 0xFF) << 24),
+                                ),
                               ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: context.colors.divider,
+                              height: 0.67,
                             ),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                context.gapV(18),
-                AppButton(
-                  label: 'Login',
-                  loading: authState.isLoading,
-                  onPressed: _onLoginPressed,
-                ),
-                context.gapV(12),
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: InkWell(
-                    onTap: () => context.go(AppRouter.magicLinkRequest),
-                    child: Text(
-                      'Login with magic link',
-                      style: context.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w400,
-                        color: context.colors.primary,
-                        fontFamily: FontFamily.roboto,
+                    ),
+                    context.gapV(26),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AppTextField(
+                            controller: _emailController,
+                            label: 'Email address',
+                            hint: 'Enter your email address',
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
+                            validator: (value) =>
+                                Validators.validateEmail(context, value),
+                          ),
+                          context.gapV(16),
+                          AppTextField(
+                            isPassword: true,
+                            controller: _passwordController,
+                            label: 'Password',
+                            hint: 'Password',
+                            textInputAction: TextInputAction.done,
+                            validator: (value) => Validators.validateRequired(
+                              context,
+                              value,
+                              fieldName: 'Password',
+                            ),
+                          ),
+                          context.gapV(8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Checkbox(
+                                    value: _rememberMe,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _rememberMe = value ?? false;
+                                      });
+                                    },
+                                  ),
+                                  const Text('Remember me'),
+                                ],
+                              ),
+                              GestureDetector(
+                                onTap: () =>
+                                    context.push(AppRouter.forgotPassword),
+                                child: Text(
+                                  'Forgot Password?',
+                                  style: context.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w400,
+                                    color: context.colors.primary,
+                                    fontFamily: FontFamily.roboto,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ),
-                context.gapV(32),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Don't have an account? "),
-                    GestureDetector(
-                      onTap: () => context.push(AppRouter.signup),
-                      child: Text(
-                        'Sign up',
-                        style: TextStyle(
-                          color: context.colors.primary,
-                          fontWeight: FontWeight.bold,
+                    context.gapV(18),
+                    AppButton(
+                      label: 'Login',
+                      loading: authState.isLoading,
+                      onPressed: _onLoginPressed,
+                    ),
+                    context.gapV(12),
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: InkWell(
+                        onTap: () => context.go(AppRouter.magicLinkRequest),
+                        child: Text(
+                          'Login with magic link',
+                          style: context.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w400,
+                            color: context.colors.primary,
+                            fontFamily: FontFamily.roboto,
+                          ),
                         ),
                       ),
                     ),
+                    context.gapV(32),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text("Don't have an account? "),
+                        GestureDetector(
+                          onTap: () => context.push(AppRouter.signup),
+                          child: Text(
+                            'Sign up',
+                            style: TextStyle(
+                              color: context.colors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    context.gapV(32),
                   ],
                 ),
-                context.gapV(32),
-              ],
+              ),
             ),
           ),
         ),

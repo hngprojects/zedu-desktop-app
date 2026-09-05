@@ -18,7 +18,15 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   }
 
   @override
-  Future<Result<void>> deleteAccount() => _guard(_remote.deleteAccount);
+  Future<Result<void>> deleteAccount({required String password}) =>
+      _guard(() => _remote.deleteAccount(password: password));
+
+  @override
+  Future<Result<void>> uploadAvatar(String filePath) =>
+      _guard(() => _remote.uploadAvatar(filePath));
+
+  @override
+  Future<Result<void>> deleteAvatar() => _guard(_remote.deleteAvatar);
 
   @override
   Future<Result<NotificationPreferences>> getNotificationPreferences() {
@@ -75,8 +83,8 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   }
 
   @override
-  Future<Result<void>> deleteOrganization() {
-    return _guard(_remote.deleteOrganization);
+  Future<Result<void>> deleteOrganization({required String orgId}) {
+    return _guard(() => _remote.deleteOrganization(orgId));
   }
 
   @override
@@ -89,6 +97,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
     required String email,
     required String role,
     required String orgId,
+    String? userId,
   }) {
     return _guard(
       () => _remote.inviteMember(email: email, role: role, orgId: orgId),
@@ -113,6 +122,24 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
   @override
   Future<Result<BillingInfo>> getBillingInfo() {
     return _guard(_remote.getBillingInfo);
+  }
+
+  @override
+  Future<Result<void>> addUserDirectly({
+    required String orgId,
+    required String userId,
+    required String roleId,
+  }) {
+    return _guard(
+      () =>
+          _remote.addUserDirectly(orgId: orgId, userId: userId, roleId: roleId),
+    );
+  }
+
+  @override
+  Future<Result<void>> acceptInvitation(String token) {
+    // Requires implementation in remote datasource
+    throw UnimplementedError();
   }
 
   Future<Result<T>> _guard<T>(Future<T> Function() operation) async {

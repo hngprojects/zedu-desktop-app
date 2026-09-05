@@ -34,11 +34,52 @@ class ChannelState {
 }
 
 class ChannelNotifier extends Notifier<ChannelState> {
+  StreamSubscription<ChatWebsocketMessage>? _wsSubscription;
+
   @override
   ChannelState build() {
-    // Schedule fetch after build
+    ref.watch(currentOrgIdProvider);
+
+    _listenToWebsockets();
+
+    ref.onDispose(() {
+      _wsSubscription?.cancel();
+    });
+
     Future.microtask(fetchChannels);
     return const ChannelState();
+  }
+
+  void _listenToWebsockets() {
+    _wsSubscription?.cancel();
+    final ws = ref.read(chatWebsocketProvider);
+    _wsSubscription = ws.messageStream.listen((msg) {
+      final authState = ref.read(authNotifierProvider);
+      final currentUser = authState.user;
+      final currentUserName = currentUser != null
+          ? '${currentUser.firstName} ${currentUser.lastName}'.trim()
+          : '';
+      final currentUsername = currentUser?.username ?? '';
+
+      final isMe =
+          msg.authorName == currentUserName ||
+          msg.authorName == currentUsername;
+      if (!isMe && msg.groupDmId.isNotEmpty) {
+        _handleIncomingMessage(msg.groupDmId, msg.text);
+      }
+    });
+  }
+
+  void _handleIncomingMessage(String channelId, String text) {
+    if (state.channels.isEmpty) return;
+    state = state.copyWith(
+      channels: state.channels.map((c) {
+        if (c.id == channelId) {
+          return c.copyWith(unreadCount: c.unreadCount + 1);
+        }
+        return c;
+      }).toList(),
+    );
   }
 
   Future<void> fetchChannels() async {
@@ -52,7 +93,69 @@ class ChannelNotifier extends Notifier<ChannelState> {
     final result = await repository.fetchChannels(orgId);
 
     if (result is Success<List<Channel>>) {
-      state = state.copyWith(isLoading: false, channels: result.value);
+      final authState = ref.read(authNotifierProvider);
+      final userId = authState.user?.id ?? '';
+
+      var channelsList = result.value;
+
+      try {
+        final storage = locator<SecureStorageService>();
+        final orderJson = await storage.readData(
+          'channel_order_${userId}_$orgId',
+        );
+        if (orderJson != null && orderJson.isNotEmpty) {
+          final List<dynamic> orderedIds =
+              jsonDecode(orderJson) as List<dynamic>;
+          final idToIndex = {
+            for (int i = 0; i < orderedIds.length; i++)
+              orderedIds[i].toString(): i,
+          };
+
+          channelsList = List<Channel>.from(channelsList)
+            ..sort((a, b) {
+              final idxA = idToIndex[a.id];
+              final idxB = idToIndex[b.id];
+              if (idxA != null && idxB != null) return idxA.compareTo(idxB);
+              if (idxA != null) return -1;
+              if (idxB != null) return 1;
+              return a.name.compareTo(b.name);
+            });
+        }
+      } catch (_) {}
+
+      state = state.copyWith(isLoading: false, channels: channelsList);
+
+      final activeIds = channelsList.map((c) => c.id).toList();
+      if (activeIds.isNotEmpty) {
+        ref.read(chatWebsocketProvider).connect(activeIds);
+      }
+
+      final activeChat = ref.read(activeChatProvider);
+
+      AppLogger.i(
+        'ChannelNotifier.fetchChannels: activeChat.type=${activeChat.type.name}, activeChat.id=${activeChat.id}',
+      );
+      if (activeChat.type == ActiveChatType.channel &&
+          activeChat.id == 'general') {
+        final realGeneral = channelsList.firstWhere(
+          (c) => c.name.toLowerCase() == 'general',
+          orElse: () => channelsList.isNotEmpty
+              ? channelsList.first
+              : const Channel(
+                  id: 'general',
+                  name: 'general',
+                  description: '',
+                  organisationId: '',
+                  ownerId: '',
+                ),
+        );
+        if (realGeneral.id != 'general') {
+          AppLogger.i(
+            'ChannelNotifier.fetchChannels: Updating general selection from "general" to ${realGeneral.id}',
+          );
+          ref.read(activeChatProvider.notifier).selectChannel(realGeneral.id);
+        }
+      }
     } else if (result is Failure<List<Channel>>) {
       state = state.copyWith(
         isLoading: false,
@@ -106,7 +209,6 @@ class ChannelNotifier extends Notifier<ChannelState> {
     );
 
     if (result is Success<void>) {
-      // Update local state
       final updatedChannels = state.channels.map((c) {
         if (c.id == channelId) {
           return Channel(
@@ -128,6 +230,131 @@ class ChannelNotifier extends Notifier<ChannelState> {
       return true;
     }
     return false;
+  }
+
+  Future<bool> archiveChannel(String channelId, bool archived) async {
+    final repository = ref.read(channelRepositoryProvider);
+    final result = await repository.archiveChannel(channelId, archived);
+
+    if (result is Success<void>) {
+      if (archived) {
+        state = state.copyWith(
+          channels: state.channels.where((c) => c.id != channelId).toList(),
+        );
+      } else {
+        state = state.copyWith(
+          channels: state.channels.map((c) {
+            if (c.id == channelId) {
+              return c.copyWith(archived: archived);
+            }
+            return c;
+          }).toList(),
+        );
+      }
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> reorderChannels(int oldIndex, int newIndex) async {
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    final channelsList = List<Channel>.from(state.channels);
+    final previousList = List<Channel>.from(channelsList);
+
+    final item = channelsList.removeAt(oldIndex);
+    channelsList.insert(newIndex, item);
+    state = state.copyWith(channels: channelsList);
+
+    final workspaceState = ref.read(workspaceProvider);
+    final String? orgId = workspaceState.selectedWorkspace?.id;
+    final authState = ref.read(authNotifierProvider);
+    final userId = authState.user?.id ?? '';
+
+    if (orgId != null && userId.isNotEmpty) {
+      final orderedIds = channelsList.map((c) => c.id).toList();
+      try {
+        final storage = locator<SecureStorageService>();
+        await storage.writeData(
+          'channel_order_${userId}_$orgId',
+          jsonEncode(orderedIds),
+        );
+      } catch (_) {}
+    }
+
+    final network = ref.read(networkStatusProvider);
+    if (network == NetworkStatus.offline) {
+      state = state.copyWith(channels: previousList);
+      if (orgId != null && userId.isNotEmpty) {
+        final orderedIds = previousList.map((c) => c.id).toList();
+        try {
+          final storage = locator<SecureStorageService>();
+          await storage.writeData(
+            'channel_order_${userId}_$orgId',
+            jsonEncode(orderedIds),
+          );
+        } catch (_) {}
+      }
+      throw Exception('Network connection lost. Reorder reverted.');
+    }
+  }
+
+  Future<bool> toggleChannelPrivacy(String channelId, bool isPrivate) async {
+    final repository = ref.read(channelRepositoryProvider);
+    final result = await repository.toggleChannelPrivacy(channelId, isPrivate);
+    if (result is Success<void>) {
+      state = state.copyWith(
+        channels: state.channels.map((c) {
+          if (c.id == channelId) {
+            return c.copyWith(isPrivate: isPrivate);
+          }
+          return c;
+        }).toList(),
+      );
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> leaveChannel(String channelId) async {
+    final repository = ref.read(channelRepositoryProvider);
+    final result = await repository.leaveChannel(channelId);
+    if (result is Success<void>) {
+      state = state.copyWith(
+        channels: state.channels.where((c) => c.id != channelId).toList(),
+      );
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> joinChannel(String channelId) async {
+    final repository = ref.read(channelRepositoryProvider);
+    final result = await repository.joinChannel(channelId);
+    if (result is Success<void>) {
+      await fetchChannels();
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> addChannelMembers(String channelId, List<String> userIds) async {
+    final repository = ref.read(channelRepositoryProvider);
+    final result = await repository.addChannelMembers(channelId, userIds);
+    if (result is Success<void>) {
+      state = state.copyWith(
+        channels: state.channels.map((c) {
+          if (c.id == channelId) {
+            return c.copyWith(membersCount: c.membersCount + userIds.length);
+          }
+          return c;
+        }).toList(),
+      );
+      return true;
+    } else {
+      return false;
+    }
   }
 }
 

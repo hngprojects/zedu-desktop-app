@@ -11,6 +11,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   iris_method_channel
   irondash_engine_context
   local_notifier
+  permission_handler_windows
   record_windows
   screen_retriever_windows
   super_native_extensions

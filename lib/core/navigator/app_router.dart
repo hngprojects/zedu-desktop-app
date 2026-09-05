@@ -4,6 +4,7 @@ import 'package:zedu/features/features.dart';
 class AppRouter {
   const AppRouter._();
 
+  static const splash = '/';
   static const home = '/home';
   static const login = '/login';
   static const magicLinkRequest = '/magic-link';
@@ -14,15 +15,51 @@ class AppRouter {
   static const changePassword = '/change-password';
   static const profile = '/profile';
   static const createOrganization = '/create-organization';
-  static const buyCredits = '/credits/buy';
+  // static const buyCredits = '/credits/buy';
+
+  static final navigatorKey = GlobalKey<NavigatorState>();
 
   static final router = GoRouter(
-    initialLocation: login,
+    navigatorKey: navigatorKey,
+    initialLocation: splash,
     routes: [
+      GoRoute(path: splash, builder: (context, state) => const SplashView()),
       GoRoute(path: login, builder: (context, state) => const LoginView()),
       GoRoute(
         path: magicLinkRequest,
         builder: (context, state) => const MagicLinkRequestView(),
+      ),
+      GoRoute(
+        path: magicLinkSent,
+        redirect: (context, state) =>
+            state.extra is String && (state.extra! as String).trim().isNotEmpty
+            ? null
+            : magicLinkRequest,
+        builder: (context, state) {
+          final email = state.extra is String ? state.extra! as String : '';
+          return MagicLinkSentView(email: email);
+        },
+      ),
+
+      GoRoute(path: home, builder: (context, state) => const HomeView()),
+      GoRoute(path: signup, builder: (context, state) => const SignUpView()),
+      GoRoute(
+        path: forgotPassword,
+        builder: (context, state) => const ForgotPasswordView(),
+      ),
+      GoRoute(
+        path: resetPassword,
+        builder: (context, state) {
+          final email = state.extra as String? ?? '';
+          return ResetPasswordView(email: email);
+        },
+      ),
+      GoRoute(
+        path: changePassword,
+        builder: (context, state) {
+          final email = state.extra as String? ?? '';
+          return ChangePasswordView(email: email);
+        },
       ),
       GoRoute(
         path: magicLinkSent,
@@ -64,10 +101,10 @@ class AppRouter {
         path: createOrganization,
         builder: (context, state) => const CreateOrganizationView(),
       ),
-      GoRoute(
-        path: buyCredits,
-        builder: (context, state) => const BuyCreditsView(),
-      ),
+      // GoRoute(
+      //   path: buyCredits,
+      //   builder: (context, state) => const BuyCreditsView(),
+      // ),
     ],
   );
 }
